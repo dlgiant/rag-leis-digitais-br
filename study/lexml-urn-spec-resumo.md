@@ -206,24 +206,79 @@ Em ordem de prioridade:
 
 ---
 
-## 9. Questões em aberto para investigar
+## 9. Questões em aberto — investigadas
 
-Anote no notebook conforme for descobrindo:
+Cada item foi confirmado pela RFC 9676 e/ou por exemplos reais no catálogo `lexml.gov.br`. Onde não há exemplo indexado direto, marco como **conjectura** com a convenção observada.
 
-- [ ] Como o LexML lida com _"redação dada pela Lei X"_? Mesma URN com componente de versão (`@`), ou URN distinta?
-- [ ] Artigos revogados continuam endereçáveis por URN? _(Spoiler: sim — a URN identifica a obra; revogação é metadado.)_
-- [ ] A **ANPD** tem código de autoridade reconhecido na URN, ou suas resoluções resolvem sob `federal:resolucao`?
-- [ ] Como decretos regulamentadores (ex.: Decreto 8.771/16 do Marco Civil) se relacionam à URN da lei-mãe? Existe componente de relação?
-- [ ] Súmulas vinculantes do STF — qual a autoridade/tipo na URN?
-- [ ] Provimentos do CNJ — entram como `federal:resolucao` ou autoridade dedicada?
+- [x] **Como o LexML lida com _"redação dada pela Lei X"_? Mesma URN com componente de versão (`@`), ou URN distinta?**
+  → **Mesma URN da obra, com `@<data>` indicando a expressão.** A RFC 9676 §5.3 define `local-name = work ["@" expression] ["$" manifestation]`. A "obra" (a lei como entidade abstrata e perene) tem URN estável; cada redação histórica é uma _expressão_ identificada pela data da última emenda incorporada. O texto original tem o token reservado `@original`. Modelo FRBR-inspirado (work / expression / manifestation / item).
+  - Exemplo: `urn:lex:br:federal:lei:2018-08-14;13709` (a LGPD como obra) vs. `urn:lex:br:federal:lei:2018-08-14;13709@2023-05-10` (redação vigente em 10/05/2023).
+  - **Implicação para o RAG:** ao indexar, decida se vai armazenar uma expressão fixa (snapshot temporal) ou seguir a versão consolidada. Se for a vigente, considere reindexar quando houver alteração — o ID da obra não muda, mas o conteúdo do chunk pode.
+  - _Fonte: RFC 9676, §§5.3, 7.1._
 
+- [x] **Artigos revogados continuam endereçáveis por URN?**
+  → **Sim — confirmado.** A URN identifica a obra; revogação é metadado da expressão. Um artigo revogado mantém URN estável (`...~art45`) e o resolver pode retornar tanto a versão atual (em geral com nota "Revogado pela Lei X") quanto qualquer expressão histórica via `@<data>`. A RFC 9676 §7.1.2 prevê tanto estratégias "multi-version" (um único objeto com marcação textual de versões) quanto "single-version" (objetos separados por data), mas em ambos a URN da obra é invariante.
+  - **Implicação para o RAG:** preservar chunks de dispositivos revogados é útil — o usuário pode citar uma decisão antiga que se refere ao artigo na redação revogada. Marque-os com metadado de status; não os exclua do índice.
+  - _Fonte: RFC 9676, §7.1._
+
+- [x] **A ANPD tem código de autoridade reconhecido na URN, ou suas resoluções resolvem sob `federal:resolucao`?**
+  → **Conjectura: autoridade dedicada `autoridade.nacional.protecao.dados`.** Não encontrei resoluções da ANPD diretamente indexadas em `lexml.gov.br` na busca, o que sugere que o catálogo ainda não as cobre ou usa outro slug. Mas a convenção do portal é clara: autoridades dedicadas usam o nome institucional com pontos no lugar de espaços — `conselho.nacional.justica`, `supremo.tribunal.federal`, `congresso.nacional`. Por extensão, ANPD → `autoridade.nacional.protecao.dados`.
+  - URN candidata para a Resolução CD/ANPD nº 1/2021 (28/10/2021): `urn:lex:br:autoridade.nacional.protecao.dados:resolucao:2021-10-28;1`.
+  - **Ação prática:** gerar a URN do nosso lado seguindo a convenção e expor o link `https://www.lexml.gov.br/urn/<URN>` na UI — se o resolver retornar 404, o fallback é o site da própria ANPD em `gov.br/anpd`. _A verificar manualmente abrindo o link candidato._
+
+- [x] **Como decretos regulamentadores (ex.: Decreto 8.771/16 do Marco Civil) se relacionam à URN da lei-mãe?**
+  → **Não há componente de relação na URN.** A sintaxe URN LEX (RFC 9676 §5) tem apenas dois separadores semânticos além do _work_: `@` (expressão/versão) e `$` (manifestação/formato). Não existe `>` ou similar para "regulamenta", "revoga" ou "altera". O decreto recebe URN independente:
+  - Lei-mãe: `urn:lex:br:federal:lei:2014-04-23;12965` (Marco Civil)
+  - Decreto regulamentador: `urn:lex:br:federal:decreto:2016-05-11;8771` (sem relação sintática)
+  - As relações ("regulamenta", "altera", "revoga") são **metadado** — vivem no XML do LexML-BR Parte 3 (campos de ementa e referências internas) e são expostas via OAI-PMH (Parte 4).
+  - **Implicação para o RAG:** se quisermos navegar lei↔decretos, precisamos de uma camada de metadados separada (grafo de relações). Não dá pra inferir da URN sozinha. Bom candidato a campo no payload do vector DB.
+  - _Fonte: RFC 9676 §5; LexML-BR Parte 3._
+
+- [x] **Súmulas vinculantes do STF — qual a autoridade/tipo na URN?**
+  → **Autoridade: `supremo.tribunal.federal`. Tipo: conjectura `sumula.vinculante`.** Súmulas comuns estão indexadas como `urn:lex:br:supremo.tribunal.federal:sumula:YYYY-MM-DD;N` (ex.: `...:sumula:1969-12-03;473`). Súmulas vinculantes — instituto criado pela EC 45/2004 e regulado pela Lei 11.417/2006 — não retornaram exemplo direto no índice na busca, mas a convenção do LexML separa subtipos com ponto (ex.: `lei.complementar`, `medida.provisoria`), então `sumula.vinculante` é o esperado.
+  - URN candidata para a Súmula Vinculante nº 11 (uso de algemas, 13/08/2008): `urn:lex:br:supremo.tribunal.federal:sumula.vinculante:2008-08-13;11`.
+  - _A verificar abrindo o link candidato no resolver oficial._
+
+- [x] **Provimentos do CNJ — entram como `federal:resolucao` ou autoridade dedicada?**
+  → **Autoridade dedicada `conselho.nacional.justica`.** Resoluções do CNJ estão claramente indexadas: `urn:lex:br:conselho.nacional.justica:resolucao:2007-12-18;48`. Provimentos, no entanto, são emitidos pela **Corregedoria** do CNJ, não pelo Plenário. A convenção LexML para sub-órgãos usa `;` (visto em `supremo.tribunal.federal;plenario` para acórdãos do plenário do STF). Por extensão, provimentos da Corregedoria seriam: `urn:lex:br:conselho.nacional.justica;corregedoria:provimento:YYYY-MM-DD;N`.
+  - URN candidata para o Provimento CN-CNJ nº 52/2016 (14/03/2016, reprodução assistida): `urn:lex:br:conselho.nacional.justica;corregedoria:provimento:2016-03-14;52`.
+  - _Fonte: catálogo `lexml.gov.br` para resoluções; convenção de sub-autoridade observada em acórdãos do STF._
+
+> **Padrão recorrente nas três conjecturas (ANPD, súmula vinculante, provimento CNJ):** o índice oficial do LexML é incompleto para autoridades regulatórias mais recentes e tipos menos comuns. A spec (RFC 9676 + Parte 2 LexML-BR) é determinística — dá pra gerar a URN do nosso lado com regras. **O resolver é uma cortesia, não a fonte de verdade.** Política do RAG: gerar URNs canônicas; expor link para o resolver; em caso de 404, fallback para o site da autoridade emissora.
+
+---
+
+## 10. Corpus inicial — escopo e composição
+
+### Premissas de escopo (defaults do projeto)
+
+| Decisão | Valor adotado |
+|---|---|
+| Cobertura temporal | Apenas redação vigente — sem snapshots históricos (`@<data>`) nesta fase. |
+| Cobertura da ANPD | Resoluções vinculantes + guias orientativos relevantes. |
+| Profundidade penal | Apenas artigos do Código Penal criados/alterados por legislação digital (arts. 154-A, 154-B, 266 §1º, 313-A, 313-B). Não indexar o CP inteiro. |
+| Esfera | Federal apenas. Sem legislação estadual ou municipal de proteção de dados. |
+| Fontes não-normativas | Não incluir doutrina, artigos acadêmicos ou acórdãos individuais. Súmulas e teses jurisprudenciais ficam para fase futura. |
+
+### Composição por _tier_
+
+A lista por _tier_ vive em arquivos separados — cada um pronto para alimentar o pipeline de ingestão:
+
+| Tier | Arquivo | Conteúdo |
+|---|---|---|
+| 1 — Núcleo | [`corpus-tier-1-nucleo.md`](corpus-tier-1-nucleo.md) | Leis sem as quais o RAG não cobre o domínio |
+| 2 — Complementar | [`corpus-tier-2-complementar.md`](corpus-tier-2-complementar.md) | Adições após o Tier 1 estar funcionando |
+| 3 — ANPD | [`corpus-tier-3-anpd.md`](corpus-tier-3-anpd.md) | Resoluções e guias orientativos da ANPD |
+| 4 — Condicional | [`corpus-tier-4-condicional.md`](corpus-tier-4-condicional.md) | Entram conforme expansão do escopo |
 
 ---
 
 **Fontes principais:**
-- RFC 9676 — LEX: A URN Namespace for Sources of Law (IETF, maio 2025)
+- [RFC 9676 — LEX: A URN Namespace for Sources of Law](https://datatracker.ietf.org/doc/rfc9676/) (IETF, maio 2025) — §5 sintaxe geral, §7 versionamento
 - LexML-BR Norma Técnica Parte 2 (URN LEX)
+- [LexML-BR Parte 5 — Serviço de Resolução de URN](https://projeto.lexml.gov.br/documentacao/Parte-5-Servico-de-Resolucao-de-URN.pdf) — comportamento do resolver oficial
 - LCP-95/1998 (técnica legislativa brasileira)
-- Projeto LexML — histórico institucional (projeto.lexml.gov.br)
+- [Projeto LexML — histórico institucional](https://projeto.lexml.gov.br/institucional/historia)
+- Catálogo público em `lexml.gov.br/urn/` — utilizado para validar convenções de autoridade e tipo
 
 **Última atualização:** 11 de maio de 2026
