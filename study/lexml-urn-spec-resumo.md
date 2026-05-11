@@ -217,11 +217,6 @@ Anote no notebook conforme for descobrindo:
 - [ ] Súmulas vinculantes do STF — qual a autoridade/tipo na URN?
 - [ ] Provimentos do CNJ — entram como `federal:resolucao` ou autoridade dedicada?
 
----
-
-## 10. TL;DR para colar no README do projeto
-
-> Este RAG indexa direito digital brasileiro usando **URN LEX (RFC 9676)** como ID estável de chunk. A hierarquia de chunking segue a **LCP-95** (artigo → parágrafo → inciso → alínea), o que permite usar citações jurídicas como chave primária do índice vetorial e fazer verificação de citação por correspondência exata. Cobertura: LGPD (13.709/18), Marco Civil da Internet (12.965/14), Lei Carolina Dieckmann (12.737/12), Lei do Software (9.609/98), Lei de Crimes Cibernéticos (14.155/21), e resoluções da ANPD.
 
 ---
 
