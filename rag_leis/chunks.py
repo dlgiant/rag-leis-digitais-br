@@ -6,6 +6,7 @@ from typing import Literal
 ChunkKind = Literal["artigo", "paragrafo", "inciso", "alinea", "item"]
 
 
+
 @dataclass(frozen=True)
 class Chunk:
     document_urn: str

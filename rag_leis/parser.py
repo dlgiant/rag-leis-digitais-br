@@ -25,6 +25,7 @@ _INCISO_HEAD = re.compile(
     re.IGNORECASE,
 )
 _ALINEA_HEAD = re.compile(r"^\s*([a-z])\)\s*", re.IGNORECASE)
+_ITEM_HEAD = re.compile(r"^\s*(\d+)\.\s+")
 
 
 def _extract_artigo_paragraphs(html: str) -> Iterator[str]:
@@ -54,6 +55,7 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
     current_artigo: str | None = None
     current_inciso_parent: str | None = None
     current_inciso: str | None = None
+    current_alinea: str | None = None
 
     for text in _extract_artigo_paragraphs(html):
         m_art = _ARTIGO_HEAD.match(text)
@@ -73,6 +75,7 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
             current_artigo = partition
             current_inciso_parent = partition
             current_inciso = None
+            current_alinea = None
             continue
 
         m_par = _PARAGRAFO_HEAD.match(text)
@@ -91,6 +94,7 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
             )
             current_inciso_parent = partition
             current_inciso = None
+            current_alinea = None
             continue
 
         m_par_u = _PAR_UNICO_HEAD.match(text)
@@ -108,6 +112,7 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
             )
             current_inciso_parent = partition
             current_inciso = None
+            current_alinea = None
             continue
 
         m_inc = _INCISO_HEAD.match(text)
@@ -126,6 +131,7 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
                 )
             )
             current_inciso = partition
+            current_alinea = None
             continue
 
         m_ali = _ALINEA_HEAD.match(text)
@@ -140,6 +146,23 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
                     label=letter,
                     text=text[m_ali.end() :].strip(),
                     parent_partition=current_inciso,
+                )
+            )
+            current_alinea = partition
+            continue
+
+        m_item = _ITEM_HEAD.match(text)
+        if m_item and current_alinea is not None:
+            item_num = int(m_item.group(1))
+            partition = f"{current_alinea};item{item_num}"
+            raw.append(
+                Chunk(
+                    document_urn=document_urn,
+                    partition=partition,
+                    kind="item",
+                    label=str(item_num),
+                    text=text[m_item.end() :].strip(),
+                    parent_partition=current_alinea,
                 )
             )
             continue
