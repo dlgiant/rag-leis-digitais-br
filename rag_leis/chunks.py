@@ -15,6 +15,7 @@ class Chunk:
     text: str
     parent_partition: str | None
     nav: dict[str, str] = field(default_factory=dict)
+    notes: list[str] = field(default_factory=list)
 
     @property
     def urn(self) -> str:

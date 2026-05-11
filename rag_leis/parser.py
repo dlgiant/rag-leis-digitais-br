@@ -58,6 +58,19 @@ _ADCT_MARKER = re.compile(
     re.IGNORECASE,
 )
 
+_LEGAL_NOTE = re.compile(
+    r"\(\s*(?:Reda[çc][ãa]o\s+dada"
+    r"|Inclu[íi]d[oa]"
+    r"|Revogad[oa]"
+    r"|Renumerad[oa]"
+    r"|Vide"
+    r"|Vig[êe]ncia"
+    r"|Regulamento"
+    r"|Produ[çc][ãa]o\s+de\s+efeit[oa])"
+    r"\b[^()]*\)",
+    re.IGNORECASE,
+)
+
 
 def _strip_amendment_blockquotes(html: str) -> str:
     def maybe_strip(m: re.Match[str]) -> str:
@@ -106,6 +119,23 @@ def _reset_below(nav: dict[str, str], level: str) -> None:
     idx = _HIERARCHY.index(level)
     for lower in _HIERARCHY[idx + 1 :]:
         nav.pop(lower, None)
+
+
+def _strip_notes(text: str) -> tuple[str, list[str]]:
+    notes: list[str] = []
+
+    def capture(m: re.Match[str]) -> str:
+        notes.append(m.group(0))
+        return " "
+
+    cleaned = _LEGAL_NOTE.sub(capture, text)
+    cleaned = _WS.sub(" ", cleaned).strip()
+    return cleaned, notes
+
+
+def _is_legal_note_paragraph(text: str) -> bool:
+    cleaned, _ = _strip_notes(text)
+    return not cleaned
 
 
 def _looks_like_section_title(text: str) -> bool:
@@ -157,13 +187,20 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
         if m_nav and len(text) < 120:
             level = _level_key(m_nav.group(1))
             if level is not None:
-                body = m_nav.group(2).strip()
-                if _NAV_NUMBER_ONLY.match(body) and i + 1 < len(paragraphs):
-                    next_text = paragraphs[i + 1]
-                    if _looks_like_section_title(next_text):
-                        nav[level] = f"{body} - {next_text}"
+                body, _ = _strip_notes(m_nav.group(2).strip())
+                if _NAV_NUMBER_ONLY.match(body):
+                    j = i + 1
+                    while j < len(paragraphs) and _is_legal_note_paragraph(
+                        paragraphs[j]
+                    ):
+                        j += 1
+                    if j < len(paragraphs) and _looks_like_section_title(
+                        paragraphs[j]
+                    ):
+                        title, _ = _strip_notes(paragraphs[j])
+                        nav[level] = f"{body} - {title}" if title else body
                         _reset_below(nav, level)
-                        i += 2
+                        i = j + 1
                         continue
                 nav[level] = body
                 _reset_below(nav, level)
@@ -180,15 +217,17 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
                 remainder = remainder[m_continued.end() :]
             base_part = f"art{art_num.lower()}"
             partition = f"{partition_prefix};{base_part}" if partition_prefix else base_part
+            cleaned, notes = _strip_notes(remainder.strip())
             raw.append(
                 Chunk(
                     document_urn=document_urn,
                     partition=partition,
                     kind="artigo",
                     label=f"Art. {art_num}",
-                    text=remainder.strip(),
+                    text=cleaned,
                     parent_partition=None,
                     nav=dict(nav),
+                    notes=notes,
                 )
             )
             current_artigo = partition
@@ -202,15 +241,17 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
         if m_par and current_artigo is not None:
             par_num = int(m_par.group(1))
             partition = f"{current_artigo};par{par_num}"
+            cleaned, notes = _strip_notes(text[m_par.end() :].strip())
             raw.append(
                 Chunk(
                     document_urn=document_urn,
                     partition=partition,
                     kind="paragrafo",
                     label=f"§ {par_num}º",
-                    text=text[m_par.end() :].strip(),
+                    text=cleaned,
                     parent_partition=current_artigo,
                     nav=dict(nav),
+                    notes=notes,
                 )
             )
             current_inciso_parent = partition
@@ -222,15 +263,17 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
         m_par_u = _PAR_UNICO_HEAD.match(text)
         if m_par_u and current_artigo is not None:
             partition = f"{current_artigo};par1"
+            cleaned, notes = _strip_notes(text[m_par_u.end() :].strip())
             raw.append(
                 Chunk(
                     document_urn=document_urn,
                     partition=partition,
                     kind="paragrafo",
                     label="Parágrafo único",
-                    text=text[m_par_u.end() :].strip(),
+                    text=cleaned,
                     parent_partition=current_artigo,
                     nav=dict(nav),
+                    notes=notes,
                 )
             )
             current_inciso_parent = partition
@@ -244,15 +287,17 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
             roman = m_inc.group(1).upper()
             inc_num = _roman_to_int(roman)
             partition = f"{current_inciso_parent};inc{inc_num}"
+            cleaned, notes = _strip_notes(text[m_inc.end() :].strip())
             raw.append(
                 Chunk(
                     document_urn=document_urn,
                     partition=partition,
                     kind="inciso",
                     label=roman,
-                    text=text[m_inc.end() :].strip(),
+                    text=cleaned,
                     parent_partition=current_inciso_parent,
                     nav=dict(nav),
+                    notes=notes,
                 )
             )
             current_inciso = partition
@@ -264,15 +309,17 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
         if m_ali and current_inciso is not None:
             letter = m_ali.group(1).lower()
             partition = f"{current_inciso};ali-{letter}"
+            cleaned, notes = _strip_notes(text[m_ali.end() :].strip())
             raw.append(
                 Chunk(
                     document_urn=document_urn,
                     partition=partition,
                     kind="alinea",
                     label=letter,
-                    text=text[m_ali.end() :].strip(),
+                    text=cleaned,
                     parent_partition=current_inciso,
                     nav=dict(nav),
+                    notes=notes,
                 )
             )
             current_alinea = partition
@@ -283,15 +330,17 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
         if m_item and current_alinea is not None:
             item_num = int(m_item.group(1))
             partition = f"{current_alinea};item{item_num}"
+            cleaned, notes = _strip_notes(text[m_item.end() :].strip())
             raw.append(
                 Chunk(
                     document_urn=document_urn,
                     partition=partition,
                     kind="item",
                     label=str(item_num),
-                    text=text[m_item.end() :].strip(),
+                    text=cleaned,
                     parent_partition=current_alinea,
                     nav=dict(nav),
+                    notes=notes,
                 )
             )
             i += 1
