@@ -13,6 +13,11 @@ _ARTIGO_P = re.compile(
 _TAG = re.compile(r"<[^>]+>")
 _WS = re.compile(r"\s+")
 _NBSP = re.compile(r"\xa0")
+_INNERMOST_BLOCKQUOTE = re.compile(
+    r"<blockquote\b[^>]*>((?:(?!<blockquote\b).)*?)</blockquote>",
+    re.DOTALL | re.IGNORECASE,
+)
+_ART_REFERENCE = re.compile(r"\bArt\.\s*\d+", re.IGNORECASE)
 
 _ARTIGO_HEAD = re.compile(
     r"^\s*Art\.\s*(\d+(?:-[A-Z])?)\s*[º°.]?\s*",
@@ -28,7 +33,22 @@ _ALINEA_HEAD = re.compile(r"^\s*([a-z])\)\s*", re.IGNORECASE)
 _ITEM_HEAD = re.compile(r"^\s*(\d+)\.\s+")
 
 
+def _strip_amendment_blockquotes(html: str) -> str:
+    def maybe_strip(m: re.Match[str]) -> str:
+        inner_plain = _TAG.sub(" ", m.group(1))
+        if _ART_REFERENCE.search(inner_plain):
+            return ""
+        return m.group(0)
+
+    while True:
+        new_html = _INNERMOST_BLOCKQUOTE.sub(maybe_strip, html)
+        if new_html == html:
+            return html
+        html = new_html
+
+
 def _extract_artigo_paragraphs(html: str) -> Iterator[str]:
+    html = _strip_amendment_blockquotes(html)
     for m in _ARTIGO_P.finditer(html):
         raw = m.group(1)
         text = _TAG.sub("", raw)
