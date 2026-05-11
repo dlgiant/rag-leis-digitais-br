@@ -23,6 +23,7 @@ _ARTIGO_HEAD = re.compile(
     r"^\s*Art\.\s*(\d+(?:-[A-Z])?)\s*[º°.]?\s*",
     re.IGNORECASE,
 )
+_ARTIGO_NUM_CONTINUATION = re.compile(r"^(\d+)\.\s")
 _PARAGRAFO_HEAD = re.compile(r"^\s*§\s*(\d+)\s*[º°.]?\s*", re.IGNORECASE)
 _PAR_UNICO_HEAD = re.compile(r"^\s*Par[áa]grafo\s+[úu]nico\s*[.:]?\s*", re.IGNORECASE)
 _INCISO_HEAD = re.compile(
@@ -81,6 +82,11 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
         m_art = _ARTIGO_HEAD.match(text)
         if m_art:
             art_num = m_art.group(1)
+            remainder = text[m_art.end() :]
+            m_continued = _ARTIGO_NUM_CONTINUATION.match(remainder)
+            if m_continued:
+                art_num = art_num + m_continued.group(1)
+                remainder = remainder[m_continued.end() :]
             partition = f"art{art_num.lower()}"
             raw.append(
                 Chunk(
@@ -88,7 +94,7 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
                     partition=partition,
                     kind="artigo",
                     label=f"Art. {art_num}",
-                    text=text[m_art.end() :].strip(),
+                    text=remainder.strip(),
                     parent_partition=None,
                 )
             )
