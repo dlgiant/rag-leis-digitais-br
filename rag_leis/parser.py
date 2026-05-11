@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import html as html_module
 import re
-from collections.abc import Iterator
 
 from rag_leis.chunks import Chunk
 
@@ -33,6 +32,32 @@ _INCISO_HEAD = re.compile(
 _ALINEA_HEAD = re.compile(r"^\s*([a-z])\)\s*", re.IGNORECASE)
 _ITEM_HEAD = re.compile(r"^\s*(\d+)\.\s+")
 
+_NAV_HEAD = re.compile(
+    r"^\s*(LIVRO|PARTE|T[IÍ]TULO|CAP[IÍ]TULO|SUBSE[CÇ][AÃ]O|SE[CÇ][AÃ]O)\s+(.+)$",
+    re.IGNORECASE,
+)
+_NAV_NUMBER_ONLY = re.compile(r"^[IVXLCDM]+\s*$|^[A-Z][A-Z\s]*$", re.IGNORECASE)
+
+_LEVEL_MAP = {
+    "livro": "livro",
+    "parte": "parte",
+    "título": "titulo",
+    "titulo": "titulo",
+    "capítulo": "capitulo",
+    "capitulo": "capitulo",
+    "seção": "secao",
+    "secao": "secao",
+    "seçao": "secao",
+    "subseção": "subsecao",
+    "subsecao": "subsecao",
+}
+_HIERARCHY = ["livro", "parte", "titulo", "capitulo", "secao", "subsecao"]
+
+_ADCT_MARKER = re.compile(
+    r"^\s*Ato\s+das\s+Disposi[çc][õo]es\s+Constitucionais\s+Transit[óo]rias",
+    re.IGNORECASE,
+)
+
 
 def _strip_amendment_blockquotes(html: str) -> str:
     def maybe_strip(m: re.Match[str]) -> str:
@@ -48,8 +73,9 @@ def _strip_amendment_blockquotes(html: str) -> str:
         html = new_html
 
 
-def _extract_artigo_paragraphs(html: str) -> Iterator[str]:
+def _extract_paragraphs(html: str) -> list[str]:
     html = _strip_amendment_blockquotes(html)
+    out: list[str] = []
     for m in _ARTIGO_P.finditer(html):
         raw = m.group(1)
         text = _TAG.sub("", raw)
@@ -57,7 +83,8 @@ def _extract_artigo_paragraphs(html: str) -> Iterator[str]:
         text = _NBSP.sub(" ", text)
         text = _WS.sub(" ", text).strip()
         if text:
-            yield text
+            out.append(text)
+    return out
 
 
 def _roman_to_int(roman: str) -> int:
@@ -71,14 +98,78 @@ def _roman_to_int(roman: str) -> int:
     return total
 
 
+def _level_key(keyword: str) -> str | None:
+    return _LEVEL_MAP.get(keyword.lower())
+
+
+def _reset_below(nav: dict[str, str], level: str) -> None:
+    idx = _HIERARCHY.index(level)
+    for lower in _HIERARCHY[idx + 1 :]:
+        nav.pop(lower, None)
+
+
+def _looks_like_section_title(text: str) -> bool:
+    if len(text) > 200:
+        return False
+    return not any(
+        r.match(text)
+        for r in (
+            _ARTIGO_HEAD,
+            _PARAGRAFO_HEAD,
+            _PAR_UNICO_HEAD,
+            _INCISO_HEAD,
+            _ALINEA_HEAD,
+            _ITEM_HEAD,
+            _NAV_HEAD,
+        )
+    )
+
+
 def parse(document_urn: str, html: str) -> list[Chunk]:
+    paragraphs = _extract_paragraphs(html)
     raw: list[Chunk] = []
     current_artigo: str | None = None
     current_inciso_parent: str | None = None
     current_inciso: str | None = None
     current_alinea: str | None = None
+    nav: dict[str, str] = {}
+    partition_prefix = ""
 
-    for text in _extract_artigo_paragraphs(html):
+    i = 0
+    while i < len(paragraphs):
+        text = paragraphs[i]
+
+        if (
+            _ADCT_MARKER.match(text)
+            and len(text) < 200
+            and current_artigo is not None
+        ):
+            partition_prefix = "adct"
+            nav = {"parte": "Ato das Disposições Constitucionais Transitórias"}
+            current_artigo = None
+            current_inciso_parent = None
+            current_inciso = None
+            current_alinea = None
+            i += 1
+            continue
+
+        m_nav = _NAV_HEAD.match(text)
+        if m_nav and len(text) < 120:
+            level = _level_key(m_nav.group(1))
+            if level is not None:
+                body = m_nav.group(2).strip()
+                if _NAV_NUMBER_ONLY.match(body) and i + 1 < len(paragraphs):
+                    next_text = paragraphs[i + 1]
+                    if _looks_like_section_title(next_text):
+                        nav[level] = f"{body} - {next_text}"
+                        _reset_below(nav, level)
+                        i += 2
+                        continue
+                nav[level] = body
+                _reset_below(nav, level)
+                i += 1
+                continue
+
         m_art = _ARTIGO_HEAD.match(text)
         if m_art:
             art_num = m_art.group(1)
@@ -87,7 +178,8 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
             if m_continued:
                 art_num = art_num + m_continued.group(1)
                 remainder = remainder[m_continued.end() :]
-            partition = f"art{art_num.lower()}"
+            base_part = f"art{art_num.lower()}"
+            partition = f"{partition_prefix};{base_part}" if partition_prefix else base_part
             raw.append(
                 Chunk(
                     document_urn=document_urn,
@@ -96,12 +188,14 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
                     label=f"Art. {art_num}",
                     text=remainder.strip(),
                     parent_partition=None,
+                    nav=dict(nav),
                 )
             )
             current_artigo = partition
             current_inciso_parent = partition
             current_inciso = None
             current_alinea = None
+            i += 1
             continue
 
         m_par = _PARAGRAFO_HEAD.match(text)
@@ -116,11 +210,13 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
                     label=f"§ {par_num}º",
                     text=text[m_par.end() :].strip(),
                     parent_partition=current_artigo,
+                    nav=dict(nav),
                 )
             )
             current_inciso_parent = partition
             current_inciso = None
             current_alinea = None
+            i += 1
             continue
 
         m_par_u = _PAR_UNICO_HEAD.match(text)
@@ -134,11 +230,13 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
                     label="Parágrafo único",
                     text=text[m_par_u.end() :].strip(),
                     parent_partition=current_artigo,
+                    nav=dict(nav),
                 )
             )
             current_inciso_parent = partition
             current_inciso = None
             current_alinea = None
+            i += 1
             continue
 
         m_inc = _INCISO_HEAD.match(text)
@@ -154,10 +252,12 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
                     label=roman,
                     text=text[m_inc.end() :].strip(),
                     parent_partition=current_inciso_parent,
+                    nav=dict(nav),
                 )
             )
             current_inciso = partition
             current_alinea = None
+            i += 1
             continue
 
         m_ali = _ALINEA_HEAD.match(text)
@@ -172,9 +272,11 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
                     label=letter,
                     text=text[m_ali.end() :].strip(),
                     parent_partition=current_inciso,
+                    nav=dict(nav),
                 )
             )
             current_alinea = partition
+            i += 1
             continue
 
         m_item = _ITEM_HEAD.match(text)
@@ -189,9 +291,13 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
                     label=str(item_num),
                     text=text[m_item.end() :].strip(),
                     parent_partition=current_alinea,
+                    nav=dict(nav),
                 )
             )
+            i += 1
             continue
+
+        i += 1
 
     return _dedup_keep_last(raw)
 
