@@ -58,6 +58,30 @@ class BGEM3Embedder:
         vec: Vec = self._encode([text], 512)[0]
         return vec
 
+    def embed_docs_colbert(self, texts: list[str]) -> list[Vec]:
+        """Per-document token vectors (Ti × D) for ColBERT-style late
+        interaction. Each token vector is L2-normalized so MaxSim becomes the
+        sum of max cosine similarities across query tokens.
+        """
+        out = self._model.encode(
+            texts,
+            batch_size=self._batch_size,
+            max_length=self._max_length,
+            return_dense=False,
+            return_sparse=False,
+            return_colbert_vecs=True,
+        )
+        result: list[Vec] = []
+        for v in out["colbert_vecs"]:
+            arr = np.asarray(v, dtype=np.float32)
+            norms = np.linalg.norm(arr, axis=-1, keepdims=True)
+            norms = np.where(norms == 0, 1.0, norms)
+            result.append((arr / norms).astype(np.float32))
+        return result
+
+    def embed_query_colbert(self, text: str) -> Vec:
+        return self.embed_docs_colbert([text])[0]
+
 
 class VoyageEmbedder:
     dim: int = 1024
