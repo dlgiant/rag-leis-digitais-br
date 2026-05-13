@@ -1,65 +1,154 @@
-# Eval set for embedding/retrieval comparison.
+# Eval set v2 — typed queries with graded relevance.
 #
-# Each entry:
+# Schema:
 #   query    — the search string
-#   relevant — list of chunk URNs that should be retrieved (binary relevance)
-#   notes    — optional, free text (which artigo, what the question is about)
+#   type     — one of: definicao, enumeracao, citacao-literal, parafrase, cross-doc
+#                * definicao: "o que é X?" / "qual a definição de X?" — gold is usually a single
+#                  inciso or caput that names X.
+#                * enumeracao: "quais são as X?" — gold is caput + all relevant incs/alíneas.
+#                * citacao-literal: mentions article number directly ("o que diz o art. 18?").
+#                  Tests whether the embedder maps explicit citations to the same chunk family
+#                  as content questions.
+#                * parafrase: natural-language phrasing without the law's canonical vocabulary.
+#                  Stresses semantic retrieval — sparse/BM25 typically underperforms here.
+#                * cross-doc: the canonical answer lives in ≥2 laws (e.g. consent in both MCI and
+#                  LGPD, or retention periods across MCI articles).
+#   relevant — gold chunks. Two accepted forms:
+#                * v1 (binary, back-compat): flat URN list. All treated as rel=2 (core).
+#                * v2 (graded):
+#                    relevant:
+#                      core:        # rel=2 — the chunk(s) a domain expert would name as THE answer
+#                        - urn:...
+#                      supporting:  # rel=1 — relevant but auxiliary (caput when the rule is in
+#                                   # a child, or sibling paragraphs that add context)
+#                        - urn:...
+#                  Only use supporting when there's a real precedence — if all chunks are equal
+#                  parts of the answer, keep them all in core.
+#   notes    — optional, free text.
 #
-# Tips when adding queries:
-#   - Aim for variety: definitions, broad concepts, cross-document, literal citations.
+# Tips:
 #   - Use partition-level URNs (art5;inc1 not art5) for precision.
-#   - List all chunks that genuinely answer the query — multiple is fine.
-#   - Run `uv run python -m rag_leis.run_eval --model bge-m3 --show-misses` to
-#     spot URNs you typoed or chunks you forgot to add.
-#
-# Gold-set philosophy:
-#   - Include the rule + the enumeration (e.g. caput + incisos) when the rule is
-#     a one-liner whose payload is the list. The caput alone is not the answer.
-#   - Do NOT include contrast/companion articles (e.g. add art.19 to a query about
-#     art.18). The retriever should distinguish them; adding them masks real model
-#     failures. Write a separate query for the contrast article instead.
+#   - Run `python -m rag_leis.run_eval --model bge-m3 --show-misses` to catch typoed gold URNs.
+#   - Aim for balance: ~10 queries per type, ≥4 per Tier-1 law, mix gold granularity
+#     (artigo / inciso / paragrafo / alinea).
+
+# ============================================================================
+# DEFINICAO — "o que é X?"
+# ============================================================================
 
 - query: "qual a definição de dado pessoal na LGPD?"
-  relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1"
-  notes: "LGPD art. 5º, I — definição literal"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1"]
+  notes: "LGPD art. 5º, I — definição literal."
 
 - query: "o que são dados pessoais sensíveis?"
-  relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2"
-  notes: "LGPD art. 5º, II"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2"]
+  notes: "LGPD art. 5º, II."
 
 - query: "dado anonimizado significa o quê?"
-  relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc3"
-  notes: "LGPD art. 5º, III — definição"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art5;inc3"]
+  notes: "LGPD art. 5º, III — definição."
+
+- query: "por quanto tempo um provedor de conexão à internet precisa guardar os logs?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2014-04-23;12965~art13"]
+  notes: "Marco Civil art. 13 — 1 ano para registros de conexão."
+
+- query: "qual o prazo de guarda de registros de acesso a aplicações de internet?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2014-04-23;12965~art15"]
+  notes: "Marco Civil art. 15 — 6 meses para registros de aplicação."
+
+- query: "provedor de conexão responde civilmente por conteúdo de terceiros?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2014-04-23;12965~art18"]
+  notes: "Marco Civil art. 18 — exclusão de responsabilidade. NÃO incluir art.19/art.21."
+
+- query: "quais medidas de segurança a LGPD exige dos controladores e operadores?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art46"]
+  notes: "LGPD art. 46 — caput autossuficiente; estabelece dever de medidas técnicas e administrativas."
+
+- query: "o que é neutralidade de rede no Marco Civil da Internet?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2014-04-23;12965~art9"]
+  notes: "Marco Civil art. 9 — caput define o dever de tratar pacotes de forma isonômica."
+
+- query: "qual a definição legal de programa de computador no Brasil?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:1998-02-19;9609~art1"]
+  notes: "Lei do Software (9609/98) art. 1 — definição literal."
+
+- query: "por quantos anos é protegido um programa de computador no Brasil?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:1998-02-19;9609~art2;par2"]
+  notes: "Lei do Software art. 2, § 2º — 50 anos. Resposta no parágrafo, não no caput."
+
+- query: "o que a Lei de Acesso à Informação considera como informação pessoal?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2011-11-18;12527~art4;inc4"]
+  notes: "LAI art. 4, IV — definição que antecede e converge com a LGPD."
+
+- query: "qual lei brasileira tipificou os crimes informáticos?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2012-11-30;12737~art1"]
+  notes: "Lei Carolina Dieckmann (12737/12) art. 1 — declaração de propósito."
+
+- query: "qual a definição de tratamento de dados pessoais?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art5;inc10"]
+  notes: "LGPD art. 5º, X — definição de 'tratamento' (lista de ações)."
+
+- query: "qual a definição de controlador na LGPD?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art5;inc6"]
+  notes: "LGPD art. 5º, VI."
+
+- query: "qual a definição de operador na LGPD?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art5;inc7"]
+  notes: "LGPD art. 5º, VII."
+
+# ============================================================================
+# ENUMERACAO — "quais são as X?" (caput + incisos)
+# ============================================================================
 
 - query: "quais são as hipóteses legais para tratar dados pessoais sem consentimento?"
+  type: enumeracao
   relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc2"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc3"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc4"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc5"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc6"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc7"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc8"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc9"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc10"
-  notes: "LGPD art. 7º — incs II a X (todos menos o I, que é consentimento). Caput não entra porque lista TODAS as hipóteses, incluindo consentimento."
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc4"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc5"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc6"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc7"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc8"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc9"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc10"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7"
+  notes: "Caput é supporting porque introduz mas inclui consentimento (inc1) que NÃO faz parte da resposta."
 
 - query: "como tratar dados sensíveis sem o consentimento do titular?"
+  type: enumeracao
   relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-a"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-b"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-c"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-d"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-e"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-f"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-g"
-  notes: "LGPD art. 11, II + alíneas a–g. O inc II sozinho é só o stem ('...nas hipóteses em que for indispensável para:'); as alíneas é que enumeram as hipóteses."
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-a"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-b"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-c"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-d"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-e"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-f"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-g"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2"
+  notes: "Alíneas a–g enumeram as hipóteses. O inc II é o stem ('nas hipóteses em que for indispensável para:'); fica supporting."
 
 - query: "quais direitos o titular dos dados tem sobre suas informações?"
+  type: enumeracao
   relevant:
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc1"
@@ -71,24 +160,10 @@
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc7"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc8"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc9"
-  notes: "LGPD art. 18 — caput introduz a regra ('O titular tem direito a obter do controlador...'); incs I–IX enumeram os direitos."
-
-- query: "por quanto tempo um provedor de conexão à internet precisa guardar os logs?"
-  relevant:
-    - "urn:lex:br:federal:lei:2014-04-23;12965~art13"
-  notes: "Marco Civil art. 13 — 1 ano para registros de conexão"
-
-- query: "qual o prazo de guarda de registros de acesso a aplicações de internet?"
-  relevant:
-    - "urn:lex:br:federal:lei:2014-04-23;12965~art15"
-  notes: "Marco Civil art. 15 — 6 meses para registros de aplicação"
-
-- query: "provedor de conexão responde civilmente por conteúdo de terceiros?"
-  relevant:
-    - "urn:lex:br:federal:lei:2014-04-23;12965~art18"
-  notes: "Marco Civil art. 18 — exclusão de responsabilidade do provedor de conexão. NÃO incluir art.19/art.21 (provedor de aplicações): são regras paralelas, e adicioná-las mascararia a falha do modelo em distinguir conexão de aplicações."
+  notes: "Caput introduz e cada inciso é um direito. Todos core."
 
 - query: "direitos garantidos ao usuário de internet"
+  type: enumeracao
   relevant:
     - "urn:lex:br:federal:lei:2014-04-23;12965~art7"
     - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc1"
@@ -104,13 +179,10 @@
     - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc11"
     - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc12"
     - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc13"
-  notes: "Marco Civil art. 7 — caput + incs I a XIII. O caput introduz a regra ('ao usuário são assegurados os seguintes direitos:'); os incisos SÃO os direitos, não 'detalhes'."
-
-# ---------------------------------------------------------------------------
-# Phase 2 additions — broaden coverage across laws and query styles.
-# ---------------------------------------------------------------------------
+  notes: "Marco Civil art. 7 — caput + 13 incisos. Todos core."
 
 - query: "quais são os princípios do tratamento de dados pessoais na LGPD?"
+  type: enumeracao
   relevant:
     - "urn:lex:br:federal:lei:2018-08-14;13709~art6"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc1"
@@ -123,9 +195,10 @@
     - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc8"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc9"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc10"
-  notes: "LGPD art. 6 — caput + incs I a X (finalidade, adequação, necessidade, livre acesso, qualidade, transparência, segurança, prevenção, não discriminação, responsabilização)."
+  notes: "LGPD art. 6 — 10 princípios."
 
 - query: "quando é permitido transferir dados pessoais para fora do Brasil?"
+  type: enumeracao
   relevant:
     - "urn:lex:br:federal:lei:2018-08-14;13709~art33"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art33;inc1"
@@ -137,9 +210,10 @@
     - "urn:lex:br:federal:lei:2018-08-14;13709~art33;inc7"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art33;inc8"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art33;inc9"
-  notes: "LGPD art. 33 — transferência internacional de dados pessoais; caput + 9 hipóteses."
+  notes: "LGPD art. 33."
 
 - query: "como se avalia se um país estrangeiro tem nível adequado de proteção de dados?"
+  type: enumeracao
   relevant:
     - "urn:lex:br:federal:lei:2018-08-14;13709~art34"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art34;inc1"
@@ -148,73 +222,49 @@
     - "urn:lex:br:federal:lei:2018-08-14;13709~art34;inc4"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art34;inc5"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art34;inc6"
-  notes: "LGPD art. 34 — critérios para avaliar nível de proteção do país de destino."
+  notes: "LGPD art. 34 — critérios de avaliação."
 
 - query: "quais sanções administrativas a ANPD pode aplicar por violação da LGPD?"
+  type: enumeracao
   relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art52"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc1"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc2"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc3"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc4"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc5"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc6"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc10"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc11"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc12"
-  notes: "LGPD art. 52 — sanções (advertência, multa, multa diária, publicização, bloqueio, eliminação, etc.); caput + incs I a VI e X a XII. Incs VII–IX foram vetados e o parser corretamente os filtra como vazios."
-
-- query: "quais medidas de segurança a LGPD exige dos controladores e operadores?"
-  relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art46"
-  notes: "LGPD art. 46 — caput é autossuficiente; estabelece o dever de medidas técnicas e administrativas."
-
-- query: "o que é neutralidade de rede no Marco Civil da Internet?"
-  relevant:
-    - "urn:lex:br:federal:lei:2014-04-23;12965~art9"
-  notes: "Marco Civil art. 9 — caput literalmente define o dever de tratar pacotes de forma isonômica. §§ detalham exceções."
-
-- query: "qual a definição legal de programa de computador no Brasil?"
-  relevant:
-    - "urn:lex:br:federal:lei:1998-02-19;9609~art1"
-  notes: "Lei do Software (9609/98) art. 1 — definição literal."
-
-- query: "por quantos anos é protegido um programa de computador no Brasil?"
-  relevant:
-    - "urn:lex:br:federal:lei:1998-02-19;9609~art2;par2"
-  notes: "Lei do Software art. 2, § 2º — 50 anos. A resposta está no parágrafo, não no caput."
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc4"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc5"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc6"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc10"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc11"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc12"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art52"
+  notes: "Caput introduz, incisos são as sanções. VII–IX foram vetados."
 
 - query: "o que NÃO constitui ofensa aos direitos do titular de software?"
+  type: enumeracao
   relevant:
     - "urn:lex:br:federal:lei:1998-02-19;9609~art6"
     - "urn:lex:br:federal:lei:1998-02-19;9609~art6;inc1"
     - "urn:lex:br:federal:lei:1998-02-19;9609~art6;inc2"
     - "urn:lex:br:federal:lei:1998-02-19;9609~art6;inc3"
     - "urn:lex:br:federal:lei:1998-02-19;9609~art6;inc4"
-  notes: "Lei do Software art. 6 — caput + 4 incisos enumerando hipóteses de uso lícito (cópia de salvaguarda, citação didática, semelhança funcional, integração)."
+  notes: "Lei do Software art. 6 — caput + 4 incs (cópia salvaguarda, citação didática, semelhança, integração)."
 
-- query: "o que a Lei de Acesso à Informação considera como informação pessoal?"
+- query: "quais são os agentes de tratamento de dados na LGPD?"
+  type: enumeracao
   relevant:
-    - "urn:lex:br:federal:lei:2011-11-18;12527~art4;inc4"
-  notes: "LAI art. 4, IV — definição. Antecede e converge com a LGPD; bom para testar desambiguação entre leis."
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc6"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc7"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc8"
+  notes: "LGPD art. 5º incs VI (controlador), VII (operador), VIII (encarregado). Pergunta nova, sem caput como gold."
 
-- query: "qual o prazo para um órgão público responder a um pedido de acesso à informação?"
-  relevant:
-    - "urn:lex:br:federal:lei:2011-11-18;12527~art11"
-    - "urn:lex:br:federal:lei:2011-11-18;12527~art11;par1"
-    - "urn:lex:br:federal:lei:2011-11-18;12527~art11;par2"
-  notes: "LAI art. 11 — acesso imediato; §1º estabelece 20 dias; §2º permite prorrogação por mais 10 dias."
-
-- query: "qual lei brasileira tipificou os crimes informáticos?"
-  relevant:
-    - "urn:lex:br:federal:lei:2012-11-30;12737~art1"
-  notes: "Lei Carolina Dieckmann (12737/12) art. 1 — declaração de propósito. A tipificação propriamente dita (art. 154-A) foi inserida no Código Penal pelo art. 2 desta lei."
-
-# Literal-citation queries — stress lexical retrieval. Gold overlaps with the
-# corresponding natural-language queries, on purpose: tests whether the
-# embedder maps "art. X" citations to the same chunks as content questions.
+# ============================================================================
+# CITACAO-LITERAL — menciona número de artigo direto
+# ============================================================================
 
 - query: "o que diz o art. 7º da LGPD?"
+  type: citacao-literal
   relevant:
     - "urn:lex:br:federal:lei:2018-08-14;13709~art7"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc1"
@@ -227,9 +277,10 @@
     - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc8"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc9"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc10"
-  notes: "Literal citation. Inclui inc1 (consentimento) porque a pergunta é sobre o artigo todo, ao contrário da pergunta natural 'sem consentimento'."
+  notes: "Citação literal — inclui inc1 porque a pergunta é sobre o artigo todo (consentimento incluído)."
 
 - query: "o que diz o art. 18 da LGPD?"
+  type: citacao-literal
   relevant:
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc1"
@@ -241,9 +292,153 @@
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc7"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc8"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc9"
-  notes: "Literal citation. Mesmo gold da pergunta 'quais direitos o titular...', diferente surface form."
+  notes: "Citação literal — mesmo gold da pergunta natural sobre direitos do titular."
 
 - query: "o que diz o art. 9º do Marco Civil da Internet?"
+  type: citacao-literal
+  relevant: ["urn:lex:br:federal:lei:2014-04-23;12965~art9"]
+  notes: "Citação literal — mesmo gold da pergunta sobre neutralidade."
+
+- query: "o que diz o art. 5 da LGPD?"
+  type: citacao-literal
   relevant:
-    - "urn:lex:br:federal:lei:2014-04-23;12965~art9"
-  notes: "Literal citation. Mesmo gold da pergunta sobre neutralidade de rede."
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc3"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc4"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc5"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc6"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc7"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc8"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc9"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc10"
+  notes: "Citação literal — artigo de definições (todos os incisos)."
+
+- query: "o que diz o art. 154-A do Código Penal?"
+  type: citacao-literal
+  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a"]
+  notes: "CP art. 154-A — invasão de dispositivo informático. Caput define o crime."
+
+- query: "o que diz o art. 11 da LGPD?"
+  type: citacao-literal
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art11"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc1"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2"
+  notes: "Citação literal — art. 11 trata de dados sensíveis. Inclui o caput e os 2 incisos top-level."
+
+- query: "o que diz o art. 13 do Marco Civil?"
+  type: citacao-literal
+  relevant: ["urn:lex:br:federal:lei:2014-04-23;12965~art13"]
+  notes: "Citação literal — mesma resposta da pergunta sobre prazo de logs de conexão."
+
+- query: "o que diz o art. 46 da Lei de Direitos Autorais?"
+  type: citacao-literal
+  relevant: ["urn:lex:br:federal:lei:1998-02-19;9610~art46"]
+  notes: "Citação literal — limitações aos direitos autorais (cópia para deficiência visual, citação acadêmica, etc.)."
+
+# ============================================================================
+# PARAFRASE — linguagem natural, sem vocabulário canônico
+# ============================================================================
+
+- query: "minha empresa precisa pedir autorização pra mandar e-mail marketing?"
+  type: parafrase
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc1"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art8"
+  notes: "Pergunta natural sobre consentimento. art. 7 I (consentimento como base legal) + art. 8 (forma do consentimento)."
+
+- query: "fui invadido no celular sem permissão, isso é crime?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a"]
+  notes: "CP art. 154-A — invasão de dispositivo informático. Linguagem coloquial."
+
+- query: "posso fazer uma cópia de backup de um programa que comprei?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:lei:1998-02-19;9609~art6;inc1"]
+  notes: "Lei do Software art. 6, I — cópia de salvaguarda. Linguagem natural pra uso lícito."
+
+- query: "posso reproduzir um trecho de livro para citar numa aula?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:lei:1998-02-19;9610~art46;inc3"]
+  notes: "Direito Autoral art. 46, III — citação em livros, jornais, revistas. Linguagem natural."
+
+- query: "a empresa pode usar dados de uma criança sem dizer pros pais?"
+  type: parafrase
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art14"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art14;par1"
+  notes: "LGPD art. 14 — proteção de crianças e adolescentes; § 1 exige consentimento dos pais."
+
+- query: "quero saber tudo que uma empresa tem sobre mim, posso pedir?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2"]
+  notes: "LGPD art. 18, II — direito de acesso. Pergunta em linguagem leiga."
+
+- query: "se vazaram meus dados, alguém me avisa?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art48"]
+  notes: "LGPD art. 48 — comunicação de incidente. Linguagem natural."
+
+- query: "policial pode pedir meus dados pra investigar crime?"
+  type: parafrase
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2014-04-23;12965~art10;par3"
+      - "urn:lex:br:federal:decreto:2016-05-11;8771~art11"
+    supporting:
+      - "urn:lex:br:federal:decreto:2016-05-11;8771~art11;par1"
+      - "urn:lex:br:federal:decreto:2016-05-11;8771~art11;par2"
+  notes: "MCI art. 10 § 3 (autoridade administrativa pode requisitar dados cadastrais) + Decreto 8771 art. 11 (procedimento operacional). § 1 do MCI é sobre obrigação de disponibilização, não sobre policial."
+
+# ============================================================================
+# CROSS-DOC — resposta canônica vive em ≥2 leis
+# ============================================================================
+
+- query: "quais os prazos de retenção de logs de internet no Brasil?"
+  type: cross-doc
+  relevant:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art13"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art15"
+  notes: "MCI art. 13 (conexão 1 ano) + art. 15 (aplicação 6 meses). Mesma lei mas dois artigos paralelos — cross-artigo."
+
+- query: "diferença entre dado pessoal e informação pessoal nas leis brasileiras"
+  type: cross-doc
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1"
+    - "urn:lex:br:federal:lei:2011-11-18;12527~art4;inc4"
+  notes: "LGPD art. 5 I + LAI art. 4 IV — duas leis, duas definições com vocabulário convergente."
+
+- query: "como uma empresa pode coletar dados pessoais legalmente?"
+  type: cross-doc
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc1"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art6"
+      - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc7"
+  notes: "Core: bases legais (art. 7 LGPD). Supporting: princípios LGPD (art. 6) + direito do usuário a consentimento informado no MCI."
+
+- query: "se vazaram meus dados, qual o caminho legal pra eu reclamar?"
+  type: cross-doc
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art48"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc4"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art42"
+  notes: "LGPD art. 48 (notificação), art. 18 IV (correção/exclusão), art. 42 (responsabilidade civil)."
+
+- query: "responsabilidade do provedor de aplicações por conteúdo de usuários"
+  type: cross-doc
+  relevant:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art19"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art21"
+  notes: "MCI art. 19 (regra geral: só responde após ordem judicial) + art. 21 (exceção: imagens íntimas). Cross-artigo de regra+exceção."
+
+- query: "compartilhamento de dados entre órgãos do governo é permitido?"
+  type: cross-doc
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art26"
+    - "urn:lex:br:federal:lei:2011-11-18;12527~art31"
+  notes: "LGPD art. 26 (compartilhamento por poder público) + LAI art. 31 (tratamento de info pessoal por órgão)."
