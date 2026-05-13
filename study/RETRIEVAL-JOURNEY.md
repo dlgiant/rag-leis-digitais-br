@@ -16,9 +16,9 @@ Spoiler: as melhorias **vieram quase todas da camada de dados** (como o chunk é
 
 ## A tese, em uma frase
 
-> **Cinco intervenções de "second-stage retrieval" testadas. Quatro (3 rerankers open-source + router gated) regrediram ou ficaram neutras. Uma (voyage rerank-2.5, comercial domain-tuned) melhora MRR sem perder nDCG. Três intervenções de "primeira-stage representation" (nav-prefix, caput-prefix, label-prefix) somaram +0.15 nDCG.**
+> **Sete intervenções de "second-stage retrieval" testadas — 3 rerankers open-source, 3 comerciais (voyage + 2 cohere), e 1 router gated. Apenas voyage rerank-2.5 melhora MRR sobre voyage dense puro. Os outros 6 regridem em alguma métrica.** Três intervenções de "primeira-stage representation" (nav-prefix, caput-prefix, label-prefix) somaram +0.15 nDCG.
 >
-> **Tese ajustada**: fix the data first; second-stage só funciona com modelo treinado pro domínio certo.
+> **Tese ajustada**: fix the data first; second-stage só funciona com modelo treinado **especificamente** pra paráfrase + corpus técnico (domain-tuning comercial é necessário mas não suficiente — Cohere também é comercial e regride).
 
 ---
 
@@ -271,7 +271,7 @@ Por quê:
 | 9 | `experiment/colbert` | late interaction vs single-vector | ◐ complementar per-tipo, plano agregado |
 | 10 | `eval/queries-v3` | eval maior + calibração | ✓ 78 queries, gap discrimina |
 | 11 | `experiment/router` | calibração → router → ganho | ✗ variância de fallback dilui |
-| 12 | `experiment/voyage-rerank` | reranker comercial domain-tuned quebra o padrão | ✓ +0.022 MRR, citação-literal +0.16 MRR |
+| 12 | `experiment/voyage-rerank` | reranker comercial domain-tuned quebra o padrão | ✓ voyage rerank-2.5: +0.022 MRR; ✗ cohere v3.5/mult-v3: -0.07 a -0.12 nDCG |
 
 ---
 
