@@ -17,6 +17,7 @@ class IndexChunk:
     urn: str
     text: str
     nav_text: str
+    caput_text: str  # concatenation of all ancestor caput texts (artigo→…→parent), "" for top-level chunks
 
 
 @dataclass(frozen=True)
@@ -27,19 +28,52 @@ class Query:
 
 
 def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
-    out: list[IndexChunk] = []
+    # First pass: read all raw rows (before the empty-chunk filter) into a urn→row
+    # map. We need the unfiltered set because a child's caput may itself be too
+    # short to index (e.g. an artigo whose body is a colon and a list) but still
+    # carries the parent context for its children.
+    raw_by_urn: dict[str, dict[str, Any]] = {}
     for jsonl in sorted(chunks_dir.glob("*.jsonl")):
         with jsonl.open(encoding="utf-8") as f:
             for line in f:
                 if not line.strip():
                     continue
-                obj: dict[str, Any] = json.loads(line)
-                # Skip revoked/empty chunks (e.g. art7;par1 with text=".").
-                if len(obj["text"].strip(". ")) < min_text_chars:
-                    continue
-                nav = obj.get("nav") or {}
-                nav_text = " > ".join(v for v in nav.values() if v)
-                out.append(IndexChunk(urn=obj["urn"], text=obj["text"], nav_text=nav_text))
+                obj = json.loads(line)
+                raw_by_urn[obj["urn"]] = obj
+
+    def _resolve_caput_chain(obj: dict[str, Any]) -> str:
+        parent_part = obj.get("parent_partition")
+        if not parent_part:
+            return ""
+        parts: list[str] = []
+        doc_urn: str = obj["document_urn"]
+        cur_part: str | None = parent_part
+        # Walk up; cap at 8 levels as a safety net (artigo→§→inciso→alínea→item is 5).
+        for _ in range(8):
+            if cur_part is None:
+                break
+            parent_urn = f"{doc_urn}~{cur_part}"
+            parent = raw_by_urn.get(parent_urn)
+            if parent is None:
+                break
+            parts.append(parent["text"])
+            cur_part = parent.get("parent_partition")
+        # Outermost (artigo caput) first → innermost last, matching reading order.
+        return " ".join(reversed(parts))
+
+    out: list[IndexChunk] = []
+    for obj in raw_by_urn.values():
+        # Skip revoked/empty chunks (e.g. art7;par1 with text=".").
+        if len(obj["text"].strip(". ")) < min_text_chars:
+            continue
+        nav = obj.get("nav") or {}
+        nav_text = " > ".join(v for v in nav.values() if v)
+        caput_text = _resolve_caput_chain(obj)
+        out.append(
+            IndexChunk(
+                urn=obj["urn"], text=obj["text"], nav_text=nav_text, caput_text=caput_text
+            )
+        )
     return out
 
 
@@ -60,6 +94,14 @@ def format_texts(chunks: list[IndexChunk], mode: str) -> list[str]:
         return [c.text for c in chunks]
     if mode == "nav+text":
         return [f"{c.nav_text} :: {c.text}" if c.nav_text else c.text for c in chunks]
+    if mode == "caput+text":
+        return [f"{c.caput_text} {c.text}".strip() if c.caput_text else c.text for c in chunks]
+    if mode == "nav+caput+text":
+        out: list[str] = []
+        for c in chunks:
+            body = f"{c.caput_text} {c.text}".strip() if c.caput_text else c.text
+            out.append(f"{c.nav_text} :: {body}" if c.nav_text else body)
+        return out
     raise ValueError(f"Unknown text mode: {mode!r}")
 
 

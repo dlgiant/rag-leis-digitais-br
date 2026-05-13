@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -22,15 +23,32 @@ CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks" / "tier-1"
 INDEX_DIR = PROJECT_ROOT / "data" / "index"
 
 
+def _load_dotenv(path: Path) -> None:
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Run retrieval eval against the Tier 1 chunk index.")
     p.add_argument("--model", required=True, help="bge-m3 | voyage-3-large | ...")
     p.add_argument("--eval", default="eval/queries.yaml", help="Path to eval queries YAML")
-    p.add_argument("--text-mode", choices=["text", "nav+text"], default="text")
+    p.add_argument(
+        "--text-mode",
+        choices=["text", "nav+text", "caput+text", "nav+caput+text"],
+        default="text",
+    )
     p.add_argument("--k", type=int, default=20, help="Max retrieval depth")
     p.add_argument("--rebuild", action="store_true", help="Force re-embed even if cache exists")
     p.add_argument("--show-misses", action="store_true", help="Print top retrieval for missed queries")
     args = p.parse_args()
+
+    _load_dotenv(PROJECT_ROOT / ".env")
 
     embedder = get_embedder(args.model)
     chunks = load_chunks(CHUNKS_DIR)
