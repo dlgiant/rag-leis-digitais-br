@@ -1,0 +1,79 @@
+# Eval set for embedding/retrieval comparison.
+#
+# Each entry:
+#   query    — the search string
+#   relevant — list of chunk URNs that should be retrieved (binary relevance)
+#   notes    — optional, free text (which artigo, what the question is about)
+#
+# Tips when adding queries:
+#   - Aim for variety: definitions, broad concepts, cross-document, literal citations.
+#   - Use partition-level URNs (art5;inc1 not art5) for precision.
+#   - List all chunks that genuinely answer the query — multiple is fine.
+#   - Run `uv run python -m rag_leis.run_eval --model bge-m3 --show-misses` to
+#     spot URNs you typoed or chunks you forgot to add.
+
+- query: "qual a definição de dado pessoal na LGPD?"
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1"
+  notes: "LGPD art. 5º, I — definição literal"
+
+- query: "o que são dados pessoais sensíveis?"
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2"
+  notes: "LGPD art. 5º, II"
+
+- query: "dado anonimizado significa o quê?"
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc3"
+  notes: "LGPD art. 5º, III — definição"
+
+- query: "quais são as hipóteses legais para tratar dados pessoais sem consentimento?"
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc2"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc3"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc4"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc5"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc6"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc7"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc8"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc9"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc10"
+  notes: "LGPD art. 7º — incs II a X (todos menos o I, que é consentimento)"
+
+- query: "como tratar dados sensíveis sem o consentimento do titular?"
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2"
+  notes: "LGPD art. 11, II — caput das exceções; alíneas detalham"
+
+- query: "quais direitos o titular dos dados tem sobre suas informações?"
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc1"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc3"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc4"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc5"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc6"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc7"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc8"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc9"
+  notes: "LGPD art. 18 — catálogo de direitos do titular"
+
+- query: "por quanto tempo um provedor de conexão à internet precisa guardar os logs?"
+  relevant:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art13"
+  notes: "Marco Civil art. 13 — 1 ano para registros de conexão"
+
+- query: "qual o prazo de guarda de registros de acesso a aplicações de internet?"
+  relevant:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art15"
+  notes: "Marco Civil art. 15 — 6 meses para registros de aplicação"
+
+- query: "provedor de conexão responde civilmente por conteúdo de terceiros?"
+  relevant:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art18"
+  notes: "Marco Civil art. 18 — exclusão de responsabilidade do provedor de conexão"
+
+- query: "direitos garantidos ao usuário de internet"
+  relevant:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7"
+  notes: "Marco Civil art. 7 — caput. Considera-se cobrir o caput; incisos são detalhes."
