@@ -442,3 +442,221 @@
     - "urn:lex:br:federal:lei:2018-08-14;13709~art26"
     - "urn:lex:br:federal:lei:2011-11-18;12527~art31"
   notes: "LGPD art. 26 (compartilhamento por poder público) + LAI art. 31 (tratamento de info pessoal por órgão)."
+
+# ============================================================================
+# V3 batch — coverage gap fill (CP, Direito Autoral, Constituição, decretos)
+# ============================================================================
+
+# ── DEFINICAO (+5) ──────────────────────────────────────────────────────────
+
+- query: "qual a definição de autor segundo a Lei de Direitos Autorais?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:lei:1998-02-19;9610~art11"]
+  notes: "DA art. 11 — definição literal de autor."
+
+- query: "o que a Constituição entende por inviolabilidade do sigilo das comunicações?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc12"]
+  notes: "CF art. 5 XII — sigilo de correspondência, comunicações, dados, telefonia."
+
+- query: "o que é habeas data?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"]
+  notes: "CF art. 5 LXXII — caput do inciso introduz, alíneas definem."
+
+- query: "o que define a Constituição como proteção à intimidade?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"]
+  notes: "CF art. 5 X — intimidade, vida privada, honra, imagem."
+
+- query: "qual a definição de invasão de dispositivo informático no Código Penal?"
+  type: definicao
+  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a"]
+  notes: "CP art. 154-A — tipificação do crime."
+
+# ── ENUMERACAO (+5) ─────────────────────────────────────────────────────────
+
+- query: "quais obras intelectuais são protegidas pela Lei de Direitos Autorais?"
+  type: enumeracao
+  relevant:
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc1"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc2"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc3"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc4"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc5"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc6"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc7"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc8"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc9"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc10"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc11"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc12"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc13"
+  notes: "DA art. 7 — caput + 13 incisos de tipos de obra."
+
+- query: "o que NÃO é objeto de proteção como direito autoral?"
+  type: enumeracao
+  relevant:
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art8"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art8;inc1"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art8;inc2"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art8;inc3"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art8;inc4"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art8;inc5"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art8;inc6"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art8;inc7"
+  notes: "DA art. 8 — caput + 7 incisos de exclusões."
+
+- query: "como o Código Penal define crime consumado e tentado?"
+  type: enumeracao
+  relevant:
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;inc1"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;inc2"
+  notes: "CP art. 14 — caput + I (consumado) + II (tentado)."
+
+- query: "quais hipóteses justificam discriminação de pacotes na internet?"
+  type: enumeracao
+  relevant:
+    - "urn:lex:br:federal:decreto:2016-05-11;8771~art4"
+    - "urn:lex:br:federal:decreto:2016-05-11;8771~art5"
+    - "urn:lex:br:federal:decreto:2016-05-11;8771~art6"
+  notes: "Decreto 8771 art. 4 (medidas excepcionais) + art. 5 (requisitos técnicos) + art. 6 (gerenciamento). No corpus, art. 4 não foi sub-particionado em incisos."
+
+- query: "quais direitos pertencem ao autor de uma obra?"
+  type: enumeracao
+  relevant:
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art22"
+  notes: "DA art. 22 — caput autossuficiente (direitos morais e patrimoniais)."
+
+# ── CITACAO-LITERAL (+6) ────────────────────────────────────────────────────
+
+- query: "o que diz o art. 154-A do Código Penal?"
+  type: citacao-literal
+  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a"]
+  notes: "CP art. 154-A — invasão dispositivo informático. (Já tinha — mantenho duplicata pra estatística.)"
+
+- query: "o que diz o art. 121 do Código Penal?"
+  type: citacao-literal
+  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art121"]
+  notes: "CP art. 121 — homicídio."
+
+- query: "o que diz o art. 147 do Código Penal?"
+  type: citacao-literal
+  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art147"]
+  notes: "CP art. 147 — ameaça."
+
+- query: "o que diz o art. 5 inciso X da Constituição?"
+  type: citacao-literal
+  relevant: ["urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"]
+  notes: "CF art. 5 X — direito de intimidade."
+
+- query: "o que diz o art. 5 inciso XII da Constituição?"
+  type: citacao-literal
+  relevant: ["urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc12"]
+  notes: "CF art. 5 XII — sigilo das comunicações."
+
+- query: "o que diz o art. 7 da Lei de Direitos Autorais?"
+  type: citacao-literal
+  relevant:
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc1"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc2"
+    - "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc3"
+  notes: "DA art. 7 — citação literal. Subset dos incisos como gold suficiente."
+
+- query: "o que diz o art. 41 da LGPD?"
+  type: citacao-literal
+  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art41"]
+  notes: "LGPD art. 41 — figura do encarregado de dados (DPO)."
+
+# ── PARAFRASE (+8) ──────────────────────────────────────────────────────────
+
+- query: "alguém me ameaçou online, posso processar?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art147"]
+  notes: "CP art. 147 — ameaça. Linguagem coloquial."
+
+- query: "clonaram meu cartão pela internet, qual artigo se aplica?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art171"]
+  notes: "CP art. 171 — estelionato (incluindo fraude eletrônica após lei 14155/21)."
+
+- query: "publicaram fotos íntimas minhas sem autorização, isso é crime?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art218-c"]
+  notes: "CP art. 218-C — divulgação de cena de sexo, nudez ou pornografia (Lei Carolina Dieckmann II)."
+
+- query: "criaram um perfil falso com meu nome nas redes, há crime?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art307"]
+  notes: "CP art. 307 — falsa identidade. Aplicável a perfis falsos."
+
+- query: "tenho direito de saber o que o governo guarda sobre mim?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"]
+  notes: "CF art. 5 LXXII — habeas data."
+
+- query: "podem me processar por escrever opinião na internet?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:constituicao:1988-10-05;1988~art220"]
+  notes: "CF art. 220 — liberdade de manifestação do pensamento. Caput autossuficiente."
+
+- query: "minha empresa precisa nomear alguém responsável pelos dados dos clientes?"
+  type: parafrase
+  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art41"]
+  notes: "LGPD art. 41 — exigência de encarregado (DPO)."
+
+- query: "se vazaram dados e eu sofri prejuízo, quem responde?"
+  type: parafrase
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art42"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art43"
+  notes: "LGPD art. 42 (responsabilidade civil) + art. 43 (excludentes)."
+
+# ── CROSS-DOC (+6) ──────────────────────────────────────────────────────────
+
+- query: "intimidade na Constituição e proteção de dados na LGPD"
+  type: cross-doc
+  relevant:
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art1"
+  notes: "CF art. 5 X + LGPD art. 1 — Constituição garante intimidade; LGPD operacionaliza."
+
+- query: "habeas data e direitos do titular de dados"
+  type: cross-doc
+  relevant:
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc4"
+  notes: "CF garante habeas data; LGPD art. 18 II (acesso) + IV (correção) operacionalizam."
+
+- query: "remoção de conteúdo na internet — quem decide e quando?"
+  type: cross-doc
+  relevant:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art19"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art21"
+  notes: "MCI art. 19 (regra geral: ordem judicial) + art. 21 (exceção: imagens íntimas)."
+
+- query: "neutralidade de rede e suas exceções"
+  type: cross-doc
+  relevant:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9"
+    - "urn:lex:br:federal:decreto:2016-05-11;8771~art4"
+  notes: "MCI art. 9 (regra) + Decreto 8771 art. 4 (regulamenta exceções)."
+
+- query: "responsabilidade civil por vazamento de dados pessoais"
+  type: cross-doc
+  relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art42"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art43"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art44"
+  notes: "LGPD art. 42 (regra), 43 (excludentes), 44 (defeito do produto)."
+
+- query: "sigilo de comunicação na Constituição e na internet"
+  type: cross-doc
+  relevant:
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc12"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art10;par2"
+  notes: "CF art. 5 XII (sigilo absoluto, salvo ordem judicial) + MCI art. 10 §2 (operacionaliza)."
