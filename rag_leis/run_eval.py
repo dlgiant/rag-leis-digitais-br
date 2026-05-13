@@ -42,7 +42,13 @@ def main() -> int:
     p.add_argument("--eval", default="eval/queries.yaml", help="Path to eval queries YAML")
     p.add_argument(
         "--text-mode",
-        choices=["text", "nav+text", "caput+text", "nav+caput+text"],
+        choices=[
+            "text",
+            "nav+text",
+            "caput+text",
+            "nav+caput+text",
+            "label+nav+caput+text",
+        ],
         default="text",
     )
     p.add_argument("--k", type=int, default=20, help="Max retrieval depth")
