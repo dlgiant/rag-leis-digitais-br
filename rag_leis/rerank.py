@@ -202,6 +202,55 @@ class BGERerankerV2Gemma:
         return out
 
 
+class VoyageReranker:
+    """Commercial reranker via Voyage's `client.rerank()` API.
+
+    Voyage's rerank-2.5 family is trained on broader commercial corpora
+    (including legal/contracts) and is the one second-stage retriever in
+    the project that wasn't tested against the open cross-encoders.
+    Compatible model names: rerank-2.5, rerank-2.5-lite, rerank-2,
+    rerank-lite-1. We default to rerank-2.5 (strongest).
+
+    Pricing reference (2026): rerank-2.5 at ~$0.05 per 1K documents
+    reranked, so a 78-query × 20-doc eval is roughly $0.08.
+    """
+
+    def __init__(self, model: str = "rerank-2.5", api_key: str | None = None) -> None:
+        try:
+            import voyageai
+        except ImportError as e:
+            raise ImportError(
+                "Voyage reranker requires `voyageai`. Install with:\n"
+                "  uv sync --extra voyage"
+            ) from e
+        import os
+
+        key = api_key or os.environ.get("VOYAGE_API_KEY")
+        if not key:
+            raise RuntimeError("Set VOYAGE_API_KEY in the environment.")
+        self._client = voyageai.Client(api_key=key)
+        self.name = f"voyage-{model}"
+        self._model = model
+
+    def score(self, query: str, passages: list[str]) -> list[float]:
+        if not passages:
+            return []
+        # Voyage returns top_k results in score-desc order with an `index` field
+        # pointing back into the original passages list. We need scores in the
+        # ORIGINAL passage order so the run_eval reranker pathway can re-sort
+        # consistently with its own argsort.
+        result = self._client.rerank(
+            query=query,
+            documents=passages,
+            model=self._model,
+            top_k=len(passages),  # request all so we can place each
+        )
+        scores = [0.0] * len(passages)
+        for entry in result.results:
+            scores[entry.index] = float(entry.relevance_score)
+        return scores
+
+
 def get_reranker(name: str) -> Reranker:
     if name == "bge-reranker-v2-m3":
         return BGERerankerV2M3()
@@ -209,7 +258,11 @@ def get_reranker(name: str) -> Reranker:
         return JinaRerankerV2()
     if name == "bge-reranker-v2-gemma":
         return BGERerankerV2Gemma()
+    if name in {"voyage-rerank-2.5", "voyage-rerank-2.5-lite", "voyage-rerank-2", "voyage-rerank-lite-1"}:
+        # Strip the "voyage-" prefix to get Voyage's actual model id.
+        return VoyageReranker(model=name.removeprefix("voyage-"))
     raise ValueError(
         f"Unknown reranker: {name!r}. Known: bge-reranker-v2-m3, "
-        "jina-reranker-v2-base-multilingual, bge-reranker-v2-gemma."
+        "jina-reranker-v2-base-multilingual, bge-reranker-v2-gemma, "
+        "voyage-rerank-2.5, voyage-rerank-2.5-lite, voyage-rerank-2."
     )
