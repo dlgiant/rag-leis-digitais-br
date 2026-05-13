@@ -49,6 +49,11 @@ def main() -> int:
     p.add_argument("--rebuild", action="store_true", help="Force re-embed even if cache exists")
     p.add_argument("--show-misses", action="store_true", help="Print top retrieval for missed queries")
     p.add_argument(
+        "--by-type",
+        action="store_true",
+        help="Break down metrics by Query.qtype (definicao / enumeracao / citacao-literal / parafrase / cross-doc).",
+    )
+    p.add_argument(
         "--rerank",
         default=None,
         help="Optional cross-encoder reranker (e.g. bge-reranker-v2-m3). "
@@ -110,7 +115,10 @@ def main() -> int:
         q_vec = embedder.embed_query(q.query)
         idx = search(q_vec, doc_vecs, k=args.k)
         retrieved = [urns[i] for i in idx]
-        dense_ndcg.append(ndcg_at_k(retrieved, q.relevant, 10))
+        # Pass the Query object so nDCG uses graded relevance when available;
+        # falls back to binary when supporting is empty (numerically equivalent
+        # to the old formula).
+        dense_ndcg.append(ndcg_at_k(retrieved, q, 10))
         dense_recall.append(recall_at_k(retrieved, q.relevant, 20))
         dense_mrr.append(mrr_at_k(retrieved, q.relevant, 10))
 
@@ -119,7 +127,7 @@ def main() -> int:
             scores = reranker.score(q.query, passages)
             order = sorted(range(len(retrieved)), key=lambda i: -scores[i])
             reranked = [retrieved[i] for i in order]
-            rr_ndcg.append(ndcg_at_k(reranked, q.relevant, 10))
+            rr_ndcg.append(ndcg_at_k(reranked, q, 10))
             rr_recall.append(recall_at_k(reranked, q.relevant, 20))
             rr_mrr.append(mrr_at_k(reranked, q.relevant, 10))
             top_for_misses = reranked
@@ -141,6 +149,11 @@ def main() -> int:
         print(f"  Recall@20: {_mean(dense_recall):.4f}")
         print(f"  MRR@10   : {_mean(dense_mrr):.4f}")
 
+    if args.by_type:
+        _print_by_type(queries, dense_ndcg, dense_recall, dense_mrr, "dense")
+        if reranker:
+            _print_by_type(queries, rr_ndcg, rr_recall, rr_mrr, "reranked")
+
     if args.show_misses and misses:
         print()
         print(f"Misses ({len(misses)}):")
@@ -161,6 +174,33 @@ def _print_row(label: str, dense: list[float], reranked: list[float]) -> None:
     delta = r - d
     sign = "+" if delta >= 0 else ""
     print(f"  {label}    {d:.4f}      {r:.4f}    {sign}{delta:.4f}")
+
+
+def _print_by_type(
+    queries: list,
+    ndcg: list[float],
+    recall: list[float],
+    mrr: list[float],
+    label: str,
+) -> None:
+    # Bucket queries by qtype; "untagged" is the catch-all for v1 queries
+    # (back-compat with the binary schema before type labels existed).
+    from collections import defaultdict
+
+    buckets: dict[str, list[int]] = defaultdict(list)
+    for i, q in enumerate(queries):
+        buckets[q.qtype or "untagged"].append(i)
+
+    print()
+    print(f"By type ({label}):")
+    print(f"  {'type':<18} {'n':>3}  {'nDCG@10':>8}  {'Recall@20':>10}  {'MRR@10':>8}")
+    for qtype in sorted(buckets):
+        idxs = buckets[qtype]
+        n = len(idxs)
+        n_ndcg = _mean([ndcg[i] for i in idxs])
+        n_recall = _mean([recall[i] for i in idxs])
+        n_mrr = _mean([mrr[i] for i in idxs])
+        print(f"  {qtype:<18} {n:>3}  {n_ndcg:>8.4f}  {n_recall:>10.4f}  {n_mrr:>8.4f}")
 
 
 if __name__ == "__main__":
