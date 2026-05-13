@@ -133,8 +133,120 @@ Em ordem de aposta-vs-esforço:
 
 ---
 
+## Update — testando a hipótese "fix the data": caput-prefix nos chunks
+
+Implementação no `format_texts` (sem re-parser): para cada chunk, walk up no `parent_partition` e concatenar todos os caputs ancestrais. Inciso/§/alínea passam a carregar o caput do artigo. Dois modos novos: `caput+text` e `nav+caput+text`.
+
+Exemplo (`art7;inc9` da LGPD):
+```
+text:           "quando necessário para atender aos interesses legítimos do controlador..."
+caput+text:     "O tratamento de dados pessoais somente poderá ser realizado nas seguintes
+                 hipóteses: quando necessário para atender aos interesses legítimos..."
+nav+caput+text: "II DO TRATAMENTO DE DADOS PESSOAIS > I Dos Requisitos :: O tratamento de
+                 dados pessoais somente poderá ser realizado nas seguintes hipóteses:
+                 quando necessário..."
+```
+
+### Resultados dense (mesma eval set, 25 queries)
+
+| modelo | mode | nDCG@10 | Recall@20 | MRR@10 |
+|---|---|---|---|---|
+| bge-m3 | text | 0.460 | 0.500 | 0.564 |
+| bge-m3 | nav+text | 0.533 | 0.620 | 0.628 |
+| bge-m3 | caput+text | 0.591 | 0.707 | 0.603 |
+| bge-m3 | nav+caput+text | 0.572 | 0.743 | 0.569 |
+| voyage-3-large | text | 0.638 | 0.717 | 0.801 |
+| voyage-3-large | nav+text | 0.667 | 0.774 | 0.811 |
+| voyage-3-large | caput+text | 0.703 | 0.834 | 0.728 |
+| voyage-3-large | **nav+caput+text** | **0.713** | **0.834** | 0.730 |
+
+### O que aconteceu
+
+A hipótese (a) bateu: **nDCG e Recall sobem em todos os casos** com caput-prefix. voyage+nav+caput+text é o novo SOTA da eval (+7.5pp nDCG, +12pp Recall vs. text). bge-m3 ganha ainda mais em termos relativos (+13pp nDCG).
+
+A hipótese (b) **não** bateu: **MRR caiu** em voyage (0.81 → 0.73). Isso revela uma tensão estrutural que o teste original não conseguiu ver:
+
+> **Trade-off "context leak vs. ranking":** prefixar o caput faz os irmãos do mesmo artigo ficarem semanticamente parecidos entre si. Antes, "qual a definição de dado pessoal" → art.5,I (única coincidência forte). Agora art.5,II, art.5,III, etc. todos carregam o caput "Para os fins desta Lei, considera-se:" — todos ficam plausíveis no top-1.
+
+Resultado: o **conjunto** de top-k fica melhor (recall ↑, nDCG ↑ porque mais relevantes entram em posições altas), mas o **primeiro colocado** fica ruidoso (MRR ↓). Pra queries com gold único (definição literal), caput-prefix é regressão; pra queries com gold de N chunks (enumerações), é ganho franco.
+
+A hipótese (c) tinha duas partes: dense sobe (sim, na média) e reranker fecha gap. Vamos ver.
+
+### Reranker em cima de voyage+nav+caput+text
+
+| pipeline | nDCG@10 | Recall@20 | MRR@10 |
+|---|---|---|---|
+| dense (voyage + nav+caput+text) | **0.713** | 0.834 | **0.730** |
+| dense + bge-reranker-v2-m3 | 0.635 | 0.834 | 0.646 |
+| dense + jina-reranker-v2-base-multilingual | 0.599 | 0.834 | 0.626 |
+| dense + bge-reranker-v2-gemma | 0.335 | 0.834 | 0.332 |
+
+Reranker ainda piora — mas em magnitudes diferentes:
+
+| reranker | ΔnDCG no text | ΔnDCG no nav+caput+text |
+|---|---|---|
+| bge-m3 | -0.144 | -0.079 |
+| jina-v2 | -0.171 | -0.114 |
+| **gemma** | -0.198 | **-0.379** |
+
+m3 e jina amaciam o estrago — provável que o caput-prefix torne os passages **menos** dependentes de casamento token-level, então o cross-encoder erra menos no top-1. Gemma vai pra trás violentamente: provavelmente porque o caput-prefix faz **todas** as passagens do mesmo artigo terem alta similaridade lexical com a query, e o scoring polarizado da Gemma (logits do token "Yes") amplifica diferenças mínimas para escolhas erradas.
+
+### Padrões de falha pós-caput (top-3 dumps)
+
+Mudança qualitativa: antes o reranker confundia **artigos** (art.18 → art.19; art.7 → art.6); agora confunde **irmãos do mesmo artigo** (art.18 caput vs art.18;inc8; art.11;par1 vs art.11;par2).
+
+Query [21] (prazo LAI):
+- gold: art.11;par1
+- dense: ★ art.11;par1 → art.11;par1;inc3 → art.11;par1;inc1
+- bge-m3: art.11;par1;inc3 → art.11;par1;inc1 → ★ art.11;par1
+
+Todos os 3 chunks no top do reranker são "filhos do par.1" — o reranker sabe que estão no contexto certo, só erra **qual nível da hierarquia** responde.
+
+### Conclusões revisadas
+
+1. **Nova baseline de produção**: voyage-3-large + `nav+caput+text`, sem reranker. nDCG 0.713 / Recall 0.834 / MRR 0.730.
+2. **Caput-prefix é um ganho net-positive** em nDCG e Recall, mas é um trade-off explícito em MRR. Se a aplicação precisa de "**uma** resposta única no top-1" (FAQ / pergunta-resposta), considerar manter `nav+text`. Se precisa de "**conjunto** de chunks relevantes pra contexto de LLM" (RAG clássico), `nav+caput+text` é melhor.
+3. **Reranker continua tóxico**, mas o problema mudou: era "confunde artigos vizinhos" → é "confunde níveis da mesma família". Suspeito que melhore com top-K maior (top-50/100) já que o candidate set tem cobertura muito melhor (Recall 0.834 vs 0.717). Próximo experimento: rerank no top-50 — **falsificado abaixo**.
+4. **Gemma é definitivamente o pior**: -0.38 nDCG é o tipo de regressão que indica modelo-corpus mismatch grave, não tuning fino. Não vale insistir.
+
+### Update — testando reranker no top-50
+
+A hipótese era que dar mais candidatos (top-50 em vez de top-20) daria ao reranker espaço pra puxar relevantes que o dense rankeou em 21-50 pra dentro do top-20 final. Recall@50 do dense é 0.884 (vs Recall@20 = 0.834), então existe ~5pp de teto disponível.
+
+| pipeline (k=50) | nDCG@10 | Recall@20 | MRR@10 |
+|---|---|---|---|
+| dense ceiling Recall@50 | — | 0.884 | — |
+| **dense (top-50, métricas no top-20/10)** | **0.713** | **0.834** | **0.730** |
+| dense + bge-reranker-v2-m3 | 0.626 | **0.772** | 0.622 |
+| dense + jina-reranker-v2-base-multilingual | 0.583 | **0.776** | 0.607 |
+| dense + bge-reranker-v2-gemma | 0.290 | **0.523** | 0.317 |
+
+**Recall@20 dos rerankers caiu** comparado ao dense (em k=20 isso era impossível por construção — o set de top-20 era idêntico). O reranker não só está reordenando mal o top-20 — está **puxando chunks irrelevantes de posições 21-50 pra dentro do top-20**, derrubando até a métrica que parecia segura.
+
+Gemma é o caso extremo: Recall@20 desaba de 0.834 → 0.523. O reranker está convencido de que chunks que o dense rankeou em posição 30+ são mais relevantes que os top-20.
+
+**Conclusão definitiva**: rerankers cross-encoder multilíngues genéricos não funcionam neste corpus. Não é questão de top-K, não é questão de representação de chunk, não é questão de força do modelo (gemma é o líder de BEIR e o pior aqui). É **misalignment de critério de relevância** treinado em web-QA vs. corpus jurídico estruturado em pt-br.
+
+Pra o reranker valer a pena, precisaríamos de:
+- (a) reranker fine-tuned no domínio (esforço significativo), ou
+- (b) reranker comercial treinado em corpus comercial-jurídico amplo (Cohere `rerank-multilingual-v3`, voyage `rerank-2.5` — custa créditos, não testamos), ou
+- (c) outra estratégia de "second-stage": hybrid sparse + dense via RRF, que aproveita o sinal lexical do BGE-M3 sem confiar em cross-encoder.
+
+Por enquanto a melhor recomendação é **dense puro com nav+caput+text e top-K alto**, sem reranker.
+
+### Para o post, edição final
+
+- **"Fix the data" funcionou parcialmente.** Subiu nDCG e Recall do dense. **Não** fechou o gap com o reranker — na verdade, em uma das métricas (MRR), o caput-prefix piorou o dense, e o reranker continuou piorando mais ainda.
+- **Trade-off revelado pelo experimento**: prefixar contexto estrutural aumenta cobertura e reduz precisão top-1 simultaneamente. É um material rico pro post — duas escolas de pensamento sobre chunking (cada chunk auto-contido vs. cada chunk com contexto enxuto) e dados que mostram quando cada uma ganha.
+- **nDCG é a métrica certa pra RAG, não MRR.** O LLM downstream vai receber top-K chunks, não só top-1. A métrica que casa com "qualidade do conjunto top-10" é nDCG. Pela lente certa, caput-prefix é o melhor truque que testamos em todo o projeto.
+
+---
+
 ## Artefatos
 
-- Aggregate: `tail -10 /tmp/rerank_voyage_text.txt` (ou re-rodar `python -m rag_leis.analyze_rerank --model voyage-3-large --text-mode text --rerankers bge-reranker-v2-m3,jina-reranker-v2-base-multilingual,bge-reranker-v2-gemma`).
-- Código: `rag_leis/rerank.py` (3 classes Reranker), `rag_leis/analyze_rerank.py` (per-query diff).
-- Indexes cacheados: `data/index/voyage-3-large__text.npz`, `data/index/voyage-3-large__nav+text.npz`, `data/index/bge-m3__*.npz`.
+- Aggregates iniciais (voyage+text): `/tmp/rerank_voyage_text.txt`
+- Aggregates pós-caput (voyage+nav+caput+text): `/tmp/rerank_voyage_nav_caput.txt`
+- Re-rodar baseline: `python -m rag_leis.run_eval --model voyage-3-large --text-mode nav+caput+text`
+- Re-rodar rerank: `python -m rag_leis.analyze_rerank --model voyage-3-large --text-mode nav+caput+text --rerankers bge-reranker-v2-m3,jina-reranker-v2-base-multilingual,bge-reranker-v2-gemma`
+- Código: `rag_leis/rerank.py`, `rag_leis/analyze_rerank.py`, `rag_leis/eval_harness.py` (load_chunks + format_texts).
+- Indexes cacheados: `data/index/{voyage-3-large,bge-m3}__{text,nav+text,caput+text,nav+caput+text}.npz`.
