@@ -11,6 +11,7 @@ dependencies = [
 [project.optional-dependencies]
 bge = ["FlagEmbedding>=1.3"]
 voyage = ["voyageai>=0.3"]
+reranker = ["FlagEmbedding>=1.3"]
 
 [dependency-groups]
 dev = [
