@@ -11,6 +11,13 @@
 #   - List all chunks that genuinely answer the query — multiple is fine.
 #   - Run `uv run python -m rag_leis.run_eval --model bge-m3 --show-misses` to
 #     spot URNs you typoed or chunks you forgot to add.
+#
+# Gold-set philosophy:
+#   - Include the rule + the enumeration (e.g. caput + incisos) when the rule is
+#     a one-liner whose payload is the list. The caput alone is not the answer.
+#   - Do NOT include contrast/companion articles (e.g. add art.19 to a query about
+#     art.18). The retriever should distinguish them; adding them masks real model
+#     failures. Write a separate query for the contrast article instead.
 
 - query: "qual a definição de dado pessoal na LGPD?"
   relevant:
@@ -38,15 +45,23 @@
     - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc8"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc9"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc10"
-  notes: "LGPD art. 7º — incs II a X (todos menos o I, que é consentimento)"
+  notes: "LGPD art. 7º — incs II a X (todos menos o I, que é consentimento). Caput não entra porque lista TODAS as hipóteses, incluindo consentimento."
 
 - query: "como tratar dados sensíveis sem o consentimento do titular?"
   relevant:
     - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2"
-  notes: "LGPD art. 11, II — caput das exceções; alíneas detalham"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-a"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-b"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-c"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-d"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-e"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-f"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art11;inc2;ali-g"
+  notes: "LGPD art. 11, II + alíneas a–g. O inc II sozinho é só o stem ('...nas hipóteses em que for indispensável para:'); as alíneas é que enumeram as hipóteses."
 
 - query: "quais direitos o titular dos dados tem sobre suas informações?"
   relevant:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc1"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc3"
@@ -56,7 +71,7 @@
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc7"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc8"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc9"
-  notes: "LGPD art. 18 — catálogo de direitos do titular"
+  notes: "LGPD art. 18 — caput introduz a regra ('O titular tem direito a obter do controlador...'); incs I–IX enumeram os direitos."
 
 - query: "por quanto tempo um provedor de conexão à internet precisa guardar os logs?"
   relevant:
@@ -71,9 +86,22 @@
 - query: "provedor de conexão responde civilmente por conteúdo de terceiros?"
   relevant:
     - "urn:lex:br:federal:lei:2014-04-23;12965~art18"
-  notes: "Marco Civil art. 18 — exclusão de responsabilidade do provedor de conexão"
+  notes: "Marco Civil art. 18 — exclusão de responsabilidade do provedor de conexão. NÃO incluir art.19/art.21 (provedor de aplicações): são regras paralelas, e adicioná-las mascararia a falha do modelo em distinguir conexão de aplicações."
 
 - query: "direitos garantidos ao usuário de internet"
   relevant:
     - "urn:lex:br:federal:lei:2014-04-23;12965~art7"
-  notes: "Marco Civil art. 7 — caput. Considera-se cobrir o caput; incisos são detalhes."
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc1"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc2"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc3"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc4"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc5"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc6"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc7"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc8"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc9"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc10"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc11"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc12"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc13"
+  notes: "Marco Civil art. 7 — caput + incs I a XIII. O caput introduz a regra ('ao usuário são assegurados os seguintes direitos:'); os incisos SÃO os direitos, não 'detalhes'."
