@@ -39,24 +39,49 @@ class BGEM3Embedder:
         self._batch_size = batch_size
         self._max_length = max_length
 
-    def _encode(self, texts: list[str], max_length: int) -> Vec:
-        out = self._model.encode(
+    def _encode(self, texts: list[str], max_length: int, sparse: bool = False) -> dict:
+        return self._model.encode(
             texts,
             batch_size=self._batch_size,
             max_length=max_length,
             return_dense=True,
-            return_sparse=False,
+            return_sparse=sparse,
             return_colbert_vecs=False,
         )
-        vecs: Vec = np.asarray(out["dense_vecs"], dtype=np.float32)
-        return _normalize(vecs)
 
     def embed_docs(self, texts: list[str]) -> Vec:
-        return self._encode(texts, self._max_length)
+        out = self._encode(texts, self._max_length)
+        return _normalize(np.asarray(out["dense_vecs"], dtype=np.float32))
 
     def embed_query(self, text: str) -> Vec:
-        vec: Vec = self._encode([text], 512)[0]
-        return vec
+        out = self._encode([text], 512)
+        return _normalize(np.asarray(out["dense_vecs"], dtype=np.float32))[0]
+
+    def embed_docs_dense_sparse(
+        self, texts: list[str]
+    ) -> tuple[Vec, list[dict[str, float]]]:
+        """Returns (normalized_dense_vectors, lexical_weights_list).
+        Each lexical_weights entry is a dict mapping token_id (as str) → weight.
+        """
+        out = self._encode(texts, self._max_length, sparse=True)
+        dense = _normalize(np.asarray(out["dense_vecs"], dtype=np.float32))
+        # FlagEmbedding emits defaultdict-like objects; coerce to plain dict for picklability.
+        sparse: list[dict[str, float]] = [
+            {str(k): float(v) for k, v in row.items()} for row in out["lexical_weights"]
+        ]
+        return dense, sparse
+
+    def embed_query_dense_sparse(self, text: str) -> tuple[Vec, dict[str, float]]:
+        dense, sparse = self.embed_docs_dense_sparse([text])
+        return dense[0], sparse[0]
+
+    @staticmethod
+    def lexical_score(q: dict[str, float], d: dict[str, float]) -> float:
+        # Sum of weight products over shared tokens — matches BGE-M3's
+        # compute_lexical_matching_score.
+        if len(q) > len(d):
+            q, d = d, q
+        return sum(w * d.get(tok, 0.0) for tok, w in q.items())
 
 
 class VoyageEmbedder:
