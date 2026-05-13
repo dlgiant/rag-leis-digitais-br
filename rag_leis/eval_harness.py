@@ -18,13 +18,28 @@ class IndexChunk:
     text: str
     nav_text: str
     caput_text: str  # concatenation of all ancestor caput texts (artigo→…→parent), "" for top-level chunks
+    citation: str  # joined label chain ("Art. 7, I" / "Art. 18, § 2") — empty for top-level if label missing
 
 
 @dataclass(frozen=True)
 class Query:
     query: str
-    relevant: frozenset[str]
+    core: frozenset[str]
+    supporting: frozenset[str] = frozenset()
+    qtype: str | None = None
     notes: str | None = None
+
+    @property
+    def relevant(self) -> frozenset[str]:
+        # Union of graded levels — for binary metrics (recall, MRR) and back-compat.
+        return self.core | self.supporting
+
+    def relevance_of(self, urn: str) -> int:
+        if urn in self.core:
+            return 2
+        if urn in self.supporting:
+            return 1
+        return 0
 
 
 def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
@@ -61,6 +76,27 @@ def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
         # Outermost (artigo caput) first → innermost last, matching reading order.
         return " ".join(reversed(parts))
 
+    def _resolve_citation(obj: dict[str, Any]) -> str:
+        """Join this chunk's label with its ancestors' labels, outermost-first.
+
+        Output: "Art. 7, I" / "Art. 18, § 2, III" / "Art. 7" (top-level artigo).
+        Empty for chunks without any label in the chain.
+        """
+        labels: list[str] = []
+        doc_urn: str = obj["document_urn"]
+        cur: dict[str, Any] | None = obj
+        for _ in range(8):
+            if cur is None:
+                break
+            lbl = cur.get("label")
+            if lbl:
+                labels.append(lbl)
+            parent_part = cur.get("parent_partition")
+            if not parent_part:
+                break
+            cur = raw_by_urn.get(f"{doc_urn}~{parent_part}")
+        return ", ".join(reversed(labels))
+
     out: list[IndexChunk] = []
     for obj in raw_by_urn.values():
         # Skip revoked/empty chunks (e.g. art7;par1 with text=".").
@@ -69,9 +105,14 @@ def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
         nav = obj.get("nav") or {}
         nav_text = " > ".join(v for v in nav.values() if v)
         caput_text = _resolve_caput_chain(obj)
+        citation = _resolve_citation(obj)
         out.append(
             IndexChunk(
-                urn=obj["urn"], text=obj["text"], nav_text=nav_text, caput_text=caput_text
+                urn=obj["urn"],
+                text=obj["text"],
+                nav_text=nav_text,
+                caput_text=caput_text,
+                citation=citation,
             )
         )
     return out
@@ -79,14 +120,26 @@ def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
 
 def load_queries(path: Path) -> list[Query]:
     raw: list[dict[str, Any]] = yaml.safe_load(path.read_text(encoding="utf-8"))
-    return [
-        Query(
-            query=item["query"],
-            relevant=frozenset(item["relevant"]),
-            notes=item.get("notes"),
+    out: list[Query] = []
+    for item in raw:
+        rel = item["relevant"]
+        if isinstance(rel, list):
+            # v1 (binary) schema — flat URN list. All gold treated as core (rel=2).
+            core = frozenset(rel)
+            supporting: frozenset[str] = frozenset()
+        else:
+            core = frozenset(rel.get("core", []))
+            supporting = frozenset(rel.get("supporting", []))
+        out.append(
+            Query(
+                query=item["query"],
+                core=core,
+                supporting=supporting,
+                qtype=item.get("type"),
+                notes=item.get("notes"),
+            )
         )
-        for item in raw
-    ]
+    return out
 
 
 def format_texts(chunks: list[IndexChunk], mode: str) -> list[str]:
@@ -101,6 +154,15 @@ def format_texts(chunks: list[IndexChunk], mode: str) -> list[str]:
         for c in chunks:
             body = f"{c.caput_text} {c.text}".strip() if c.caput_text else c.text
             out.append(f"{c.nav_text} :: {body}" if c.nav_text else body)
+        return out
+    if mode == "label+nav+caput+text":
+        # Prefixes the chunk's citation chain ("Art. 7, I") so that literal
+        # article references in queries have an explicit token to match.
+        out = []
+        for c in chunks:
+            body = f"{c.caput_text} {c.text}".strip() if c.caput_text else c.text
+            mid = f"{c.nav_text} :: {body}" if c.nav_text else body
+            out.append(f"{c.citation} :: {mid}" if c.citation else mid)
         return out
     raise ValueError(f"Unknown text mode: {mode!r}")
 
@@ -127,13 +189,37 @@ def recall_at_k(retrieved: list[str], relevant: frozenset[str], k: int) -> float
     return hits / len(relevant)
 
 
-def ndcg_at_k(retrieved: list[str], relevant: frozenset[str], k: int) -> float:
+def ndcg_at_k(
+    retrieved: list[str],
+    gold: frozenset[str] | dict[str, int] | Query,
+    k: int,
+) -> float:
+    """Normalized DCG with graded relevance (2^rel - 1 gain).
+
+    `gold` accepts three forms for caller convenience:
+      * frozenset[str] (legacy): every URN is treated as rel=1 (gain=1) —
+        reduces to the binary nDCG formula since the gain factor cancels in
+        the DCG/IDCG ratio.
+      * dict[str, int]: explicit URN→relevance-level mapping.
+      * Query: uses Query.core (rel=2) and Query.supporting (rel=1).
+    """
+    if isinstance(gold, Query):
+        rels: dict[str, int] = {urn: 2 for urn in gold.core}
+        for urn in gold.supporting:
+            rels.setdefault(urn, 1)
+    elif isinstance(gold, frozenset):
+        rels = {urn: 1 for urn in gold}
+    else:
+        rels = dict(gold)
+
     dcg = 0.0
-    for i, r in enumerate(retrieved[:k]):
-        if r in relevant:
-            dcg += 1.0 / math.log2(i + 2)
-    ideal_hits = min(len(relevant), k)
-    idcg = sum(1.0 / math.log2(i + 2) for i in range(ideal_hits))
+    for i, urn in enumerate(retrieved[:k]):
+        rel = rels.get(urn, 0)
+        if rel > 0:
+            dcg += (2**rel - 1) / math.log2(i + 2)
+
+    ideal = sorted(rels.values(), reverse=True)[:k]
+    idcg = sum((2**rel - 1) / math.log2(i + 2) for i, rel in enumerate(ideal) if rel > 0)
     return dcg / idcg if idcg > 0 else 0.0
 
 
