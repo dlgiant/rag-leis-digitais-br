@@ -23,8 +23,22 @@ class IndexChunk:
 @dataclass(frozen=True)
 class Query:
     query: str
-    relevant: frozenset[str]
+    core: frozenset[str]
+    supporting: frozenset[str] = frozenset()
+    qtype: str | None = None
     notes: str | None = None
+
+    @property
+    def relevant(self) -> frozenset[str]:
+        # Union of graded levels — for binary metrics (recall, MRR) and back-compat.
+        return self.core | self.supporting
+
+    def relevance_of(self, urn: str) -> int:
+        if urn in self.core:
+            return 2
+        if urn in self.supporting:
+            return 1
+        return 0
 
 
 def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
@@ -79,14 +93,26 @@ def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
 
 def load_queries(path: Path) -> list[Query]:
     raw: list[dict[str, Any]] = yaml.safe_load(path.read_text(encoding="utf-8"))
-    return [
-        Query(
-            query=item["query"],
-            relevant=frozenset(item["relevant"]),
-            notes=item.get("notes"),
+    out: list[Query] = []
+    for item in raw:
+        rel = item["relevant"]
+        if isinstance(rel, list):
+            # v1 (binary) schema — flat URN list. All gold treated as core (rel=2).
+            core = frozenset(rel)
+            supporting: frozenset[str] = frozenset()
+        else:
+            core = frozenset(rel.get("core", []))
+            supporting = frozenset(rel.get("supporting", []))
+        out.append(
+            Query(
+                query=item["query"],
+                core=core,
+                supporting=supporting,
+                qtype=item.get("type"),
+                notes=item.get("notes"),
+            )
         )
-        for item in raw
-    ]
+    return out
 
 
 def format_texts(chunks: list[IndexChunk], mode: str) -> list[str]:
@@ -127,13 +153,37 @@ def recall_at_k(retrieved: list[str], relevant: frozenset[str], k: int) -> float
     return hits / len(relevant)
 
 
-def ndcg_at_k(retrieved: list[str], relevant: frozenset[str], k: int) -> float:
+def ndcg_at_k(
+    retrieved: list[str],
+    gold: frozenset[str] | dict[str, int] | Query,
+    k: int,
+) -> float:
+    """Normalized DCG with graded relevance (2^rel - 1 gain).
+
+    `gold` accepts three forms for caller convenience:
+      * frozenset[str] (legacy): every URN is treated as rel=1 (gain=1) —
+        reduces to the binary nDCG formula since the gain factor cancels in
+        the DCG/IDCG ratio.
+      * dict[str, int]: explicit URN→relevance-level mapping.
+      * Query: uses Query.core (rel=2) and Query.supporting (rel=1).
+    """
+    if isinstance(gold, Query):
+        rels: dict[str, int] = {urn: 2 for urn in gold.core}
+        for urn in gold.supporting:
+            rels.setdefault(urn, 1)
+    elif isinstance(gold, frozenset):
+        rels = {urn: 1 for urn in gold}
+    else:
+        rels = dict(gold)
+
     dcg = 0.0
-    for i, r in enumerate(retrieved[:k]):
-        if r in relevant:
-            dcg += 1.0 / math.log2(i + 2)
-    ideal_hits = min(len(relevant), k)
-    idcg = sum(1.0 / math.log2(i + 2) for i in range(ideal_hits))
+    for i, urn in enumerate(retrieved[:k]):
+        rel = rels.get(urn, 0)
+        if rel > 0:
+            dcg += (2**rel - 1) / math.log2(i + 2)
+
+    ideal = sorted(rels.values(), reverse=True)[:k]
+    idcg = sum((2**rel - 1) / math.log2(i + 2) for i, rel in enumerate(ideal) if rel > 0)
     return dcg / idcg if idcg > 0 else 0.0
 
 
