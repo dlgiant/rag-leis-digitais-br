@@ -72,3 +72,25 @@ TIER_1: tuple[Document, ...] = (
         planalto_url="https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm",
     ),
 )
+
+
+# Tier 2 — complementar. Reviewer-pruned: CDC e EC 115/2022 estavam na lista
+# original mas já estão cobertos pelo Tier-1 (CDC indexado + EC 115 integrada
+# na CF compilada). Ver study/corpus-tier-2-complementar.md.
+TIER_2: tuple[Document, ...] = (
+    Document(
+        urn="urn:lex:br:federal:lei:2020-09-23;14063",
+        title="Lei 14.063/2020 — assinaturas eletrônicas em interações com entes públicos",
+        planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2020/lei/l14063.htm",
+    ),
+    Document(
+        urn="urn:lex:br:federal:lei:2021-03-29;14129",
+        title="Lei 14.129/2021 — Lei do Governo Digital",
+        planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14129.htm",
+    ),
+    Document(
+        urn="urn:lex:br:federal:lei:2006-12-19;11419",
+        title="Lei 11.419/2006 — informatização do processo judicial",
+        planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11419.htm",
+    ),
+)
