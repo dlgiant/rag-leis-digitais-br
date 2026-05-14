@@ -63,7 +63,7 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
         "--text-mode",
-        choices=["text", "nav+text", "caput+text", "nav+caput+text"],
+        choices=["text", "nav+text", "caput+text", "nav+caput+text", "label+nav+caput+text"],
         default="nav+caput+text",
     )
     p.add_argument("--dense-model", default="voyage-3-large")
@@ -130,7 +130,7 @@ def main() -> int:
         per_query.append({"dense": dense_urns, "bm25": bm25_urns, "rrf": rrf_urns})
 
         for name, ranked in [("dense", dense_urns), ("bm25", bm25_urns), ("rrf", rrf_urns)]:
-            metrics[name]["ndcg"].append(ndcg_at_k(ranked, q.relevant, 10))
+            metrics[name]["ndcg"].append(ndcg_at_k(ranked, q, 10))
             metrics[name]["recall"].append(recall_at_k(ranked, q.relevant, 20))
             metrics[name]["mrr"].append(mrr_at_k(ranked, q.relevant, 10))
 
@@ -140,7 +140,7 @@ def main() -> int:
     )
     print("=" * 72)
     print(
-        f"Aggregate ({label} / {args.text_mode}, 25 queries, k={args.k}, "
+        f"Aggregate ({label} / {args.text_mode}, {len(queries)} queries, k={args.k}, "
         f"rrf-k={args.rrf_k}{weight_tag})"
     )
     print("=" * 72)

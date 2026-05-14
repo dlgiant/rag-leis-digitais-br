@@ -6,19 +6,21 @@ Documento-mãe das decisões e achados do projeto. Cada seção aponta pra um ou
 
 ## Visão geral
 
-O projeto monta um **retriever sobre 11 leis digitais brasileiras** (LGPD, Marco Civil, Lei do Software, Direito Autoral, LAI, Código Penal, Constituição, decretos regulamentadores). 5937 chunks no Tier 1 do corpus, parseados via Planalto+LexML, indexados em embeddings densos.
+O projeto monta um **retriever sobre 12 leis digitais brasileiras** (LGPD, Marco Civil, Lei do Software, Direito Autoral, LAI, CP, Constituição, CDC, decretos regulamentadores). 6365 chunks no Tier 1 do corpus, parseados via Planalto+LexML, indexados em embeddings densos.
 
 Goal: aprender e documentar **o que efetivamente melhora retrieval em corpus jurídico estruturado pt-br** e o que parece bom no papel mas não rende.
 
-Spoiler: as melhorias **vieram quase todas da camada de dados** (como o chunk é formatado pra indexação), não da camada de modelo (qual embedding, qual reranker, qual segunda etapa). Esse é o ponto que vale o post.
+Spoiler: as melhorias **vieram quase todas da camada de dados** (como o chunk é formatado pra indexação + qualidade do gold do eval), não da camada de modelo (qual embedding, qual reranker, qual segunda etapa). Esse é o ponto que vale o post.
 
 ---
 
-## A tese, em uma frase
+## A tese, em uma frase (versão final pós-gold-expansion)
 
-> **Sete intervenções de "second-stage retrieval" testadas — 3 rerankers open-source, 3 comerciais (voyage + 2 cohere), e 1 router gated. Apenas voyage rerank-2.5 melhora MRR sobre voyage dense puro. Os outros 6 regridem em alguma métrica.** Três intervenções de "primeira-stage representation" (nav-prefix, caput-prefix, label-prefix) somaram +0.15 nDCG.
+> **Com gold de eval expandido, TODAS as 9 técnicas de second-stage testadas (3 rerankers open + 2 comerciais + hybrid sparse + BM25 + ColBERT + router) regridem ou ficam neutras.** A única exceção marginal é voyage rerank-2.5 (+0.014 MRR mas -0.022 nDCG). Quatro intervenções de "primeira-stage" (nav-prefix, caput-prefix, label-prefix, gold expansion) somaram +0.106 MRR e +0.052 nDCG sobre o baseline.
 >
-> **Tese ajustada**: fix the data first; second-stage só funciona com modelo treinado **especificamente** pra paráfrase + corpus técnico (domain-tuning comercial é necessário mas não suficiente — Cohere também é comercial e regride).
+> **Tese final**: fix the data, *and the gold*. Second-stage retrieval em corpus jurídico-pt-br não compensa quando o dense + chunk representation está bem feito.
+
+Caveat metodológico importante: o ganho aparente que vários second-stage tinham com gold antigo (voyage rerank-2.5 +0.022 MRR, voyage+BM25 +0.029 nDCG, ColBERT RRF flat) **se inverteu ou desapareceu com gold expandido**. Eval set incompleto produz ilusão de ganho onde não há.
 
 ---
 
@@ -272,6 +274,8 @@ Por quê:
 | 10 | `eval/queries-v3` | eval maior + calibração | ✓ 78 queries, gap discrimina |
 | 11 | `experiment/router` | calibração → router → ganho | ✗ variância de fallback dilui |
 | 12 | `experiment/voyage-rerank` | reranker comercial domain-tuned quebra o padrão | ✓ voyage rerank-2.5: +0.022 MRR; ✗ cohere v3.5/mult-v3: -0.07 a -0.12 nDCG |
+| 13 | `eval/expand-paraphrase-gold` | gold expandido (78q v3.5, +CDC) revela force real do dense | ✓ +0.106 MRR, +0.052 nDCG agregado; paráfrase MRR 0.40 → 0.86 |
+| 14 | `experiments/re-eval-with-newgold` | re-eval de TODOS os 2nd-stage com gold novo | ✗ voyage+BM25 (3:1) inverte +0.029 → -0.111 nDCG; voyage+colbert RRF -0.052 (era flat); router -0.008 (era flat). voyage rerank-2.5 -0.022 nDCG / +0.014 MRR (gain encolheu) |
 
 ---
 
