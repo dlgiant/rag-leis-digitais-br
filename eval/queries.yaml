@@ -352,11 +352,12 @@
     supporting:
       - "urn:lex:br:federal:lei:1990-09-11;8078~art39"
       - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc5"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc9"
       - "urn:lex:br:federal:lei:2018-08-14;13709~art8;par1"
       - "urn:lex:br:federal:lei:2018-08-14;13709~art8;par2"
       - "urn:lex:br:federal:lei:2018-08-14;13709~art8;par3"
       - "urn:lex:br:federal:lei:2018-08-14;13709~art8;par4"
-  notes: "LGPD art. 7 I (consent base legal) + art. 8 (forma) + CDC art. 39 III (envio sem solicitação prévia = prática abusiva). Supporting: CDC art. 39 caput; LGPD art. 7 V (alternativa contratual); LGPD art. 8 §§ 1-4 (forma/ônus/vício/finalidade)."
+  notes: "LGPD art. 7 I (consent base legal) + art. 8 (forma) + CDC art. 39 III (envio sem solicitação prévia = prática abusiva). Supporting: CDC art. 39 caput; LGPD art. 7 V (alternativa contratual); LGPD art. 7 IX (interesses legítimos — base alternativa pra marketing direto); LGPD art. 8 §§ 1-4 (forma/ônus/vício/finalidade)."
 
 - query: "fui invadido no celular sem permissão, isso é crime?"
   type: parafrase
@@ -464,7 +465,7 @@
 # ============================================================================
 
 - query: "quais os prazos de retenção de logs de internet no Brasil?"
-  type: cross-doc
+  type: enumeracao
   relevant:
     - "urn:lex:br:federal:lei:2014-04-23;12965~art13"
     - "urn:lex:br:federal:lei:2014-04-23;12965~art15"
@@ -497,7 +498,7 @@
   notes: "LGPD art. 48 (notificação), art. 18 IV (correção/exclusão), art. 42 (responsabilidade civil)."
 
 - query: "responsabilidade do provedor de aplicações por conteúdo de usuários"
-  type: cross-doc
+  type: enumeracao
   relevant:
     - "urn:lex:br:federal:lei:2014-04-23;12965~art19"
     - "urn:lex:br:federal:lei:2014-04-23;12965~art21"
@@ -761,7 +762,7 @@
   notes: "CF garante habeas data; LGPD art. 18 II (acesso) + IV (correção) operacionalizam."
 
 - query: "remoção de conteúdo na internet — quem decide e quando?"
-  type: cross-doc
+  type: enumeracao
   relevant:
     - "urn:lex:br:federal:lei:2014-04-23;12965~art19"
     - "urn:lex:br:federal:lei:2014-04-23;12965~art21"
@@ -775,7 +776,7 @@
   notes: "MCI art. 9 (regra) + Decreto 8771 art. 4 (regulamenta exceções)."
 
 - query: "responsabilidade civil por vazamento de dados pessoais"
-  type: cross-doc
+  type: enumeracao
   relevant:
     - "urn:lex:br:federal:lei:2018-08-14;13709~art42"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art43"

@@ -19,7 +19,12 @@ _INNERMOST_BLOCKQUOTE = re.compile(
 _ART_REFERENCE = re.compile(r"\bArt\.\s*\d+", re.IGNORECASE)
 
 _ARTIGO_HEAD = re.compile(
-    r"^\s*Art\.\s*(\d+(?:-[A-Z])?)\s*[º°.]?\s*",
+    # Matches "Art. 1", "Art 1" (no period — Planalto inconsistency in CP arts
+    # 187-189), "Art. 1º", "Art. 1º.", "Art. 154-A", etc.
+    # - `\.?` after "Art" makes the period optional.
+    # - Trailing `[º°]?\s*\.?` consumes optional ordinal marker AND optional final
+    #   period — fixes leading "." remnant on CF ADCT art1.
+    r"^\s*Art\.?\s*(\d+(?:-[A-Z])?)\s*[º°]?\s*\.?\s*",
     re.IGNORECASE,
 )
 _ARTIGO_NUM_CONTINUATION = re.compile(r"^(\d+)\.\s")
@@ -86,18 +91,46 @@ def _strip_amendment_blockquotes(html: str) -> str:
         html = new_html
 
 
+_BR_TAG = re.compile(r"<br\s*/?>", re.IGNORECASE)
+
+
 def _extract_paragraphs(html: str) -> list[str]:
     html = _strip_amendment_blockquotes(html)
     out: list[str] = []
     for m in _ARTIGO_P.finditer(html):
         raw = m.group(1)
-        text = _TAG.sub("", raw)
-        text = html_module.unescape(text)
-        text = _NBSP.sub(" ", text)
-        text = _WS.sub(" ", text).strip()
-        if text:
-            out.append(text)
+        # Break on <br> tags BEFORE stripping all tags. CP (Decreto-Lei 2848)
+        # packs multiple artigos + their Nomen iuris into a single <p>, separated
+        # only by <br>; without this split the title of artN+1 ends up appended
+        # to the text of artN.
+        for chunk in _BR_TAG.split(raw):
+            text = _TAG.sub("", chunk)
+            text = html_module.unescape(text)
+            text = _NBSP.sub(" ", text)
+            text = _WS.sub(" ", text).strip()
+            if text:
+                out.extend(_split_embedded_artigos(text))
     return out
+
+
+# Planalto occasionally emits malformed HTML where a <p> is closed with </div>,
+# or stacks a "Nomen iuris" title in the same <p> as the artigo head. Symptoms:
+#   1. Paragraph starts with "Parágrafo único." but contains embedded "Art. N." —
+#      CF ADCT art119/120 boundary.
+#   2. Paragraph starts with the crime name ("Violação de privilégio…") and the
+#      artigo head ("Art 187.") follows in the same <p> — CP arts 187-194.
+#
+# Split heuristic: any "Art." or "Art" (period optional, Planalto inconsistency)
+# preceded by a word char, `.`, or `)` — i.e., NOT at the start of the paragraph
+# — is treated as a missed paragraph boundary. Lowercase `art. N` cross-references
+# like "nos termos do art. 89" don't match because we require capital `A`.
+_INTERNAL_ARTIGO_BREAK = re.compile(r"(?<=[\w.)])\s+(?=Art\.?\s+\d+[º°]?\.?)")
+
+
+def _split_embedded_artigos(text: str) -> list[str]:
+    """Split a paragraph at boundaries where a new artigo head appears mid-text."""
+    parts = _INTERNAL_ARTIGO_BREAK.split(text)
+    return [p.strip() for p in parts if p.strip()]
 
 
 def _roman_to_int(roman: str) -> int:
