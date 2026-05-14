@@ -70,7 +70,12 @@
   type: definicao
   oos: false
   gold_urns:
+    # CF art. 5 LXXII caput is a list-stem ("conceder-se-á habeas-data:").
+    # The substantive content lives in the two alíneas — both must be cited
+    # for the expected_paragraph to be reproducible from context.
     - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a"
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b"
   expected_paragraph: |
     A Constituição (art. 5º, LXXII) prevê o habeas data como remédio
     constitucional para (a) assegurar o conhecimento de informações
@@ -218,17 +223,25 @@
   type: cross-doc
   oos: false
   gold_urns:
+    # CF half: caput + both alíneas (caput is a stub, content in alíneas).
     - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a"
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b"
+    # LGPD half: art. 18 II (acesso ≈ habeas data ali-a), III (correção ≈
+    # habeas data ali-b retificação), IV (anonimização/bloqueio/eliminação).
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc3"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc4"
   expected_paragraph: |
     A Constituição (art. 5º, LXXII) garante o habeas data para acesso a
     informações pessoais em registros governamentais ou de caráter público
     e para sua retificação. A LGPD operacionaliza esses direitos na esfera
-    do controlador privado: o art. 18, II, assegura ao titular o direito
-    de acesso aos dados, e o art. 18, IV, o direito à anonimização,
-    bloqueio ou eliminação de dados desnecessários, excessivos ou tratados
-    em desconformidade com a Lei.
+    do controlador privado: o art. 18, II, assegura o direito de acesso
+    aos dados; o art. 18, III, o direito à correção de dados incompletos,
+    inexatos ou desatualizados (análogo à retificação do habeas data); e
+    o art. 18, IV, o direito à anonimização, bloqueio ou eliminação de
+    dados desnecessários, excessivos ou tratados em desconformidade com
+    a Lei.
 
 # ============================================================================
 # OOS (3) — clearly outside the corpus; pipeline should refuse
