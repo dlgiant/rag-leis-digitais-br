@@ -360,25 +360,53 @@
 
 - query: "fui invadido no celular sem permissão, isso é crime?"
   type: parafrase
-  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a"]
-  notes: "CP art. 154-A — invasão de dispositivo informático. Linguagem coloquial."
+  relevant:
+    core:
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a"
+    supporting:
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par1"
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par2"
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par3"
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5"
+  notes: "CP art. 154-A (invasão de dispositivo). Supporting: §§ 1-3, 5 (modalidades, qualificadoras, condutas conexas)."
 
 - query: "posso fazer uma cópia de backup de um programa que comprei?"
   type: parafrase
-  relevant: ["urn:lex:br:federal:lei:1998-02-19;9609~art6;inc1"]
-  notes: "Lei do Software art. 6, I — cópia de salvaguarda. Linguagem natural pra uso lícito."
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:1998-02-19;9609~art6;inc1"
+    supporting:
+      - "urn:lex:br:federal:lei:1998-02-19;9609~art6"
+      - "urn:lex:br:federal:lei:1998-02-19;9609~art6;inc4"
+      - "urn:lex:br:federal:lei:1998-02-19;9609~art2;par5"
+      - "urn:lex:br:federal:lei:1998-02-19;9609~art12;par1"
+  notes: "Lei do Software art. 6 I (cópia de salvaguarda). Supporting: art. 6 caput (não-ofensa); inc IV (integração — outra hipótese lícita); art. 2 § 5 (direito exclusivo — delimita); art. 12 § 1 (penalidade reprodução comercial — contraste)."
 
 - query: "posso reproduzir um trecho de livro para citar numa aula?"
   type: parafrase
-  relevant: ["urn:lex:br:federal:lei:1998-02-19;9610~art46;inc3"]
-  notes: "Direito Autoral art. 46, III — citação em livros, jornais, revistas. Linguagem natural."
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc3"
+      - "urn:lex:br:federal:lei:1998-02-19;9610~art46"
+      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc1"
+      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc2"
+      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc4"
+      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc6"
+      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc7"
+      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc8"
+      - "urn:lex:br:federal:lei:1998-02-19;9610~art29;inc8;ali-a"
+  notes: "DA art. 46 — limitações ao direito autoral. Múltiplos incisos respondem a uso didático/citação (inc III canônico, mas inc I/II/IV/VI/VII/VIII também aplicáveis). art. 29 VIII a (representação/declamação) inclusive."
 
 - query: "a empresa pode usar dados de uma criança sem dizer pros pais?"
   type: parafrase
   relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art14"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art14;par1"
-  notes: "LGPD art. 14 — proteção de crianças e adolescentes; § 1 exige consentimento dos pais."
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art14"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art14;par1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art14;par3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art14;par4"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art14;par5"
+  notes: "LGPD art. 14 caput (proteção de crianças/adolescentes) + § 1 (consentimento dos pais) + § 3 (sem consent quando p/ contatar pais) + § 4 (não condicionar participação) + § 5 (esforços p/ verificar consent dos pais)."
 
 - query: "quero saber tudo que uma empresa tem sobre mim, posso pedir?"
   type: parafrase
@@ -401,8 +429,20 @@
 
 - query: "se vazaram meus dados, alguém me avisa?"
   type: parafrase
-  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art48"]
-  notes: "LGPD art. 48 — comunicação de incidente. Linguagem natural."
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art48"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par1;inc1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par1;inc2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par1;inc3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par1;inc4"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par1;inc6"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par2;inc1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par3"
+  notes: "LGPD art. 48 (comunicação de incidente). Supporting: § 1 (caput dos detalhes da notificação) + incs I-IV/VI (conteúdo); § 2 e § 2 I (providências da autoridade); § 3 (juízo de gravidade)."
 
 - query: "policial pode pedir meus dados pra investigar crime?"
   type: parafrase
@@ -413,7 +453,11 @@
     supporting:
       - "urn:lex:br:federal:decreto:2016-05-11;8771~art11;par1"
       - "urn:lex:br:federal:decreto:2016-05-11;8771~art11;par2"
-  notes: "MCI art. 10 § 3 (autoridade administrativa pode requisitar dados cadastrais) + Decreto 8771 art. 11 (procedimento operacional). § 1 do MCI é sobre obrigação de disponibilização, não sobre policial."
+      - "urn:lex:br:federal:decreto:2016-05-11;8771~art11;par2;inc1"
+      - "urn:lex:br:federal:decreto:2016-05-11;8771~art11;par2;inc2"
+      - "urn:lex:br:federal:decreto:2016-05-11;8771~art11;par2;inc3"
+      - "urn:lex:br:federal:decreto:2016-05-11;8771~art11;par3"
+  notes: "MCI art. 10 § 3 (autoridade administrativa requisita dados cadastrais) + Decreto 8771 art. 11 (procedimento). Supporting: § 1 (obrigação info), § 2 + incs I-III (definição de dados cadastrais: filiação, endereço, qualificação), § 3 (vedados pedidos genéricos)."
 
 # ============================================================================
 # CROSS-DOC — resposta canônica vive em ≥2 leis
@@ -598,8 +642,13 @@
 
 - query: "alguém me ameaçou online, posso processar?"
   type: parafrase
-  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art147"]
-  notes: "CP art. 147 — ameaça. Linguagem coloquial."
+  relevant:
+    core:
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art147"
+    supporting:
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art147;par1"
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art147;par2"
+  notes: "CP art. 147 (ameaça). Supporting: § 1 (pena em dobro contra mulher), § 2 (procede mediante representação)."
 
 - query: "clonaram meu cartão pela internet, qual artigo se aplica?"
   type: parafrase
@@ -614,13 +663,24 @@
 
 - query: "publicaram fotos íntimas minhas sem autorização, isso é crime?"
   type: parafrase
-  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art218-c"]
-  notes: "CP art. 218-C — divulgação de cena de sexo, nudez ou pornografia (Lei Carolina Dieckmann II)."
+  relevant:
+    core:
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art218-c"
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art216-b"
+    supporting:
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art216-b;par1"
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art218-c;par1"
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art218-c;par2"
+  notes: "CP art. 218-C (divulgação de cena íntima) + art. 216-B (produzir/fotografar sem autorização — conduta paralela). Supporting: § 1 do 216-B (montagem); § 1 do 218-C (qualificadora); § 2 do 218-C (excludente jornalístico/científico)."
 
 - query: "criaram um perfil falso com meu nome nas redes, há crime?"
   type: parafrase
-  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art307"]
-  notes: "CP art. 307 — falsa identidade. Aplicável a perfis falsos."
+  relevant:
+    core:
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art307"
+    supporting:
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art141;par2"
+  notes: "CP art. 307 (falsa identidade). Supporting: art. 141 § 2 (pena triplicada quando calúnia/difamação em rede social — frequentemente conexo a perfil falso)."
 
 - query: "tenho direito de saber o que o governo guarda sobre mim?"
   type: parafrase
@@ -651,15 +711,37 @@
 
 - query: "minha empresa precisa nomear alguém responsável pelos dados dos clientes?"
   type: parafrase
-  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art41"]
-  notes: "LGPD art. 41 — exigência de encarregado (DPO)."
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art41"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art41;par1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art41;par2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art41;par2;inc1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art41;par2;inc2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art41;par2;inc3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art41;par2;inc4"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art41;par3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc8"
+  notes: "LGPD art. 41 caput (exigência de encarregado). Supporting: § 1 (identidade pública) + § 2 (atividades) + incs (atribuições) + § 3 (autoridade nacional define dispensa) + art. 5 VIII (definição de encarregado)."
 
 - query: "se vazaram dados e eu sofri prejuízo, quem responde?"
   type: parafrase
   relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art42"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art43"
-  notes: "LGPD art. 42 (responsabilidade civil) + art. 43 (excludentes)."
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art42"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art43"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art42;par1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art42;par1;inc1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art42;par1;inc2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art42;par2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art42;par3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art42;par4"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art43;inc3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art44;par1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art45"
+  notes: "LGPD art. 42 (responsabilidade civil) + art. 43 (excludentes). Supporting: §§ 1-4 do art. 42 (efetiva indenização, solidariedade, ônus, ações coletivas, regresso); art. 43 III (excludente de culpa); art. 44 § 1 (responde quem deixou de adotar segurança); art. 45 (relações de consumo)."
 
 # ── CROSS-DOC (+6) ──────────────────────────────────────────────────────────
 
