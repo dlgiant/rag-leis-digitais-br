@@ -21,19 +21,19 @@ from rag_leis.eval_harness import (
 from rag_leis.rerank import get_reranker
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks" / "tier-1"
+CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks"
 INDEX_DIR = PROJECT_ROOT / "data" / "index"
 
 
 def _load_dotenv(path: Path) -> None:
+    """Load a .env file into os.environ. Kept as a thin wrapper so existing
+    imports stay valid; delegates to python-dotenv for proper parsing
+    (handles export prefix, multi-line values, escaped quotes, etc.)."""
     if not path.exists():
         return
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+    from dotenv import load_dotenv
+
+    load_dotenv(path, override=False)
 
 
 def main() -> int:
@@ -76,16 +76,31 @@ def main() -> int:
     safe_name = embedder.name.replace("/", "_")
     cache_path = INDEX_DIR / f"{safe_name}__{args.text_mode}.npz"
 
-    if cache_path.exists() and not args.rebuild:
+    # Content-hash gate against silent staleness: any change to the embedded
+    # surface forms (new chunks, parser fixes, text-mode tweaks) invalidates.
+    from rag_leis.cache import cache_is_fresh, texts_hash, write_meta
+
+    current_hash = texts_hash(format_texts(chunks, args.text_mode))
+
+    if cache_is_fresh(cache_path, current_hash) and not args.rebuild:
         print(f"Loading cached index: {cache_path}")
         loaded = np.load(cache_path, allow_pickle=True)
         urns: list[str] = list(loaded["urns"])
         doc_vecs = loaded["vecs"]
     else:
+        if cache_path.exists():
+            print(f"Cache stale (hash mismatch or missing meta): {cache_path.name} — rebuilding.")
         print(f"Embedding {len(chunks)} chunks with {embedder.name} (mode={args.text_mode})...")
         urns, doc_vecs = build_index(chunks, embedder, mode=args.text_mode)
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         np.savez(cache_path, urns=np.array(urns, dtype=object), vecs=doc_vecs)
+        write_meta(
+            cache_path,
+            content_hash=current_hash,
+            n_chunks=len(urns),
+            model=embedder.name,
+            text_mode=args.text_mode,
+        )
         print(f"Cached index → {cache_path}")
 
     # Build a urn → passage-text dict (matching the index's text mode) so the

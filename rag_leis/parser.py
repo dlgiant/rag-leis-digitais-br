@@ -348,11 +348,60 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
 
         i += 1
 
-    return _dedup_keep_last(raw)
+    return _mark_revoked(_dedup_keep_last(raw))
+
+
+class PlanaltoHtmlParser:
+    """Parses Planalto.gov.br HTML pages (Lei / Decreto / Constituição).
+
+    Implements the `Parser` protocol from rag_leis.chunks. Wraps the
+    module-level `parse()` function so the regex-heavy implementation can stay
+    as procedural code while the call site uses a polymorphic interface.
+
+    Use this when other parsers exist alongside (e.g. AnpdPdfParser) and the
+    caller wants to dispatch based on URN scheme or source format.
+    """
+
+    name: str = "planalto-html"
+
+    def parse(self, document_urn: str, source: str) -> list[Chunk]:
+        return parse(document_urn, source)
+
+
+def _mark_revoked(chunks: list[Chunk]) -> list[Chunk]:
+    """Set Chunk.is_revoked for placeholder chunks (revogado/vetado/suprimido/stub).
+
+    Run after dedup so the flag reflects the chunk that survives. Single pass —
+    avoids touching the 6 Chunk() construction sites individually.
+    """
+    from dataclasses import replace
+
+    from rag_leis.chunks import is_revoked_text
+
+    return [replace(c, is_revoked=is_revoked_text(c.text)) for c in chunks]
 
 
 def _dedup_keep_last(chunks: list[Chunk]) -> list[Chunk]:
-    by_partition: dict[str, Chunk] = {}
+    """Keep the last chunk for each partition slug.
+
+    Dedup firing means the parser emitted >1 chunk with the same partition
+    URN — typically a sign of a regex bug or unexpected HTML shape. Logs a
+    warning per duplicate so silent bugs surface during corpus expansion.
+    """
+    import logging
+
+    log = logging.getLogger(__name__)
+    seen: dict[str, Chunk] = {}
+    dupes: list[tuple[str, str]] = []  # (partition, dropped_label)
     for c in chunks:
-        by_partition[c.partition] = c
-    return list(by_partition.values())
+        if c.partition in seen:
+            dupes.append((c.partition, seen[c.partition].label))
+        seen[c.partition] = c
+    if dupes:
+        log.warning(
+            "dedup_keep_last fired on %d duplicates (kept last): %s",
+            len(dupes),
+            ", ".join(f"{p}={lbl!r}" for p, lbl in dupes[:5])
+            + ("..." if len(dupes) > 5 else ""),
+        )
+    return list(seen.values())

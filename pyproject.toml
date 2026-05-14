@@ -6,6 +6,7 @@ dependencies = [
     "httpx>=0.28.1",
     "numpy>=2.0",
     "pyyaml>=6.0",
+    "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]
@@ -16,6 +17,7 @@ reranker = ["FlagEmbedding>=1.3"]
 [dependency-groups]
 dev = [
     "mypy>=2.0.0",
+    "pytest>=8.0",
     "ruff>=0.15.12",
     "types-PyYAML>=6.0",
 ]
@@ -54,3 +56,7 @@ pretty = true
 [[tool.mypy.overrides]]
 module = ["FlagEmbedding.*", "voyageai.*"]
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider -p no:launch -p no:launch_ros -p no:launch_testing"

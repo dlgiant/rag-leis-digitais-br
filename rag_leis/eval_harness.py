@@ -43,12 +43,18 @@ class Query:
 
 
 def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
+    """Load all chunks from `chunks_dir`, recursively.
+
+    Accepts either a tier-specific dir (`data/chunks/tier-1`, legacy) or the
+    chunks root (`data/chunks/`). Uses rglob so multi-tier layouts work
+    transparently without callers touching paths.
+    """
     # First pass: read all raw rows (before the empty-chunk filter) into a urn→row
     # map. We need the unfiltered set because a child's caput may itself be too
     # short to index (e.g. an artigo whose body is a colon and a list) but still
     # carries the parent context for its children.
     raw_by_urn: dict[str, dict[str, Any]] = {}
-    for jsonl in sorted(chunks_dir.glob("*.jsonl")):
+    for jsonl in sorted(chunks_dir.rglob("*.jsonl")):
         with jsonl.open(encoding="utf-8") as f:
             for line in f:
                 if not line.strip():
@@ -97,10 +103,14 @@ def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
             cur = raw_by_urn.get(f"{doc_urn}~{parent_part}")
         return ", ".join(reversed(labels))
 
+    from rag_leis.chunks import is_revoked_text
+
     out: list[IndexChunk] = []
     for obj in raw_by_urn.values():
-        # Skip revoked/empty chunks (e.g. art7;par1 with text=".").
-        if len(obj["text"].strip(". ")) < min_text_chars:
+        # Skip placeholders (revogado/vetado/suprimido/stub). Prefer the explicit
+        # `is_revoked` flag set at parse time; fall back to text-pattern detection
+        # for JSONL written before the flag existed.
+        if obj.get("is_revoked", False) or is_revoked_text(obj["text"]):
             continue
         nav = obj.get("nav") or {}
         nav_text = " > ".join(v for v in nav.values() if v)
