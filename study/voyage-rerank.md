@@ -137,3 +137,62 @@ Custo total: ~$0.16.
 
 - Aggregate: `/tmp/voyage_rerank.txt`.
 - Código: `rag_leis/rerank.py:VoyageReranker`, wired em `get_reranker`.
+
+---
+
+## Update — re-eval com gold expandido (v3.5)
+
+Após expansão do gold de paráfrase (78 queries com graded relevance, +CDC adicionado, +CF/LAI/LGPD cross-doc, +incs/§§ supporting nas mono-artigo), re-rodei voyage rerank-2.5 contra o novo dense baseline.
+
+**Mudanças nos números agregados**:
+
+| metric | gold antigo | **gold expandido** |
+|---|---|---|
+| dense baseline nDCG | 0.608 | **0.660** (+0.052) |
+| dense baseline MRR | 0.591 | **0.697** (+0.106) |
+| + rerank nDCG | 0.603 (Δ -0.005) | 0.637 (**Δ -0.022**) |
+| + rerank MRR | 0.613 (Δ +0.022) | 0.711 (**Δ +0.014**) |
+
+A regressão de nDCG **dobrou** (-0.005 → -0.022). O ganho de MRR **caiu** de +0.022 pra +0.014.
+
+**Per-type com gold expandido**:
+
+| tipo | Δ nDCG | Δ MRR | conclusão |
+|---|---:|---:|---|
+| **citacao-literal** | **+0.046** | **+0.099** | ✓ ganho confirmado |
+| **enumeracao** | +0.001 | **+0.058** | ✓ MRR ganha real |
+| definicao | -0.045 | -0.045 | regride como antes |
+| cross-doc | -0.027 | -0.008 | regride leve |
+| **parafrase** | **-0.078** | **-0.016** | ✗ **agora regride** (antes parecia neutra) |
+
+### Por que o ganho do reranker caiu
+
+A v3 baseline tinha gold underspec em paráfrase — média 1-2 chunks marcados quando a resposta natural envolve 5-10 da mesma família estrutural. Esse underspec mascarava parte do dense:
+
+- **Gold antigo**: dense top-10 retornava chunks "vizinhos do gold" que **não contavam** como relevantes → dense parecia mais fraco do que é.
+- **Reranker movia esses vizinhos** sem perder o gold único → parecia neutro/positivo na superfície.
+- **Gold expandido**: vizinhos do gold viraram supporting (rel=1). Dense agora retorna vários relevantes no top-K → nDCG do dense sobe muito.
+- **Reranker reordena dentro do top-K** e empurra alguns supporting pra fora do top-10 → DCG cai.
+
+Resumindo: parte do "ganho aparente" do reranker em paráfrase era **artefato de gold incompleto**.
+
+### Tese ajustada (de novo)
+
+> Voyage rerank-2.5 é útil **apenas** em queries com gold multi-chunk concentrado em UM artigo: **citação-literal** (+0.099 MRR) e **enumeração** (+0.058 MRR). Em outras categorias (definição, paráfrase, cross-doc), regride.
+
+### Recomendação revisada de produção
+
+| caso de uso | recomendação |
+|---|---|
+| RAG geral (top-K → LLM, queries paraphrásticas) | voyage dense puro |
+| Citation lookup ("o que diz o art. X?") | voyage dense + voyage rerank-2.5 |
+| FAQ enumerativa ("quais são as X?") | voyage dense + voyage rerank-2.5 |
+| Definição single-answer | voyage dense puro |
+
+A escolha de ligar reranker depende do mix de queries. **Não é universal**.
+
+### Implicação maior pro projeto
+
+Toda comparação anterior (rerank, hybrid, colbert) deveria ser re-rodada com o gold expandido. Ganhos podem ter sido **sub**estimados (se ajudava em paráfrase, gold antigo escondeu) ou **sobre**estimados (se ajudava em definição, gold antigo deu crédito demais).
+
+Aprendizado pra próximos projetos: **eval set com gold completo é pré-requisito pra avaliar second-stage retrieval**. Eval v1/v2 era suficiente pra detectar grandes efeitos (label-prefix 0 → 0.36 em citação-literal); insuficiente pra calibrar efeitos finos de rerank/router. v3 + gold expansion é o primeiro nível confiável.
