@@ -1,0 +1,263 @@
+# Answer-eval set v0 — 15 rows for Phase 2 LLM-pipeline measurement.
+#
+# Different from eval/queries.yaml (retrieval gold): here we also pin the
+# *content* of an acceptable answer, so we can score faithfulness with an
+# LLM judge (Phase 2.6) and citation precision/recall against the gold.
+#
+# Schema:
+#   query                — the user-facing question
+#   type                 — same taxonomy as eval/queries.yaml
+#                          (definicao | enumeracao | citacao-literal | cross-doc | oos)
+#   oos                  — true iff out-of-scope (no answer should be produced;
+#                          the pipeline should refuse)
+#   gold_urns            — URNs the answer should cite. For enumerações we
+#                          list every relevant chunk; the pipeline may miss
+#                          some due to top_k limits, which is exactly the
+#                          recall signal we want to measure.
+#   expected_paragraph   — a 1-5 sentence ground-truth paraphrase. Not the
+#                          chunk text verbatim — it's what a senior lawyer
+#                          would say when prompted to summarize the rule.
+#                          The LLM judge compares the model's `answer` to
+#                          this for faithfulness scoring (0-5).
+#
+# Sample distribution:
+#   - 4 definicao         (single-chunk gold, short answer)
+#   - 4 enumeracao        (multi-chunk gold, longer answer)
+#   - 3 citacao-literal   (article-number anchored)
+#   - 1 cross-doc         (gold spans ≥2 laws)
+#   - 3 oos               (clearly outside the corpus; should refuse)
+#
+# This v0 is small (15 rows). Documented as such in study/phase-2-design.md.
+# Expand iteratively once metrics are flowing.
+
+# ============================================================================
+# DEFINICAO (4)
+# ============================================================================
+
+- query: "qual a definição de dado pessoal na LGPD?"
+  type: definicao
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1"
+  expected_paragraph: |
+    Segundo a LGPD (art. 5º, I), dado pessoal é toda informação relacionada
+    a pessoa natural identificada ou identificável.
+
+- query: "o que é neutralidade de rede no Marco Civil da Internet?"
+  type: definicao
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9"
+  expected_paragraph: |
+    O Marco Civil da Internet (art. 9º) estabelece a neutralidade de rede
+    como o dever do responsável pela transmissão, comutação ou roteamento
+    de tratar de forma isonômica quaisquer pacotes de dados, sem distinção
+    por conteúdo, origem e destino, serviço, terminal ou aplicação.
+
+- query: "qual a definição legal de programa de computador no Brasil?"
+  type: definicao
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:lei:1998-02-19;9609~art1"
+  expected_paragraph: |
+    A Lei do Software (Lei nº 9.609/1998, art. 1º) define programa de
+    computador como a expressão de um conjunto organizado de instruções em
+    linguagem natural ou codificada, contida em suporte físico de qualquer
+    natureza, empregada em máquinas automáticas de tratamento da informação
+    para fazê-las funcionar de modo e para fins determinados.
+
+- query: "o que é habeas data?"
+  type: definicao
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"
+  expected_paragraph: |
+    A Constituição (art. 5º, LXXII) prevê o habeas data como remédio
+    constitucional para (a) assegurar o conhecimento de informações
+    relativas à pessoa do impetrante constantes de registros ou bancos de
+    dados de entidades governamentais ou de caráter público, e (b) para
+    retificação desses dados quando não se prefira fazê-lo por processo
+    sigiloso, judicial ou administrativo.
+
+# ============================================================================
+# ENUMERACAO (4)
+# ============================================================================
+
+- query: "quais são os princípios do tratamento de dados pessoais na LGPD?"
+  type: enumeracao
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc1"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc2"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc3"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc4"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc5"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc6"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc7"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc8"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc9"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc10"
+  expected_paragraph: |
+    O art. 6º da LGPD lista, além da boa-fé, dez princípios para o
+    tratamento de dados pessoais: finalidade (I), adequação (II),
+    necessidade (III), livre acesso (IV), qualidade dos dados (V),
+    transparência (VI), segurança (VII), prevenção (VIII), não
+    discriminação (IX) e responsabilização e prestação de contas (X).
+
+- query: "direitos garantidos ao usuário de internet"
+  type: enumeracao
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc1"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc2"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc3"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc4"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc5"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc6"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc7"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc8"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc9"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc10"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc11"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc12"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc13"
+  expected_paragraph: |
+    O art. 7º do Marco Civil da Internet declara o acesso à internet
+    essencial ao exercício da cidadania e assegura ao usuário 13 direitos,
+    entre eles: inviolabilidade da intimidade e da vida privada (I); sigilo
+    do fluxo e das comunicações armazenadas, salvo ordem judicial (II e
+    III); não suspensão da conexão salvo por inadimplência (IV);
+    informações claras sobre o regime de proteção dos registros (VI); não
+    fornecimento de dados pessoais a terceiros sem consentimento (VII);
+    consentimento expresso e destacado para coleta e tratamento (IX);
+    exclusão definitiva dos dados ao término da relação (X); e aplicação
+    das normas de defesa do consumidor (XIII).
+
+- query: "quais sanções administrativas a ANPD pode aplicar por violação da LGPD?"
+  type: enumeracao
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc1"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc2"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc3"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc4"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc5"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc6"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc10"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc11"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc12"
+  expected_paragraph: |
+    O art. 52 da LGPD prevê as sanções administrativas que a ANPD pode
+    aplicar por infrações: advertência com prazo para correção (I); multa
+    simples de até 2% do faturamento, limitada a R$ 50 milhões por infração
+    (II); multa diária (III); publicização da infração (IV); bloqueio dos
+    dados (V); eliminação dos dados (VI); suspensão parcial do banco de
+    dados por até 6 meses, prorrogável (X); suspensão da atividade de
+    tratamento por até 6 meses, prorrogável (XI); e proibição parcial ou
+    total das atividades de tratamento (XII). Os incisos VII, VIII e IX
+    foram vetados.
+
+- query: "como o Código Penal define crime consumado e tentado?"
+  type: enumeracao
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;inc1"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;inc2"
+  expected_paragraph: |
+    Conforme o art. 14 do Código Penal, o crime se diz consumado (I) quando
+    nele se reúnem todos os elementos de sua definição legal, e tentado
+    (II) quando, iniciada a execução, não se consuma por circunstâncias
+    alheias à vontade do agente.
+
+# ============================================================================
+# CITACAO-LITERAL (3)
+# ============================================================================
+
+- query: "o que diz o art. 9º do Marco Civil da Internet?"
+  type: citacao-literal
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9"
+  expected_paragraph: |
+    O art. 9º do Marco Civil da Internet consagra a neutralidade de rede:
+    o responsável pela transmissão, comutação ou roteamento tem o dever de
+    tratar de forma isonômica quaisquer pacotes de dados, sem distinção
+    por conteúdo, origem e destino, serviço, terminal ou aplicação.
+
+- query: "o que diz o art. 154-A do Código Penal?"
+  type: citacao-literal
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a"
+  expected_paragraph: |
+    O art. 154-A do Código Penal tipifica o crime de invasão de dispositivo
+    informático: invadir dispositivo informático de uso alheio, conectado
+    ou não à rede de computadores, com o fim de obter, adulterar ou
+    destruir dados ou informações sem autorização expressa ou tácita do
+    usuário, ou de instalar vulnerabilidades para obter vantagem ilícita.
+
+- query: "o que diz o art. 5 inciso X da Constituição?"
+  type: citacao-literal
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"
+  expected_paragraph: |
+    O art. 5º, X, da Constituição Federal declara invioláveis a intimidade,
+    a vida privada, a honra e a imagem das pessoas, assegurando direito a
+    indenização pelo dano material ou moral decorrente de sua violação.
+
+# ============================================================================
+# CROSS-DOC (1)
+# ============================================================================
+
+- query: "habeas data e direitos do titular de dados"
+  type: cross-doc
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc4"
+  expected_paragraph: |
+    A Constituição (art. 5º, LXXII) garante o habeas data para acesso a
+    informações pessoais em registros governamentais ou de caráter público
+    e para sua retificação. A LGPD operacionaliza esses direitos na esfera
+    do controlador privado: o art. 18, II, assegura ao titular o direito
+    de acesso aos dados, e o art. 18, IV, o direito à anonimização,
+    bloqueio ou eliminação de dados desnecessários, excessivos ou tratados
+    em desconformidade com a Lei.
+
+# ============================================================================
+# OOS (3) — clearly outside the corpus; pipeline should refuse
+# ============================================================================
+
+- query: "qual a alíquota do imposto de renda para pessoa física em 2025?"
+  type: oos
+  oos: true
+  gold_urns: []
+  expected_paragraph: |
+    O corpus do projeto cobre legislação digital brasileira (LGPD, MCI,
+    Lei do Software, etc.), não a legislação tributária. A pipeline deve
+    recusar com "fora do escopo da base" ou equivalente.
+
+- query: "como funciona o divórcio judicial no Brasil?"
+  type: oos
+  oos: true
+  gold_urns: []
+  expected_paragraph: |
+    O corpus do projeto cobre legislação digital brasileira (LGPD, MCI,
+    Código Penal, etc.), não direito de família. A pipeline deve recusar
+    com "fora do escopo da base" ou equivalente.
+
+- query: "quais os requisitos para registrar uma marca no INPI?"
+  type: oos
+  oos: true
+  gold_urns: []
+  expected_paragraph: |
+    O corpus do projeto cobre direitos autorais (Lei 9.610) e software
+    (Lei 9.609), mas não propriedade industrial (Lei 9.279/1996 — marcas
+    e patentes). A pipeline deve recusar com "fora do escopo da base" ou
+    equivalente.
