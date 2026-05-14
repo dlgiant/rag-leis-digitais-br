@@ -99,7 +99,7 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
         "--text-mode",
-        choices=["text", "nav+text", "caput+text", "nav+caput+text"],
+        choices=["text", "nav+text", "caput+text", "nav+caput+text", "label+nav+caput+text"],
         default="nav+caput+text",
     )
     p.add_argument("--k", type=int, default=50, help="candidate depth for each retriever")
@@ -226,7 +226,7 @@ def main() -> int:
         per_query.append({"dense": dense_urns, "sparse": sparse_urns, "rrf": rrf_urns})
 
         for name, ranked in [("dense", dense_urns), ("sparse", sparse_urns), ("rrf", rrf_urns)]:
-            metrics[name]["ndcg"].append(ndcg_at_k(ranked, q.relevant, 10))
+            metrics[name]["ndcg"].append(ndcg_at_k(ranked, q, 10))
             metrics[name]["recall"].append(recall_at_k(ranked, q.relevant, 20))
             metrics[name]["mrr"].append(mrr_at_k(ranked, q.relevant, 10))
 
@@ -236,7 +236,7 @@ def main() -> int:
         if args.dense_model != "bge-m3"
         else "bge-m3 (dense+sparse)"
     )
-    print(f"Aggregate ({label} / {args.text_mode}, 25 queries, k={args.k}, rrf-k={args.rrf_k})")
+    print(f"Aggregate ({label} / {args.text_mode}, {len(queries)} queries, k={args.k}, rrf-k={args.rrf_k})")
     print("=" * 72)
     print(f"{'pipeline':<10} {'nDCG@10':>8} {'Recall@20':>10} {'MRR@10':>8}")
     for name in ("dense", "sparse", "rrf"):
