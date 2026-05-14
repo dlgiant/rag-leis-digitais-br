@@ -345,9 +345,18 @@
 - query: "minha empresa precisa pedir autorização pra mandar e-mail marketing?"
   type: parafrase
   relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc1"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art8"
-  notes: "Pergunta natural sobre consentimento. art. 7 I (consentimento como base legal) + art. 8 (forma do consentimento)."
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art8"
+      - "urn:lex:br:federal:lei:1990-09-11;8078~art39;inc3"
+    supporting:
+      - "urn:lex:br:federal:lei:1990-09-11;8078~art39"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc5"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art8;par1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art8;par2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art8;par3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art8;par4"
+  notes: "LGPD art. 7 I (consent base legal) + art. 8 (forma) + CDC art. 39 III (envio sem solicitação prévia = prática abusiva). Supporting: CDC art. 39 caput; LGPD art. 7 V (alternativa contratual); LGPD art. 8 §§ 1-4 (forma/ônus/vício/finalidade)."
 
 - query: "fui invadido no celular sem permissão, isso é crime?"
   type: parafrase
@@ -373,8 +382,22 @@
 
 - query: "quero saber tudo que uma empresa tem sobre mim, posso pedir?"
   type: parafrase
-  relevant: ["urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2"]
-  notes: "LGPD art. 18, II — direito de acesso. Pergunta em linguagem leiga."
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art18"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc1"
+      - "urn:lex:br:federal:lei:1990-09-11;8078~art43"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art18;par3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art18;par5"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art18;par8"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc7"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art19"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art19;par2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art19;par3"
+      - "urn:lex:br:federal:lei:1990-09-11;8078~art43;par4"
+  notes: "LGPD art. 18 + inc I (confirmação) + inc II (acesso) + CDC art. 43 (acesso direto a cadastros/registros sobre o consumidor). Supporting: §§ procedurais do art. 18; art. 19 (forma do fornecimento); CDC art. 43 § 4 (bancos de dados como entidades de caráter público)."
 
 - query: "se vazaram meus dados, alguém me avisa?"
   type: parafrase
