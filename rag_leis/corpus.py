@@ -66,4 +66,9 @@ TIER_1: tuple[Document, ...] = (
         title="Lei 13.853/2019 — criação da ANPD",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2019/lei/l13853.htm",
     ),
+    Document(
+        urn="urn:lex:br:federal:lei:1990-09-11;8078",
+        title="Código de Defesa do Consumidor (Lei 8.078/1990)",
+        planalto_url="https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm",
+    ),
 )

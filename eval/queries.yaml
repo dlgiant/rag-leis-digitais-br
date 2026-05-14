@@ -580,8 +580,14 @@
 
 - query: "clonaram meu cartão pela internet, qual artigo se aplica?"
   type: parafrase
-  relevant: ["urn:lex:br:federal:decreto.lei:1940-12-07;2848~art171"]
-  notes: "CP art. 171 — estelionato (incluindo fraude eletrônica após lei 14155/21)."
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:1990-09-11;8078~art14"
+      - "urn:lex:br:federal:lei:1990-09-11;8078~art39"
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art171"
+    supporting:
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art155;par4;inc2"
+  notes: "CDC art. 14 (responsabilidade civil do fornecedor) + CDC art. 39 (práticas abusivas) + CP art. 171 (estelionato, fraude eletrônica após Lei 14155/21). Supporting: CP art. 155 § 4 II (furto qualificado mediante fraude)."
 
 - query: "publicaram fotos íntimas minhas sem autorização, isso é crime?"
   type: parafrase
