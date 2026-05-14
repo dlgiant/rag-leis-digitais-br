@@ -115,21 +115,21 @@ Depois eu (ou você) atualiza `eval/queries.yaml` baseado nas marcações.
 - nav: ESPECIAL > I DOS CRIMES CONTRA A PESSOA > VI DOS CRIMES CONTRA A LIBERDADE INDIVIDUAL > IV DOS CRIMES CONTRA A INVIOLABILIDADE DOS SEGREDOS - Divulgação de segredo
 - text: o Se da invasão resultar a obtenção de conteúdo de comunicações eletrônicas privadas, segredos comerciais ou industriais, informações sigilosas, assim definidas em lei, ou o controle remoto não autorizado do dispositivo…
 - `[ ] add as core`
-- `[ ] add as supporting`
+- `[x] add as supporting`
 
 ### Rank 3  (sim=0.6573)    
 - URN: `urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5`
 - nav: ESPECIAL > I DOS CRIMES CONTRA A PESSOA > VI DOS CRIMES CONTRA A LIBERDADE INDIVIDUAL > IV DOS CRIMES CONTRA A INVIOLABILIDADE DOS SEGREDOS - Divulgação de segredo
 - text: o Aumenta-se a pena de um terço à metade se o crime for praticado contra: Vigência
 - `[ ] add as core`
-- `[ ] add as supporting`
+- `[x] add as supporting`
 
 ### Rank 4  (sim=0.6548)    
 - URN: `urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par1`
 - nav: ESPECIAL > I DOS CRIMES CONTRA A PESSOA > VI DOS CRIMES CONTRA A LIBERDADE INDIVIDUAL > IV DOS CRIMES CONTRA A INVIOLABILIDADE DOS SEGREDOS - Divulgação de segredo
 - text: o Na mesma pena incorre quem produz, oferece, distribui, vende ou difunde dispositivo ou programa de computador com o intuito de permitir a prática da conduta definida no caput. Vigência
 - `[ ] add as core`
-- `[ ] add as supporting`
+- `[x] add as supporting`
 
 ### Rank 5  (sim=0.6533)    
 - URN: `urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5;inc2`
@@ -150,7 +150,7 @@ Depois eu (ou você) atualiza `eval/queries.yaml` baseado nas marcações.
 - nav: ESPECIAL > I DOS CRIMES CONTRA A PESSOA > VI DOS CRIMES CONTRA A LIBERDADE INDIVIDUAL > IV DOS CRIMES CONTRA A INVIOLABILIDADE DOS SEGREDOS - Divulgação de segredo
 - text: Aumenta-se a pena de 1/3 (um terço) a 2/3 (dois terços) se da invasão resulta prejuízo econômico.
 - `[ ] add as core`
-- `[ ] add as supporting`
+- `[x] add as supporting`
 
 ### Rank 8  (sim=0.6442)    
 - URN: `urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5;inc4`
@@ -195,28 +195,28 @@ Depois eu (ou você) atualiza `eval/queries.yaml` baseado nas marcações.
 - nav: II - DA PROTEÇÃO AOS DIREITOS DE AUTOR E DO REGISTRO
 - text: Inclui-se dentre os direitos assegurados por esta Lei e pela legislação de direitos autorais e conexos vigentes no País aquele direito exclusivo de autorizar ou proibir o aluguel comercial, não sendo esse direito exaurí…
 - `[ ] add as core`
-- `[ ] add as supporting`
+- `[x] add as supporting`
 
 ### Rank 3  (sim=0.6017)    
 - URN: `urn:lex:br:federal:lei:1998-02-19;9609~art6;inc4`
 - nav: II - DA PROTEÇÃO AOS DIREITOS DE AUTOR E DO REGISTRO
 - text: a integração de um programa, mantendo-se suas características essenciais, a um sistema aplicativo ou operacional, tecnicamente indispensável às necessidades do usuário, desde que para o uso exclusivo de quem a promoveu.
 - `[ ] add as core`
-- `[ ] add as supporting`
+- `[x] add as supporting`
 
 ### Rank 4  (sim=0.5995)    
 - URN: `urn:lex:br:federal:lei:1998-02-19;9609~art6`
 - nav: II - DA PROTEÇÃO AOS DIREITOS DE AUTOR E DO REGISTRO
 - text: Não constituem ofensa aos direitos do titular de programa de computador:
 - `[ ] add as core`
-- `[ ] add as supporting`
+- `[x] add as supporting`
 
 ### Rank 5  (sim=0.5985)    
 - URN: `urn:lex:br:federal:lei:1998-02-19;9609~art12;par1`
 - nav: V - DAS INFRAÇÕES E DAS PENALIDADES
 - text: Se a violação consistir na reprodução, por qualquer meio, de programa de computador, no todo ou em parte, para fins de comércio, sem autorização expressa do autor ou de quem o represente:
 - `[ ] add as core`
-- `[ ] add as supporting`
+- `[x] add as supporting`
 
 ### Rank 6  (sim=0.5929)    
 - URN: `urn:lex:br:federal:decreto.lei:1940-12-07;2848~art184;par4`
@@ -269,7 +269,7 @@ Depois eu (ou você) atualiza `eval/queries.yaml` baseado nas marcações.
 - URN: `urn:lex:br:federal:lei:1998-02-19;9610~art46;inc2`
 - nav: III - Dos Direitos do Autor > IV - Das Limitações aos Direitos Autorais
 - text: a reprodução, em um só exemplar de pequenos trechos, para uso privado do copista, desde que feita por este, sem intuito de lucro;
-- `[ ] add as core`
+- `[x] add as core`
 - `[ ] add as supporting`
 
 ### Rank 2  (sim=0.7201)  ★ core
@@ -281,21 +281,21 @@ Depois eu (ou você) atualiza `eval/queries.yaml` baseado nas marcações.
 - URN: `urn:lex:br:federal:lei:1998-02-19;9610~art46;inc4`
 - nav: III - Dos Direitos do Autor > IV - Das Limitações aos Direitos Autorais
 - text: o apanhado de lições em estabelecimentos de ensino por aqueles a quem elas se dirigem, vedada sua publicação, integral ou parcial, sem autorização prévia e expressa de quem as ministrou;
-- `[ ] add as core`
+- `[x] add as core`
 - `[ ] add as supporting`
 
 ### Rank 4  (sim=0.7066)    
 - URN: `urn:lex:br:federal:lei:1998-02-19;9610~art46;inc8`
 - nav: III - Dos Direitos do Autor > IV - Das Limitações aos Direitos Autorais
 - text: a reprodução, em quaisquer obras, de pequenos trechos de obras preexistentes, de qualquer natureza, ou de obra integral, quando de artes plásticas, sempre que a reprodução em si não seja o objetivo principal da obra nov…
-- `[ ] add as core`
+- `[x] add as core`
 - `[ ] add as supporting`
 
 ### Rank 5  (sim=0.6960)    
 - URN: `urn:lex:br:federal:lei:1998-02-19;9610~art46;inc1`
 - nav: III - Dos Direitos do Autor > IV - Das Limitações aos Direitos Autorais
 - text: a reprodução:
-- `[ ] add as core`
+- `[x] add as core`
 - `[ ] add as supporting`
 
 ### Rank 6  (sim=0.6935)    
@@ -309,28 +309,28 @@ Depois eu (ou você) atualiza `eval/queries.yaml` baseado nas marcações.
 - URN: `urn:lex:br:federal:lei:1998-02-19;9610~art46;inc7`
 - nav: III - Dos Direitos do Autor > IV - Das Limitações aos Direitos Autorais
 - text: a utilização de obras literárias, artísticas ou científicas para produzir prova judiciária ou administrativa;
-- `[ ] add as core`
+- `[x] add as core`
 - `[ ] add as supporting`
 
 ### Rank 8  (sim=0.6823)    
 - URN: `urn:lex:br:federal:lei:1998-02-19;9610~art29;inc8;ali-a`
 - nav: III - Dos Direitos do Autor > III - Dos Direitos Patrimoniais do Autor e de sua Duração
 - text: representação, recitação ou declamação;
-- `[ ] add as core`
+- `[x] add as core`
 - `[ ] add as supporting`
 
 ### Rank 9  (sim=0.6750)    
 - URN: `urn:lex:br:federal:lei:1998-02-19;9610~art46`
 - nav: III - Dos Direitos do Autor > IV - Das Limitações aos Direitos Autorais
 - text: Não constitui ofensa aos direitos autorais:
-- `[ ] add as core`
+- `[x] add as core`
 - `[ ] add as supporting`
 
 ### Rank 10  (sim=0.6732)    
 - URN: `urn:lex:br:federal:lei:1998-02-19;9610~art46;inc6`
 - nav: III - Dos Direitos do Autor > IV - Das Limitações aos Direitos Autorais
 - text: a representação teatral e a execução musical, quando realizadas no recesso familiar ou, para fins exclusivamente didáticos, nos estabelecimentos de ensino, não havendo em qualquer caso intuito de lucro;
-- `[ ] add as core`
+- `[x] add as core`
 - `[ ] add as supporting`
 
 ---
@@ -350,7 +350,7 @@ Depois eu (ou você) atualiza `eval/queries.yaml` baseado nas marcações.
 - URN: `urn:lex:br:federal:lei:2018-08-14;13709~art14;par3`
 - nav: II DO TRATAMENTO DE DADOS PESSOAIS > III Do Tratamento de Dados Pessoais de Crianças e de Adolescentes
 - text: Poderão ser coletados dados pessoais de crianças sem o consentimento a que se refere o § 1º deste artigo quando a coleta for necessária para contatar os pais ou o responsável legal, utilizados uma única vez e sem armaze…
-- `[ ] add as core`
+- `[x] add as core`
 - `[ ] add as supporting`
 
 ### Rank 2  (sim=0.6566)  ★ core
@@ -362,14 +362,14 @@ Depois eu (ou você) atualiza `eval/queries.yaml` baseado nas marcações.
 - URN: `urn:lex:br:federal:lei:2018-08-14;13709~art14;par5`
 - nav: II DO TRATAMENTO DE DADOS PESSOAIS > III Do Tratamento de Dados Pessoais de Crianças e de Adolescentes
 - text: O controlador deve realizar todos os esforços razoáveis para verificar que o consentimento a que se refere o § 1º deste artigo foi dado pelo responsável pela criança, consideradas as tecnologias disponíveis.
-- `[ ] add as core`
+- `[x] add as core`
 - `[ ] add as supporting`
 
 ### Rank 4  (sim=0.6375)    
 - URN: `urn:lex:br:federal:lei:2018-08-14;13709~art14;par4`
 - nav: II DO TRATAMENTO DE DADOS PESSOAIS > III Do Tratamento de Dados Pessoais de Crianças e de Adolescentes
 - text: Os controladores não deverão condicionar a participação dos titulares de que trata o § 1º deste artigo em jogos, aplicações de internet ou outras atividades ao fornecimento de informações pessoais além das estritamente …
-- `[ ] add as core`
+- `[x] add as core`
 - `[ ] add as supporting`
 
 ### Rank 5  (sim=0.6365)    
