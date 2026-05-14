@@ -34,7 +34,7 @@ from rag_leis.eval_harness import (  # noqa: E402
 from rag_leis.rerank import get_reranker  # noqa: E402
 from rag_leis.run_eval import _load_dotenv  # noqa: E402
 
-CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks" / "tier-1"
+CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks"
 
 
 def _mean(xs: list[float]) -> float:

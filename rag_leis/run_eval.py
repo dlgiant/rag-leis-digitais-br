@@ -21,19 +21,19 @@ from rag_leis.eval_harness import (
 from rag_leis.rerank import get_reranker
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks" / "tier-1"
+CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks"
 INDEX_DIR = PROJECT_ROOT / "data" / "index"
 
 
 def _load_dotenv(path: Path) -> None:
+    """Load a .env file into os.environ. Kept as a thin wrapper so existing
+    imports stay valid; delegates to python-dotenv for proper parsing
+    (handles export prefix, multi-line values, escaped quotes, etc.)."""
     if not path.exists():
         return
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+    from dotenv import load_dotenv
+
+    load_dotenv(path, override=False)
 
 
 def main() -> int:

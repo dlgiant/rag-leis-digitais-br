@@ -31,7 +31,7 @@ from rag_leis.eval_harness import (  # noqa: E402
 )
 from rag_leis.run_eval import _load_dotenv  # noqa: E402
 
-CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks" / "tier-1"
+CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks"
 INDEX_DIR = PROJECT_ROOT / "data" / "index"
 
 # Very simple Portuguese tokenizer: lowercase, strip punctuation, split on whitespace.
