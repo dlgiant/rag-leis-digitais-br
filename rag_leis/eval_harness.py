@@ -113,7 +113,7 @@ def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
         if obj.get("is_revoked", False) or is_revoked_text(obj["text"]):
             continue
         nav = obj.get("nav") or {}
-        nav_text = " > ".join(v for v in nav.values() if v)
+        nav_text = " > ".join(_normalize_nav_casing(v) for v in nav.values() if v)
         caput_text = _resolve_caput_chain(obj)
         citation = _resolve_citation(obj)
         out.append(
@@ -126,6 +126,54 @@ def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
             )
         )
     return out
+
+
+# Nav values from Planalto come in mixed casing: capítulos are usually ALL-UPPER
+# ("I - DISPOSIÇÕES GERAIS"), seções/subseções are Title Case ("I - Da Digitalização").
+# That inconsistency leaks into the embedded surface form (label+nav+caput+text),
+# adding noise. Normalize ALL-UPPER segments to Title Case at load time;
+# leave mixed-case alone. Independent from chunk text (we don't touch obj["text"]).
+_PT_LOWERCASE_WORDS = frozenset(
+    {"de", "da", "do", "das", "dos", "e", "em", "na", "no", "nas", "nos",
+     "com", "para", "por", "ou", "a", "o", "as", "os", "à", "às", "ao", "aos"}
+)
+
+
+def _normalize_nav_casing(value: str) -> str:
+    """If `value` is mostly uppercase, convert to Portuguese Title Case.
+
+    - Single uppercase letters and Roman numerals stay uppercase.
+    - Connectives (de/da/do/das/dos/e/em/na/no/com/para/por) stay lowercase
+      unless they're the first token.
+    - Mixed-case input is left untouched.
+    """
+    alpha = [c for c in value if c.isalpha()]
+    if not alpha:
+        return value
+    upper_ratio = sum(c.isupper() for c in alpha) / len(alpha)
+    if upper_ratio < 0.7:
+        return value  # already mixed/title case; don't touch.
+
+    out_tokens: list[str] = []
+    just_after_dash = False
+    for i, tok in enumerate(value.split()):
+        if not tok:
+            continue
+        # Preserve Roman numerals (II, III, IV, ..., LXXIX, etc.) and dashes.
+        if all(c in "IVXLCDM-" for c in tok):
+            just_after_dash = "-" in tok
+            out_tokens.append(tok)
+            continue
+        lower = tok.lower()
+        # Lowercase connectives unless they're the first content word OR they
+        # follow a "-" delimiter (e.g. "I - Dos Princípios" should keep "Dos"
+        # capitalized).
+        if i > 0 and not just_after_dash and lower in _PT_LOWERCASE_WORDS:
+            out_tokens.append(lower)
+        else:
+            out_tokens.append(lower[:1].upper() + lower[1:])
+        just_after_dash = False
+    return " ".join(out_tokens)
 
 
 def load_queries(path: Path) -> list[Query]:

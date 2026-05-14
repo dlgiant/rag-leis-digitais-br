@@ -177,3 +177,38 @@ def test_revoked_flag_set_on_placeholders(cdc_chunks):
     assert all(c.is_revoked for c in vetados), (
         "is_revoked must be True for all (Vetado) chunks"
     )
+
+
+# ----------------------------------------------------------------------------
+# Regression goldens for the 4 BLOCKER bugs surfaced by the chunk-auditor
+# (2026-05-14): ADCT art1 leading dot, ADCT art120 missing, CF art231 fine
+# but pinned, CP art187 missing (br-tag split fix).
+# ----------------------------------------------------------------------------
+
+
+def test_cf_adct_art1_text_clean(cf_chunks):
+    """ADCT art. 1 must start with 'O Presidente' — no stray leading period
+    from the 'Art. 1º.' ordinal+period pattern."""
+    c = _find_chunk(cf_chunks, "~adct;art1")
+    assert c.text.startswith("O Presidente da República"), (
+        f"ADCT art1 should start clean; got {c.text[:40]!r}"
+    )
+
+
+def test_cf_adct_art120_present(cf_chunks):
+    """ADCT art. 120 was being swallowed because the preceding `<p>` for
+    art119's parágrafo único was malformed (closed with </div>)."""
+    c = _find_chunk(cf_chunks, "~adct;art120")
+    assert c.kind == "artigo"
+    assert "estado de emergência" in c.text
+    assert "2022" in c.text
+
+
+def test_cp_arts_187_to_191_present_and_revoked(cp_chunks):
+    """CP arts 187-191 are revogados (Lei 9.279/1996) and used to be missing
+    because Planalto packs them with Nomen iuris titles into a single <p> +
+    separates with <br>. Now extracted via <br>-split, marked revogados."""
+    for n in (187, 188, 189, 190, 191):
+        c = _find_chunk(cp_chunks, f"~art{n}")
+        assert c.kind == "artigo"
+        assert c.is_revoked, f"art{n} should be is_revoked (revogado pela Lei 9.279)"
