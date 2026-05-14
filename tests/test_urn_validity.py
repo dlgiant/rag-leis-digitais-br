@@ -71,7 +71,7 @@ def chunks() -> list[tuple[Path, int, dict[str, Any]]]:
                     continue
                 rows.append((jsonl, lineno, json.loads(line)))
     if not rows:
-        pytest.skip(f"Sem chunks em {CHUNKS_DIR} (rode parse_all_tier1 antes).")
+        pytest.skip(f"Sem chunks em {CHUNKS_DIR} (rode parse_all_tier antes).")
     return rows
 
 
