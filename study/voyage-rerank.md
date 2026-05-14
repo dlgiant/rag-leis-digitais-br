@@ -196,3 +196,42 @@ A escolha de ligar reranker depende do mix de queries. **Não é universal**.
 Toda comparação anterior (rerank, hybrid, colbert) deveria ser re-rodada com o gold expandido. Ganhos podem ter sido **sub**estimados (se ajudava em paráfrase, gold antigo escondeu) ou **sobre**estimados (se ajudava em definição, gold antigo deu crédito demais).
 
 Aprendizado pra próximos projetos: **eval set com gold completo é pré-requisito pra avaliar second-stage retrieval**. Eval v1/v2 era suficiente pra detectar grandes efeitos (label-prefix 0 → 0.36 em citação-literal); insuficiente pra calibrar efeitos finos de rerank/router. v3 + gold expansion é o primeiro nível confiável.
+
+---
+
+## Update 2 — comparação dos 5 rerankers com gold expandido
+
+Re-rodei também os 3 rerankers open-source + Cohere v3.5 contra o gold expandido pra comparar.
+
+| reranker | Δ nDCG (antigo) | **Δ nDCG (novo)** | Δ MRR (antigo) | **Δ MRR (novo)** | mudança |
+|---|---:|---:|---:|---:|---|
+| **voyage rerank-2.5** | -0.005 | **-0.022** | +0.022 | **+0.014** | **piora** |
+| cohere rerank-v3.5 | -0.070 | -0.089 | -0.081 | -0.077 | quase igual |
+| bge-reranker-v2-m3 | -0.184 | -0.130 | -0.114 | -0.126 | melhora levemente |
+| jina-reranker-v2 | -0.246 | **-0.108** | -0.231 | **-0.128** | **melhora muito** |
+| bge-reranker-v2-gemma | -0.274 | -0.273 | -0.286 | -0.296 | igual |
+
+Padrão claro:
+
+- **Voyage rerank-2.5 piora** com gold expandido — confirma que parte do ganho aparente era artefato.
+- **Open rerankers (bge-m3, jina-v2) ficam menos catastróficos** — eles ajudavam um pouco em paráfrase mas perdiam muito em definição; gold rico faz a soma ficar menos negativa.
+- **Gemma e Cohere ficam similares** — desalinhamento estrutural não responde a melhoria de gold.
+
+### Per-type (gold novo): quem ainda ajuda em quê
+
+| tipo | melhor reranker | Δ nDCG | Δ MRR |
+|---|---|---:|---:|
+| **citacao-literal** | cohere v3.5 (nDCG) / voyage rerank-2.5 (MRR) | +0.051 | +0.099 |
+| **enumeracao** | voyage rerank-2.5 | +0.001 | +0.058 |
+| definicao | nenhum — todos regridem | — | — |
+| parafrase | nenhum | — | — |
+| cross-doc | nenhum | — | — |
+
+### Conclusão consolidada do projeto sobre rerankers
+
+> **De 5 rerankers testados (3 open + 2 comerciais), apenas voyage rerank-2.5 melhora MRR no agregado** (+0.014 com gold expandido, +0.022 com gold antigo). Mesmo voyage rerank-2.5 **regride em nDCG** (-0.022). O ganho real é concentrado em duas categorias: **citação-literal** e **enumeração** — queries com gold multi-chunk numa mesma família estrutural.
+>
+> Em produção:
+> - **RAG geral / paráfrase / cross-doc / definição**: dense puro voyage + label+nav+caput+text
+> - **Citation lookup específico**: + voyage rerank-2.5 (única classe onde rerank claramente vale)
+> - **Não usar**: Cohere, bge-m3, jina-v2, gemma neste corpus
