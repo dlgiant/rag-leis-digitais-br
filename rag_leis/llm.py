@@ -44,15 +44,19 @@ class AnthropicLLM:
         system: str,
         user: str,
         max_tokens: int = 1024,
-        temperature: float = 0.0,
+        temperature: float | None = None,
     ) -> str:
-        resp = self.client.messages.create(
-            model=self.model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-        )
+        kwargs: dict[str, Any] = {
+            "model": self.model,
+            "max_tokens": max_tokens,
+            "system": system,
+            "messages": [{"role": "user", "content": user}],
+        }
+        # opus-4-7 deprecated `temperature`; only pass it when the caller
+        # explicitly sets a value (sonnet-4-5 etc. still accept it).
+        if temperature is not None:
+            kwargs["temperature"] = temperature
+        resp = self.client.messages.create(**kwargs)
         # Pull all text blocks (typically one) and join — tool blocks shouldn't
         # appear here since we didn't pass `tools=`.
         parts = [b.text for b in resp.content if isinstance(b, TextBlock)]
@@ -64,7 +68,7 @@ class AnthropicLLM:
         user: str,
         tool_schema: dict[str, Any],
         max_tokens: int = 2048,
-        temperature: float = 0.0,
+        temperature: float | None = None,
     ) -> dict[str, Any]:
         """Force the model to respond via the named tool.
 
@@ -72,15 +76,17 @@ class AnthropicLLM:
         the supplied `input_schema`. Raises `RuntimeError` if no tool block
         comes back (shouldn't happen with `tool_choice`, but we guard).
         """
-        resp = self.client.messages.create(
-            model=self.model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-            tools=[tool_schema],
-            tool_choice={"type": "tool", "name": tool_schema["name"]},
-        )
+        kwargs: dict[str, Any] = {
+            "model": self.model,
+            "max_tokens": max_tokens,
+            "system": system,
+            "messages": [{"role": "user", "content": user}],
+            "tools": [tool_schema],
+            "tool_choice": {"type": "tool", "name": tool_schema["name"]},
+        }
+        if temperature is not None:
+            kwargs["temperature"] = temperature
+        resp = self.client.messages.create(**kwargs)
         for block in resp.content:
             if isinstance(block, ToolUseBlock) and block.name == tool_schema["name"]:
                 # block.input is already a parsed dict (Anthropic SDK validates).
