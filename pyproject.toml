@@ -60,3 +60,6 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-p no:cacheprovider -p no:launch -p no:launch_ros -p no:launch_testing"
+markers = [
+    "network: hits external services (skipped unless explicitly selected with `-m network`).",
+]

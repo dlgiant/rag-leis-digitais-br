@@ -5,14 +5,17 @@ import json
 import sys
 from pathlib import Path
 
-from rag_leis.corpus import TIER_1, Document
+from rag_leis.corpus import TIER_1, TIER_2, Document
 from rag_leis.lexml_resolver import LexmlResolverClient, ResolverRecord
 from rag_leis.planalto import PlanaltoDocument, PlanaltoScraper
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
-RAW_DIR = DATA_DIR / "raw" / "tier-1"
-META_DIR = DATA_DIR / "metadata" / "tier-1"
+
+_TIERS: dict[str, tuple[tuple[Document, ...], str]] = {
+    "1": (TIER_1, "tier-1"),
+    "2": (TIER_2, "tier-2"),
+}
 
 
 def urn_to_filename(urn: str) -> str:
@@ -68,14 +71,16 @@ def write_outputs(
     record: ResolverRecord | None,
     html_doc: PlanaltoDocument | None,
     error: str | None,
+    raw_dir: Path,
+    meta_dir: Path,
 ) -> None:
     base = urn_to_filename(doc.urn)
 
     if html_doc is not None:
-        raw_path = RAW_DIR / f"{base}.html"
+        raw_path = raw_dir / f"{base}.html"
         raw_path.write_text(html_doc.html, encoding="utf-8")
 
-    meta_path = META_DIR / f"{base}.json"
+    meta_path = meta_dir / f"{base}.json"
     meta_path.write_text(
         json.dumps(
             {
@@ -108,21 +113,24 @@ def write_outputs(
     )
 
 
-async def main() -> int:
-    RAW_DIR.mkdir(parents=True, exist_ok=True)
-    META_DIR.mkdir(parents=True, exist_ok=True)
+async def _fetch_one_tier(
+    docs: tuple[Document, ...], tier_dir: str
+) -> int:
+    raw_dir = DATA_DIR / "raw" / tier_dir
+    meta_dir = DATA_DIR / "metadata" / tier_dir
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    meta_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Fetching {len(TIER_1)} documents from Tier 1...")
-    print(f"  Raw HTML  → {RAW_DIR.relative_to(PROJECT_ROOT)}")
-    print(f"  Metadata  → {META_DIR.relative_to(PROJECT_ROOT)}")
-    print()
+    print(f"Fetching {len(docs)} documents ({tier_dir})...")
+    print(f"  Raw HTML  → {raw_dir.relative_to(PROJECT_ROOT)}")
+    print(f"  Metadata  → {meta_dir.relative_to(PROJECT_ROOT)}")
 
     async with LexmlResolverClient() as lexml, PlanaltoScraper() as planalto:
-        results = await asyncio.gather(*(fetch_one(doc, lexml, planalto) for doc in TIER_1))
+        results = await asyncio.gather(*(fetch_one(doc, lexml, planalto) for doc in docs))
 
     failures = 0
     for doc, record, html_doc, error in results:
-        write_outputs(doc, record, html_doc, error)
+        write_outputs(doc, record, html_doc, error, raw_dir, meta_dir)
         if error and html_doc is None:
             marker = "[FAIL]"
             failures += 1
@@ -136,9 +144,32 @@ async def main() -> int:
         if error:
             print(f"          └─ {error}")
 
+    print(f"Done {tier_dir}: {len(docs) - failures}/{len(docs)} downloaded.")
     print()
-    print(f"Done. {len(TIER_1) - failures}/{len(TIER_1)} downloaded.")
-    return 0 if failures == 0 else 1
+    return failures
+
+
+async def main() -> int:
+    import argparse
+
+    p = argparse.ArgumentParser(
+        description="Fetch Planalto HTML + LexML metadata, per Tier."
+    )
+    p.add_argument(
+        "--tier",
+        choices=["1", "2", "all"],
+        default="1",
+        help="Which tier's documents to fetch (default: 1, for backward compat).",
+    )
+    args = p.parse_args()
+
+    tiers_to_run = ["1", "2"] if args.tier == "all" else [args.tier]
+    total_failures = 0
+    for t in tiers_to_run:
+        docs, tier_dir = _TIERS[t]
+        total_failures += await _fetch_one_tier(docs, tier_dir)
+
+    return 0 if total_failures == 0 else 1
 
 
 if __name__ == "__main__":

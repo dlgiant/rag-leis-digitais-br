@@ -788,3 +788,105 @@
     - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc12"
     - "urn:lex:br:federal:lei:2014-04-23;12965~art10;par2"
   notes: "CF art. 5 XII (sigilo absoluto, salvo ordem judicial) + MCI art. 10 §2 (operacionaliza)."
+
+# ============================================================================
+# TIER-2 — Lei 14.063 (assinaturas), Lei 14.129 (Governo Digital),
+# Lei 11.419 (processo eletrônico). Adicionado em 2026-05-14.
+# T8 (cross-doc Tier-1×Tier-2) deferred — ver BACKLOG.md.
+# ============================================================================
+
+- query: "o que é assinatura eletrônica qualificada?"
+  type: definicao
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2020-09-23;14063~art4;inc3"
+    supporting:
+      - "urn:lex:br:federal:lei:2020-09-23;14063~art3;inc2"
+      - "urn:lex:br:federal:lei:2020-09-23;14063~art4"
+  notes: "Lei 14.063 art. 4 III — assinatura qualificada (certificado via ICP-Brasil). Supporting: art. 3 II (def genérica) + art. 4 caput."
+
+- query: "quais os tipos de assinatura eletrônica para interação com o poder público?"
+  type: enumeracao
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2020-09-23;14063~art4"
+      - "urn:lex:br:federal:lei:2020-09-23;14063~art4;inc1"
+      - "urn:lex:br:federal:lei:2020-09-23;14063~art4;inc2"
+      - "urn:lex:br:federal:lei:2020-09-23;14063~art4;inc3"
+    supporting:
+      - "urn:lex:br:federal:lei:2020-09-23;14063~art4;par1"
+  notes: "Lei 14.063 art. 4 — caput + 3 incisos (simples, avançada, qualificada). § 1 como supporting."
+
+- query: "o que é certificado digital ICP-Brasil?"
+  type: definicao
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2020-09-23;14063~art3;inc4"
+    supporting:
+      - "urn:lex:br:federal:lei:2020-09-23;14063~art3;inc3"
+  notes: "Lei 14.063 art. 3 IV — definição. Supporting: inc III (definição genérica)."
+
+- query: "quais são os princípios do Governo Digital?"
+  type: enumeracao
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc1"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc2"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc3"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc4"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc5"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc6"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc7"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc8"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc9"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc10"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc11"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc12"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc13"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc14"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc15"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc16"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc17"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc18"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc19"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc20"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc21"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc22"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc23"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc24"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc25"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc26"
+  notes: "Lei 14.129 art. 3 — caput + 26 incisos. Maior enumeração do projeto."
+
+- query: "o governo pode obrigar tudo em meio digital no serviço público?"
+  type: parafrase
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art5"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art6"
+    supporting:
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc16"
+  notes: "14.129 art. 5 (administração usará soluções digitais) + art. 6 (atos processuais eletrônicos). Supporting: art. 3 XVI (permanência presencial — limite)."
+
+- query: "o que a Lei do Governo Digital entende por autosserviço?"
+  type: definicao
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art4;inc2"
+  notes: "14.129 art. 4 II — definição literal."
+
+- query: "como funciona intimação eletrônica no judiciário?"
+  type: parafrase
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2006-12-19;11419~art5"
+    supporting:
+      - "urn:lex:br:federal:lei:2006-12-19;11419~art5;par1"
+      - "urn:lex:br:federal:lei:2006-12-19;11419~art5;par2"
+      - "urn:lex:br:federal:lei:2006-12-19;11419~art5;par3"
+      - "urn:lex:br:federal:lei:2006-12-19;11419~art5;par4"
+      - "urn:lex:br:federal:lei:2006-12-19;11419~art5;par5"
+      - "urn:lex:br:federal:lei:2006-12-19;11419~art5;par6"
+      - "urn:lex:br:federal:lei:2006-12-19;11419~art9"
+  notes: "11.419 art. 5 — intimações em portal próprio. Supporting: §§ 1-6 + art. 9 (todas intimações no processo eletrônico)."
