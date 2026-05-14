@@ -76,16 +76,31 @@ def main() -> int:
     safe_name = embedder.name.replace("/", "_")
     cache_path = INDEX_DIR / f"{safe_name}__{args.text_mode}.npz"
 
-    if cache_path.exists() and not args.rebuild:
+    # Content-hash gate against silent staleness: any change to the embedded
+    # surface forms (new chunks, parser fixes, text-mode tweaks) invalidates.
+    from rag_leis.cache import cache_is_fresh, texts_hash, write_meta
+
+    current_hash = texts_hash(format_texts(chunks, args.text_mode))
+
+    if cache_is_fresh(cache_path, current_hash) and not args.rebuild:
         print(f"Loading cached index: {cache_path}")
         loaded = np.load(cache_path, allow_pickle=True)
         urns: list[str] = list(loaded["urns"])
         doc_vecs = loaded["vecs"]
     else:
+        if cache_path.exists():
+            print(f"Cache stale (hash mismatch or missing meta): {cache_path.name} — rebuilding.")
         print(f"Embedding {len(chunks)} chunks with {embedder.name} (mode={args.text_mode})...")
         urns, doc_vecs = build_index(chunks, embedder, mode=args.text_mode)
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         np.savez(cache_path, urns=np.array(urns, dtype=object), vecs=doc_vecs)
+        write_meta(
+            cache_path,
+            content_hash=current_hash,
+            n_chunks=len(urns),
+            model=embedder.name,
+            text_mode=args.text_mode,
+        )
         print(f"Cached index → {cache_path}")
 
     # Build a urn → passage-text dict (matching the index's text mode) so the

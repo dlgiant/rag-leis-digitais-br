@@ -136,19 +136,21 @@ def main() -> int:
     print(f"Loaded {len(chunks)} chunks")
 
     cache = INDEX_DIR / f"bge-m3__{args.text_mode}.colbert.npz"
-    if cache.exists() and not args.rebuild:
+    from rag_leis.cache import cache_is_fresh, texts_hash, write_meta
+
+    current_hash = texts_hash(texts)
+    cache_fresh = cache_is_fresh(cache, current_hash) and not args.rebuild
+
+    embedder: BGEM3Embedder | None = None
+    if cache_fresh:
         print(f"Loading cached ColBERT index: {cache.name}")
         loaded = np.load(cache, allow_pickle=True)
         flat_vecs = loaded["vecs"].astype(np.float16)
         offsets = loaded["offsets"]
-        cached_urns = list(loaded["urns"])
-        if cached_urns != urns:
-            print("Cache urn mismatch — rebuilding.")
-            cache.unlink()
-        else:
-            embedder = BGEM3Embedder()
-
-    if not cache.exists() or args.rebuild:
+        embedder = BGEM3Embedder()
+    else:
+        if cache.exists():
+            print(f"ColBERT cache stale (hash/meta mismatch): {cache.name} — rebuilding.")
         embedder = BGEM3Embedder()
         print(f"Embedding {len(chunks)} chunks with bge-m3 ColBERT (mode={args.text_mode})...")
         per_doc = embedder.embed_docs_colbert(texts)
@@ -159,6 +161,13 @@ def main() -> int:
             vecs=flat_vecs,
             offsets=offsets,
             urns=np.array(urns, dtype=object),
+        )
+        write_meta(
+            cache,
+            content_hash=current_hash,
+            n_chunks=len(urns),
+            model="bge-m3-colbert",
+            text_mode=args.text_mode,
         )
         print(
             f"Cached ColBERT → {cache.name} "
@@ -172,7 +181,12 @@ def main() -> int:
     dense_top: list[list[str]] | None = None
     if args.compare_dense:
         dense_cache = INDEX_DIR / f"bge-m3__{args.text_mode}.npz"
-        if dense_cache.exists():
+        if not cache_is_fresh(dense_cache, current_hash):
+            print(
+                f"WARN: bge-m3 dense cache stale or missing ({dense_cache.name}). "
+                f"Run `python -m rag_leis.run_eval --model bge-m3 --text-mode {args.text_mode}` first. Skipping --compare-dense."
+            )
+        elif dense_cache.exists():
             print(f"Loading dense baseline: {dense_cache.name}")
             d_loaded = np.load(dense_cache, allow_pickle=True)
             doc_dense = d_loaded["vecs"].astype(np.float32)
@@ -218,9 +232,9 @@ def main() -> int:
     if args.rrf_dense_model:
         safe = args.rrf_dense_model.replace("/", "_")
         rrf_cache = INDEX_DIR / f"{safe}__{args.text_mode}.npz"
-        if not rrf_cache.exists():
+        if not cache_is_fresh(rrf_cache, current_hash):
             print(
-                f"RRF dense cache missing ({rrf_cache.name}). Run "
+                f"RRF dense cache missing or stale ({rrf_cache.name}). Run "
                 f"`python -m rag_leis.run_eval --model {args.rrf_dense_model} "
                 f"--text-mode {args.text_mode}` first."
             )

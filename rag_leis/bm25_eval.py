@@ -81,11 +81,14 @@ def main() -> int:
     print(f"Loaded {len(chunks)} chunks")
 
     # Dense from cache (built by run_eval).
+    from rag_leis.cache import cache_is_fresh, texts_hash
+
     safe_dense = args.dense_model.replace("/", "_")
     dense_cache = INDEX_DIR / f"{safe_dense}__{args.text_mode}.npz"
-    if not dense_cache.exists():
+    current_hash = texts_hash(texts)
+    if not cache_is_fresh(dense_cache, current_hash):
         print(
-            f"Dense cache {dense_cache.name} missing. Run "
+            f"Dense cache {dense_cache.name} missing or stale. Run "
             f"`python -m rag_leis.run_eval --model {args.dense_model} --text-mode {args.text_mode}` first."
         )
         return 1

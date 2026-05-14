@@ -131,20 +131,32 @@ def main() -> int:
     # Sparse is always BGE-M3 (it's the model that emits both representations).
     sparse_cache = INDEX_DIR / f"bge-m3__{args.text_mode}.sparse.pkl"
 
+    from rag_leis.cache import cache_is_fresh, texts_hash, write_meta
+
+    current_hash = texts_hash(texts)
+    sparse_meta_path = sparse_cache.with_suffix(".meta.json")
+
     # Resolve dense and sparse caches independently — cross-model uses voyage
     # dense + BGE-M3 sparse, and each may already be cached separately.
     def _try_load_dense() -> tuple[np.ndarray, list[str]] | None:
-        if args.rebuild or not dense_cache.exists():
+        if args.rebuild:
+            return None
+        if not cache_is_fresh(dense_cache, current_hash):
+            if dense_cache.exists():
+                print(f"Dense cache stale ({dense_cache.name}) — rebuilding.")
             return None
         loaded = np.load(dense_cache, allow_pickle=True)
-        cached_urns = list(loaded["urns"])
-        if cached_urns != urns:
-            print(f"Dense cache urn mismatch ({dense_cache.name}) — rebuilding.")
-            return None
-        return loaded["vecs"].astype(np.float32), cached_urns
+        return loaded["vecs"].astype(np.float32), list(loaded["urns"])
 
     def _try_load_sparse() -> list[dict[str, float]] | None:
         if args.rebuild or not sparse_cache.exists():
+            return None
+        # Sparse uses a sidecar .meta.json next to the .pkl file (same scheme as .npz).
+        from rag_leis.cache import read_meta
+
+        meta = read_meta(sparse_meta_path)
+        if meta is None or meta.get("content_hash") != current_hash:
+            print(f"Sparse cache stale ({sparse_cache.name}) — rebuilding.")
             return None
         with sparse_cache.open("rb") as f:
             return pickle.load(f)  # type: ignore[no-any-return]
@@ -170,6 +182,13 @@ def main() -> int:
         doc_dense = dense_embedder.embed_docs(texts)
         INDEX_DIR.mkdir(parents=True, exist_ok=True)
         np.savez(dense_cache, urns=np.array(urns, dtype=object), vecs=doc_dense)
+        write_meta(
+            dense_cache,
+            content_hash=current_hash,
+            n_chunks=len(urns),
+            model=args.dense_model,
+            text_mode=args.text_mode,
+        )
         print(f"Cached dense → {dense_cache.name}")
 
     if sparse_loaded is not None:
@@ -181,6 +200,20 @@ def main() -> int:
         _, doc_sparse = sparse_embedder.embed_docs_dense_sparse(texts)
         with sparse_cache.open("wb") as f:
             pickle.dump(doc_sparse, f)
+        # Sparse pickle uses the same sidecar scheme as .npz caches.
+        sparse_meta_path.write_text(
+            __import__("json").dumps(
+                {
+                    "content_hash": current_hash,
+                    "n_chunks": len(urns),
+                    "model": "bge-m3-sparse",
+                    "text_mode": args.text_mode,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
         print(f"Cached sparse → {sparse_cache.name}")
 
     # Ensure embedders exist for query-time encoding.
