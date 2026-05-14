@@ -16,7 +16,9 @@ Spoiler: as melhorias **vieram quase todas da camada de dados** (como o chunk é
 
 ## A tese, em uma frase
 
-> **Quatro intervenções de "second-stage retrieval" testadas (rerank, hybrid sparse, hybrid ColBERT, gated router) somam zero ganho agregado. Três intervenções de "primeira-stage representation" (nav-prefix, caput-prefix, label-prefix) somaram +0.15 nDCG. Fix the data, not the model.**
+> **Sete intervenções de "second-stage retrieval" testadas — 3 rerankers open-source, 3 comerciais (voyage + 2 cohere), e 1 router gated. Apenas voyage rerank-2.5 melhora MRR sobre voyage dense puro. Os outros 6 regridem em alguma métrica.** Três intervenções de "primeira-stage representation" (nav-prefix, caput-prefix, label-prefix) somaram +0.15 nDCG.
+>
+> **Tese ajustada**: fix the data first; second-stage só funciona com modelo treinado **especificamente** pra paráfrase + corpus técnico (domain-tuning comercial é necessário mas não suficiente — Cohere também é comercial e regride).
 
 ---
 
@@ -269,6 +271,7 @@ Por quê:
 | 9 | `experiment/colbert` | late interaction vs single-vector | ◐ complementar per-tipo, plano agregado |
 | 10 | `eval/queries-v3` | eval maior + calibração | ✓ 78 queries, gap discrimina |
 | 11 | `experiment/router` | calibração → router → ganho | ✗ variância de fallback dilui |
+| 12 | `experiment/voyage-rerank` | reranker comercial domain-tuned quebra o padrão | ✓ voyage rerank-2.5: +0.022 MRR; ✗ cohere v3.5/mult-v3: -0.07 a -0.12 nDCG |
 
 ---
 
@@ -296,7 +299,7 @@ Por quê:
 
 1. **Expandir gold da paráfrase manualmente.** 16 queries, ~30 min de trabalho. Pode subir MRR dessa categoria de 0.40 → 0.65+ sem mexer no retriever.
 2. **Tier-2 do corpus**: ANPD resoluções, decretos de proteção de dados. ~10 documentos. Estende cobertura sem mudar nada na pipeline.
-3. **Reranker em-domínio comercial**: Cohere `rerank-multilingual-v3` ou Voyage `rerank-2.5`. Custa créditos. Os abertos falharam por mismatch de domínio — comerciais podem ter melhor cobertura jurídica. Ou podem falhar pelo mesmo motivo. ~1-2 horas de teste pra descobrir.
+3. ~~**Reranker em-domínio comercial**~~ → **testado**, ver `study/voyage-rerank.md`. Voyage rerank-2.5 é o primeiro reranker que melhora MRR (+0.022 agregado, +0.165 em citação-literal) sem perder nDCG. Único second-stage do projeto que vale ligar — pra pipelines single-answer ou citation-lookup. Cohere `rerank-multilingual-v3` ainda não testado.
 4. **Voyage-3-law-2** específico pra Common Law: testar se overshoot pra domínio de direito americano ainda ajuda pra português brasileiro. Hipótese: provavelmente pior que voyage-3-large genérico.
 5. **Eval set 200+ queries**: necessário pra estatística confiável dentro de cada tipo. Trabalho de semana.
 6. **Hybrid via late-fusion learnable**: em vez de RRF fixo, aprender pesos por tipo de query num pequeno classifier. Sofisticação extra, ganho marginal esperado dada a análise anterior.
