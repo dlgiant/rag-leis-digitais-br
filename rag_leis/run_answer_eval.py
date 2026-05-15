@@ -474,6 +474,7 @@ def serialize_row(r: EvalRow) -> dict[str, Any]:
             for m in r.answer.prose_citation_mismatches
         ],
         "prose_check_retried": r.answer.prose_check_retried,
+        "sources_consulted_at": r.answer.sources_consulted_at,
         "cit_precision": r.cit_precision,
         "cit_precision_lenient": r.cit_precision_lenient,
         "cit_recall": r.cit_recall,

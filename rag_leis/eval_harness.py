@@ -27,6 +27,11 @@ class IndexChunk:
     # detect when the LLM cites lower-rank sources while higher-rank
     # ones were available in top-K.
     legal_rank: int = DEFAULT_RANK
+    # Phase 5.5: ISO date (YYYY-MM-DD) the document's chunks were last
+    # updated on disk. Computed from the JSONL file's mtime as a proxy
+    # for the fetch+parse date. Used by RAGPipeline to render
+    # "consultado em DD/MM/AAAA" footers — practitioner transparency.
+    fetched_at: str = ""
 
 
 @dataclass(frozen=True)
@@ -71,13 +76,23 @@ def load_chunks(
     # short to index (e.g. an artigo whose body is a colon and a list) but still
     # carries the parent context for its children.
     raw_by_urn: dict[str, dict[str, Any]] = {}
+    # Phase 5.5: per-document fetched_at, derived from the JSONL file's
+    # mtime (proxy for fetch+parse date). When fetch_tier writes explicit
+    # metadata files in the future, we can prefer those.
+    import datetime as _dt
+
+    fetched_at_by_doc: dict[str, str] = {}
     for jsonl in sorted(chunks_dir.rglob("*.jsonl")):
+        mtime = jsonl.stat().st_mtime
+        date_iso = _dt.date.fromtimestamp(mtime).isoformat()
         with jsonl.open(encoding="utf-8") as f:
             for line in f:
                 if not line.strip():
                     continue
                 obj = json.loads(line)
                 raw_by_urn[obj["urn"]] = obj
+                # Last-writer-wins per document URN
+                fetched_at_by_doc[obj["document_urn"]] = date_iso
 
     def _resolve_caput_chain(obj: dict[str, Any]) -> str:
         parent_part = obj.get("parent_partition")
@@ -156,6 +171,7 @@ def load_chunks(
                 citation=citation,
                 vigencia=overlays.get(obj["urn"]),
                 legal_rank=legal_rank_for_urn(obj["document_urn"]),
+                fetched_at=fetched_at_by_doc.get(obj["document_urn"], ""),
             )
         )
     return out

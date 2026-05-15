@@ -31,6 +31,7 @@ from typing import Any
 
 import numpy as np
 
+from rag_leis.corpus import TIER_1, TIER_2, TIER_3
 from rag_leis.embeddings import Embedder, Vec, get_embedder
 from rag_leis.eval_harness import IndexChunk, format_texts, load_chunks
 from rag_leis.legal_rank import rank_name
@@ -51,6 +52,56 @@ from rag_leis.verify import verify_citations
 from rag_leis.vigencia import Vigencia, vigencia_warning
 
 DEFAULT_TOP_K = 10
+
+# Phase 5.5: doc URN → human-readable title for rendering source-as-of
+# footers. Built lazily from the corpus registry; missing URNs fall back
+# to a friendly slug from the URN itself.
+TITLE_BY_URN: dict[str, str] = {
+    d.urn: d.title for d in (*TIER_1, *TIER_2, *TIER_3)
+}
+
+
+def _doc_label(doc_urn: str) -> str:
+    """Human title for `doc_urn`, with a defensive fallback."""
+    if doc_urn in TITLE_BY_URN:
+        return TITLE_BY_URN[doc_urn]
+    # Fallback: derive a short label from the URN type+id
+    parts = doc_urn.split(":")
+    if len(parts) >= 6:
+        return f"{parts[4]} {parts[5].replace(';', '/')}"
+    return doc_urn
+
+
+def _format_date_pt_br(iso_date: str) -> str:
+    """ISO date YYYY-MM-DD → DD/MM/YYYY (BR convention)."""
+    parts = iso_date.split("-")
+    # Must be 3 parts, all digits, lengths 4/2/2 — otherwise pass through.
+    # Avoids reformatting strings that happen to contain dashes ("not-a-date"
+    # → "date/a/not" was the bug this guards).
+    if (
+        len(parts) == 3
+        and all(p.isdigit() for p in parts)
+        and len(parts[0]) == 4
+        and len(parts[1]) == 2
+        and len(parts[2]) == 2
+    ):
+        y, m, d = parts
+        return f"{d}/{m}/{y}"
+    return iso_date  # malformed; pass through
+
+
+def _render_sources_footer(sources_dates: dict[str, str]) -> str:
+    """Build the 'Fontes consultadas em: ...' practitioner-facing footer.
+
+    Sorted by doc URN for stable output across runs (so a UI can diff
+    answers without footer re-ordering causing churn).
+    """
+    items = sorted(sources_dates.items())
+    parts = [
+        f"{_doc_label(urn)} ({_format_date_pt_br(date)})"
+        for urn, date in items
+    ]
+    return "—\nFontes consultadas em: " + "; ".join(parts) + "."
 DEFAULT_AUDIT_LOG_PATH = Path(__file__).resolve().parents[1] / "data" / "audit" / "pii-redactions.jsonl"
 # Cosine threshold below which we refuse before paying for the LLM call.
 # Phase 2.7 measured the OOS-vs-in-scope distribution: OOS top-1 sims
@@ -218,6 +269,11 @@ class RAGAnswer:
     # represents the FINAL state — what survived the retry.
     prose_citation_mismatches: list[ProseMismatch] = field(default_factory=list)
     prose_check_retried: bool = False  # True if reject-and-reprompt fired
+    # Phase 5.5: per-cited-document source-as-of date. Derived from the
+    # IndexChunk.fetched_at of cited URNs. Rendered into the answer text
+    # as a "Fontes consultadas em: ..." footer for practitioner transparency.
+    # Empty dict when no in-scope citations.
+    sources_consulted_at: dict[str, str] = field(default_factory=dict)
 
 
 # ----------------------------------------------------------------------------
@@ -371,6 +427,12 @@ class RAGPipeline:
 
         flagged = self._collect_flagged_vigencia(verified)
         hier_warn = self._compute_hierarchy_warning(verified, retrieved)
+        sources_dates = self._collect_sources_consulted_at(verified)
+        # Phase 5.5: append source-as-of footer (deterministic post-process,
+        # no LLM call). Skip when the model refused or cited nothing — no
+        # sources to declare.
+        if sources_dates and not self_refused:
+            answer_text = answer_text.rstrip() + "\n\n" + _render_sources_footer(sources_dates)
         return RAGAnswer(
             answer=answer_text,
             citations=verified,
@@ -386,9 +448,25 @@ class RAGPipeline:
             hierarchy_warning=hier_warn,
             prose_citation_mismatches=prose_mismatches,
             prose_check_retried=prose_retried,
+            sources_consulted_at=sources_dates,
         )
 
     # ------------------------------------------------------------------
+
+    def _collect_sources_consulted_at(
+        self, cited_urns: list[str]
+    ) -> dict[str, str]:
+        """Build {doc_urn: ISO date} from the IndexChunk.fetched_at of the
+        verified citations. Multiple cited URNs from the same doc collapse
+        to one entry."""
+        out: dict[str, str] = {}
+        for urn in cited_urns:
+            chunk = self.chunks_by_urn.get(urn)
+            if chunk is None or not chunk.fetched_at:
+                continue
+            doc_urn = urn.split("~", 1)[0]
+            out[doc_urn] = chunk.fetched_at
+        return out
 
     def _compute_hierarchy_warning(
         self,
