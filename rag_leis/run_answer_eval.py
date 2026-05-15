@@ -452,6 +452,15 @@ def serialize_row(r: EvalRow) -> dict[str, Any]:
         "raw_retrieval": [
             {"urn": u, "score": s} for u, s in r.answer.raw_retrieval
         ],
+        "flagged_vigencia": [
+            {
+                "urn": fv.urn,
+                "status": fv.status,
+                "fundamento": fv.fundamento,
+                "descricao_curta": fv.descricao_curta,
+            }
+            for fv in r.answer.flagged_vigencia
+        ],
         "cit_precision": r.cit_precision,
         "cit_precision_lenient": r.cit_precision_lenient,
         "cit_recall": r.cit_recall,

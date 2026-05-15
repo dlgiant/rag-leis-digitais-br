@@ -291,6 +291,36 @@
     a Lei.
 
 # ============================================================================
+# Vigência overlay row (added 2026-05-14, Phase 3.1)
+# Exercises end-to-end the flagged_vigencia pipeline: MCI art. 19 carries
+# sub_judice (STF Tema 987) — the model MUST surface ⚠️ Atenção in its
+# answer. Verified by inspecting RAGAnswer.flagged_vigencia + grepping
+# the answer text post-hoc.
+# ============================================================================
+
+- query: "qual o regime de responsabilidade do provedor de aplicações de internet por conteúdo de terceiros?"
+  type: definicao
+  oos: false
+  gold_urns:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art19"
+  alternative_acceptable_urns:
+    # Procedural & exception siblings of art.19 — natural co-cites.
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art19;par1"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art19;par2"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art19;par3"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art19;par4"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art21"
+  expected_paragraph: |
+    O Marco Civil da Internet (art. 19) estabelece que o provedor de
+    aplicações de internet somente pode ser responsabilizado civilmente
+    por danos decorrentes de conteúdo gerado por terceiros se, após ordem
+    judicial específica, não tomar as providências para tornar
+    indisponível o conteúdo apontado como infringente. ⚠️ Atenção: a
+    aplicação deste dispositivo está em discussão no STF (RE 1.037.396 —
+    Tema 987 da repercussão geral), com tese pendente sobre sua
+    constitucionalidade.
+
+# ============================================================================
 # OOS (3) — clearly outside the corpus; pipeline should refuse
 # ============================================================================
 
