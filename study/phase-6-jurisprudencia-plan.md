@@ -199,6 +199,8 @@ Adicionar à 🔴 (blockers):
 
 ## Cronograma
 
+### Estimativa original (single dev sem AI)
+
 | sub | sizing | wall clock |
 |---|---|---|
 | 6.0 URN scheme + schema | ½ d | day 1 |
@@ -212,6 +214,24 @@ Adicionar à 🔴 (blockers):
 
 **v0 (manual hybrid)**: ~6 dias úteis
 **Real scrapers gating**: depende de Phase 7+ (cron infra) ou D6 launch date
+
+### Estimativa revisada (Claude-Code-assisted)
+
+Empirical baseline (Phases 2-5): trabalho técnico comprime 5-10x;
+curadoria comprime ~2x. Phase 6 v0 é mais técnica que curatorial
+(7 itens canônicos pré-definidos no plan).
+
+| sub | original | **revisada** | o que comprime |
+|---|---|---|---|
+| 6.0 URN scheme | ½ d | **15 min** | só edição em doc existente |
+| 6.1 Manual ingestion (7 itens) | 2 d | **2-3h** | curadoria leve (textos curtos), build scripts repetitivos |
+| 6.2 Stub parser + wiring | ½ d | **30 min** | mirror do AnpdPdfParser pattern já existente |
+| 6.4 Eval expansion (8 queries) | 2 d | **1-2h** | similar ao 5.1 OOS — Claude rascunha, você revisa |
+| 6.5 Hierarchy ext | ½ d | **30 min** | extensão pequena ao pipeline |
+| 6.6 Cross-validation + write-up | ½ d | **1h** | 2 eval runs + comparação |
+| 6.7 Docs | ¼ d | **15 min** | trivial |
+| **v0 total** | **6 dias** | **~½-1 dia** ⭐ | (5-10x compression) |
+| **6.3 scrapers real** (gated) | 5-7 d | **~2-3 d** | scraping + Playwright tem inerente exploração |
 
 ## Decisões pendentes
 

@@ -315,6 +315,8 @@ Pré-requisito pra deploy.
 
 ## Cronograma agregado (production)
 
+### Estimativa original (single dev sem AI assist)
+
 | Phase | Foco | Wall clock |
 |---|---|---|
 | 4 | Practitioner-grade (classifier + PII + ANPD híbrido) | ~3-4 sem |
@@ -324,6 +326,72 @@ Pré-requisito pra deploy.
 | 8 | Operations | ~1-2 sem |
 | 9 | Compliance | ~2-3 sem |
 | **Total v1 production** | | **~3-4 meses** |
+
+### Estimativa revisada (Claude-Code-assisted, com base empírica 2026-05-15)
+
+Empirical multiplier observado nas Phases 2-5: trabalho técnico puro
+acelera **5-10x**. Wall clock real foi: Phase 2 ~1 dia (estimado 1 sem),
+Phase 4.0 ~1.5h (estimado 3d), Phase 5.3 ~30min (estimado 1d). Curadoria
+de domínio + decisões + esperas externas NÃO comprimem.
+
+| Phase | Foco | Original | Revisada | O que comprime |
+|---|---|---|---|---|
+| 4 | (DONE) | 3-4 sem | **~2 dias real** | quase tudo |
+| 5 | (DONE — não-gated) | 2-3 sem | **~1 dia real** | quase tudo |
+| 6 v0 | Jurisprudência hybrid | 4-6 sem | **~½ dia** ⭐ | tudo (curatorial é só 7 itens) |
+| 6.3 | Real scrapers (gated) | 5-7 d | ~2-3 d | scraping + Playwright |
+| 7 | Production infra | 2 sem | **~3 d** ⭐ | Docker/CI/CD/observability/rate limit |
+| 8 | Operations | 1-2 sem | **~2-3 d** | runbooks/deploy script — Claude rascunha |
+| 9 | Compliance — own work | 2-3 sem | **~5-7 d** | parts internas |
+| 9 | Compliance — lawyer waiting | (incluído) | **~2-4 sem** | NÃO comprime |
+| **Total v1 production** | | **3-4 meses** | **~3-5 semanas** | (5-8x compression) |
+
+**Total assumptions**:
+- Você dedica ~½-1 dia útil/dia ao projeto (não tempo integral)
+- Claude Code disponível durante todas as sessões
+- Lawyer (D7) contratado em paralelo, ~2-4 semanas pra fechar Phase 9
+- Sem pausas longas entre phases
+
+### Componentes que NÃO comprimem com Claude Code
+
+1. **Decisões de scope**: D6 (launch date), D7 (lawyer budget), D8-D14 — requerem você. Tipicamente **30 min-1h por decisão**, mas precisa contexto.
+2. **Curadoria jurídica**: gold URNs, expected_paragraphs, vigência overlays, OOS rows. Claude rascunha 80% mas você revisa. **~30 min por row** se domain-fluent.
+3. **External waiting**: DPA com Anthropic (~1-2 sem), security review (~1-2 sem), lawyer drafting (~2-4 sem). Não comprimem.
+4. **Validação humana**: revisar diffs, aprovar merges, decidir prioridades. **~10-30 min por phase**.
+5. **Trabalho bloqueado por dados**: Res 2/2022 cid encoding → OCR. Phase 4.3.a entregou 1/4 PDFs em vez de 4/4 — não foi velocidade do código, foi qualidade da fonte.
+
+### Onde a compressão é máxima (Claude Code excels)
+
+- **Refactoring**: Phase 4.0 (LLM Protocol) — minutos, não horas
+- **Tests**: pure-logic + integration, escritos imediatamente. Phase 5.x gerou 50+ tests em horas
+- **Docs**: commits, study/, write-ups gerados em paralelo ao código
+- **Eval iteração**: cada run é um comando + análise. Phase 5.1 cross-validation = 2 runs em ~10 min
+- **Boilerplate**: Dockerfile, GitHub Actions, structured logging — Claude conhece patterns
+- **Schema migrations**: adicionar campo a dataclass + tests + serialize — minutos
+
+### Onde a compressão é menor (~2x)
+
+- **Curadoria de eval**: pensar nas 12 OOS rows requer contexto jurídico real
+- **Decisões arquiteturais**: D9 (Sabiá vs Anthropic) precisou benchmark + análise human
+- **Correção de bugs sutis**: prose-check prefix-vs-suffix bug — precisei iterar com runs reais
+- **Production deploy real**: você precisa pessoalmente acessar provider, configurar billing, etc.
+
+### Conclusão revisada
+
+**~3-5 semanas wall clock** do estado atual até production v1 launch,
+considerando:
+- Phases 6, 7, 8 técnicas: ~1 sem total (Claude-Code-assisted)
+- Phase 9 own work: ~1 sem
+- Phase 9 lawyer waiting: ~2-4 sem (em paralelo com 6/7/8)
+- D7 lawyer review desbloqueia Phase 5.4/5.6 + Phase 6 final curation: ~1 sem trabalho próprio + ~1-2 sem de lawyer review
+
+**Bottleneck NÃO é mais código**. É:
+1. D7 lawyer (gating múltiplos itens)
+2. Compliance lawyer drafting (Phase 9)
+3. Decisões de scope que dependem de contexto fora do projeto
+
+Recomendação operacional: contratar lawyer consultor o quanto antes
+mesmo que pra trabalho parcial — desbloqueia ~30% do roadmap.
 
 ## Decisões pendentes — production lens
 
