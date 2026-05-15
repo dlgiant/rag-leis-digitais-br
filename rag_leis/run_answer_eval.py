@@ -68,6 +68,11 @@ class AnswerQuery:
     type: str
     oos: bool
     gold_urns: frozenset[str]
+    # URNs that aren't "must-cite" but a senior lawyer would consider
+    # naturally co-cited (e.g., a definição's siblings: caput's parágrafos
+    # of exceptions). Used to compute lenient citation precision — see
+    # score_citations(). Defaults to empty (strict == lenient).
+    alternative_acceptable_urns: frozenset[str]
     expected_paragraph: str
 
 
@@ -77,10 +82,11 @@ class EvalRow:
     query: AnswerQuery
     answer: RAGAnswer
     # in-scope:
-    cit_precision: float | None = None
-    cit_recall: float | None = None
-    cit_f1: float | None = None
-    faithfulness: int | None = None             # 0-5
+    cit_precision: float | None = None              # strict: |cited ∩ gold| / |cited|
+    cit_precision_lenient: float | None = None      # |cited ∩ (gold | alt)| / |cited|
+    cit_recall: float | None = None                 # |cited ∩ gold| / |gold| — gold-only
+    cit_f1: float | None = None                     # uses strict P
+    faithfulness: int | None = None                 # 0-5
     faithfulness_reasoning: str | None = None
     # both (refusal sanity):
     refused_correctly: bool = False
@@ -170,6 +176,9 @@ def load_answer_queries(path: Path) -> list[AnswerQuery]:
                 type=item["type"],
                 oos=bool(item.get("oos", False)),
                 gold_urns=frozenset(item.get("gold_urns") or []),
+                alternative_acceptable_urns=frozenset(
+                    item.get("alternative_acceptable_urns") or []
+                ),
                 expected_paragraph=str(item.get("expected_paragraph", "")),
             )
         )
@@ -181,30 +190,50 @@ def _safe_div(a: float, b: float) -> float:
 
 
 def score_citations(
-    cited: list[str], gold: frozenset[str]
-) -> tuple[float, float, float]:
-    """Citation precision / recall / F1.
+    cited: list[str],
+    gold: frozenset[str],
+    alt: frozenset[str] = frozenset(),
+) -> tuple[float, float, float, float]:
+    """Citation metrics.
 
-    Empty-gold case (OOS, shouldn't reach here): all metrics 0.
-    Empty-cited case (model refused or cited nothing despite gold existing):
-    precision is undefined; we return 0 by convention. Reported alongside
-    refusal flag so callers can distinguish "refused" from "answered with
-    no cites".
+    Returns (precision_strict, precision_lenient, recall, f1_strict).
+
+      precision_strict  = |cited ∩ gold|        / |cited|
+      precision_lenient = |cited ∩ (gold | alt)| / |cited|
+      recall            = |cited ∩ gold|        / |gold|     — gold-only by design;
+        alt is an "OK to cite" set, not a "must cite" set, so it doesn't
+        change the recall denominator
+      f1_strict         = harmonic of strict precision and recall
+
+    Empty-gold case (OOS sentinel): all metrics 0. Empty-cited case (model
+    refused or cited nothing despite gold existing): precision metrics 0
+    by convention; surfaces alongside the refusal flag so callers can
+    distinguish "refused" from "answered with no cites".
+
+    `alt` defaults to empty → strict == lenient. Add per-row alts in
+    eval/answer_queries.yaml when the gold is intentionally narrow but
+    sibling chunks (parágrafos, alíneas, related incisos) would be
+    legitimately cited by a senior lawyer answering the same question.
     """
     if not gold:
-        return 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0
     cited_set = set(cited)
     hits = len(cited_set & gold)
-    precision = _safe_div(hits, len(cited_set))
+    hits_lenient = len(cited_set & (gold | alt))
+    n_cited = len(cited_set)
+    precision = _safe_div(hits, n_cited)
+    precision_lenient = _safe_div(hits_lenient, n_cited)
     recall = _safe_div(hits, len(gold))
     f1 = _safe_div(2 * precision * recall, precision + recall)
-    return precision, recall, f1
+    return precision, precision_lenient, recall, f1
 
 
 def score_in_scope(
     q: AnswerQuery, answer: RAGAnswer, judge: AnthropicLLM
 ) -> EvalRow:
-    prec, rec, f1 = score_citations(answer.citations, q.gold_urns)
+    prec, prec_lenient, rec, f1 = score_citations(
+        answer.citations, q.gold_urns, q.alternative_acceptable_urns
+    )
     if answer.refused:
         # Model refused on an answerable query → judge can't score the
         # (empty) generated answer fairly; assign 0 and mark.
@@ -217,6 +246,7 @@ def score_in_scope(
         query=q,
         answer=answer,
         cit_precision=prec,
+        cit_precision_lenient=prec_lenient,
         cit_recall=rec,
         cit_f1=f1,
         faithfulness=faithfulness,
@@ -243,7 +273,8 @@ class Aggregate:
     n_total: int
     n_inscope: int
     n_oos: int
-    cit_precision_mean: float
+    cit_precision_mean: float                  # strict
+    cit_precision_lenient_mean: float
     cit_recall_mean: float
     cit_f1_mean: float
     faithfulness_mean: float
@@ -276,6 +307,9 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
         by_type[t] = {
             "n": float(len(group)),
             "cit_precision": _mean([r.cit_precision or 0.0 for r in inscope_g]),
+            "cit_precision_lenient": _mean(
+                [r.cit_precision_lenient or 0.0 for r in inscope_g]
+            ),
             "cit_recall": _mean([r.cit_recall or 0.0 for r in inscope_g]),
             "cit_f1": _mean([r.cit_f1 or 0.0 for r in inscope_g]),
             "faithfulness": _mean([float(r.faithfulness or 0) for r in inscope_g]),
@@ -287,6 +321,9 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
         n_inscope=len(inscope),
         n_oos=len(oos),
         cit_precision_mean=_mean([r.cit_precision or 0.0 for r in inscope]),
+        cit_precision_lenient_mean=_mean(
+            [r.cit_precision_lenient or 0.0 for r in inscope]
+        ),
         cit_recall_mean=_mean([r.cit_recall or 0.0 for r in inscope]),
         cit_f1_mean=_mean([r.cit_f1 or 0.0 for r in inscope]),
         faithfulness_mean=_mean([float(r.faithfulness or 0) for r in inscope]),
@@ -298,19 +335,24 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
 
 def print_report(rows: list[EvalRow], agg: Aggregate, verbose: bool) -> None:
     print()
-    print("Per-query results:")
+    print("Per-query results (P_s = strict precision, P_l = lenient precision):")
     print(
         f"  {'#':>2}  {'type':<15}  {'oos':<3}  "
-        f"{'refused':<7}  {'cit_P':<5}  {'cit_R':<5}  "
+        f"{'refused':<7}  {'P_s':<5}  {'P_l':<5}  {'R':<5}  "
         f"{'F1':<5}  {'faith':<5}  {'rej':<3}  query"
     )
     for i, r in enumerate(rows):
         ref = "Y" if r.answer.refused else "N"
         rej = len(r.answer.rejected_citations)
         if r.query.oos:
-            p_str = r_str = f_str = fa_str = "  -  "
+            p_str = pl_str = r_str = f_str = fa_str = "  -  "
         else:
             p_str = f"{r.cit_precision:.2f}" if r.cit_precision is not None else "  -  "
+            pl_str = (
+                f"{r.cit_precision_lenient:.2f}"
+                if r.cit_precision_lenient is not None
+                else "  -  "
+            )
             r_str = f"{r.cit_recall:.2f}" if r.cit_recall is not None else "  -  "
             f_str = f"{r.cit_f1:.2f}" if r.cit_f1 is not None else "  -  "
             fa_str = f"{r.faithfulness}/5" if r.faithfulness is not None else "  -  "
@@ -318,32 +360,35 @@ def print_report(rows: list[EvalRow], agg: Aggregate, verbose: bool) -> None:
         print(
             f"  {i+1:>2}  {r.query.type:<15}  "
             f"{'Y' if r.query.oos else 'N':<3}  "
-            f"{ref:<7}  {p_str:<5}  {r_str:<5}  "
+            f"{ref:<7}  {p_str:<5}  {pl_str:<5}  {r_str:<5}  "
             f"{f_str:<5}  {fa_str:<5}  {rej:<3}  {q_short}"
         )
 
+    extra_rate = agg.cit_precision_lenient_mean - agg.cit_precision_mean
     print()
     print(f"Aggregate over {agg.n_total} rows ({agg.n_inscope} in-scope, {agg.n_oos} OOS):")
-    print(f"  Citation precision (mean, in-scope)  : {agg.cit_precision_mean:.3f}")
-    print(f"  Citation recall    (mean, in-scope)  : {agg.cit_recall_mean:.3f}")
-    print(f"  Citation F1        (mean, in-scope)  : {agg.cit_f1_mean:.3f}")
-    print(f"  Faithfulness       (mean, in-scope)  : {agg.faithfulness_mean:.2f} / 5")
-    print(f"  Refusal accuracy   (all rows)         : {agg.refusal_accuracy:.3f}")
-    print(f"  Rejected citation rate (all rows)     : {agg.rejected_citation_rate:.3f}")
+    print(f"  Citation precision strict  (mean, in-scope)  : {agg.cit_precision_mean:.3f}")
+    print(f"  Citation precision lenient (mean, in-scope)  : {agg.cit_precision_lenient_mean:.3f}")
+    print(f"  Over-citation rate (lenient - strict)         : {extra_rate:+.3f}")
+    print(f"  Citation recall            (mean, in-scope)  : {agg.cit_recall_mean:.3f}")
+    print(f"  Citation F1 (strict)       (mean, in-scope)  : {agg.cit_f1_mean:.3f}")
+    print(f"  Faithfulness               (mean, in-scope)  : {agg.faithfulness_mean:.2f} / 5")
+    print(f"  Refusal accuracy           (all rows)         : {agg.refusal_accuracy:.3f}")
+    print(f"  Rejected citation rate     (all rows)         : {agg.rejected_citation_rate:.3f}")
 
     print()
     print("By type (in-scope metrics; refusal_accuracy includes OOS):")
     print(
-        f"  {'type':<16}  {'n':>2}  {'cit_P':<6}  {'cit_R':<6}  "
-        f"{'F1':<6}  {'faith':<6}  {'ref_acc':<6}"
+        f"  {'type':<16}  {'n':>2}  {'P_s':<5}  {'P_l':<5}  {'R':<5}  "
+        f"{'F1':<5}  {'faith':<6}  {'ref_acc':<6}"
     )
     for t in sorted(agg.by_type):
         b = agg.by_type[t]
         print(
             f"  {t:<16}  {int(b['n']):>2}  "
-            f"{b['cit_precision']:<6.3f}  {b['cit_recall']:<6.3f}  "
-            f"{b['cit_f1']:<6.3f}  {b['faithfulness']:<6.2f}  "
-            f"{b['refusal_accuracy']:<6.3f}"
+            f"{b['cit_precision']:<5.2f}  {b['cit_precision_lenient']:<5.2f}  "
+            f"{b['cit_recall']:<5.2f}  {b['cit_f1']:<5.2f}  "
+            f"{b['faithfulness']:<6.2f}  {b['refusal_accuracy']:<6.3f}"
         )
 
     if verbose:
@@ -394,6 +439,7 @@ def serialize_row(r: EvalRow) -> dict[str, Any]:
         "type": r.query.type,
         "oos": r.query.oos,
         "gold_urns": sorted(r.query.gold_urns),
+        "alternative_acceptable_urns": sorted(r.query.alternative_acceptable_urns),
         "expected_paragraph": r.query.expected_paragraph,
         "answer": r.answer.answer,
         "citations": r.answer.citations,
@@ -407,6 +453,7 @@ def serialize_row(r: EvalRow) -> dict[str, Any]:
             {"urn": u, "score": s} for u, s in r.answer.raw_retrieval
         ],
         "cit_precision": r.cit_precision,
+        "cit_precision_lenient": r.cit_precision_lenient,
         "cit_recall": r.cit_recall,
         "cit_f1": r.cit_f1,
         "faithfulness": r.faithfulness,

@@ -10,15 +10,25 @@
 #                          (definicao | enumeracao | citacao-literal | cross-doc | oos)
 #   oos                  — true iff out-of-scope (no answer should be produced;
 #                          the pipeline should refuse)
-#   gold_urns            — URNs the answer should cite. For enumerações we
-#                          list every relevant chunk; the pipeline may miss
-#                          some due to top_k limits, which is exactly the
-#                          recall signal we want to measure.
-#   expected_paragraph   — a 1-5 sentence ground-truth paraphrase. Not the
-#                          chunk text verbatim — it's what a senior lawyer
-#                          would say when prompted to summarize the rule.
-#                          The LLM judge compares the model's `answer` to
-#                          this for faithfulness scoring (0-5).
+#   gold_urns                    — URNs the answer SHOULD cite. For
+#                                  enumerações we list every relevant
+#                                  chunk; the pipeline may miss some due
+#                                  to top_k limits, which is exactly the
+#                                  recall signal we want to measure.
+#   alternative_acceptable_urns  — optional. URNs that AREN'T must-cite
+#                                  but a senior lawyer would consider
+#                                  naturally co-cited (e.g., the §§ that
+#                                  carry exceptions to a rule's caput).
+#                                  Used to compute lenient citation
+#                                  precision: the diff lenient - strict
+#                                  measures "over-citation that's still
+#                                  defensible". Empty by default.
+#   expected_paragraph           — a 1-5 sentence ground-truth paraphrase.
+#                                  Not the chunk text verbatim — it's
+#                                  what a senior lawyer would say when
+#                                  prompted to summarize the rule. The
+#                                  LLM judge compares the model's `answer`
+#                                  to this for faithfulness scoring (0-5).
 #
 # Sample distribution:
 #   - 4 definicao         (single-chunk gold, short answer)
@@ -48,6 +58,18 @@
   oos: false
   gold_urns:
     - "urn:lex:br:federal:lei:2014-04-23;12965~art9"
+  alternative_acceptable_urns:
+    # The §§ carry the exceções to neutralidade — a lawyer answering
+    # "o que é neutralidade?" would naturally cite the rule + its limits.
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc1"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc2"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc1"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc2"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc3"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc4"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par3"
   expected_paragraph: |
     O Marco Civil da Internet (art. 9º) estabelece a neutralidade de rede
     como o dever do responsável pela transmissão, comutação ou roteamento
@@ -187,6 +209,18 @@
   oos: false
   gold_urns:
     - "urn:lex:br:federal:lei:2014-04-23;12965~art9"
+  alternative_acceptable_urns:
+    # "o que diz o art X" is a literal-citation question; the §§ are part
+    # of the article and a complete answer naturally cites them.
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc1"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc2"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc1"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc2"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc3"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc4"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art9;par3"
   expected_paragraph: |
     O art. 9º do Marco Civil da Internet consagra a neutralidade de rede:
     o responsável pela transmissão, comutação ou roteamento tem o dever de
@@ -198,6 +232,19 @@
   oos: false
   gold_urns:
     - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a"
+  alternative_acceptable_urns:
+    # The 5 §§ extend / qualify the typified crime: equiparados (§1),
+    # qualificadora prejuízo (§2), comunicações privadas (§3), divulgação
+    # (§4), vítimas qualificadas (§5 + 4 incs).
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par1"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par2"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par3"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par4"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5;inc1"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5;inc2"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5;inc3"
+    - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5;inc4"
   expected_paragraph: |
     O art. 154-A do Código Penal tipifica o crime de invasão de dispositivo
     informático: invadir dispositivo informático de uso alheio, conectado
