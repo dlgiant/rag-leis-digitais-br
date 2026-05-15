@@ -1,0 +1,1681 @@
+{
+  "config": {
+    "embedder": "voyage-3-large",
+    "text_mode": "label+nav+caput+text",
+    "llm_model": "claude-sonnet-4-5",
+    "judge_model": "claude-opus-4-7",
+    "top_k": 10,
+    "oos_threshold": 0.4
+  },
+  "aggregate": {
+    "n_total": 16,
+    "n_inscope": 13,
+    "n_oos": 3,
+    "cit_precision_mean": 0.3353868353868354,
+    "cit_precision_lenient_mean": 0.6216006216006217,
+    "cit_recall_mean": 0.8379120879120878,
+    "cit_f1_mean": 0.40562987736900785,
+    "faithfulness_mean": 4.384615384615385,
+    "refusal_accuracy": 1.0,
+    "rejected_citation_rate": 0.0,
+    "by_type": {
+      "definicao": {
+        "n": 5.0,
+        "cit_precision": 0.14343434343434341,
+        "cit_precision_lenient": 0.4328282828282828,
+        "cit_recall": 1.0,
+        "cit_f1": 0.24439560439560437,
+        "faithfulness": 4.8,
+        "refusal_accuracy": 1.0
+      },
+      "enumeracao": {
+        "n": 4.0,
+        "cit_precision": 0.5416666666666666,
+        "cit_precision_lenient": 0.5416666666666666,
+        "cit_recall": 0.6607142857142857,
+        "cit_f1": 0.5788740245261985,
+        "faithfulness": 3.75,
+        "refusal_accuracy": 1.0
+      },
+      "citacao-literal": {
+        "n": 3.0,
+        "cit_precision": 0.4365079365079365,
+        "cit_precision_lenient": 1.0,
+        "cit_recall": 1.0,
+        "cit_f1": 0.5119047619047619,
+        "faithfulness": 5.0,
+        "refusal_accuracy": 1.0
+      },
+      "cross-doc": {
+        "n": 1.0,
+        "cit_precision": 0.16666666666666666,
+        "cit_precision_lenient": 0.75,
+        "cit_recall": 0.25,
+        "cit_f1": 0.2,
+        "faithfulness": 3.0,
+        "refusal_accuracy": 1.0
+      },
+      "oos": {
+        "n": 3.0,
+        "cit_precision": 0.0,
+        "cit_precision_lenient": 0.0,
+        "cit_recall": 0.0,
+        "cit_f1": 0.0,
+        "faithfulness": 0.0,
+        "refusal_accuracy": 1.0
+      }
+    }
+  },
+  "rows": [
+    {
+      "query": "qual a definição de dado pessoal na LGPD?",
+      "type": "definicao",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1"
+      ],
+      "alternative_acceptable_urns": [],
+      "expected_paragraph": "Segundo a LGPD (art. 5º, I), dado pessoal é toda informação relacionada\na pessoa natural identificada ou identificável.\n",
+      "answer": "A definição de **dado pessoal** na Lei Geral de Proteção de Dados Pessoais (LGPD) está prevista no Art. 5º, inciso I, e consiste em \"informação relacionada a pessoa natural identificada ou identificável\" (urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1).\n\nEssa definição se insere no contexto da LGPD, que dispõe sobre o tratamento de dados pessoais, inclusive nos meios digitais, por pessoa natural ou jurídica de direito público ou privado, com o objetivo de proteger os direitos fundamentais de liberdade e de privacidade e o livre desenvolvimento da personalidade da pessoa natural (Art. 1º, urn:lex:br:federal:lei:2018-08-14;13709~art1).\n\n**Elementos complementares:**\n\n- **Titular dos dados pessoais**: pessoa natural a quem se referem os dados pessoais que são objeto de tratamento (Art. 5º, V, urn:lex:br:federal:lei:2018-08-14;13709~art5;inc5).\n\n- **Dados pessoais sensíveis**: constituem categoria especial, abrangendo dados sobre origem racial ou étnica, convicção religiosa, opinião política, filiação a sindicato ou organização de caráter religioso, filosófico ou político, dados referentes à saúde ou à vida sexual, dados genéticos ou biométricos, quando vinculados a uma pessoa natural (Art. 5º, II, urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2).\n\n- **Dados para formação de perfil comportamental**: poderão ser igualmente considerados como dados pessoais, para os fins da LGPD, aqueles utilizados para formação do perfil comportamental de determinada pessoa natural, se identificada (Art. 12, § 2º, urn:lex:br:federal:lei:2018-08-14;13709~art12;par2).\n\nA definição legal é ampla e abarca qualquer informação que permita identificar ou tornar identificável uma pessoa natural, seja de forma direta (nome, CPF) ou indireta (identificadores eletrônicos, dados locacionais), conforme parâmetros também adotados em outros diplomas normativos (Decreto nº 8.771/2016, Art. 14, I, urn:lex:br:federal:decreto:2016-05-11;8771~art14;inc1).",
+      "citations": [
+        "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art1",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc5",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art12;par2",
+        "urn:lex:br:federal:decreto:2016-05-11;8771~art14;inc1"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1",
+          "score": 0.745559573173523
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto:2016-05-11;8771~art14;inc1",
+          "score": 0.7168475389480591
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2011-11-18;12527~art4;inc4",
+          "score": 0.700907826423645
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15~art3;inc8",
+          "score": 0.6963685750961304
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15~art3;inc9",
+          "score": 0.6837158203125
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art1",
+          "score": 0.6834081411361694
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc5",
+          "score": 0.6809695363044739
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15~art3;inc15",
+          "score": 0.6787887811660767
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art1;par1",
+          "score": 0.6727988719940186
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15~art3;inc3",
+          "score": 0.6723620891571045
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2",
+          "score": 0.6709845066070557
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art12;par2",
+          "score": 0.6687076091766357
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "definicao",
+      "classified_top_k": 12,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 0.16666666666666666,
+      "cit_precision_lenient": 0.16666666666666666,
+      "cit_recall": 1.0,
+      "cit_f1": 0.2857142857142857,
+      "faithfulness": 5,
+      "faithfulness_reasoning": "A resposta cobre integralmente o fato essencial (definição de dado pessoal conforme art. 5º, I, LGPD) e acrescenta informações corretas e correlatas sem contradizer a referência.",
+      "refused_correctly": true
+    },
+    {
+      "query": "o que é neutralidade de rede no Marco Civil da Internet?",
+      "type": "definicao",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9"
+      ],
+      "alternative_acceptable_urns": [
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc3",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc4",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par3"
+      ],
+      "expected_paragraph": "O Marco Civil da Internet (art. 9º) estabelece a neutralidade de rede\ncomo o dever do responsável pela transmissão, comutação ou roteamento\nde tratar de forma isonômica quaisquer pacotes de dados, sem distinção\npor conteúdo, origem e destino, serviço, terminal ou aplicação.\n",
+      "answer": "**Definição de neutralidade de rede no Marco Civil da Internet**\n\nA neutralidade de rede está definida no art. 9º, caput, da Lei nº 12.965/2014 (Marco Civil da Internet). Segundo esse dispositivo, o responsável pela transmissão, comutação ou roteamento tem o **dever de tratar de forma isonômica quaisquer pacotes de dados, sem distinção por conteúdo, origem e destino, serviço, terminal ou aplicação** (urn:lex:br:federal:lei:2014-04-23;12965~art9).\n\nA exigência de tratamento isonômico deve **garantir a preservação do caráter público e irrestrito do acesso à internet** e os fundamentos, princípios e objetivos do uso da internet no País, conforme previsto na Lei nº 12.965/2014 (art. 3º do Decreto nº 8.771/2016, que regulamenta o Marco Civil) (urn:lex:br:federal:decreto:2016-05-11;8771~art3).\n\nO art. 10 do Decreto nº 8.771/2016 complementa que as ofertas comerciais e os modelos de cobrança de acesso à internet devem **preservar uma internet única, de natureza aberta, plural e diversa**, compreendida como um meio para a promoção do desenvolvimento humano, econômico, social e cultural, contribuindo para a construção de uma sociedade inclusiva e não discriminatória (urn:lex:br:federal:decreto:2016-05-11;8771~art10).\n\n**Vedações e regras operacionais**\n\nNa provisão de conexão à internet, onerosa ou gratuita, bem como na transmissão, comutação ou roteamento, **é vedado bloquear, monitorar, filtrar ou analisar o conteúdo dos pacotes de dados**, respeitado o disposto no art. 9º (art. 9º, § 3º) (urn:lex:br:federal:lei:2014-04-23;12965~art9;par3).\n\n**Exceções à neutralidade**\n\nA discriminação ou degradação do tráfego somente poderá decorrer de:\n- **requisitos técnicos indispensáveis à prestação adequada dos serviços e aplicações**; e\n- **priorização de serviços de emergência** (art. 9º, § 1º, incisos I e II) (urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc1 e urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc2).\n\nTais exceções devem ser regulamentadas pelo Presidente da República, ouvidos o Comitê Gestor da Internet e a Agência Nacional de Telecomunicações (art. 9º, § 1º) (urn:lex:br:federal:lei:2014-04-23;12965~art9;par1).\n\n**Obrigações em caso de discriminação ou degradação**\n\nNas hipóteses excepcionais, o responsável deve:\n- **abster-se de causar dano aos usuários**, na forma do art. 927 do Código Civil (art. 9º, § 2º, I) (urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc1);\n- **agir com proporcionalidade, transparência e isonomia** (art. 9º, § 2º, II) (urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc2);\n- **informar previamente de modo transparente, claro e suficientemente descritivo** aos seus usuários sobre as práticas de gerenciamento e mitigação de tráfego adotadas, inclusive as relacionadas à segurança da rede (art. 9º, § 2º, III) (urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc3).\n\nO art. 9º, § 2º, estabelece o contexto dessas obrigações (urn:lex:br:federal:lei:2014-04-23;12965~art9;par2).\n\nO Decreto nº 8.771/2016, em seu art. 9º, I, reforça que as práticas de discriminação ou degradação não podem comprometer o caráter público e irrestrito do acesso à internet e os fundamentos, princípios e objetivos do uso da internet no País (urn:lex:br:federal:decreto:2016-05-11;8771~art9;inc1).",
+      "citations": [
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9",
+        "urn:lex:br:federal:decreto:2016-05-11;8771~art3",
+        "urn:lex:br:federal:decreto:2016-05-11;8771~art10",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par3",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc3",
+        "urn:lex:br:federal:decreto:2016-05-11;8771~art9;inc1"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9",
+          "score": 0.7547944784164429
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto:2016-05-11;8771~art10",
+          "score": 0.7500309944152832
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto:2016-05-11;8771~art3",
+          "score": 0.7472888231277466
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par3",
+          "score": 0.7457967400550842
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2",
+          "score": 0.7383530735969543
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1",
+          "score": 0.7339215874671936
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc2",
+          "score": 0.7329721450805664
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc2",
+          "score": 0.7325867414474487
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc1",
+          "score": 0.7315269708633423
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc3",
+          "score": 0.729190468788147
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc1",
+          "score": 0.7274907827377319
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto:2016-05-11;8771~art9;inc1",
+          "score": 0.7271223664283752
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "definicao",
+      "classified_top_k": 12,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 0.08333333333333333,
+      "cit_precision_lenient": 0.75,
+      "cit_recall": 1.0,
+      "cit_f1": 0.15384615384615385,
+      "faithfulness": 5,
+      "faithfulness_reasoning": "A resposta gerada cobre integralmente o fato essencial esperado (definição de neutralidade no art. 9º do MCI com tratamento isonômico de pacotes sem distinção por conteúdo, origem, destino, serviço, terminal ou aplicação) e adiciona detalhes corretos e relacionados (vedações, exceções, obrigações, regulamentação), sem contradizer a referência.",
+      "refused_correctly": true
+    },
+    {
+      "query": "qual a definição legal de programa de computador no Brasil?",
+      "type": "definicao",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:lei:1998-02-19;9609~art1"
+      ],
+      "alternative_acceptable_urns": [],
+      "expected_paragraph": "A Lei do Software (Lei nº 9.609/1998, art. 1º) define programa de\ncomputador como a expressão de um conjunto organizado de instruções em\nlinguagem natural ou codificada, contida em suporte físico de qualquer\nnatureza, empregada em máquinas automáticas de tratamento da informação\npara fazê-las funcionar de modo e para fins determinados.\n",
+      "answer": "A definição legal de programa de computador no Brasil está estabelecida no Art. 1º da Lei n.º 9.609/98 (Lei do Software):\n\n**\"Programa de computador é a expressão de um conjunto organizado de instruções em linguagem natural ou codificada, contida em suporte físico de qualquer natureza, de emprego necessário em máquinas automáticas de tratamento da informação, dispositivos, instrumentos ou equipamentos periféricos, baseados em técnica digital ou análoga, para fazê-los funcionar de modo e para fins determinados.\"**\n\n**Contexto normativo e regime de proteção:**\n\nOs programas de computador são reconhecidos como obras intelectuais protegidas pela Lei de Direitos Autorais (Art. 7, XII, da Lei n.º 9.610/98), porém submetem-se a legislação específica, conforme estabelece o Art. 7, § 1º, da mesma lei.\n\nO regime de proteção à propriedade intelectual de programa de computador é o conferido às obras literárias pela legislação de direitos autorais vigente no País, observadas as disposições específicas da Lei n.º 9.609/98 (Art. 2º). A proteção é assegurada pelo prazo de cinquenta anos, contados a partir de 1º de janeiro do ano subsequente ao da publicação ou, na ausência desta, da criação (Art. 2º, § 2º), e independe de registro (Art. 2º, § 3º).\n\nQuanto aos direitos morais, não se aplicam ao programa de computador as disposições gerais, ressalvados o direito do autor de reivindicar a paternidade e de opor-se a alterações não autorizadas que impliquem deformação, mutilação ou modificação prejudicial à sua honra ou reputação (Art. 2º, § 1º).\n\nEntre os direitos assegurados está o direito exclusivo de autorizar ou proibir o aluguel comercial, não sendo esse direito exaurível pela venda, licença ou outra forma de transferência da cópia do programa, exceto nos casos em que o programa em si não seja objeto essencial do aluguel (Art. 2º, § 5º e § 6º).",
+      "citations": [
+        "urn:lex:br:federal:lei:1998-02-19;9609~art1",
+        "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc12",
+        "urn:lex:br:federal:lei:1998-02-19;9610~art7;par1",
+        "urn:lex:br:federal:lei:1998-02-19;9609~art2",
+        "urn:lex:br:federal:lei:1998-02-19;9609~art2;par2",
+        "urn:lex:br:federal:lei:1998-02-19;9609~art2;par3",
+        "urn:lex:br:federal:lei:1998-02-19;9609~art2;par1",
+        "urn:lex:br:federal:lei:1998-02-19;9609~art2;par5",
+        "urn:lex:br:federal:lei:1998-02-19;9609~art2;par6"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art1",
+          "score": 0.715503454208374
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art7;inc12",
+          "score": 0.6808977723121643
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art7;par1",
+          "score": 0.6766101121902466
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art2",
+          "score": 0.657097578048706
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art2;par6",
+          "score": 0.6523784399032593
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art2;par4",
+          "score": 0.6324725151062012
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art2;par1",
+          "score": 0.6320029497146606
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art2;par5",
+          "score": 0.6317731142044067
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art2;par3",
+          "score": 0.6316845417022705
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art2;par2",
+          "score": 0.6299461722373962
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art3;par1;inc2",
+          "score": 0.6201720237731934
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art3;par1;inc3",
+          "score": 0.6143155694007874
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "definicao",
+      "classified_top_k": 12,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 0.1111111111111111,
+      "cit_precision_lenient": 0.1111111111111111,
+      "cit_recall": 1.0,
+      "cit_f1": 0.19999999999999998,
+      "faithfulness": 5,
+      "faithfulness_reasoning": "A resposta gerada cita corretamente o art. 1º da Lei 9.609/98 com a definição completa de programa de computador, cobrindo todos os fatos essenciais da resposta esperada. Os acréscimos sobre regime de proteção são factualmente corretos e não contradizem a referência.",
+      "refused_correctly": true
+    },
+    {
+      "query": "o que é habeas data?",
+      "type": "definicao",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72",
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a",
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b"
+      ],
+      "alternative_acceptable_urns": [
+        "urn:lex:br:federal:lei:1997-11-12;9507~art2",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art4",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc3",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art8"
+      ],
+      "expected_paragraph": "A Constituição (art. 5º, LXXII) prevê o habeas data como remédio\nconstitucional para (a) assegurar o conhecimento de informações\nrelativas à pessoa do impetrante constantes de registros ou bancos de\ndados de entidades governamentais ou de caráter público, e (b) para\nretificação desses dados quando não se prefira fazê-lo por processo\nsigiloso, judicial ou administrativo. O procedimento, tanto na via\nadministrativa quanto na judicial, é disciplinado pela Lei 9.507/1997\n(art. 2º — requerimento administrativo; art. 4º — retificação; art.\n7º — hipóteses de cabimento da ação judicial, incluindo, além das\nduas hipóteses constitucionais, a anotação de contestação sobre dado\nverdadeiro mas justificável (inc. III); art. 8º — petição inicial).\n",
+      "answer": "**Habeas data** é um remédio constitucional que pode ser concedido para proteger direitos relacionados a dados pessoais constantes de registros ou bancos de dados de entidades governamentais ou de caráter público.\n\nNos termos do Art. 5, LXXII, da Constituição Federal de 1988 e do Art. 7 da Lei nº 9.507/1997 (Lei do Habeas Data), o habeas data será concedido nas seguintes hipóteses:\n\na) para assegurar o conhecimento de informações relativas à pessoa do impetrante, constantes de registros ou bancos de dados de entidades governamentais ou de caráter público (Art. 5, LXXII, a, da CF/1988 e Art. 7, I, da Lei 9.507/1997);\n\nb) para a retificação de dados, quando não se prefira fazê-lo por processo sigiloso, judicial ou administrativo (Art. 5, LXXII, b, da CF/1988 e Art. 7, II, da Lei 9.507/1997);\n\nc) para a anotação nos assentamentos do interessado, de contestação ou explicação sobre dado verdadeiro mas justificável e que esteja sob pendência judicial ou amigável (Art. 7, III, da Lei 9.507/1997).\n\nO procedimento e a ação de habeas data são gratuitos (Art. 21 da Lei 9.507/1997). Da sentença que conceder ou negar o habeas data cabe apelação, sendo que quando a sentença conceder o habeas data, o recurso terá efeito meramente devolutivo (Art. 15 e parágrafo único da Lei 9.507/1997).\n\nOs prazos e procedimentos para exercício dos direitos do titular perante o Poder Público observam, em especial, as disposições da Lei do Habeas Data, da Lei Geral do Processo Administrativo e da Lei de Acesso à Informação (Art. 23, § 3º, da Lei nº 13.709/2018 – LGPD).",
+      "citations": [
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7",
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1",
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc3",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art21",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art15",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art15;par1",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art23;par3"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a",
+          "score": 0.7109764814376831
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1",
+          "score": 0.7098444104194641
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art7",
+          "score": 0.6954807043075562
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2",
+          "score": 0.6820948123931885
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b",
+          "score": 0.665310263633728
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc3",
+          "score": 0.6637624502182007
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art21",
+          "score": 0.645155131816864
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72",
+          "score": 0.641996443271637
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art15;par1",
+          "score": 0.6325245499610901
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art15",
+          "score": 0.6183475255966187
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art23;par3",
+          "score": 0.61118084192276
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art20",
+          "score": 0.6106301546096802
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "definicao",
+      "classified_top_k": 12,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 0.2727272727272727,
+      "cit_precision_lenient": 0.6363636363636364,
+      "cit_recall": 1.0,
+      "cit_f1": 0.42857142857142855,
+      "faithfulness": 4,
+      "faithfulness_reasoning": "A resposta gerada cobre todas as hipóteses constitucionais e legais do habeas data (art. 5º, LXXII, CF e art. 7º da Lei 9.507/1997), incluindo a anotação de contestação. Adiciona corretamente informações sobre gratuidade, recurso e LGPD, sem contradizer a referência. Omite menção explícita aos arts. 2º, 4º e 8º da Lei 9.507/1997, mas isso é detalhe menor.",
+      "refused_correctly": true
+    },
+    {
+      "query": "quais são os princípios do tratamento de dados pessoais na LGPD?",
+      "type": "enumeracao",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc1",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc10",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc2",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc3",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc4",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc5",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc6",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc7",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc8",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc9"
+      ],
+      "alternative_acceptable_urns": [],
+      "expected_paragraph": "O art. 6º da LGPD lista, além da boa-fé, dez princípios para o\ntratamento de dados pessoais: finalidade (I), adequação (II),\nnecessidade (III), livre acesso (IV), qualidade dos dados (V),\ntransparência (VI), segurança (VII), prevenção (VIII), não\ndiscriminação (IX) e responsabilização e prestação de contas (X).\n",
+      "answer": "Os princípios do tratamento de dados pessoais previstos na Lei Geral de Proteção de Dados (LGPD) estão enumerados no Art. 6º, que estabelece que as atividades de tratamento de dados pessoais deverão observar a boa-fé e os seguintes princípios:\n\n**I – Finalidade:** realização do tratamento para propósitos legítimos, específicos, explícitos e informados ao titular, sem possibilidade de tratamento posterior de forma incompatível com essas finalidades (Art. 6, I);\n\n**II – Adequação:** compatibilidade do tratamento com as finalidades informadas ao titular, de acordo com o contexto do tratamento (Art. 6, II);\n\n**III – Necessidade:** limitação do tratamento ao mínimo necessário para a realização de suas finalidades, com abrangência dos dados pertinentes, proporcionais e não excessivos em relação às finalidades do tratamento de dados (Art. 6, III);\n\n**IV – Livre acesso:** garantia, aos titulares, de consulta facilitada e gratuita sobre a forma e a duração do tratamento, bem como sobre a integralidade de seus dados pessoais (Art. 6, IV);\n\n**V – Qualidade dos dados:** garantia, aos titulares, de exatidão, clareza, relevância e atualização dos dados, de acordo com a necessidade e para o cumprimento da finalidade de seu tratamento (Art. 6, V);\n\n**VI – Transparência:** garantia, aos titulares, de informações claras, precisas e facilmente acessíveis sobre a realização do tratamento e os respectivos agentes de tratamento, observados os segredos comercial e industrial (Art. 6, VI);\n\n**VII – Segurança:** utilização de medidas técnicas e administrativas aptas a proteger os dados pessoais de acessos não autorizados e de situações acidentais ou ilícitas de destruição, perda, alteração, comunicação ou difusão (Art. 6, VII);\n\n**VIII – Prevenção:** adoção de medidas para prevenir a ocorrência de danos em virtude do tratamento de dados pessoais (Art. 6, VIII);\n\n**IX – Não discriminação:** impossibilidade de realização do tratamento para fins discriminatórios ilícitos ou abusivos (Art. 6, IX);\n\n**X – Responsabilização e prestação de contas:** demonstração, pelo agente, da adoção de medidas eficazes e capazes de comprovar a observância e o cumprimento das normas de proteção de dados pessoais e, inclusive, da eficácia dessas medidas (Art. 6, X).\n\nEsses princípios aplicam-se a todos os agentes de tratamento, inclusive nos casos de dispensa de consentimento, conforme prevê o Art. 7, § 6º.",
+      "citations": [
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc1",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc2",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc3",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc4",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc5",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc6",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc7",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc8",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc9",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc10",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art7;par6"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc1",
+          "score": 0.7313368320465088
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art6",
+          "score": 0.7269101738929749
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc3",
+          "score": 0.726892352104187
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc2",
+          "score": 0.7236944437026978
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc10",
+          "score": 0.7199088931083679
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc5",
+          "score": 0.7164512872695923
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc6",
+          "score": 0.7162460684776306
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc4",
+          "score": 0.7110475301742554
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc7",
+          "score": 0.7066134810447693
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art7;par7",
+          "score": 0.7052029967308044
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art7;par6",
+          "score": 0.7046660780906677
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc8",
+          "score": 0.6988054513931274
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art7;inc9",
+          "score": 0.6971796751022339
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art10;par1",
+          "score": 0.694554328918457
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art6;inc9",
+          "score": 0.6870329976081848
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art7;par3",
+          "score": 0.6847353577613831
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art7;par2",
+          "score": 0.6827499866485596
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art10",
+          "score": 0.6811641454696655
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art10;par2",
+          "score": 0.6793292760848999
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art1;par1",
+          "score": 0.6780954599380493
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art1",
+          "score": 0.6752985715866089
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art46;par1",
+          "score": 0.6735422611236572
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2011-11-18;12527~art31;par3",
+          "score": 0.6733860373497009
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art44;inc1",
+          "score": 0.6733352541923523
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art7",
+          "score": 0.6730169057846069
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "enumeracao",
+      "classified_top_k": 25,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 0.9166666666666666,
+      "cit_precision_lenient": 0.9166666666666666,
+      "cit_recall": 1.0,
+      "cit_f1": 0.9565217391304348,
+      "faithfulness": 5,
+      "faithfulness_reasoning": "A resposta gerada cobre todos os dez princípios listados na resposta esperada, além da boa-fé, com descrições corretas conforme o art. 6º da LGPD. Não há alucinação significativa.",
+      "refused_correctly": true
+    },
+    {
+      "query": "direitos garantidos ao usuário de internet",
+      "type": "enumeracao",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc10",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc11",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc12",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc13",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc3",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc4",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc5",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc6",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc7",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc8",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc9"
+      ],
+      "alternative_acceptable_urns": [],
+      "expected_paragraph": "O art. 7º do Marco Civil da Internet declara o acesso à internet\nessencial ao exercício da cidadania e assegura ao usuário 13 direitos,\nentre eles: inviolabilidade da intimidade e da vida privada (I); sigilo\ndo fluxo e das comunicações armazenadas, salvo ordem judicial (II e\nIII); não suspensão da conexão salvo por inadimplência (IV);\ninformações claras sobre o regime de proteção dos registros (VI); não\nfornecimento de dados pessoais a terceiros sem consentimento (VII);\nconsentimento expresso e destacado para coleta e tratamento (IX);\nexclusão definitiva dos dados ao término da relação (X); e aplicação\ndas normas de defesa do consumidor (XIII).\n",
+      "answer": "Os direitos garantidos ao usuário de internet estão previstos no Art. 7 da Lei n.º 12.965/2014 (Marco Civil da Internet), que reconhece o acesso à internet como essencial ao exercício da cidadania.\n\nEntre os direitos assegurados, destacam-se:\n\n**Privacidade e sigilo:**\n- Inviolabilidade da intimidade e da vida privada, com proteção e indenização pelo dano material ou moral decorrente de sua violação (Art. 7, I);\n- Inviolabilidade e sigilo do fluxo de suas comunicações pela internet, salvo por ordem judicial, na forma da lei (Art. 7, II);\n- Inviolabilidade e sigilo de suas comunicações privadas armazenadas, salvo por ordem judicial (Art. 7, III).\n\n**Transparência e informação:**\n- Informações claras e completas constantes dos contratos de prestação de serviços, com detalhamento sobre o regime de proteção aos registros de conexão e aos registros de acesso a aplicações de internet, bem como sobre práticas de gerenciamento da rede que possam afetar sua qualidade (Art. 7, VI);\n- Informações claras e completas sobre coleta, uso, armazenamento, tratamento e proteção de seus dados pessoais, que somente poderão ser utilizados para finalidades que: justifiquem sua coleta (Art. 7, VIII, a); não sejam vedadas pela legislação (Art. 7, VIII, b); e estejam especificadas nos contratos de prestação de serviços ou em termos de uso de aplicações de internet (Art. 7, VIII, c);\n- Publicidade e clareza de eventuais políticas de uso dos provedores de conexão à internet e de aplicações de internet (Art. 7, XI).\n\n**Qualidade do serviço:**\n- Manutenção da qualidade contratada da conexão à internet (Art. 7, V).\n\n**Defesa do consumidor:**\n- Aplicação das normas de proteção e defesa do consumidor nas relações de consumo realizadas na internet (Art. 7, XIII).",
+      "citations": [
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc3",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc5",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc6",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc8",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc8;ali-a",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc8;ali-b",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc8;ali-c",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc11",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc13"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc1",
+          "score": 0.7199407815933228
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc6",
+          "score": 0.7044216990470886
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7",
+          "score": 0.7029455304145813
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc2",
+          "score": 0.6973567605018616
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc8",
+          "score": 0.6925877332687378
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc8;ali-c",
+          "score": 0.6913071274757385
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc11",
+          "score": 0.6890891790390015
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc8;ali-a",
+          "score": 0.688831627368927
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc3",
+          "score": 0.6880356073379517
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc13",
+          "score": 0.6879644393920898
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc8;ali-b",
+          "score": 0.6857720017433167
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc5",
+          "score": 0.6854504346847534
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "parafrase",
+      "classified_top_k": 12,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 0.75,
+      "cit_precision_lenient": 0.75,
+      "cit_recall": 0.6428571428571429,
+      "cit_f1": 0.6923076923076924,
+      "faithfulness": 3,
+      "faithfulness_reasoning": "A resposta gerada cobre vários direitos essenciais mencionados na esperada (I, II, III, VI, XIII) e adiciona outros corretos (V, VIII, XI). Contudo, omite incisos importantes citados na esperada: IV (não suspensão por inadimplência), VII (não fornecimento a terceiros sem consentimento), IX (consentimento expresso) e X (exclusão definitiva dos dados). Não há alucinações, mas a cobertura é parcial em relação aos itens destacados pela referência.",
+      "refused_correctly": true
+    },
+    {
+      "query": "quais sanções administrativas a ANPD pode aplicar por violação da LGPD?",
+      "type": "enumeracao",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:lei:2018-08-14;13709~art52",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc1",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc10",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc11",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc12",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc2",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc3",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc4",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc5",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc6"
+      ],
+      "alternative_acceptable_urns": [],
+      "expected_paragraph": "O art. 52 da LGPD prevê as sanções administrativas que a ANPD pode\naplicar por infrações: advertência com prazo para correção (I); multa\nsimples de até 2% do faturamento, limitada a R$ 50 milhões por infração\n(II); multa diária (III); publicização da infração (IV); bloqueio dos\ndados (V); eliminação dos dados (VI); suspensão parcial do banco de\ndados por até 6 meses, prorrogável (X); suspensão da atividade de\ntratamento por até 6 meses, prorrogável (XI); e proibição parcial ou\ntotal das atividades de tratamento (XII). Os incisos VII, VIII e IX\nforam vetados.\n",
+      "answer": "A Autoridade Nacional de Proteção de Dados (ANPD) pode aplicar as seguintes sanções administrativas por violação da Lei Geral de Proteção de Dados (LGPD):\n\n**I –** advertência (Art. 3, I);\n\n**II –** multa simples (Art. 3, II);\n\n**III –** multa diária (Art. 3, III);\n\n**IV –** publicização da infração (Art. 3, IV);\n\n**V –** bloqueio dos dados pessoais (Art. 3, V);\n\n**VI –** eliminação dos dados pessoais (Art. 3, VI);\n\n**VII –** suspensão parcial do funcionamento do banco de dados (Art. 3, VII);\n\n**VIII –** suspensão do exercício da atividade de tratamento dos dados pessoais (Art. 3, VIII);\n\n**IX –** proibição parcial ou total do exercício de atividades relacionadas a tratamento de dados (Art. 3, IX).\n\nAs sanções previstas nos incisos VII, VIII e IX somente podem ser aplicadas: (a) após já ter sido imposta ao menos uma das sanções dos incisos II, III, IV, V e VI para o mesmo caso concreto; e (b) se verificada a insuficiência da sanção anteriormente aplicada para garantir a conformidade do autuado à legislação de proteção de dados, em razão de má-fé ou outros fatos (Art. 3, § 1º, I e II).\n\nAs sanções serão aplicadas de forma gradativa, isolada ou cumulativamente, conforme as peculiaridades do caso concreto (Art. 5). O não cumprimento da sanção aplicada ou a ausência de regularização da conduta no prazo estipulado ensejará a progressão da atuação da ANPD para a aplicação de sanções mais graves (Art. 5, § 2º).\n\nQuanto a entidades e órgãos públicos, podem ser aplicadas as sanções dos incisos I e IV a IX, sem prejuízo do disposto nas Leis nº 8.112/1990, nº 8.429/1992 e nº 12.527/2011 (Art. 3, § 5º).",
+      "citations": [
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc1",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc2",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc3",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc4",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc5",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc6",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc7",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc8",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc9",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;par1",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;par1;inc1",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;par1;inc2",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;par1;inc2;ali-a",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art5",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art5;par2",
+        "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;par5"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3",
+          "score": 0.7126470804214478
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;par1",
+          "score": 0.7104085683822632
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc3",
+          "score": 0.708703875541687
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc6",
+          "score": 0.7074493169784546
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art5;par1",
+          "score": 0.7055881023406982
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art5;par2",
+          "score": 0.7045586109161377
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc5",
+          "score": 0.7024885416030884
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc8",
+          "score": 0.7000187635421753
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;par1;inc1",
+          "score": 0.6990697979927063
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc1",
+          "score": 0.6985212564468384
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc2",
+          "score": 0.6981697678565979
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art52;par1;inc6",
+          "score": 0.6976343393325806
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;par1;inc2;ali-a",
+          "score": 0.6930500268936157
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;par4",
+          "score": 0.6924781203269958
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;par1;inc2",
+          "score": 0.6914666891098022
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc9",
+          "score": 0.6896886229515076
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;par5",
+          "score": 0.6893793940544128
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc7",
+          "score": 0.6883516311645508
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art52;par1;inc1",
+          "score": 0.6882546544075012
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc4",
+          "score": 0.687807559967041
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art52;par6;inc1",
+          "score": 0.6875689625740051
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art52;par1;inc3",
+          "score": 0.6860142946243286
+        },
+        {
+          "urn": "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art5",
+          "score": 0.6844013929367065
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art52;par1;inc2",
+          "score": 0.6838896870613098
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc3",
+          "score": 0.6832718849182129
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "enumeracao",
+      "classified_top_k": 25,
+      "pii_types_redacted": [],
+      "hierarchy_warning": "⚠️ Atenção (hierarquia normativa): a resposta cita apenas fontes de rank 5 (Resolução/Portaria/Infralegal); o contexto continha fontes de rank superior — Lei Ordinária (urn:lex:br:federal:lei:2018-08-14;13709~art52;par1;inc6, urn:lex:br:federal:lei:2018-08-14;13709~art52;par1;inc1, urn:lex:br:federal:lei:2018-08-14;13709~art52;par6;inc1). Verifique se a hierarquia foi respeitada (CF > LC > LO > Decreto > Resolução).",
+      "cit_precision": 0.0,
+      "cit_precision_lenient": 0.0,
+      "cit_recall": 0.0,
+      "cit_f1": 0.0,
+      "faithfulness": 2,
+      "faithfulness_reasoning": "A resposta cobre as sanções essenciais do art. 52 (advertência, multa simples, multa diária, publicização, bloqueio, eliminação, suspensão parcial, suspensão da atividade, proibição). Porém, há imprecisões: numera os incisos como I-IX em vez de I, II, III, IV, V, VI, X, XI, XII, e não menciona que VII, VIII e IX foram vetados (na verdade, apresenta como se VII, VIII, IX estivessem vigentes). Também omite detalhes da multa (até 2%, limite de R$ 50 milhões) e do prazo de 6 meses das suspensões. As referências a \"Art. 3\" são confusas/incorretas. Há contradição com o fato esperado sobre vetos.",
+      "refused_correctly": true
+    },
+    {
+      "query": "como o Código Penal define crime consumado e tentado?",
+      "type": "enumeracao",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;inc1",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;inc2"
+      ],
+      "alternative_acceptable_urns": [],
+      "expected_paragraph": "Conforme o art. 14 do Código Penal, o crime se diz consumado (I) quando\nnele se reúnem todos os elementos de sua definição legal, e tentado\n(II) quando, iniciada a execução, não se consuma por circunstâncias\nalheias à vontade do agente.\n",
+      "answer": "O Código Penal brasileiro define as modalidades de crime consumado e tentado no art. 14, que estabelece: \"Diz-se o crime:\"\n\n**Crime consumado** (art. 14, I): ocorre quando nele se reúnem todos os elementos de sua definição legal. Ou seja, o tipo penal foi integralmente realizado, com a produção do resultado previsto na norma incriminadora.\n\n**Crime tentado** (art. 14, II): ocorre quando, iniciada a execução, não se consuma por circunstâncias alheias à vontade do agente. A tentativa pressupõe o início dos atos executórios e a não consumação por fatores externos ao controle do autor.\n\n**Punição da tentativa**: Salvo disposição em contrário, pune-se a tentativa com a pena correspondente ao crime consumado, diminuída de um a dois terços (art. 14, parágrafo único).\n\n**Tentativa inidônea (crime impossível)**: Não se pune a tentativa quando, por ineficácia absoluta do meio ou por absoluta impropriedade do objeto, é impossível consumar-se o crime (art. 17).\n\n**Desistência voluntária e arrependimento eficaz**: O agente que, voluntariamente, desiste de prosseguir na execução ou impede que o resultado se produza, só responde pelos atos já praticados (art. 15).",
+      "citations": [
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;inc1",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;inc2",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;par1",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art17",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art15"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;inc2",
+          "score": 0.6448818445205688
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;inc1",
+          "score": 0.6224245429039001
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14;par1",
+          "score": 0.601966381072998
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art17",
+          "score": 0.5330153703689575
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art4",
+          "score": 0.5038127899169922
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art31",
+          "score": 0.5024977922439575
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art111;inc2",
+          "score": 0.4857182502746582
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art15",
+          "score": 0.48414525389671326
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art18;inc1",
+          "score": 0.4804914891719818
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art14",
+          "score": 0.4689175486564636
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art6",
+          "score": 0.4622208774089813
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art13;par1",
+          "score": 0.46141117811203003
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "parafrase",
+      "classified_top_k": 12,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 0.5,
+      "cit_precision_lenient": 0.5,
+      "cit_recall": 1.0,
+      "cit_f1": 0.6666666666666666,
+      "faithfulness": 5,
+      "faithfulness_reasoning": "A resposta gerada cobre integralmente os fatos essenciais da resposta esperada (art. 14, I e II do CP, com definições corretas de crime consumado e tentado) e adiciona informações corretas e correlatas (punição da tentativa, crime impossível, desistência voluntária), sem contradições ou alucinações.",
+      "refused_correctly": true
+    },
+    {
+      "query": "o que diz o art. 9º do Marco Civil da Internet?",
+      "type": "citacao-literal",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9"
+      ],
+      "alternative_acceptable_urns": [
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1;inc2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc3",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc4",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par3"
+      ],
+      "expected_paragraph": "O art. 9º do Marco Civil da Internet consagra a neutralidade de rede:\no responsável pela transmissão, comutação ou roteamento tem o dever de\ntratar de forma isonômica quaisquer pacotes de dados, sem distinção\npor conteúdo, origem e destino, serviço, terminal ou aplicação.\n",
+      "answer": "O Art. 9º do Marco Civil da Internet (Lei nº 12.965/2014) estabelece o princípio da **neutralidade de rede**.\n\n**Caput do Art. 9º**\n\nSegundo o caput do artigo, \"o responsável pela transmissão, comutação ou roteamento tem o dever de tratar de forma isonômica quaisquer pacotes de dados, sem distinção por conteúdo, origem e destino, serviço, terminal ou aplicação.\"\n\n**§ 1º — Exceções à regra**\n\nO § 1º prevê que \"a discriminação ou degradação do tráfego será regulamentada nos termos das atribuições privativas do Presidente da República previstas no inciso IV do art. 84 da Constituição Federal, para a fiel execução desta Lei, ouvidos o Comitê Gestor da Internet e a Agência Nacional de Telecomunicações, e somente poderá decorrer de\" situações excepcionais regulamentadas.\n\n**§ 2º — Deveres na hipótese de discriminação ou degradação**\n\nNa hipótese de discriminação ou degradação do tráfego prevista no § 1º, o responsável mencionado no caput deve:\n\nI - abster-se de causar dano aos usuários, na forma do art. 927 da Lei nº 10.406, de 10 de janeiro de 2002 - Código Civil;\n\nII - agir com proporcionalidade, transparência e isonomia;\n\nIII - informar previamente de modo transparente, claro e suficientemente descritivo aos seus usuários sobre as práticas de gerenciamento e mitigação de tráfego adotadas, inclusive as relacionadas à segurança da rede.\n\n**§ 3º — Vedação**\n\nO § 3º dispõe que \"na provisão de conexão à internet, onerosa ou gratuita, bem como na transmissão, comutação ou roteamento, é vedado bloquear, monitorar, filtrar ou analisar o conteúdo dos pacotes de dados, respeitado o disposto neste artigo.\"",
+      "citations": [
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc3",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art9;par3"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par3",
+          "score": 0.6326907873153687
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc3",
+          "score": 0.6286206245422363
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc2",
+          "score": 0.6264861822128296
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2;inc1",
+          "score": 0.6240048408508301
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par2",
+          "score": 0.6229965686798096
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto:2016-05-11;8771~art9;inc1",
+          "score": 0.6200171113014221
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9",
+          "score": 0.6171848773956299
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art9;par1",
+          "score": 0.6103794574737549
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "citacao-literal",
+      "classified_top_k": 8,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 0.14285714285714285,
+      "cit_precision_lenient": 1.0,
+      "cit_recall": 1.0,
+      "cit_f1": 0.25,
+      "faithfulness": 5,
+      "faithfulness_reasoning": "A resposta gerada cobre integralmente o caput do art. 9º (neutralidade de rede) conforme esperado, e adiciona detalhes corretos sobre §§ 1º, 2º e 3º que complementam sem contradizer a referência.",
+      "refused_correctly": true
+    },
+    {
+      "query": "o que diz o art. 154-A do Código Penal?",
+      "type": "citacao-literal",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a"
+      ],
+      "alternative_acceptable_urns": [
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par1",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par2",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par3",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par4",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5;inc1",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5;inc2",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5;inc3",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5;inc4"
+      ],
+      "expected_paragraph": "O art. 154-A do Código Penal tipifica o crime de invasão de dispositivo\ninformático: invadir dispositivo informático de uso alheio, conectado\nou não à rede de computadores, com o fim de obter, adulterar ou\ndestruir dados ou informações sem autorização expressa ou tácita do\nusuário, ou de instalar vulnerabilidades para obter vantagem ilícita.\n",
+      "answer": "O art. 154-A do Código Penal tipifica o crime de invasão de dispositivo informático. Segundo o caput do artigo, constitui crime \"Invadir dispositivo informático de uso alheio, conectado ou não à rede de computadores, com o fim de obter, adulterar ou destruir dados ou informações sem autorização expressa ou tácita do usuário do dispositivo ou de instalar vulnerabilidades para obter vantagem ilícita\".\n\nO tipo penal está estruturado com os seguintes parágrafos:\n\nO § 1º pune com a mesma pena \"quem produz, oferece, distribui, vende ou difunde dispositivo ou programa de computador com o intuito de permitir a prática da conduta definida no caput\".\n\nO § 2º prevê causa de aumento de pena de 1/3 (um terço) a 2/3 (dois terços) \"se da invasão resulta prejuízo econômico\".\n\nO § 3º estabelece qualificadora para os casos em que \"da invasão resultar a obtenção de conteúdo de comunicações eletrônicas privadas, segredos comerciais ou industriais, informações sigilosas, assim definidas em lei, ou o controle remoto não autorizado do dispositivo invadido\".\n\nO § 4º prevê causa de aumento de pena de um a dois terços \"na hipótese do § 3º\", caso \"houver divulgação, comercialização ou transmissão a terceiro, a qualquer título, dos dados ou informações obtidos\".\n\nO § 5º estabelece outra causa de aumento de pena de um terço à metade \"se o crime for praticado contra\" determinados sujeitos passivos (o texto fornecido não especifica quais).\n\n⚠️ Atenção: dispositivo com vigência ressalvada — Tipo introduzido pela Lei Carolina Dieckmann (12.737/2012) e significativamente alterado pela Lei 14.155/2021, que aumentou as penas e ampliou as qualificadoras (§§ 3º a 5º). Jurisprudência ainda em formação sobre a nova redação. (Status: atualizado_recentemente; Fundamento: Lei 12.737/2012 (introduziu) + Lei 14.155/2021 (aumentou penas e qualificadoras); Desde: 2021-05-27.)",
+      "citations": [
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par1",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par2",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par3",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par4",
+        "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:lei:2012-11-30;12737~art2",
+          "score": 0.559546172618866
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par1",
+          "score": 0.507094144821167
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par4",
+          "score": 0.5017366409301758
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a",
+          "score": 0.49847412109375
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par3",
+          "score": 0.4925103783607483
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par2",
+          "score": 0.48858317732810974
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art149-a;inc1",
+          "score": 0.4877137541770935
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par5",
+          "score": 0.4870103597640991
+        }
+      ],
+      "flagged_vigencia": [
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a",
+          "status": "atualizado_recentemente",
+          "fundamento": "Lei 12.737/2012 (introduziu) + Lei 14.155/2021 (aumentou penas e qualificadoras)",
+          "descricao_curta": "Tipo introduzido pela Lei Carolina Dieckmann (12.737/2012) e\nsignificativamente alterado pela Lei 14.155/2021, que aumentou as\npenas e ampliou as qualificadoras (§§ 3º a 5º). Jurisprudência ainda\nem formação sobre a nova redação."
+        }
+      ],
+      "classified_type": "citacao-literal",
+      "classified_top_k": 8,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 0.16666666666666666,
+      "cit_precision_lenient": 1.0,
+      "cit_recall": 1.0,
+      "cit_f1": 0.2857142857142857,
+      "faithfulness": 5,
+      "faithfulness_reasoning": "A resposta gerada cobre integralmente o conteúdo essencial do caput do art. 154-A esperado, com citação literal precisa, e adiciona detalhes corretos sobre os parágrafos e legislação aplicável, sem contradições ou alucinações relevantes.",
+      "refused_correctly": true
+    },
+    {
+      "query": "o que diz o art. 5 inciso X da Constituição?",
+      "type": "citacao-literal",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"
+      ],
+      "alternative_acceptable_urns": [],
+      "expected_paragraph": "O art. 5º, X, da Constituição Federal declara invioláveis a intimidade,\na vida privada, a honra e a imagem das pessoas, assegurando direito a\nindenização pelo dano material ou moral decorrente de sua violação.\n",
+      "answer": "O art. 5º, inciso X, da Constituição Federal de 1988 estabelece que \"são invioláveis a intimidade, a vida privada, a honra e a imagem das pessoas, assegurado o direito a indenização pelo dano material ou moral decorrente de sua violação\".\n\nTrata-se de garantia fundamental que protege os direitos da personalidade, consagrando a inviolabilidade da intimidade, da vida privada, da honra e da imagem. O dispositivo assegura, ainda, o direito à reparação por danos materiais ou morais resultantes da violação desses direitos.",
+      "citations": [
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10",
+          "score": 0.5800769329071045
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc25",
+          "score": 0.5434978008270264
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc73",
+          "score": 0.5407568216323853
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc44",
+          "score": 0.535051703453064
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc59",
+          "score": 0.5322093963623047
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc9",
+          "score": 0.5269302129745483
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc11",
+          "score": 0.526870846748352
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc60",
+          "score": 0.5258496403694153
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "citacao-literal",
+      "classified_top_k": 8,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 1.0,
+      "cit_precision_lenient": 1.0,
+      "cit_recall": 1.0,
+      "cit_f1": 1.0,
+      "faithfulness": 5,
+      "faithfulness_reasoning": "A resposta gerada cita literalmente o art. 5º, X, cobrindo todos os fatos essenciais (inviolabilidade da intimidade, vida privada, honra e imagem, e direito a indenização por dano material ou moral). Os comentários adicionais são corretos e não contradizem a referência.",
+      "refused_correctly": true
+    },
+    {
+      "query": "habeas data e direitos do titular de dados",
+      "type": "cross-doc",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72",
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a",
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art2",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art4",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc3",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc4"
+      ],
+      "alternative_acceptable_urns": [
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc3",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art17",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art18;par1",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art18;par3",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art18;par8"
+      ],
+      "expected_paragraph": "A Constituição (art. 5º, LXXII) garante o habeas data para acesso a\ninformações pessoais em registros governamentais ou de caráter público\ne para sua retificação; o procedimento administrativo correspondente\né disciplinado pela Lei 9.507/1997 (art. 2º — requerimento de acesso;\nart. 4º — pedido de retificação). A LGPD operacionaliza direitos\nanálogos na esfera do controlador privado: o art. 18, II, assegura o\ndireito de acesso aos dados; o art. 18, III, o direito à correção de\ndados incompletos, inexatos ou desatualizados (análogo à retificação\ndo habeas data); e o art. 18, IV, o direito à anonimização, bloqueio\nou eliminação de dados desnecessários, excessivos ou tratados em\ndesconformidade com a Lei.\n",
+      "answer": "O habeas data e os direitos do titular de dados pessoais estão disciplinados na Constituição Federal, na Lei Geral de Proteção de Dados Pessoais (LGPD – Lei nº 13.709/2018) e na Lei do Habeas Data (Lei nº 9.507/1997), com pontos de interface importantes.\n\n**Habeas Data**\n\nO habeas data é um remédio constitucional previsto no Art. 5º, LXXII, da Constituição Federal, e regulamentado pela Lei nº 9.507/1997. Concede-se habeas data (Art. 7º da Lei nº 9.507/1997):\n\na) para assegurar o conhecimento de informações relativas à pessoa do impetrante, constantes de registro ou banco de dados de entidades governamentais ou de caráter público (Art. 5º, LXXII, \"a\", da CF/88 e Art. 7º, I, da Lei nº 9.507/1997);\n\nb) para a retificação de dados, quando não se prefira fazê-lo por processo sigiloso, judicial ou administrativo (Art. 5º, LXXII, \"b\", da CF/88 e Art. 7º, II, da Lei nº 9.507/1997).\n\n**Direitos do Titular de Dados Pessoais (LGPD)**\n\nA LGPD assegura que toda pessoa natural tem a titularidade de seus dados pessoais e garante os direitos fundamentais de liberdade, intimidade e privacidade (Art. 17 da Lei nº 13.709/2018).\n\nO titular dos dados pessoais tem direito a obter do controlador, em relação aos dados por ele tratados, a qualquer momento e mediante requisição (Art. 18 da LGPD), diversas informações e providências. Os direitos são exercidos mediante requerimento expresso do titular ou de representante legalmente constituído, ao agente de tratamento (Art. 18, § 3º, da LGPD).\n\nAs informações e os dados poderão ser fornecidos, a critério do titular, conforme as modalidades previstas na legislação (Art. 19, § 2º, da LGPD).\n\nO titular também tem o direito de peticionar em relação aos seus dados contra o controlador perante a autoridade nacional (Art. 18, § 1º, da LGPD), bem como exercer esse direito perante os organismos de defesa do consumidor (Art. 18, § 8º, da LGPD).\n\n**Interface: Habeas Data e LGPD no âmbito do Poder Público**\n\nA LGPD estabelece que os prazos e procedimentos para exercício dos direitos do titular perante o Poder Público observarão o disposto em legislação específica, em especial as disposições constantes da Lei nº 9.507/1997 (Lei do Habeas Data), da Lei nº 9.784/1999 (Lei Geral do Processo Administrativo) e da Lei nº 12.527/2011 (Lei de Acesso à Informação) (Art. 23, § 3º, da Lei nº 13.709/2018).\n\nAssim, quando o titular de dados desejar exercer seus direitos perante entidades governamentais ou de caráter público, poderá utilizar o habeas data como instrumento de garantia constitucional, observando-se os procedimentos específicos da Lei nº 9.507/1997, em complemento aos direitos gerais previstos na LGPD.",
+      "citations": [
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a",
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1",
+        "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art17",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art18",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art18;par1",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art18;par3",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art18;par8",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art19;par2",
+        "urn:lex:br:federal:lei:2018-08-14;13709~art23;par3"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a",
+          "score": 0.6655675172805786
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art17",
+          "score": 0.6473314762115479
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b",
+          "score": 0.6433718204498291
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art23;par3",
+          "score": 0.6428231000900269
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1",
+          "score": 0.6393710374832153
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2",
+          "score": 0.6378867626190186
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art18;par1",
+          "score": 0.6358853578567505
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art18;par3",
+          "score": 0.635161280632019
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art18;par8",
+          "score": 0.633927583694458
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art19;par2",
+          "score": 0.6328884363174438
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2018-08-14;13709~art18",
+          "score": 0.6303601264953613
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art7",
+          "score": 0.6270467042922974
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "parafrase",
+      "classified_top_k": 12,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 0.16666666666666666,
+      "cit_precision_lenient": 0.75,
+      "cit_recall": 0.25,
+      "cit_f1": 0.2,
+      "faithfulness": 3,
+      "faithfulness_reasoning": "A resposta cobre o art. 5º, LXXII da CF e a Lei 9.507/1997 (mencionando art. 7º em vez dos arts. 2º e 4º citados na referência, mas tratando do mesmo conteúdo de acesso e retificação). Quanto à LGPD, menciona o art. 18 genericamente mas não detalha explicitamente os incisos II (acesso), III (correção) e IV (anonimização/bloqueio/eliminação) — que são o cerne da análise comparativa esperada. Acrescenta informação correta sobre a interface (art. 23, §3º). Cobertura parcial dos pontos essenciais sem alucinação significativa.",
+      "refused_correctly": true
+    },
+    {
+      "query": "qual o regime de responsabilidade do provedor de aplicações de internet por conteúdo de terceiros?",
+      "type": "definicao",
+      "oos": false,
+      "gold_urns": [
+        "urn:lex:br:federal:lei:2014-04-23;12965~art19"
+      ],
+      "alternative_acceptable_urns": [
+        "urn:lex:br:federal:lei:2014-04-23;12965~art19;par1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art19;par2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art19;par3",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art19;par4",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art21"
+      ],
+      "expected_paragraph": "O Marco Civil da Internet (art. 19) estabelece que o provedor de\naplicações de internet somente pode ser responsabilizado civilmente\npor danos decorrentes de conteúdo gerado por terceiros se, após ordem\njudicial específica, não tomar as providências para tornar\nindisponível o conteúdo apontado como infringente. ⚠️ Atenção: a\naplicação deste dispositivo está em discussão no STF (RE 1.037.396 —\nTema 987 da repercussão geral), com tese pendente sobre sua\nconstitucionalidade.\n",
+      "answer": "O regime de responsabilidade do provedor de aplicações de internet por conteúdo gerado por terceiros está disciplinado na Lei nº 12.965/2014 (Marco Civil da Internet) e segue, como regra geral, o princípio da **responsabilização condicionada à ordem judicial**.\n\n**Regra Geral (Art. 19)**\n\nO provedor de aplicações de internet somente poderá ser responsabilizado civilmente por danos decorrentes de conteúdo gerado por terceiros se, após ordem judicial específica, não tomar as providências para, no âmbito e nos limites técnicos do seu serviço e dentro do prazo assinalado, tornar indisponível o conteúdo apontado como infringente, ressalvadas as disposições legais em contrário. A ordem judicial deve conter, sob pena de nulidade, identificação clara e específica do conteúdo apontado como infringente, que permita a localização inequívoca do material (Art. 19, § 1º).\n\n⚠️ **Atenção**: dispositivo com vigência ressalvada — Aplicação em discussão no STF. Tema 987 da repercussão geral questiona constitucionalidade do regime que condiciona a responsabilidade do provedor de aplicações por conteúdo de terceiros à existência de ordem judicial específica. (Status: sub judice; Fundamento: STF RE 1.037.396 (Tema 987 da repercussão geral); Desde: 2017-09-29.)\n\n**Exceção: Violação da Intimidade (Art. 21)**\n\nO provedor será responsabilizado **subsidiariamente** pela violação da intimidade decorrente da divulgação, sem autorização, de imagens, vídeos ou outros materiais contendo cenas de nudez ou de atos sexuais de caráter privado quando, após o recebimento de **notificação** pelo participante ou seu representante legal, deixar de promover, de forma diligente, no âmbito e nos limites técnicos do seu serviço, a indisponibilização desse conteúdo. A notificação deverá conter, sob pena de nulidade, elementos que permitam a identificação específica do material apontado como violador da intimidade do participante e a verificação da legitimidade para apresentação do pedido (Art. 21, Parágrafo único).\n\n⚠️ **Atenção**: dispositivo com vigência ressalvada — Conexo ao Tema 987 do STF. Discussão sobre o regime de remoção independentemente de ordem judicial em casos de imagens íntimas pode ser afetada pela tese de repercussão geral. (Status: sub judice; Fundamento: STF RE 1.037.396 (Tema 987); Desde: 2017-09-29.)\n\n**Direitos Autorais**\n\nA aplicação do regime do Art. 19 para infrações a direitos de autor ou a direitos conexos depende de previsão legal específica, que deverá respeitar a liberdade de expressão e demais garantias previstas no art. 5º da Constituição Federal (Art. 19, § 2º). Até a entrada em vigor de lei específica, a responsabilidade do provedor por danos decorrentes de conteúdo gerado por terceiros, quando se tratar de infração a direitos de autor ou a direitos conexos, continuará a ser disciplinada pela legislação autoral vigente aplicável na data da entrada em vigor da Lei nº 12.965/2014 (Art. 31).\n\n**Tutela Antecipada**\n\nO juiz poderá antecipar, total ou parcialmente, os efeitos da tutela pretendida no pedido inicial, existindo prova inequívoca do fato e considerado o interesse da coletividade na disponibilização do conteúdo na internet, desde que presentes os requisitos de verossimilhança da alegação do autor e de fundado receio de dano irreparável ou de difícil reparação (Art. 19, § 4º).\n\n**Competência dos Juizados Especiais**\n\nAs causas que versem sobre ressarcimento por danos decorrentes de conteúdos disponibilizados na internet relacionados à honra, à reputação ou a direitos de personalidade, bem como sobre a indisponibilização desses conteúdos por provedores de aplicações de internet, poderão ser apresentadas perante os juizados especiais (Art. 19, § 3º).\n\n**Transparência e Contraditório**\n\nSempre que tiver informações de contato do usuário diretamente responsável pelo conteúdo, caberá ao provedor de aplicações de internet comunicar-lhe os motivos e informações relativos à indisponibilização de conteúdo, com informações que permitam o contraditório e a ampla defesa em juízo, salvo expressa previsão legal ou expressa determinação judicial fundamentada em contrário (Art. 20). Quando solicitado pelo usuário que disponibilizou o conteúdo tornado indisponível, o provedor de aplicações de internet que exerce essa atividade de forma organizada, profissionalmente e com fins econômicos substituirá o conteúdo tornado indisponível pela motivação ou pela ordem judicial que deu fundamento à indisponibilização (Art. 20, Parágrafo único).\n\n**Distinção: Provedor de Conexão**\n\nRessalte-se que o provedor de **conexão** à internet não será responsabilizado civilmente por danos decorrentes de conteúdo gerado por terceiros (Art. 18), regime distinto do aplicável ao provedor de aplicações.\n\nPor fim, a opção por não guardar os registros de acesso a aplicações de internet não implica responsabilidade sobre danos decorrentes do uso desses serviços por terceiros, ressalvadas as hipóteses previstas na Lei nº 12.965/2014 (Art. 17).",
+      "citations": [
+        "urn:lex:br:federal:lei:2014-04-23;12965~art19",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art19;par1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art21",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art21;par1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art19;par2",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art31",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art19;par4",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art19;par3",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art20",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art20;par1",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art18",
+        "urn:lex:br:federal:lei:2014-04-23;12965~art17"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": false,
+      "refusal_reason": null,
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art19",
+          "score": 0.6871387958526611
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art21",
+          "score": 0.6847641468048096
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art19;par3",
+          "score": 0.6788129806518555
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art19;par2",
+          "score": 0.6746814250946045
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art19;par4",
+          "score": 0.6745449304580688
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art19;par1",
+          "score": 0.673539400100708
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art31",
+          "score": 0.6709942817687988
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art21;par1",
+          "score": 0.6641587615013123
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art18",
+          "score": 0.6575096845626831
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art20",
+          "score": 0.6450512409210205
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art20;par1",
+          "score": 0.6422502994537354
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art17",
+          "score": 0.6148647665977478
+        }
+      ],
+      "flagged_vigencia": [
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art19",
+          "status": "sub_judice",
+          "fundamento": "STF RE 1.037.396 (Tema 987 da repercussão geral)",
+          "descricao_curta": "Aplicação em discussão no STF. Tema 987 da repercussão geral\nquestiona constitucionalidade do regime que condiciona a\nresponsabilidade do provedor de aplicações por conteúdo de\nterceiros à existência de ordem judicial específica."
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art21",
+          "status": "sub_judice",
+          "fundamento": "STF RE 1.037.396 (Tema 987)",
+          "descricao_curta": "Conexo ao Tema 987 do STF. Discussão sobre o regime de remoção\nindependentemente de ordem judicial em casos de imagens íntimas\npode ser afetada pela tese de repercussão geral."
+        }
+      ],
+      "classified_type": "parafrase",
+      "classified_top_k": 12,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": 0.08333333333333333,
+      "cit_precision_lenient": 0.5,
+      "cit_recall": 1.0,
+      "cit_f1": 0.15384615384615385,
+      "faithfulness": 5,
+      "faithfulness_reasoning": "A resposta gerada cobre integralmente os fatos essenciais da esperada (art. 19 do MCI, regra de responsabilização condicionada à ordem judicial, e o alerta sobre o Tema 987/RE 1.037.396 no STF). Acrescenta informações corretas e relacionadas (arts. 18, 20, 21, 31, §§ do art. 19) sem contradizer a referência nem alucinar.",
+      "refused_correctly": true
+    },
+    {
+      "query": "qual a alíquota do imposto de renda para pessoa física em 2025?",
+      "type": "oos",
+      "oos": true,
+      "gold_urns": [],
+      "alternative_acceptable_urns": [],
+      "expected_paragraph": "O corpus do projeto cobre legislação digital brasileira (LGPD, MCI,\nLei do Software, etc.), não a legislação tributária. A pipeline deve\nrecusar com \"fora do escopo da base\" ou equivalente.\n",
+      "answer": "Não há informação suficiente nas fontes fornecidas.",
+      "citations": [],
+      "rejected_citations": [],
+      "unverified_claims": [
+        "As fontes fornecidas tratam exclusivamente de alíquotas relacionadas ao imposto previsto no art. 156-A da Constituição Federal (imposto sobre bens e serviços - IBS) e à contribuição prevista no art. 195, V, da Constituição Federal (contribuição social sobre bens e serviços - CBS), no contexto da reforma tributária e do período de transição entre 2026 e 2033. Nenhuma das fontes aborda o imposto de renda de pessoa física (IRPF) ou suas alíquotas aplicáveis em 2025."
+      ],
+      "refused": true,
+      "refusal_reason": "llm-self-refusal",
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art125",
+          "score": 0.6480067372322083
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art125;par4",
+          "score": 0.6350844502449036
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art127;par1",
+          "score": 0.6350260972976685
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art125;par1",
+          "score": 0.6289010047912598
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art22;par1",
+          "score": 0.6283798217773438
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art128;inc2",
+          "score": 0.6264663934707642
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art130;par5",
+          "score": 0.626192569732666
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art128;inc3",
+          "score": 0.6251720190048218
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art128;inc1",
+          "score": 0.624374270439148
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art127",
+          "score": 0.6209074258804321
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art128;inc4",
+          "score": 0.6190919876098633
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art125;par3",
+          "score": 0.6186404228210449
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "parafrase",
+      "classified_top_k": 12,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": null,
+      "cit_precision_lenient": null,
+      "cit_recall": null,
+      "cit_f1": null,
+      "faithfulness": null,
+      "faithfulness_reasoning": null,
+      "refused_correctly": true
+    },
+    {
+      "query": "como funciona o divórcio judicial no Brasil?",
+      "type": "oos",
+      "oos": true,
+      "gold_urns": [],
+      "alternative_acceptable_urns": [],
+      "expected_paragraph": "O corpus do projeto cobre legislação digital brasileira (LGPD, MCI,\nCódigo Penal, etc.), não direito de família. A pipeline deve recusar\ncom \"fora do escopo da base\" ou equivalente.\n",
+      "answer": "Não há informação suficiente nas fontes fornecidas.\n\nAs fontes disponíveis limitam-se a mencionar que \"o casamento civil pode ser dissolvido pelo divórcio\" (Art. 226, § 6º da Constituição Federal), mas não trazem qualquer dispositivo legal que discipline o procedimento, os requisitos, o rito processual ou as etapas do divórcio judicial no Brasil.\n\nPara responder adequadamente à pergunta sobre como funciona o divórcio judicial — incluindo competência, legitimidade, requisitos, prazos, formas consensual ou litigiosa, partilha de bens, guarda de filhos, alimentos, efeitos da sentença, recursos cabíveis, entre outros aspectos procedimentais — seria necessário acesso aos dispositivos do Código de Processo Civil (Lei n.º 13.105/2015) e do Código Civil (Lei n.º 10.406/2002) que tratam especificamente da ação de divórcio, os quais não constam do contexto fornecido.",
+      "citations": [
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art226;par6"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [],
+      "refused": true,
+      "refusal_reason": "llm-self-refusal",
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art226;par6",
+          "score": 0.5834258794784546
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art98;inc2",
+          "score": 0.5498962998390198
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art182;inc1",
+          "score": 0.5340772867202759
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art240",
+          "score": 0.5246540307998657
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art236;par1",
+          "score": 0.5199741721153259
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2006-12-19;11419~art8",
+          "score": 0.5030539035797119
+        },
+        {
+          "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art236",
+          "score": 0.4979972839355469
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art98;inc1",
+          "score": 0.496071994304657
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art8;par1",
+          "score": 0.49386879801750183
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art8",
+          "score": 0.493498831987381
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art126;par1",
+          "score": 0.4929542541503906
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1990-09-11;8078~art104-b;par4",
+          "score": 0.4927826225757599
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "parafrase",
+      "classified_top_k": 12,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": null,
+      "cit_precision_lenient": null,
+      "cit_recall": null,
+      "cit_f1": null,
+      "faithfulness": null,
+      "faithfulness_reasoning": null,
+      "refused_correctly": true
+    },
+    {
+      "query": "quais os requisitos para registrar uma marca no INPI?",
+      "type": "oos",
+      "oos": true,
+      "gold_urns": [],
+      "alternative_acceptable_urns": [],
+      "expected_paragraph": "O corpus do projeto cobre direitos autorais (Lei 9.610) e software\n(Lei 9.609), mas não propriedade industrial (Lei 9.279/1996 — marcas\ne patentes). A pipeline deve recusar com \"fora do escopo da base\" ou\nequivalente.\n",
+      "answer": "Não há informação suficiente nas fontes fornecidas.\n\nAs fontes disponibilizadas tratam de temas como habeas data (Lei nº 9.507/1997), registro de programas de computador (Lei nº 9.609/1998), direitos autorais e registro de obras intelectuais (Lei nº 9.610/1998), e Marco Civil da Internet (Lei nº 12.965/2014), mas não contêm dispositivos legais relativos aos requisitos específicos para o registro de marcas no Instituto Nacional da Propriedade Industrial (INPI).\n\nEmbora a Constituição Federal, em seu Art. 5º, XXIX, assegure a proteção às criações industriais e à propriedade das marcas, tendo em vista o interesse social e o desenvolvimento tecnológico e econômico do País, essa disposição apenas reconhece o direito à proteção marcária, sem estabelecer os requisitos procedimentais para o registro.\n\nPara responder adequadamente à pergunta, seriam necessárias fontes que contivessem disposições da Lei da Propriedade Industrial (Lei nº 9.279/1996), que efetivamente regulamenta os requisitos, procedimentos e condições para o registro de marcas junto ao INPI.",
+      "citations": [
+        "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc29"
+      ],
+      "rejected_citations": [],
+      "unverified_claims": [
+        "As fontes fornecidas não contêm dispositivos da Lei nº 9.279/1996 (Lei da Propriedade Industrial), que é a legislação específica que estabelece os requisitos para registro de marcas no INPI.",
+        "A menção à Lei nº 9.279/1996 como legislação aplicável é inferência baseada no conhecimento jurídico externo, não presente nas fontes fornecidas."
+      ],
+      "refused": true,
+      "refusal_reason": "llm-self-refusal",
+      "raw_retrieval": [
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art8;par1;inc3",
+          "score": 0.5204251408576965
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art3;par1;inc3",
+          "score": 0.5155791640281677
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art10",
+          "score": 0.5142714381217957
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art3;par1;inc1",
+          "score": 0.513995349407196
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art98-a;inc2",
+          "score": 0.5135833024978638
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art18",
+          "score": 0.5113682746887207
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art98-a;inc2;ali-a",
+          "score": 0.5104324221611023
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art98-a;inc1",
+          "score": 0.5096837282180786
+        },
+        {
+          "urn": "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc29",
+          "score": 0.509666919708252
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art3;par1;inc2",
+          "score": 0.5091307163238525
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art2",
+          "score": 0.5085086822509766
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art113",
+          "score": 0.5079031586647034
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:2014-04-23;12965~art8;par1;inc5",
+          "score": 0.5078283548355103
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art98-a;inc2;ali-c",
+          "score": 0.5076992511749268
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art5;inc8;ali-d",
+          "score": 0.506523609161377
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art8",
+          "score": 0.5063794851303101
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art98-a;inc2;ali-g",
+          "score": 0.5059809684753418
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art21",
+          "score": 0.5058764219284058
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9609~art3;par1",
+          "score": 0.5056553483009338
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art80;inc4",
+          "score": 0.5037283897399902
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art8;par1;inc1",
+          "score": 0.5025187730789185
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art98-a;inc2;ali-e",
+          "score": 0.5020763874053955
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art8;par1",
+          "score": 0.5002508759498596
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1998-02-19;9610~art98-a;inc2;ali-j",
+          "score": 0.5000545382499695
+        },
+        {
+          "urn": "urn:lex:br:federal:lei:1997-11-12;9507~art2;par1",
+          "score": 0.4998244643211365
+        }
+      ],
+      "flagged_vigencia": [],
+      "classified_type": "enumeracao",
+      "classified_top_k": 25,
+      "pii_types_redacted": [],
+      "hierarchy_warning": null,
+      "cit_precision": null,
+      "cit_precision_lenient": null,
+      "cit_recall": null,
+      "cit_f1": null,
+      "faithfulness": null,
+      "faithfulness_reasoning": null,
+      "refused_correctly": true
+    }
+  ]
+}

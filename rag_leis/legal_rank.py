@@ -1,0 +1,101 @@
+"""Hierarquia normativa brasileira → numeric rank for retrieval & answer auditing.
+
+Reviewer round 2 item 3: Brazilian legal sources are NOT equivalent in
+authority. CF/EC outranks Lei Complementar; LC outranks Lei Ordinária;
+LO outranks Decreto; Decreto outranks Resolução. Today the cosine
+retriever can rank Decreto 8.771 above MCI art. 9 if the lexical match
+is closer — that's a misrepresentation of how a lawyer weighs sources.
+
+This module attaches a numeric `legal_rank` to every chunk via its URN
+type. Used by:
+
+  - `IndexChunk.legal_rank` — populated at load_chunks time
+  - `RAGAnswer.hierarchy_warning` — set when the LLM cites lower-rank
+    sources while higher-rank ones were in top-K context
+
+Rank scale (lower = higher authority):
+
+  1  Constituição / Emenda Constitucional
+  2  Lei Complementar
+  3  Lei Ordinária / Decreto-Lei / Medida Provisória
+  4  Decreto
+  5  Resolução / Portaria / Instrução Normativa (and unknown defaults)
+
+The mapping is hard-coded because Brazilian normative hierarchy is
+fixed by the Constitution itself; the RAG can't legitimately reinterpret
+it. Adding a new act type means deciding its rank in this table.
+"""
+
+from __future__ import annotations
+
+# Rank constants — exposed for callers that compare directly.
+RANK_CONSTITUCIONAL = 1
+RANK_LEI_COMPLEMENTAR = 2
+RANK_LEI_ORDINARIA = 3
+RANK_DECRETO = 4
+RANK_INFRALEGAL = 5
+
+
+# URN type segment → rank. Matches `type` slot of `urn:lex:br:<jur>:<type>:<date>;<id>`.
+LEGAL_RANK_BY_TYPE: dict[str, int] = {
+    # Rank 1 — Constituição / Emendas
+    "constituicao": RANK_CONSTITUCIONAL,
+    "emenda.constitucional": RANK_CONSTITUCIONAL,
+    # Rank 2 — Lei Complementar
+    "lei.complementar": RANK_LEI_COMPLEMENTAR,
+    # Rank 3 — Lei Ordinária + equiparados (Decreto-Lei sob CF/88 = LO; MP idem)
+    "lei": RANK_LEI_ORDINARIA,
+    "decreto.lei": RANK_LEI_ORDINARIA,
+    "medida.provisoria": RANK_LEI_ORDINARIA,
+    # Rank 4 — Decreto (regulamentar)
+    "decreto": RANK_DECRETO,
+    # Rank 5 — Infralegal (resoluções, portarias, instruções normativas)
+    "resolucao": RANK_INFRALEGAL,
+    "resolucao.cd": RANK_INFRALEGAL,  # ANPD Conselho Diretor (Phase 4.3.a/b)
+    "portaria": RANK_INFRALEGAL,
+    "instrucao.normativa": RANK_INFRALEGAL,
+    "sumula": RANK_INFRALEGAL,            # STJ/STF súmulas (future Tier-4)
+    "sumula.vinculante": RANK_INFRALEGAL,  # STF vinculantes (future Tier-4)
+    "tema": RANK_INFRALEGAL,               # STF temas (future Tier-4)
+}
+
+# When a URN type is not in the map, default to lowest authority. The
+# RAG should NEVER silently treat an unknown act as Constitutional level.
+DEFAULT_RANK = RANK_INFRALEGAL
+
+
+# Human-readable rank names for warnings/UI.
+RANK_NAMES: dict[int, str] = {
+    RANK_CONSTITUCIONAL: "Constituição/EC",
+    RANK_LEI_COMPLEMENTAR: "Lei Complementar",
+    RANK_LEI_ORDINARIA: "Lei Ordinária",
+    RANK_DECRETO: "Decreto",
+    RANK_INFRALEGAL: "Resolução/Portaria/Infralegal",
+}
+
+
+def legal_rank_for_urn(document_urn: str) -> int:
+    """Extract the type segment from a document URN and look up its rank.
+
+    URN shape: `urn:lex:<jurisdição>:<autoridade>:<tipo>:<data>;<id>`.
+    Splitting on ':' the type is the segment at index 4.
+
+    Examples:
+        urn:lex:br:federal:lei:2018-08-14;13709        → 3 (LO)
+        urn:lex:br:federal:constituicao:1988-10-05;1988 → 1 (CF)
+        urn:lex:br:federal:decreto.lei:1940-12-07;2848 → 3 (decreto-lei)
+        urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15 → 5
+    """
+    # Strip any partition tail (after `~`) — we only need the document URN.
+    doc_urn = document_urn.split("~", 1)[0]
+    parts = doc_urn.split(":")
+    if len(parts) < 5:
+        # Malformed URN — return lowest rank (safe default).
+        return DEFAULT_RANK
+    type_segment = parts[4]
+    return LEGAL_RANK_BY_TYPE.get(type_segment, DEFAULT_RANK)
+
+
+def rank_name(rank: int) -> str:
+    """Human-readable name for a rank number."""
+    return RANK_NAMES.get(rank, f"rank-{rank}")

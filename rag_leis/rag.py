@@ -33,6 +33,7 @@ import numpy as np
 
 from rag_leis.embeddings import Embedder, Vec, get_embedder
 from rag_leis.eval_harness import IndexChunk, format_texts, load_chunks
+from rag_leis.legal_rank import rank_name
 from rag_leis.llm import LLM, get_llm
 from rag_leis.pii import RedactedQuery, redact
 from rag_leis.pii_audit import write_audit
@@ -202,6 +203,10 @@ class RAGAnswer:
     # Phase 4.2: PII types redacted before query crossed provider boundary.
     # Empty list when the query had no PII OR when redact_pii=False.
     pii_types_redacted: list[str] = field(default_factory=list)
+    # Phase 5.2: hierarchy warning string when the LLM cites lower-rank
+    # sources (e.g., Decreto, Resolução) while higher-rank sources (CF, LC,
+    # LO) were in top-K context. None when not applicable.
+    hierarchy_warning: str | None = None
 
 
 # ----------------------------------------------------------------------------
@@ -314,6 +319,7 @@ class RAGPipeline:
         self_refused = _is_self_refusal(answer_text)
 
         flagged = self._collect_flagged_vigencia(verified)
+        hier_warn = self._compute_hierarchy_warning(verified, retrieved)
         return RAGAnswer(
             answer=answer_text,
             citations=verified,
@@ -326,9 +332,70 @@ class RAGPipeline:
             classified_type=classified,
             classified_top_k=effective_top_k,
             pii_types_redacted=pii_types,
+            hierarchy_warning=hier_warn,
         )
 
     # ------------------------------------------------------------------
+
+    def _compute_hierarchy_warning(
+        self,
+        verified_urns: list[str],
+        retrieved: list[tuple[str, float]],
+    ) -> str | None:
+        """Emit a warning when the LLM's verified citations skip over
+        higher-authority sources that were in top-K context.
+
+        Specifically: if the BEST (lowest) rank among CITED URNs is
+        strictly worse (higher number) than the BEST rank in the top-K
+        context, the model passed over a higher-authority source.
+
+        Returns None when:
+          - No verified citations (refused, OOS, etc.)
+          - Cited URNs already include the highest-rank source in top-K
+          - No top-K retrieved chunks (shouldn't happen post-OOS gate)
+
+        Rationale: Brazilian normative hierarchy is constitutional law.
+        A peça or parecer that cites Decreto 8.771 while ignoring MCI
+        art. 9 (the lei it regulates) is a serious legal error. This
+        warning is a confidence signal; the caller / UI surfaces it.
+        """
+        if not verified_urns or not retrieved:
+            return None
+
+        # Best (lowest) rank among the model's citations
+        cited_chunks = [self.chunks_by_urn.get(u) for u in verified_urns]
+        cited_chunks = [c for c in cited_chunks if c is not None]
+        if not cited_chunks:
+            return None
+        best_cited_rank = min(c.legal_rank for c in cited_chunks)
+
+        # Best (lowest) rank in the top-K retrieved context
+        retrieved_chunks = [self.chunks_by_urn.get(u) for u, _ in retrieved]
+        retrieved_chunks = [c for c in retrieved_chunks if c is not None]
+        if not retrieved_chunks:
+            return None
+        best_retrieved_rank = min(c.legal_rank for c in retrieved_chunks)
+
+        if best_cited_rank <= best_retrieved_rank:
+            # Model used the best available authority — no warning
+            return None
+
+        # Find which higher-authority sources were available but not cited.
+        # Surface the first few URNs at the higher rank for the warning text.
+        cited_set = set(verified_urns)
+        higher_available = [
+            c for c in retrieved_chunks
+            if c.legal_rank == best_retrieved_rank and c.urn not in cited_set
+        ]
+        higher_urns_str = ", ".join(c.urn for c in higher_available[:3])
+
+        return (
+            f"⚠️ Atenção (hierarquia normativa): a resposta cita apenas "
+            f"fontes de rank {best_cited_rank} ({rank_name(best_cited_rank)}); "
+            f"o contexto continha fontes de rank superior — {rank_name(best_retrieved_rank)} "
+            f"({higher_urns_str}). Verifique se a hierarquia foi respeitada "
+            f"(CF > LC > LO > Decreto > Resolução)."
+        )
 
     def _collect_flagged_vigencia(self, cited_urns: list[str]) -> list[FlaggedVigencia]:
         """For each verified citation, surface its overlay (if any).
