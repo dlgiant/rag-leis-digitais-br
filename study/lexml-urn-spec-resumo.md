@@ -222,9 +222,27 @@ Cada item foi confirmado pela RFC 9676 e/ou por exemplos reais no catálogo `lex
   - _Fonte: RFC 9676, §7.1._
 
 - [x] **A ANPD tem código de autoridade reconhecido na URN, ou suas resoluções resolvem sob `federal:resolucao`?**
-  → **Conjectura: autoridade dedicada `autoridade.nacional.protecao.dados`.** Não encontrei resoluções da ANPD diretamente indexadas em `lexml.gov.br` na busca, o que sugere que o catálogo ainda não as cobre ou usa outro slug. Mas a convenção do portal é clara: autoridades dedicadas usam o nome institucional com pontos no lugar de espaços — `conselho.nacional.justica`, `supremo.tribunal.federal`, `congresso.nacional`. Por extensão, ANPD → `autoridade.nacional.protecao.dados`.
-  - URN candidata para a Resolução CD/ANPD nº 1/2021 (28/10/2021): `urn:lex:br:autoridade.nacional.protecao.dados:resolucao:2021-10-28;1`.
-  - **Ação prática:** gerar a URN do nosso lado seguindo a convenção e expor o link `https://www.lexml.gov.br/urn/<URN>` na UI — se o resolver retornar 404, o fallback é o site da própria ANPD em `gov.br/anpd`. _A verificar manualmente abrindo o link candidato._
+  → **DECIDIDO em Phase 4.3.a (2026-05-15): autoridade `autoridade.nacional.protecao.dados`, tipo `resolucao.cd`.**
+  - Forma canônica: `urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:YYYY-MM-DD;N`
+  - O sufixo `.cd` no tipo (Conselho Diretor) espelha o cabeçalho oficial dos atos
+    ("RESOLUÇÃO CD/ANPD Nº 15, DE 24 DE ABRIL DE 2024") e mantém espaço pra outros
+    tipos de ato ANPD no futuro (Diretoria, Coordenação-Geral, etc.) sem colisão.
+  - **Diferença vs convenção CNJ/STF**: outros órgãos usam só `resolucao` porque
+    todas as resoluções saem do plenário/CD. ANPD é mais novo e ainda está
+    estabelecendo padrões institucionais; explicitar `.cd` é defensivo.
+  - Exemplos canônicos:
+    - Res. 15/2024 (Comunicação de Incidente): `urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15`
+    - Res. 4/2023 (Dosimetria): `urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4`
+    - Res. 2/2022 (Pequeno Porte): `urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2022-01-27;2`
+    - Res. 1/2021 (Fiscalização): `urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2021-10-28;1`
+  - O resolver `lexml.gov.br/urn/` retorna 404 pra essas URNs (catálogo oficial
+    ainda não cobre ANPD). É esperado e foi flagado nas notas técnicas da própria
+    ANPD ao Senado. Fallback prático: `gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd`.
+  - **Implicação produção**: nossas URNs ANPD são CANÔNICAS DO LADO DO PROJETO
+    até o LexML oficial alcançar. Documentação clara em answer + footer
+    explicando o status sintético resolve a questão de transparência.
+  - _Fonte: Phase 4.3.a transcription, 2026-05-15; convenção LexML observada;
+    cabeçalho oficial DOU dos atos ANPD._
 
 - [x] **Como decretos regulamentadores (ex.: Decreto 8.771/16 do Marco Civil) se relacionam à URN da lei-mãe?**
   → **Não há componente de relação na URN.** A sintaxe URN LEX (RFC 9676 §5) tem apenas dois separadores semânticos além do _work_: `@` (expressão/versão) e `$` (manifestação/formato). Não existe `>` ou similar para "regulamenta", "revoga" ou "altera". O decreto recebe URN independente:

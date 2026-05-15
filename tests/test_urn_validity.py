@@ -22,7 +22,7 @@ from typing import Any
 
 import pytest
 
-from rag_leis.corpus import TIER_1, TIER_2
+from rag_leis.corpus import TIER_1, TIER_2, TIER_3
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks"
@@ -57,7 +57,7 @@ _KIND_BY_TAIL = (
     (re.compile(r"^item\d+$"), "item"),
 )
 
-KNOWN_DOC_URNS = {d.urn for d in TIER_1} | {d.urn for d in TIER_2}
+KNOWN_DOC_URNS = {d.urn for d in TIER_1} | {d.urn for d in TIER_2} | {d.urn for d in TIER_3}
 
 
 @pytest.fixture(scope="module")

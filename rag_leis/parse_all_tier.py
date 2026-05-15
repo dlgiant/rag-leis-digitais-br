@@ -6,8 +6,9 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
-from rag_leis.corpus import TIER_1, TIER_2, Document
+from rag_leis.corpus import TIER_1, TIER_2, TIER_3, Document
 from rag_leis.parser import parse
+from rag_leis.parsers.anpd_pdf import AnpdPdfParser
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -15,6 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _TIERS: dict[str, tuple[tuple[Document, ...], str]] = {
     "1": (TIER_1, "tier-1"),
     "2": (TIER_2, "tier-2"),
+    "3": (TIER_3, "tier-3"),
 }
 
 
@@ -32,11 +34,42 @@ def _parse_one_tier(docs: tuple[Document, ...], tier_dir: str) -> dict[str, int]
 
     chunks_dir.mkdir(parents=True, exist_ok=True)
 
+    # Tier 3 uses AnpdPdfParser (PDF-backed). For 4.3.a it's a stub that
+    # re-reads the JSONL produced by tier3_ingest/build_*.py scripts.
+    # 4.3.b will replace AnpdPdfParser's body with real pdfplumber extraction.
+    # Tiers 1+2 use the HTML parser.
+    use_anpd_parser = tier_dir == "tier-3"
+
     print(f"Parsing {len(docs)} documents from {raw_dir.relative_to(PROJECT_ROOT)}...")
 
     totals: dict[str, int] = {}
+    anpd_parser = AnpdPdfParser() if use_anpd_parser else None
     for doc in docs:
         base = urn_to_filename(doc.urn)
+
+        if use_anpd_parser:
+            # For tier-3, parsing means re-loading the JSONL produced by
+            # the manual transcription script. This validates the chunks
+            # are well-formed; production parse_all_tier --tier 3 will
+            # always pass through here.
+            try:
+                chunks = anpd_parser.parse(doc.urn, "")
+            except FileNotFoundError as e:
+                print(f"[MISS]   {doc.urn} — {e.args[0].splitlines()[0]}")
+                continue
+            # JSONL already on disk; nothing to write. Just collect stats.
+            by_kind: dict[str, int] = {}
+            for c in chunks:
+                by_kind[c.kind] = by_kind.get(c.kind, 0) + 1
+                totals[c.kind] = totals.get(c.kind, 0) + 1
+            summary = "  ".join(
+                f"{k}={by_kind.get(k, 0):>4}"
+                for k in ("artigo", "paragrafo", "inciso", "alinea", "item")
+                if by_kind.get(k, 0) > 0 or k in ("artigo", "paragrafo", "inciso", "alinea")
+            )
+            print(f"[OK]     {len(chunks):>5} chunks  {summary}  {doc.urn}")
+            continue
+
         html_path = raw_dir / f"{base}.html"
         if not html_path.exists():
             print(f"[MISS]   {doc.urn}")
@@ -72,13 +105,13 @@ def main() -> int:
     )
     p.add_argument(
         "--tier",
-        choices=["1", "2", "all"],
+        choices=["1", "2", "3", "all"],
         default="1",
         help="Which tier's documents to parse (default: 1, for backward compat).",
     )
     args = p.parse_args()
 
-    tiers_to_run = ["1", "2"] if args.tier == "all" else [args.tier]
+    tiers_to_run = ["1", "2", "3"] if args.tier == "all" else [args.tier]
     grand_total: dict[str, int] = {}
     for t in tiers_to_run:
         docs, tier_dir = _TIERS[t]
