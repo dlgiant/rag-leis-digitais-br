@@ -1,402 +1,371 @@
-# Post-Review Plan — Round 2 (legal-domain pass)
+# Post-Review Plan — Production-Level Roadmap
 
-**Status**: design (não-implementado). 2026-05-14, post-Phase-2 merge.
+**Status**: design (não-implementado). 2026-05-15. **Production framing
+ativada nesta data** — cada decisão sob lente de reproducibilidade,
+compliance, audit trail, multi-dev handover, automação.
 
-Reviewer round 2 (legal-domain) flagged 12 items grouped by gravity. The
-retrieval and pipeline layers are working; the failures from here on are
-**legal, not technical**: the system is precise about *what the text
-says* and naïve about *what the text is worth*.
+Reviewer round 2 (legal-domain) flagged 12 items. Phase 3 (P0)
+está fechada em `main`. Este plan agora estende para Phase 4-9 sob
+production lens, não learning lens.
 
-This document maps each reviewer item to a concrete deliverable, sequenced
-into 4 follow-on phases. Phase 2 is done (LLM contract); Phase 3 starts
-here. The reviewer's own ranking (P0/P1/P2/P3) drives the phase boundaries
-plus a couple of items we hoist forward because they're cheap.
+A diferença não é cosmética: cada "good enough" do learning project
+vira "documentado como dívida técnica + plan pra fechar" no production.
+Ver [[project-purpose-production]] em memory.
 
-## Mapping — reviewer item → phase → sizing
+## Princípios production que mudaram desde v1 deste plan
 
-| # | Reviewer item | Phase | Pri | Size | Type |
+1. **Builds 100% reproducíveis** — sem manual steps no caminho de CI/CD
+2. **Audit trail jurídico** — toda peça (chunk, prompt, gold) tem source + version
+3. **Cadência de update automatizada** — ANPD/STF publicam → ingestão sem humano
+4. **Multi-dev / handover** — workflows que exigem "Claude Code in the loop" são dívida
+5. **Compliance LGPD do próprio sistema** — query logs, retention, DPA, residency
+6. **Test discipline maior** — golden tests por documento, não smoke; CI integration tests
+7. **Operational readiness** — Docker, monitoring, rate limiting, fallback model, retry/backoff
+
+## Mapping atualizado — reviewer item → phase → sizing (production)
+
+Sizing entre parêntesis = `(learning estimate → production estimate)`.
+
+| # | Reviewer item | Phase | Pri | Size (learn → prod) | Mudança |
 |---|---|---|---|---|---|
-| 1 | Vigência overlay (suspenso/sub judice/vacatio) | 3 | P0 | ½ d code + ½ d curation | Data + code |
-| 2 | ANPD resoluções (Tier-3 PDF parser) | 4 | P1 | ~1 wk | Corpus + parser |
-| 3 | Normative hierarchy (`legal_rank`) | 5 | P2 | 2 h | Code |
-| 4 | Cross-doc undersized (8 → ≥30) | 5 | P2 | 1 d | Eval curation |
-| 5 | Citation precision tier 3 ("juiz aceitaria") | 5 | P2 | ½ d code + ½ d curation | Eval + code |
-| 6 | Human-citation regex check (`Art. 5, XII` vs URN) | 5 | P2 | 2 h | Code |
-| 7 | Source-as-of-date in answer footer | 5 | P2 | 3 h | Code |
-| 8 | Input PII redactor (CPF/CNPJ/email/phone) | 4 | P1 | 2 h | Code |
-| 9 | OOS taxonomy (3 → ≥15, 5 subtypes) | 5 | P2 | ½ d | Eval curation |
-| 10 | Query-type classifier + adaptive top_k | 4 | P1 | ½ d | Code |
-| 11 | ADCT + EC linkage (`amended_by`) | 5 | P2 | ½ d | Parser |
-| 12a | Add Lei 9.507/97 (habeas data procedimento) | 3 | P0 | 1 h | Corpus |
-| 12b | Decreto 8.771 cross-test query | 5 | P2 | 30 min | Eval |
-| 12c | Update README declared scope (CDC, etc.) | 3 | P0 | 5 min | Docs |
-| (4) | STF/STJ jurisprudência (Tier-4) | 6 | P3 | ~2 wk | Corpus + URN spec |
-
-## Phase 3 — P0 legal correctness (~1.5 dias)
-
-**Goal**: eliminate the two errors a banca académica would flunk on sight.
-
-### 3.1 Vigência overlay (~1 dia)
-
-The big one. Today `is_revoked_text` only catches Planalto markers
-`(Revogado)`/`(Vetado)`/`(Suprimido)`. Misses: revogação tácita,
-suspensão por liminar, sub judice (ex: MCI art. 19, STF Tema 987),
-vacatio legis parcial (LGPD sanções diferidas pra 2021), eficácia
-limitada por regulamentação (LGPD art. 52 §1 → ANPD Res. 4/2023).
-
-**Deliverables**:
-
-- `data/vigencia/overlays.yaml` — hand-curated, ~20 dispositivos
-  sensíveis. Schema:
-  ```yaml
-  - urn: urn:lex:br:federal:lei:2014-04-23;12965~art19
-    status: sub_judice
-    fundamento: STF RE 1.037.396 (Tema 987)
-    desde: 2017-09-29
-    descricao_curta: |
-      Aplicação em discussão no STF. Tese de repercussão geral pendente.
-  ```
-- `rag_leis/vigencia.py` — `Vigencia` dataclass, `load_overlays(path)`,
-  `apply_overlays(chunks, overlays)`
-- `Chunk.vigencia: Vigencia | None` (field on chunk, populated post-parse)
-- `RAGPipeline._build_context()` — when chunk has overlay, render in
-  `<fonte>` tag: `<fonte urn="..." vigencia="sub_judice (STF Tema 987)">`
-- `SYSTEM_PROMPT` update — explicit instruction: *"Se uma `<fonte>`
-  tiver atributo `vigencia` diferente de 'vigente', SINALIZE no answer
-  com formato '⚠️ Atenção: dispositivo com vigência ressalvada — <descricao>'."*
-- `RAGAnswer.flagged_vigencia: list[dict]` — surface to caller for UI
-- Golden test: `test_vigencia_mci_art19_flagged()` — pipeline answer
-  for an MCI art. 19 query must contain the warning string
-
-**Open decisions (surface to user before coding)**:
-- Who curates the 20 entries? Two options:
-  - (i) I draft 20 from public knowledge, user reviews
-  - (ii) User dictates the list, I implement schema+code only
-- Should `flagged_vigencia` block the answer or just annotate?
-  Recommend annotate (consistent with existing `unverified_claims`
-  pattern — let the UI / caller decide policy).
-
-### 3.2 Add Lei 9.507/97 (procedimento do habeas data) (~1 hora)
-
-Closes a gold-incompletude already shipped: the habeas data answer-eval
-gold cites only CF art. 5º LXXII, but no senior lawyer answers habeas
-data without the procedural law.
-
-**Deliverables**:
-- Append to `corpus.py` `TIER_1`: `Document(urn="urn:lex:br:federal:lei:1997-11-12;9507", ...)`
-- `uv run python -m rag_leis.fetch_tier --tier 1` (incremental)
-- `uv run python -m rag_leis.parse_all_tier --tier 1` (incremental)
-- Rebuild voyage index: `uv run python -m rag_leis.run_eval --model voyage-3-large --text-mode label+nav+caput+text` (auto-rebuild via content hash)
-- Update `eval/answer_queries.yaml` row 4 (habeas data definicao) and
-  row 12 (cross-doc): add 2-4 chunks from 9.507 to gold + tweak
-  expected_paragraph
-- Run answer-eval to confirm metrics improve on rows 4/12
-
-### 3.3 README scope declaration (~5 min)
-
-The README claims coverage of "resoluções da ANPD" which don't exist
-yet, and omits CDC (which is in the corpus with 471 chunks). Declared-
-vs-actual mismatch is a compliance flag in itself.
-
-**Deliverables**: edit README.md cobertura sentence to reflect actual
-TIER_1 (12 docs) + TIER_2 (3 docs) + remove ANPD claim (or move to
-"em construção (Phase 4)").
-
-## Phase 4 — P1 practitioner-grade (~2 semanas)
-
-**Goal**: take the system from "TCC demo" to "ferramenta auxiliar com
-supervisão humana".
-
-### 4.1 Query-type classifier + adaptive top_k (~½ dia)
-
-Closes the deferred Phase 2.6 decision and the BACKLOG item about row 7
-non-determinism. Today every query gets `top_k=10` regardless of whether
-it's a literal citation (probably needs 1 chunk) or an enumeração
-(needs 10-30).
-
-**Deliverables**:
-- `rag_leis/query_type.py` — regex classifier:
-  - `r"\b(quais|liste|enumere)\b"` → enumeracao
-  - `r"\b(o que (?:é|são)|defina)\b"` → definicao
-  - `r"\bart(?:igo)?\.?\s*\d+"` → citacao-literal
-  - `r"\b(diferença|comparação|relação)\b"` → cross-doc
-  - fallback: parafrase
-  - tests: 8-10 cases including ambiguities ("quais artigos da LGPD" → enumeracao not citacao-literal)
-- `rag_leis/rag.py` — `RAGPipeline.answer()` runs classifier, picks
-  `top_k_per_type = {definicao: 10, enumeracao: 25, citacao_literal: 8, cross_doc: 15, parafrase: 10}`
-- Per-type prompt snippet appended to `SYSTEM_PROMPT` (eg enumeração
-  gets "se a query é enumeração, prefira listas explícitas com todos
-  os incisos disponíveis no contexto")
-- Re-run answer-eval to confirm row 7 (enumeração sanções) improves
-
-**Open decision**: query-type as field on `RAGAnswer`? Useful for
-analysis. Recommend yes — `RAGAnswer.classified_type: str`.
-
-### 4.2 Input PII redactor (~2 horas)
-
-The system describes LGPD compliance and itself doesn't comply: a query
-"O CPF 123.456.789-00 do João Silva foi vazado" sends dados pessoais
-sensíveis to Anthropic verbatim.
-
-**Deliverables**:
-- `rag_leis/pii.py` — regex patterns:
-  - CPF: `r"\b\d{3}\.\d{3}\.\d{3}-\d{2}\b"` + variants
-  - CNPJ: `r"\b\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b"`
-  - email: standard
-  - phone: `\(?\d{2}\)?\s?\d{4,5}-?\d{4}` (BR formats)
-  - RG: regional patterns (skip — too noisy)
-  - CEP: `\d{5}-?\d{3}`
-- `redact(text) → (redacted_text, mapping)` — substitutes with `[CPF#1]`, `[EMAIL#1]` etc., returns mapping
-- `unredact(text, mapping)` — for symmetric reinjection if a UI wants original answer
-- `RAGPipeline.answer()` — apply redact pre-LLM, optionally unredact post
-- `run_answer_eval.py` — log `hash(query)` instead of literal query in JSON output (LGPD compliance for the eval logs themselves)
-- 6-8 unit tests (positive + non-matching benign content)
-
-**Defer**: pt-BR NER for nomes próprios (needs spaCy pt or HF model).
-Big complexity uplift; not worth it pre-deploy. Add as Phase 5 nice-to-have.
-
-### 4.3 ANPD resoluções — Tier-3 PDF parser (~1 semana)
-
-Practitioner-grade requires the operational layer: ANPD Res. 1/2021
-(sancionatório), 2/2022 (pequeno porte), 4/2023 (dosimetria), 15/2024
-(notificação de incidente — **3 dias úteis**, the actual answer to
-"prazo de notificação de incidente?"). Without these, LGPD art. 48
-returns vague language and the practitioner doesn't see the deadline.
-
-**Deliverables**:
-- `rag_leis/parsers/anpd_pdf.py` — implements `Parser` protocol from
-  Phase 0; uses `pdfplumber` (cleaner table handling than pypdf for ANPD's
-  layout). Maps ANPD's resolução structure (Considerandos, Capítulos,
-  Seções, Artigos, §§, Incs) to LCP-95 partitions
-- Extend `study/lexml-urn-spec-resumo.md` — synthetic URN scheme for
-  ANPD: `urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:<date>;<num>`
-- `rag_leis/corpus.py` — new `TIER_3` list with 4 resoluções
-- `data/raw/tier-3/` — fetch HTML if available, PDF as fallback
-- New tests: parser golden tests (1 fixture per resolução), URN format check
-- Re-run full pipeline (parse → chunk → embed → eval)
-
-**Open decisions (need user input before)**:
-- Which 4 resoluções to include? Reviewer named 4; defer beyond MVP.
-- HTML or PDF source? ANPD publishes both; HTML preferred.
-- Indexing alongside Tier-1/2 in same voyage index? Recommend yes
-  (`run_eval` already supports rglob).
-
-## Phase 5 — P2 robustness (~4-5 dias)
-
-### 5.1 OOS taxonomy + 3 → ≥15 expansion (~½ dia)
-
-Current 3 OOS rows are all "different domain entirely" — trivial. Real
-hallucination risk is **adjacent OOS**: query touches the corpus's
-neighborhood but no answer exists.
-
-**Deliverables**:
-- Schema extension: `oos_subtype` field with 5 values
-  - `(a)` other_domain — outras matérias inteiras (IRPF, divórcio)
-  - `(b)` adjacent_no_coverage — direito digital com matéria fora (Marco Legal Startups, processual)
-  - `(c)` projeto_de_lei — PLs não promulgados (PL 2338 IA, PL 2630 fake news)
-  - `(d)` materia_estadual_municipal — fora da competência federal
-  - `(e)` doutrina_sem_positivacao — direito ao esquecimento pré-Tema 786
-- Add 12 OOS rows (~2-3 per subtype)
-- Type-specific refusal templates in SYSTEM_PROMPT (eg `(c)` triggers "esta matéria não tem norma federal vigente; existem PLs em tramitação que esta base não acompanha")
-- Re-run answer-eval to measure subtype-level refusal accuracy
-
-### 5.2 `legal_rank` + tie-breaker (~2 horas)
-
-Today the retriever can rank Decreto 8.771 above MCI art. 9 if it's
-lexically closer. A `top-K` mix of CF + Decreto with no precedence
-misrepresents how a lawyer weighs sources.
-
-**Deliverables**:
-- `Chunk.legal_rank: int` — auto-derived from URN type:
-  - 1 = CF / EC (`constituicao`, `emenda.constitucional`)
-  - 2 = LC (`lei.complementar`)
-  - 3 = LO/MP (`lei`, `decreto.lei`, `medida.provisoria`)
-  - 4 = Decreto (`decreto`)
-  - 5 = Resolução / Portaria (`resolucao`, `portaria`)
-- Tie-breaker on cosine equality: lower `legal_rank` wins (rare in dense retrieval, more relevant for hybrid)
-- `RAGAnswer.hierarchy_warning: str | None` — set when answer cites
-  rank≥4 chunk while rank≤3 chunk was in top-K
-- Render warning in answer footer (consistent with vigência overlay)
-
-### 5.3 Human-citation regex check (~2 horas)
-
-`verify_citations` checks JSON `citations[]`. The `answer` prose can
-say "Art. 5º, **XII**" while URN points to `inc10` — verifier doesn't
-see that. The reader sees "XII".
-
-**Deliverables**:
-- `rag_leis/verify.py` — new `verify_prose_citations(answer_text, citation_urns, chunks_by_urn) → list[ProseMismatch]`
-- Regex extract `Art\.\s*\d+(-[A-Z])?[º°]?(?:,\s*§?\s*\d+[º°]?)?(?:,\s*[IVXLCDM]+)?(?:,\s*[a-z]\))?`
-- For each match, look up the corresponding URN via citation chain
-  (the `IndexChunk.citation` field already gives reverse mapping)
-- Return mismatches: `("Art. 5º, XII", expected_urn=art5;inc12, but cited URNs are [art5;inc10])`
-- `RAGAnswer.prose_citation_mismatches: list[ProseMismatch]`
-- **Decision pendente**: refuse on mismatch (re-prompt) OR flag (annotate).
-  Recommend flag for v1; refuse adds latency + complexity.
-
-### 5.4 Cross-doc expansion 8 → ≥30 (~1 dia)
-
-Direito digital is cross-doc by nature: LGPD ↔ MCI ↔ CDC ↔ CF ↔ CP.
-Current 8 cross-doc queries are inadequate. Reviewer flags 3 missing:
-vazamento+CDC+STJ Súmula 479, direito ao esquecimento, dados de crianças.
-
-**Deliverables**:
-- 22 new cross-doc rows in `eval/queries.yaml` (retrieval) + ~5 in
-  `eval/answer_queries.yaml` (answer-eval)
-- Schema extension on cross-doc rows:
-  ```yaml
-  type: cross-doc
-  cross_doc_relationship:
-    primary: urn:...
-    companions:
-      - urn: urn:...
-        relationship: regulamenta | derroga | integra | contradiz | complementa
-  ```
-- Update eval-set-reviewer subagent prompt to validate cross-doc gold
-
-### 5.5 Source-as-of-date (~3 horas)
-
-Practitioner-grade output needs `consultado em DD/MM/AAAA` per source.
-
-**Deliverables**:
-- `rag_leis/fetch_tier.py` already records `fetched_at`? Check; if not, add
-- Propagate through Chunk metadata → IndexChunk → RAGAnswer
-- `RAGAnswer.sources_consulted_at: dict[doc_urn, ISO_date]` (one date per doc, not per chunk)
-- `SYSTEM_PROMPT` instructs to render footer: *"Fontes consultadas em: LGPD (14/05/2026), MCI (14/05/2026), ..."*
-- Render the footer outside the LLM-controlled `answer` field — append in
-  Pipeline post-process so we control format
-
-### 5.6 3rd precision tier ("juiz aceitaria") (~½ dia)
-
-Current `gold_urns` (strict) + `alternative_acceptable_urns` (lenient)
-hides the practitioner-relevant question: cita o dispositivo na
-**granularidade que um juiz aceitaria**? A peça processual that cites
-"art. 7" when the rule is in `art. 7, § 6º` is sloppy — accepted by
-lenient, rejected by judicial standards.
-
-**Deliverables**:
-- 3rd column in answer-eval YAML: `judicial_acceptable_urns` (subset
-  of strict gold, with explicit granularity)
-- 3rd metric: `cit_precision_judicial = |cited ∩ judicial_acceptable| / |cited|`
-- Type-aware floors enforced *as a metric*, not a hard reject:
-  - `definicao` → top cite must be `kind=artigo` (not § or inc)
-  - `enumeracao` → all vigente incs cited (not just caput)
-  - `citacao-literal` → exact requested URN (the requested label resolved)
-- Hand-curate 3rd column for the 12 in-scope rows
-- Aggregate now reports 3 precision numbers: strict, judicial, lenient
-
-### 5.7 ADCT + EC linkage (`amended_by`) (~½ dia)
-
-Constitutional chunks need to carry which EC introduced their current
-redação. Today the dedup-last-wins discards that linkage.
-
-**Deliverables**:
-- Parser change: extract `(Redação dada pela Emenda Constitucional nº X)` from text and into `Chunk.amended_by: list[str]` (e.g., `["EC-115/2022"]`)
-- Verify CF `art5;inc79` (EC 115/2022 — proteção de dados como direito fundamental) is indexed
-- Add eval query: *"proteção de dados é direito fundamental?"* — gold should put `art5;inc79` first
-
-### 5.8 Decreto 8.771 cross-test query (~30 min)
-
-Add to `eval/queries.yaml`: *"O que o decreto regulamentador do MCI diz sobre guarda de logs?"* — forces lei → decreto traversal. Gold:
-Decreto 8.771 art. 13 + MCI art. 13.
-
-## Phase 6 — P3 pesquisa-jurídica tool (~2-3 semanas)
-
-### 6.1 STF/STJ jurisprudência Tier-4 (~2 semanas)
-
-Synthetic URN scheme + scraper + parser for:
-- STJ Súmulas (227, 403, 479)
-- STF Temas vinculantes (786 direito ao esquecimento, 987 MCI 19 pendente)
-- Possivelmente: STF/STJ informativos selecionados
-
-**Deliverables**:
-- Extend `study/lexml-urn-spec-resumo.md` with jurisprudência URN form:
-  - `urn:lex:br:supremo.tribunal.federal:tema:987`
-  - `urn:lex:br:superior.tribunal.justica:sumula:227`
-- New parser type (`Parser` protocol implementation)
-- New `Chunk.kind = "jurisprudencia"`
-- `legal_rank = 6` (or out-of-band — jurisprudência é vinculante mas não é norma)
-- ~50-100 chunks total
-
-### 6.2 Lei 12.414/2011 (Cadastro Positivo), Decreto 10.474/2020 (~2 hours)
-
-Reviewer flags as "silent" gaps. Both are simple TIER_1 / TIER_2 adds.
-
-## Cross-cutting design decisions
-
-These touch multiple phases; resolve before starting Phase 3.
-
-### CC1. Parser refactor
-
-Phase 5 introduces 3 new fields on `Chunk`: `vigencia`, `legal_rank`,
-`amended_by`. Plus `fetched_at` propagation. The parser is already
-flagged for refactor in BACKLOG. Recommendation: do parser refactor
-**alongside** Phase 3 vigência (since it's the first new field), not
-separately. Sized as part of Phase 3 (~2 extra hours).
-
-### CC2. RAGAnswer field proliferation
-
-After Phase 5 the RAGAnswer dataclass grows several status fields:
-`flagged_vigencia`, `hierarchy_warning`, `prose_citation_mismatches`,
-`sources_consulted_at`. Consider grouping into a `RAGAnswer.warnings:
-list[Warning]` with structured types. Defer — premature abstraction
-without the call sites speaking yet.
-
-### CC3. Eval set v3
-
-Phase 5 expands answer-eval significantly: cross-doc 8 → ≥30, OOS 3 → ≥15,
-3rd precision tier hand-curated. By end of Phase 5 we'll have ~40-50 rows.
-Worth versioning: rename `answer_queries.yaml` → `answer_queries_v3.yaml`
-when 5.4+5.6 land, or mantain v2 → v3 in study notes.
-
-### CC4. README scope declaration is the cheapest legal-risk fix in the project
-
-Item 12c is 5 minutes and closes a "compliance flag" (declared vs actual).
-Hoist it to Phase 3 even though it's not technically P0 — same delivery
-window, zero coupling to other items.
-
-## Suggested phase ordering & timing
-
-| Phase | Items | Wall clock | API/data cost |
-|---|---|---|---|
-| **3** | 3.1, 3.2, 3.3 + parser refactor groundwork | ~1.5 dias | $0 (no new corpus) |
-| **4** | 4.1, 4.2, 4.3 (Tier-3 ANPD is the long pole) | ~2 semanas | ~$5 voyage re-embed |
-| **5** | 5.1-5.8 (5.4 cross-doc curation is the long pole) | ~4-5 dias | ~$1 eval re-runs |
-| **6** | 6.1, 6.2 | ~2-3 semanas | ~$5 |
-
-**Sequential reasoning**: Phase 3 must come first (corrigir o que está
-publicado errado). Phase 4 ANPD (4.3) is the biggest single piece — could
-parallelize 4.1 + 4.2 if you're impatient. Phase 5 items mostly
-independent; can pick-and-choose. Phase 6 is "nice to have" for academic
-demo, "essential" for production tool.
-
-## Decisões a surface antes de começar Phase 3
-
-| # | Decisão | Recomendação default |
+| 1 | Vigência overlay | **3 ✓** | P0 | (1d → 1d) | done |
+| 2 | ANPD resoluções (Tier-3 PDF parser) | 4 | P1 | (1wk → **2wk**) | + golden tests por resolução, + audit metadata |
+| 3 | Normative hierarchy (`legal_rank`) | 5 | P2 | (2h → 4h) | + tests + integration com retriever |
+| 4 | Cross-doc undersized (8 → ≥30) | 5 | P2 | (1d → **3-5d**) | curadoria por advogado, não eu |
+| 5 | Citation precision tier 3 | 5 | P2 | (1d → **5-7d**) | validação jurídica humana, não auto |
+| 6 | Human-citation regex check | 5 | P2 | (2h → 1d) | + reject-and-reprompt loop + tests adversariais |
+| 7 | Source-as-of-date | 5 | P2 | (3h → 1d) | + audit log + per-chunk version, não só per-doc |
+| 8 | Input PII redactor | 4 | P1 | (2h → **2-3d**) | regex + NER pt-BR + comprehensive tests + adversariais |
+| 9 | OOS taxonomy (3 → ≥15) | 5 | P2 | (½d → **3d**) | ≥50 rows, adversarial, validados |
+| 10 | Query-type classifier + adaptive top_k | 4 | P1 | (½d → 1d) | + observability hooks |
+| 11 | ADCT + EC linkage (`amended_by`) | 5 | P2 | (½d → 1d) | + golden tests + versioning |
+| 12a | Add Lei 9.507/97 | **3 ✓** | P0 | (1h → 1h) | done |
+| 12b | Decreto 8.771 cross-test query | 5 | P2 | (30m → 30m) | trivial |
+| 12c | Update README declared scope | **3 ✓** | P0 | (5m → 5m) | done |
+| (4) | STF/STJ jurisprudência (Tier-4) | 6 | P3 | (2wk → **4-6wk**) | scraper + scheduler + parser + audit |
+
+## Novas phases — production-only
+
+| Phase | Scope | Sizing |
 |---|---|---|
-| D1 | Quem cura os 20 dispositivos da `vigencia/overlays.yaml`? | (i) eu rascunho, você revisa |
-| D2 | `flagged_vigencia` bloqueia ou anota? | anota (consistente com `unverified_claims`) |
-| D3 | Phase 3 inclui parser refactor (CC1)? | sim, ~+2h, evita 2 mudanças de mesma natureza |
-| D4 | Lei 9.507/97 fica em Tier-1 ou novo subgrupo "instrumentos"? | Tier-1 (mesma natureza) |
-| D5 | Phase 4 ordem: ANPD primeiro (longo) ou query-classifier+PII (curtos) primeiro? | curtos primeiro — compounding gain pra todas as queries |
+| **7** | Production infra (Docker, CI/CD, monitoring, rate limiting, model fallback) | ~2 sem |
+| **8** | Operations (deploy, runbooks, on-call, rollback, DR) | ~1-2 sem |
+| **9** | Compliance (DPA Anthropic, retenção logs LGPD, security review, ToS) | ~2-3 sem + custos legais |
 
-## Open items NOT in this plan
+Total roadmap atualizado: **~3-4 meses** de trabalho até v1 production
+(antes: ~3-5 semanas pra learning demo).
 
-- Phase 2.8 write-up (`study/phase-2-results.md`) — completar antes ou
-  depois de Phase 3? Recomendação: depois de Phase 3, pra incluir o
-  vigência overlay como evidência "fix the data, not the model" estende
-  pra dimensão jurídica.
-- BACKLOG "597 silent dedups in CF parser" — investigar como parte do
-  parser refactor (CC1).
-- Posts (`posts/`, gitignored) — atualizar quando Phase 3 fechar pra
-  capturar a evolução "engineering review → legal review".
+## Phase 4 — practitioner-grade infra (~3-4 sem production)
 
-## Verdict do reviewer
+**Goal mudou**: de "TCC para ferramenta supervisionada" para "componente
+deployável com observability e PII compliance interna".
 
-> Phase 3 (P0) closes the two failures an academic banca would flunk on
-> sight. Phase 4 (P1) takes the system from "TCC demo" to "ferramenta
-> auxiliar de escritório com supervisão humana". Phase 6 (P3) separates
-> this from a real pesquisa-jurídica tool.
+### 4.1 Query-type classifier + adaptive top_k (~1d)
 
-Concordo. Recomendação: começar Phase 3 **agora**, antes do write-up de
-2.8, porque P0 não é "incremento" — é correção do que já foi publicado.
+Mesmo design técnico do v1. Mudanças production:
+
+- **Observability obrigatória**: cada query loga `{query_type, top_k_used,
+  retrieve_latency_ms, llm_latency_ms, total_tokens_in, total_tokens_out}`
+- **Métrica nova**: `classification_accuracy` mensurada contra eval set
+  (se classificar errado, top_k errado, eval reflete)
+- **Fallback**: se classifier não bate confiança mínima, usar default
+  conservador (top_k=15)
+
+### 4.2 Input PII redactor (~2-3d, era 2h)
+
+Production framing aumenta MUITO o escopo:
+
+- **Regex base** (CPF, CNPJ, email, phone, RG, CEP) — 2h, igual antes
+- **NER pt-BR** pra nomes próprios — adiciona spaCy `pt_core_news_md` ou
+  HF model. ~1d integrating + benchmarking precisão
+- **Testes adversariais**: queries com edge cases (CPF formatado vs sem
+  formato, nomes pouco comuns, endereços, datas que parecem documentos).
+  ~½d
+- **Audit log**: cada redação registra `{original_hash, redacted_text,
+  pii_types_found}` em log local (não no Anthropic). LGPD requirement.
+- **Reverse mapping** durável (não só in-memory) pra reinjetar no answer
+  se UI quiser. Cache + TTL.
+- **Test coverage**: ≥85% das categorias de PII LGPD (art.5 II) listadas
+  com pelo menos 1 caso positivo + 1 falso-positivo controlado.
+
+### 4.3 ANPD Tier-3 — híbrido production-acceptable (~3-4d agora + 1 sem depois)
+
+**Decision**: híbrido (Claude-Code-assisted ingestion now → real parser
+antes de production deploy). Não é dívida silenciosa — é roadmap.
+
+Stages:
+
+**4.3.a (now, ~3-4d): manual ingestion com discipline production**
+- Eu leio cada PDF da ANPD (Res. 1/2021, 2/2022, 4/2023, 15/2024) via Read tool
+- Estruturo em LCP-95 (artigo → § → inciso → alínea), respeitando capítulos
+- Escrevo JSONL diretamente em `data/chunks/tier-3/<file>.jsonl`
+- **Cada chunk carrega metadata**:
+  ```json
+  {
+    "urn": "...",
+    "text": "...",
+    "source": "claude-code-2026-05-15",
+    "source_pdf_sha256": "<hash>",
+    "ingestion_method": "manual-transcription-v0",
+    "ingestion_provenance": "Read tool, single Claude session"
+  }
+  ```
+- **Stub `rag_leis/parsers/anpd_pdf.py`** implementa `Parser` protocol
+  mas internamente apenas re-lê o JSONL produzido. Wiring `corpus.py` +
+  `parse_all_tier --tier 3` funciona end-to-end.
+- **URN scheme** documentado em `study/lexml-urn-spec-resumo.md`:
+  `urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:<date>;<num>`
+- **Smoke tests**: 1 golden test por resolução (4 total) checando que
+  artigos críticos foram capturados (ex: prazo 3 dias úteis na Res. 15/2024)
+- **Eval gold NÃO inclui chunks ANPD ainda** — preserva o eval anchored
+  no parser canônico, evita "eval rewards what I wrote"
+
+**4.3.b (production gating, ~1 sem): parser real**
+- Implementar `AnpdPdfParser` real (pdfplumber + heurísticas pra ANPD layout)
+- Run `parse_all_tier --tier 3 --rebuild` → produz NOVO JSONL
+- **DIFF script** (`rag_leis/scripts/diff_parsed_vs_manual.py`) compara
+  v0 (manual) vs v1 (parser). Cada diff é bug em uma das duas pontas.
+- Golden tests por resolução em `tests/test_parser_anpd.py`
+- `source` field flipa para `pdfplumber-v1`, `ingestion_method` para `automated`
+- **GATE**: 4.3.b é hard requirement antes de Phase 8 production deploy.
+  Documentado em ROADMAP.md (a ser criado em Phase 7).
+
+### Phase 4 entregáveis (production)
+
+- 5 novos módulos (`query_type.py`, `pii.py`, `parsers/anpd_pdf.py`, etc.)
+- 1 nova dependência prod (spaCy pt) + 1 dev (pdfplumber)
+- ~50-100 chunks ANPD indexados
+- ~15-20 testes novos (incluindo adversariais PII + 4 goldens ANPD)
+- Re-run answer-eval com 5-8 queries operacionais ANPD novas
+- Re-eval cost: ~$5-10 (production observability adds tokens)
+- README atualizado com Phase 4 deliverables + Phase 4.3.b gating note
+
+## Phase 5 — robustez production (~2-3 sem)
+
+Cada item do v1 cresceu sob production lens.
+
+### 5.1 OOS taxonomy + 3 → ≥50 expansion (~3d, era ½d)
+
+- 5 subtypes (a-e) — schema preservado
+- **Mas**: ≥50 rows totais, ≥10 por subtype, com adversarial cases
+  (queries que parecem in-scope mas não são; queries que parecem OOS mas têm answer parcial)
+- Validação cruzada: 2-3 OOS rows revisados por advogado consultor
+
+### 5.2 `legal_rank` + tie-breaker (~4h, era 2h)
+
+- Auto-derive da URN type — igual antes
+- **Production add**: `RAGAnswer.hierarchy_warning: str | None` quando
+  resposta cita rank≥4 enquanto rank≤3 estava no top-K. Renderizado no answer.
+- Integration test: query que retrieva CF + Decreto verifica que CF wins tie
+
+### 5.3 Human-citation regex check (~1d, era 2h)
+
+- Extração regex igual ao v1
+- **Production add**: reject-and-reprompt loop (não só flag). Se mismatch,
+  re-chama LLM com instrução "você citou Art. X, Y mas o URN é Z; corrija."
+- Max 1 retry, depois aceita com flag explícita
+- Adversarial tests: queries que tendem a soltar Art. errado (cross-doc
+  com numeração compartilhada, ex: art. 5 da CF vs art. 5 da LGPD)
+
+### 5.4 Cross-doc expansion 8 → ≥30 (~3-5d, era 1d)
+
+- Curadoria precisa **validação jurídica externa**. Não posso curar 22
+  novas cross-doc rows sozinho com production rigor.
+- **Decision pendente** (ver "Open decisions" abaixo): advogado consultor?
+  Externalizar pra firma? Crowdsource via reviewer?
+
+### 5.5 Source-as-of-date (~1d, era 3h)
+
+- `fetched_at` per doc — igual v1
+- **Production add**: `chunk_version` per chunk (hash do texto na ingestão).
+  Permite "este chunk mudou desde quando? quando o usuário leu, qual versão?"
+- Audit log no Postgres/SQLite local: cada answer registra `{query, answer,
+  citations, sources_consulted_at, chunk_versions, anthropic_model_version,
+  prompt_version_hash}`
+- Footer no answer: "Fontes: LGPD (consultada em 2026-05-15, versão chunk
+  hash a3f...); Marco Civil (...); ..."
+
+### 5.6 3rd precision tier ("juiz aceitaria") (~5-7d, era ½d)
+
+- **Production-blocking**: precisa validação jurídica humana, não eu
+- Mesma decisão pendente do 5.4
+
+### 5.7 ADCT + EC linkage (~1d, era ½d)
+
+- Parser change pra capturar `(Redação dada pela EC X)` — igual v1
+- **Production add**: golden test por amend (CF art. 5 LXXIX → EC 115/2022,
+  art. 5 § 3 → EC 45/2004, etc.). Cada chunk constitucional com EC anotada
+  precisa teste positivo.
+
+### 5.8 Decreto 8.771 cross-test query (~30m)
+
+Trivial, não muda.
+
+## Phase 6 — pesquisa-jurídica completa (~4-6 sem production)
+
+### 6.1 STF/STJ jurisprudência Tier-4 (~4-6 sem, era 2 sem)
+
+Production lens dobra/triplica:
+- Scraper STF + STJ (não há API estável; HTML scraping com tolerância)
+- Scheduler (cron job ou Cloud Scheduler) pra pickup de novos súmulas/temas
+- URN scheme + parser por tipo de fonte
+- Audit pipeline (jurisprudência tem alta cadência de update; precisa monitoring)
+
+### 6.2 Lei 12.414/2011, Decreto 10.474/2020 (~1d cada)
+
+Iguais ao v1. Triviais.
+
+## Phase 7 — Production infra (NOVA, ~2 sem)
+
+Pré-requisito pra deploy.
+
+### 7.1 Containerization (~3d)
+
+- `Dockerfile` multi-stage (build voyage cache em build time? Ou volume mount?)
+- `docker-compose.yml` pra dev local
+- Health-check endpoint
+- Read-only filesystem onde possível (chunks, index)
+
+### 7.2 CI/CD GitHub Actions (~3d)
+
+- Workflow: PR → lint + tests + golden eval (sem network) + parser tests
+- Workflow: push to main → build image + push registry
+- Tag-based release workflow
+- **Eval gate**: PR não merged se faithfulness mean drops > X%
+- Live integration test (network-marked) roda nightly em staging, não por PR
+
+### 7.3 Observability (~3d)
+
+- Structured logs (JSON) por query
+- Metrics (Prometheus-compatible): per-query cost, latency p50/p95, error rate
+- Trace (OpenTelemetry?): retrieve → LLM → verify spans
+- Dashboard (Grafana? Datadog?) com alertas
+
+### 7.4 Resiliência LLM (~3d)
+
+- Retry com exponential backoff (Anthropic 429s)
+- Model fallback: sonnet 429 → haiku (com flag `degraded=True` no answer)
+- Circuit breaker se Anthropic down > N min
+- Token budget cap per query
+
+### 7.5 Rate limiting (~2d)
+
+- Per-IP / per-user rate limit (nginx ou app-level)
+- Cost cap diário/mensal (parar antes de explodir)
+
+## Phase 8 — Operations (NOVA, ~1-2 sem)
+
+### 8.1 Deploy strategy (~3d)
+
+- Decision: Cloud Run (GCP), Lambda (AWS), bare ECS, ou self-hosted (Hetzner/Render)?
+- Region: Brazil (data residency LGPD-friendly)?
+- Setup environment: dev / staging / prod
+
+### 8.2 Runbooks (~2d)
+
+- "ANPD published new resolução": passo-a-passo de ingestão
+- "STF emitiu nova súmula": passo-a-passo
+- "Anthropic API down": fallback procedures
+- "Eval regression in production": rollback procedure
+- "PII redactor missed something": incident response
+
+### 8.3 On-call setup (~1d)
+
+- Pager (PagerDuty? OpsGenie?)
+- Alert thresholds
+- Initial responder = solo dev; plan pra escalar
+
+### 8.4 Disaster recovery (~2d)
+
+- Index backup (S3? Blob storage?)
+- Chunks versioned em git (já é o caso — confirmar)
+- Restore drill: rebuild from scratch in < 30 min
+
+## Phase 9 — Compliance (NOVA, ~2-3 sem + custos legais)
+
+### 9.1 DPA com Anthropic (~3-5d incluindo lawyer review)
+
+- Negotiate Data Processing Agreement
+- Confirm data retention de Anthropic side (zero-retention possível?)
+- Document for ANPD audit purposes
+
+### 9.2 Query log retention (~2d)
+
+- Política: queries armazenadas N dias, depois aggregated/deleted
+- LGPD compliance (queries podem conter dados pessoais mesmo com PII redactor)
+- Right-to-deletion endpoint
+
+### 9.3 ToS / Privacy Policy (~3d, lawyer-drafted)
+
+- ToS específico do serviço (não é genérico SaaS — RAG jurídico tem responsabilidades específicas)
+- Privacy Policy LGPD-compliant
+- Disclaimer: "ferramenta auxiliar, não substitui parecer humano"
+
+### 9.4 Security review (~5-7d, externalized?)
+
+- Pentesting (OWASP top 10)
+- Dependency scanning (Snyk, GitHub Dependabot)
+- Secrets management review (não tem secrets no repo já — confirmar)
+- API auth strategy (mTLS? OAuth? simple bearer?)
+
+### 9.5 Data residency (~2d)
+
+- Brazilian users → answer tokens não saem do BR? Anthropic não tem region BR ainda
+- Mitigation: documentar isso em ToS, dar opção de opt-out
+
+## Cronograma agregado (production)
+
+| Phase | Foco | Wall clock |
+|---|---|---|
+| 4 | Practitioner-grade (classifier + PII + ANPD híbrido) | ~3-4 sem |
+| 5 | Robustez (OOS, hierarchy, prose check, cross-doc, etc.) | ~2-3 sem |
+| 6 | Jurisprudência (STF/STJ Tier-4) | ~4-6 sem |
+| 7 | Production infra | ~2 sem |
+| 8 | Operations | ~1-2 sem |
+| 9 | Compliance | ~2-3 sem |
+| **Total v1 production** | | **~3-4 meses** |
+
+## Decisões pendentes — production lens
+
+| # | Decisão | Default learning | Default production |
+|---|---|---|---|
+| D1 | Quem cura legal-domain (vigência overlay v2, cross-doc, 3rd precision tier)? | eu rascunho, user revisa | **advogado consultor pago** ou parceria com firma |
+| D2 | `flagged_vigencia` bloqueia ou anota? | anota | anota + audit log |
+| D3 | Phase 4.3 path — manual now / parser later? | manual ok | **híbrido com gating em 4.3.b** (ver acima) |
+| D4 | Lei 9.507 → Tier-1? | Tier-1 (done) | done |
+| D5 | Phase 4 ordem? | curtos primeiro | curtos primeiro (mantém) |
+| **D6 NEW** | Quando é production launch? | (n/a) | **precisa data clara pra gating de Phase 4.3.b/9.x** |
+| **D7 NEW** | Compliance budget? Lawyer disponível? | (n/a) | **precisa SIM/NÃO antes de Phase 9** |
+| **D8 NEW** | Multi-tenancy ou single-tenant production? | (n/a) | impacta Phase 7 (auth, rate limit) e Phase 8 (deploy) |
+| **D9 NEW** | Brazilian region requirement? | (n/a) | impacta Phase 8 deploy + Phase 9 ToS |
+| **D10 NEW** | SLA target (uptime, latency)? | (n/a) | impacta Phase 7 (resiliência) e Phase 8 (on-call) |
+
+D6-D10 são pré-requisitos de planejamento real. **Recomendação: scoping
+conversation** antes de começar Phase 7+ pra travar essas variáveis.
+
+## O que do v1 deste plan continua válido sem mudança
+
+- Princípio "fix the data, not the model" continua sendo a mola da Phase 5
+- Faithfulness (LLM-as-judge) continua sendo a métrica anchor
+- 4 phases originais (3, 4, 5, 6) preservadas — mudanças são internas (sizing + escopo)
+- Reviewer round 2 não fica obsoleto — adiciona-se Phase 7-9 ao invés de re-arquivar
+
+## O que do v1 está **obsoleto**
+
+- "Aceitar gold estreito + acrescentar `alternative_acceptable_urns` v0" como solução final → production precisa do 3rd tier "judicial acceptable" hand-curated por advogado
+- Eval set de 16 rows v0 como "small but useful" → production blocking ≥100 rows curados
+- "Phase 2.8 write-up substitui doc formal de design" → production precisa changelog formal por release; posts/findings é suplementar
+- "Posts no posts/ gitignored" → talvez review se vão pra blog/docs.example.com production
+- Library de prompts (SYSTEM_PROMPT inline em código) → production prefere prompts versionados em arquivos separados com hash em audit log
+
+## Primeira ação operacional
+
+Antes de começar Phase 4 efetivamente, recomendo:
+
+1. **Travar D6-D10** (scoping conversation, ~1h)
+2. **Criar `ROADMAP.md`** com gates explícitos (production date, 4.3.b parser deadline, etc.)
+3. **Atualizar CLAUDE.md** removendo "treat as learning project" — substitui por "production-track project com fases learning passadas"
+4. **Decidir D1**: advogado consultor disponível? Se não, certas tasks de Phase 5 (cross-doc curation, 3rd precision tier, OOS validation) ficam blocked
+
+Sem D1 resolvido, posso entregar Phase 4 inteira mas algumas Phase 5 items
+ficam pendurados.
