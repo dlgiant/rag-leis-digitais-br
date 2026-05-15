@@ -37,9 +37,36 @@ from rag_leis.llm import AnthropicLLM
 from rag_leis.verify import verify_citations
 
 DEFAULT_TOP_K = 10
-DEFAULT_OOS_THRESHOLD = 0.50  # placeholder; Phase 2.7 calibrates
+# Cosine threshold below which we refuse before paying for the LLM call.
+# Phase 2.7 measured the OOS-vs-in-scope distribution: OOS top-1 sims
+# (0.52-0.65) overlap the in-scope range (0.56-0.75), so no clean cosine
+# threshold separates them. The cosine gate is now a *fast-path* for very
+# clearly OOS queries (e.g. someone pasting a paragraph in a different
+# language); the load-bearing OOS detection happens at the LLM-self-refusal
+# level, since the model has full context to make that call.
+DEFAULT_OOS_THRESHOLD = 0.40
 DEFAULT_TEXT_MODE = "label+nav+caput+text"
 DEFAULT_EMBEDDER = "voyage-3-large"
+
+# Prefix patterns that mean "the LLM examined the context and decided it
+# can't answer". Anchored to the start of `answer` because the system
+# prompt instructs the model to LEAD with this literal sentence on
+# refusals — anchoring avoids matching inline "não há informação" mentions
+# that appear within real answers.
+_SELF_REFUSAL_PREFIXES = (
+    "não há informação suficiente",
+    "não há informações suficientes",
+    "não foi possível encontrar",
+    "as fontes fornecidas não",
+    "fora do escopo",
+)
+
+
+def _is_self_refusal(answer_text: str) -> bool:
+    if not answer_text:
+        return False
+    head = answer_text.strip().lower()[:120]
+    return any(head.startswith(p) for p in _SELF_REFUSAL_PREFIXES)
 
 
 # ----------------------------------------------------------------------------
@@ -162,6 +189,9 @@ class RAGPipeline:
         retrieved = self._retrieve(query)
         top1_score = retrieved[0][1] if retrieved else 0.0
 
+        # Fast-path OOS: cosine top-1 too low to bother calling the LLM.
+        # Threshold is intentionally lenient; the LLM does the substantive
+        # OOS detection downstream once it has the actual context.
         if top1_score < self.oos_threshold:
             return RAGAnswer(
                 answer="Fora do escopo da base.",
@@ -170,7 +200,7 @@ class RAGPipeline:
                 rejected_citations=[],
                 refused=True,
                 refusal_reason=(
-                    f"top-1 score {top1_score:.3f} < limiar OOS {self.oos_threshold:.3f}"
+                    f"cosine fast-path: top-1 {top1_score:.3f} < {self.oos_threshold:.3f}"
                 ),
                 raw_retrieval=retrieved,
             )
@@ -179,17 +209,25 @@ class RAGPipeline:
         user_msg = f"Pergunta: {query}\n\nFontes:\n{context}"
         result = self.llm.complete_structured(SYSTEM_PROMPT, user_msg, ANSWER_TOOL)
 
+        answer_text = str(result.get("answer", ""))
         cited = [str(u) for u in result.get("citations", [])]
         retrieved_urns = frozenset(u for u, _ in retrieved)
         verified, rejected = verify_citations(cited, retrieved_urns, self.corpus_urns)
 
+        # LLM-self-refusal: model read the context and emitted the canonical
+        # "informação insuficiente" prefix. This is the strongest OOS signal
+        # we have — it's the model's judgment with full context, not a
+        # surface-similarity threshold. Mark refused; preserve the answer
+        # text and any citations the model managed to attach (could still
+        # be useful for "I can't answer but here's what I found"-style UIs).
+        self_refused = _is_self_refusal(answer_text)
         return RAGAnswer(
-            answer=str(result.get("answer", "")),
+            answer=answer_text,
             citations=verified,
             unverified_claims=[str(c) for c in result.get("unverified_claims", [])],
             rejected_citations=rejected,
-            refused=False,
-            refusal_reason=None,
+            refused=self_refused,
+            refusal_reason="llm-self-refusal" if self_refused else None,
             raw_retrieval=retrieved,
         )
 
