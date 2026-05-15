@@ -123,11 +123,20 @@ TIER_3: tuple[Document, ...] = (
         title="Resolução CD/ANPD nº 15/2024 — Regulamento de Comunicação de Incidente de Segurança",
         planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
     ),
+    # Res. 4/2023 — Phase 4.3.b real pdfplumber parser. Source PDF is the
+    # SEI bundle (917pgs); regulamento extracted from pp.98-108 per
+    # ANPD_PARSE_CONFIG. The chunks are produced by AnpdPdfParser and
+    # written with source="pdfplumber-v1" audit metadata.
+    Document(
+        urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4",
+        title="Resolução CD/ANPD nº 4/2023 — Regulamento de Dosimetria e Aplicação de Sanções Administrativas",
+        planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
+    ),
     # ----------------------------------------------------------------------
-    # The 3 below are GATED on Phase 4.3.b (real pdfplumber parser). They
-    # are listed in TIER_3 for API completeness (so corpus.py reflects the
-    # planned scope) but their JSONL files do NOT exist yet. parse_all_tier
-    # --tier 3 will fail loud on these until 4.3.b ships.
+    # The 2 below STILL gated. Res. 1/2021 is in a 807-page bundle (could
+    # be done with the pdfplumber parser but page_range not yet curated).
+    # Res. 2/2022 part1 has (cid:XXX) font-encoding issue — would need
+    # OCR fallback (pytesseract). Both deferred to follow-on work.
     # ----------------------------------------------------------------------
     # Document(
     #     urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2021-10-28;1",
@@ -137,11 +146,6 @@ TIER_3: tuple[Document, ...] = (
     # Document(
     #     urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2022-01-27;2",
     #     title="Resolução CD/ANPD nº 2/2022 — Aplicação da LGPD a agentes de tratamento de pequeno porte",
-    #     planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
-    # ),
-    # Document(
-    #     urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4",
-    #     title="Resolução CD/ANPD nº 4/2023 — Regulamento de Dosimetria e Aplicação de Sanções Administrativas",
     #     planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
     # ),
 )

@@ -152,11 +152,111 @@ def test_res_15_capitulo_navigation(res_15_chunks):
 
 def test_res_15_anpd_pdf_parser_raises_for_unknown_urn():
     """Defensive: AnpdPdfParser must fail loud (not silently return [])
-    when asked for a URN whose JSONL doesn't exist. This is the v0
-    failure mode for the gated 1/2021, 2/2022, 4/2023 resoluções."""
+    when asked for a URN that's neither in ANPD_PARSE_CONFIG nor has
+    a fallback JSONL."""
     parser = AnpdPdfParser()
-    with pytest.raises(FileNotFoundError, match="No tier-3 JSONL"):
+    with pytest.raises(FileNotFoundError, match="No tier-3 source"):
         parser.parse(
             "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2099-01-01;99",
             "",
         )
+
+
+# ============================================================================
+# Phase 4.3.b — pdfplumber-backed parser for Res 4/2023
+# ============================================================================
+
+RES_4_URN = "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4"
+
+
+@pytest.fixture(scope="module")
+def res_4_chunks() -> dict:
+    """Load Res. 4/2023 chunks via the real parser. Includes a side
+    effect: re-runs the pdfplumber extraction (fast, ~1 sec)."""
+    chunks = AnpdPdfParser().parse(RES_4_URN, "")
+    return {c.urn: c for c in chunks}
+
+
+def test_res_4_chunk_count(res_4_chunks):
+    """Res. 4/2023 regulamento has 29 articles. Per-kind counts pinned to
+    catch regressions in the parser logic (e.g., if a structural marker
+    detection breaks, the counts shift)."""
+    artigos = [c for c in res_4_chunks.values() if c.kind == "artigo"]
+    assert len(artigos) == 29, f"expected 29 artigos, got {len(artigos)}"
+
+
+def test_res_4_art3_sancao_enumeration(res_4_chunks):
+    """The 9 administrative sanctions of LGPD (art. 52 LGPD itself) are
+    enumerated here in art.3 of the Regulamento de Dosimetria. The
+    canonical 'multa simples' must be one of them."""
+    art3_incs = [
+        c for c in res_4_chunks.values()
+        if c.partition.startswith("art3;inc")
+        and c.kind == "inciso"
+        and c.partition.count(";") == 1  # top-level (no nested under §§)
+    ]
+    assert len(art3_incs) == 9, f"art.3 must have 9 sanção incisos, got {len(art3_incs)}"
+    # Find inc2 = multa simples
+    inc2 = next(c for c in art3_incs if c.partition.endswith("inc2"))
+    assert "multa simples" in inc2.text.lower()
+
+
+def test_res_4_audit_metadata_pdfplumber():
+    """Phase 4.3.b distinguishes its chunks from 4.3.a manual ones via
+    the source tag. Res 4/2023 must say source=pdfplumber-v1."""
+    import json
+
+    jsonl_path = PROJECT_ROOT / "data" / "chunks" / "tier-3" / "anpd_res_4_2023.jsonl"
+    assert jsonl_path.exists()
+
+    audit_fields = {"source", "source_pdf_sha256", "ingestion_method", "ingestion_provenance"}
+    with jsonl_path.open(encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            obj = json.loads(line)
+            missing = audit_fields - set(obj.keys())
+            assert not missing, f"chunk {obj.get('urn')} missing audit fields: {missing}"
+            assert obj["source"] == "pdfplumber-v1", (
+                f"Res. 4/2023 must be pdfplumber-extracted (source=pdfplumber-v1); "
+                f"got source={obj['source']!r}"
+            )
+            assert obj["ingestion_method"] == "pdfplumber-extraction"
+
+
+def test_res_4_capitulo_navigation(res_4_chunks):
+    """Each chunk carries CAPÍTULO + Seção nav for retrieval context."""
+    # art.1 is in CAPÍTULO I
+    art1 = res_4_chunks[f"{RES_4_URN}~art1"]
+    assert "CAPÍTULO I" in art1.nav.get("capitulo", "")
+    # art.3 starts CAPÍTULO II Seção I
+    art3 = res_4_chunks[f"{RES_4_URN}~art3"]
+    assert "CAPÍTULO II" in art3.nav.get("capitulo", "")
+
+
+def test_res_4_alineas_under_art3_par1_inc2():
+    """art.3 §1, inc.II has alíneas a/b (má-fé / práticas irregulares).
+    This is the only place with alíneas in Res. 4/2023 — pinning it
+    proves the alínea parser path works."""
+    chunks = AnpdPdfParser().parse(RES_4_URN, "")
+    by_urn = {c.urn: c for c in chunks}
+
+    ali_a = by_urn.get(f"{RES_4_URN}~art3;par1;inc2;ali-a")
+    ali_b = by_urn.get(f"{RES_4_URN}~art3;par1;inc2;ali-b")
+    assert ali_a is not None, "missing art.3;par1;inc2;ali-a (má-fé)"
+    assert ali_b is not None, "missing art.3;par1;inc2;ali-b (práticas irregulares)"
+    assert "má-fé" in ali_a.text.lower()
+    assert "práticas irregulares" in ali_b.text.lower()
+
+
+def test_anpd_parse_config_only_has_real_parser_urns():
+    """Sanity: ANPD_PARSE_CONFIG should only contain URNs we've actually
+    page-mapped + tested. Adding without testing would be a footgun."""
+    from rag_leis.parsers.anpd_pdf import ANPD_PARSE_CONFIG
+
+    assert RES_4_URN in ANPD_PARSE_CONFIG
+    # The Res. 15/2024 URN should NOT be in config (it uses the JSONL
+    # fallback path; Phase 4.3.a manual transcription is the canonical
+    # source for that one until a future re-validation phase).
+    assert RES_15_URN not in ANPD_PARSE_CONFIG

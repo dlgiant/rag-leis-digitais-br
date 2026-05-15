@@ -8,7 +8,11 @@ from pathlib import Path
 
 from rag_leis.corpus import TIER_1, TIER_2, TIER_3, Document
 from rag_leis.parser import parse
-from rag_leis.parsers.anpd_pdf import AnpdPdfParser
+from rag_leis.parsers.anpd_pdf import (
+    ANPD_PARSE_CONFIG,
+    AnpdPdfParser,
+    write_jsonl_with_audit,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -48,16 +52,27 @@ def _parse_one_tier(docs: tuple[Document, ...], tier_dir: str) -> dict[str, int]
         base = urn_to_filename(doc.urn)
 
         if use_anpd_parser:
-            # For tier-3, parsing means re-loading the JSONL produced by
-            # the manual transcription script. This validates the chunks
-            # are well-formed; production parse_all_tier --tier 3 will
-            # always pass through here.
+            # For tier-3:
+            #   - URNs in ANPD_PARSE_CONFIG → real pdfplumber parsing
+            #     (Phase 4.3.b). Output is written to data/chunks/tier-3/
+            #     with audit metadata source="pdfplumber-v1".
+            #   - URNs NOT in ANPD_PARSE_CONFIG → JSONL fallback (Phase 4.3.a
+            #     manual transcription). Don't re-write — the existing JSONL
+            #     has its own audit metadata source="claude-code-*".
             try:
                 chunks = anpd_parser.parse(doc.urn, "")
             except FileNotFoundError as e:
                 print(f"[MISS]   {doc.urn} — {e.args[0].splitlines()[0]}")
                 continue
-            # JSONL already on disk; nothing to write. Just collect stats.
+            # Write to JSONL only if the parser produced from PDF
+            # (config-driven). The JSONL fallback path doesn't need re-write.
+            if doc.urn in ANPD_PARSE_CONFIG:
+                import hashlib as _hashlib
+                config = ANPD_PARSE_CONFIG[doc.urn]
+                pdf_path = PROJECT_ROOT / "data" / "raw" / tier_dir / config.pdf_filename
+                pdf_sha = _hashlib.sha256(pdf_path.read_bytes()).hexdigest()
+                out_path = chunks_dir / f"{config.output_slug}.jsonl"
+                write_jsonl_with_audit(chunks, doc.urn, out_path, pdf_sha)
             by_kind: dict[str, int] = {}
             for c in chunks:
                 by_kind[c.kind] = by_kind.get(c.kind, 0) + 1
