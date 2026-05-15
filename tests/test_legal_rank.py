@@ -53,8 +53,8 @@ from rag_leis.legal_rank import (
             "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4",
             RANK_INFRALEGAL,
         ),
-        ("urn:lex:br:superior.tribunal.justica:sumula:1985-04-25;227", RANK_INFRALEGAL),
-        ("urn:lex:br:superior.tribunal.justica:sumula:2009-12-09;479", RANK_INFRALEGAL),
+        ("urn:lex:br:superior.tribunal.justica:sumula:1999-09-08;227", RANK_INFRALEGAL),
+        ("urn:lex:br:superior.tribunal.justica:sumula:2012-06-27;479", RANK_INFRALEGAL),
     ],
 )
 def test_legal_rank_for_known_types(urn, expected):
