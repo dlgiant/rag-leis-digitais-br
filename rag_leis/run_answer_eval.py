@@ -41,7 +41,7 @@ from typing import Any
 import yaml
 from dotenv import load_dotenv
 
-from rag_leis.llm import DEFAULT_JUDGE_MODEL, AnthropicLLM
+from rag_leis.llm import DEFAULT_JUDGE_MODEL, LLM, get_llm
 from rag_leis.rag import (
     DEFAULT_EMBEDDER,
     DEFAULT_OOS_THRESHOLD,
@@ -146,7 +146,7 @@ Use a ferramenta `avaliar_fidelidade` pra emitir score (0-5) e reasoning conciso
 
 
 def judge_faithfulness(
-    judge: AnthropicLLM, expected: str, generated: str
+    judge: LLM, expected: str, generated: str
 ) -> tuple[int, str]:
     user_msg = (
         f"<expected>\n{expected.strip()}\n</expected>\n\n"
@@ -229,7 +229,7 @@ def score_citations(
 
 
 def score_in_scope(
-    q: AnswerQuery, answer: RAGAnswer, judge: AnthropicLLM
+    q: AnswerQuery, answer: RAGAnswer, judge: LLM
 ) -> EvalRow:
     prec, prec_lenient, rec, f1 = score_citations(
         answer.citations, q.gold_urns, q.alternative_acceptable_urns
@@ -483,7 +483,19 @@ def main() -> int:
     p.add_argument("--eval", default=str(DEFAULT_EVAL_PATH), help="Path to answer_queries.yaml")
     p.add_argument("--embedder", default=DEFAULT_EMBEDDER)
     p.add_argument("--text-mode", default=DEFAULT_TEXT_MODE)
-    p.add_argument("--llm-model", default=None, help="Generator model (default: sonnet-4-5)")
+    p.add_argument(
+        "--llm-provider",
+        default="anthropic",
+        choices=["anthropic", "maritaca"],
+        help="Generator LLM provider (default: anthropic)",
+    )
+    p.add_argument("--llm-model", default=None, help="Generator model (default: provider's)")
+    p.add_argument(
+        "--judge-provider",
+        default="anthropic",
+        choices=["anthropic", "maritaca"],
+        help="Judge LLM provider (default: anthropic — opus-4-7)",
+    )
     p.add_argument("--judge-model", default=DEFAULT_JUDGE_MODEL)
     p.add_argument("--top-k", type=int, default=DEFAULT_TOP_K)
     p.add_argument(
@@ -508,13 +520,14 @@ def main() -> int:
         index_dir=INDEX_DIR,
         embedder_name=args.embedder,
         text_mode=args.text_mode,
+        llm_provider=args.llm_provider,
         llm_model=args.llm_model,
         top_k=args.top_k,
         oos_threshold=args.oos_threshold,
     )
-    judge = AnthropicLLM(model=args.judge_model)
-    print(f"Generator: {pipeline.llm.model}")
-    print(f"Judge    : {judge.model}")
+    judge = get_llm(provider=args.judge_provider, model=args.judge_model)
+    print(f"Generator: {pipeline.llm.provider}/{pipeline.llm.name}")
+    print(f"Judge    : {judge.provider}/{judge.name}")
 
     queries = load_answer_queries(Path(args.eval))
     print(f"Loaded {len(queries)} queries from {args.eval}")
