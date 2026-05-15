@@ -10,6 +10,7 @@ import numpy as np
 import yaml
 
 from rag_leis.embeddings import Embedder, Vec
+from rag_leis.legal_rank import DEFAULT_RANK, legal_rank_for_urn
 from rag_leis.vigencia import Vigencia
 
 
@@ -21,6 +22,11 @@ class IndexChunk:
     caput_text: str  # concatenation of all ancestor caput texts (artigo→…→parent), "" for top-level chunks
     citation: str  # joined label chain ("Art. 7, I" / "Art. 18, § 2") — empty for top-level if label missing
     vigencia: Vigencia | None = None  # overlay metadata; None means default "vigente"
+    # Brazilian normative hierarchy rank (1=CF, 5=infralegal). Computed
+    # from the document URN type at load time. Used by RAGPipeline to
+    # detect when the LLM cites lower-rank sources while higher-rank
+    # ones were available in top-K.
+    legal_rank: int = DEFAULT_RANK
 
 
 @dataclass(frozen=True)
@@ -149,6 +155,7 @@ def load_chunks(
                 caput_text=caput_text,
                 citation=citation,
                 vigencia=overlays.get(obj["urn"]),
+                legal_rank=legal_rank_for_urn(obj["document_urn"]),
             )
         )
     return out

@@ -464,6 +464,7 @@ def serialize_row(r: EvalRow) -> dict[str, Any]:
         "classified_type": r.answer.classified_type,
         "classified_top_k": r.answer.classified_top_k,
         "pii_types_redacted": r.answer.pii_types_redacted,
+        "hierarchy_warning": r.answer.hierarchy_warning,
         "cit_precision": r.cit_precision,
         "cit_precision_lenient": r.cit_precision_lenient,
         "cit_recall": r.cit_recall,
