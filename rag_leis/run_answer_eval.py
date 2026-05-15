@@ -465,6 +465,15 @@ def serialize_row(r: EvalRow) -> dict[str, Any]:
         "classified_top_k": r.answer.classified_top_k,
         "pii_types_redacted": r.answer.pii_types_redacted,
         "hierarchy_warning": r.answer.hierarchy_warning,
+        "prose_citation_mismatches": [
+            {
+                "surface": m.surface,
+                "expected_partition": m.expected_partition,
+                "nearest_cited_urn": m.nearest_cited_urn,
+            }
+            for m in r.answer.prose_citation_mismatches
+        ],
+        "prose_check_retried": r.answer.prose_check_retried,
         "cit_precision": r.cit_precision,
         "cit_precision_lenient": r.cit_precision_lenient,
         "cit_recall": r.cit_recall,

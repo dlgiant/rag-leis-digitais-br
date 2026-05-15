@@ -37,6 +37,11 @@ from rag_leis.legal_rank import rank_name
 from rag_leis.llm import LLM, get_llm
 from rag_leis.pii import RedactedQuery, redact
 from rag_leis.pii_audit import write_audit
+from rag_leis.prose_check import (
+    ProseMismatch,
+    build_reprompt_message,
+    check_prose_vs_citations,
+)
 from rag_leis.query_type import (
     TOP_K_PER_TYPE,
     classify_query,
@@ -207,6 +212,12 @@ class RAGAnswer:
     # sources (e.g., Decreto, Resolução) while higher-rank sources (CF, LC,
     # LO) were in top-K context. None when not applicable.
     hierarchy_warning: str | None = None
+    # Phase 5.3: prose-citation mismatches the answer text contains
+    # references (Art. N, X) that don't match any verified citation URN.
+    # Empty list = clean. After Phase 5.3 reject-and-reprompt loop, this
+    # represents the FINAL state — what survived the retry.
+    prose_citation_mismatches: list[ProseMismatch] = field(default_factory=list)
+    prose_check_retried: bool = False  # True if reject-and-reprompt fired
 
 
 # ----------------------------------------------------------------------------
@@ -234,6 +245,12 @@ class RAGPipeline:
     # raw query are needed.
     redact_pii: bool = True
     pii_audit_log: Path | None = DEFAULT_AUDIT_LOG_PATH
+    # Phase 5.3: prose-vs-URN consistency check. When the LLM's answer
+    # prose says "Art. 5, XII" but no cited URN ends with art5;inc12,
+    # re-prompt the LLM (max 1 retry) with the specific mismatch info.
+    # Adds 1 LLM call per mismatch event; production tradeoff for
+    # closing the unmonitored hallucination surface.
+    prose_check_retry: bool = True
     corpus_urns: frozenset[str] = field(init=False)
 
     def __post_init__(self) -> None:
@@ -292,6 +309,8 @@ class RAGPipeline:
                 classified_type=classified,
                 classified_top_k=effective_top_k,
                 pii_types_redacted=pii_types,
+                prose_citation_mismatches=[],
+                prose_check_retried=False,
             )
 
         context = self._build_context(retrieved)
@@ -309,6 +328,38 @@ class RAGPipeline:
         cited = [str(u) for u in result.get("citations", [])]
         retrieved_urns = frozenset(u for u, _ in retrieved)
         verified, rejected = verify_citations(cited, retrieved_urns, self.corpus_urns)
+
+        # Phase 5.3: prose-vs-URN consistency check. If the answer prose
+        # references articles/incisos/paragraphs that don't match any
+        # verified URN, re-prompt with explicit correction instructions
+        # (max 1 retry). The retry can fix two ways:
+        #   - rephrase the prose to match URNs already cited, OR
+        #   - add/swap the URN in citations[] to match the prose
+        # We accept whichever the LLM chooses on retry.
+        prose_mismatches = check_prose_vs_citations(answer_text, verified)
+        prose_retried = False
+        if prose_mismatches and self.prose_check_retry:
+            prose_retried = True
+            reprompt = build_reprompt_message(prose_mismatches)
+            retry_msg = f"{user_msg}\n\n--- CORREÇÃO SOLICITADA ---\n{reprompt}"
+            try:
+                retry_result = self.llm.complete_structured(
+                    system_prompt, retry_msg, ANSWER_TOOL
+                )
+                # Take the retry's output regardless — even if mismatches
+                # remain. The flag tells the caller a retry happened.
+                answer_text = str(retry_result.get("answer", answer_text))
+                cited = [str(u) for u in retry_result.get("citations", cited)]
+                verified, rejected = verify_citations(
+                    cited, retrieved_urns, self.corpus_urns
+                )
+                prose_mismatches = check_prose_vs_citations(answer_text, verified)
+            except RuntimeError:
+                # If the retry call fails (e.g., LLM tool-call breakage),
+                # fall back to the original output + mismatches. Production
+                # observability picks this up via prose_retried=True with
+                # mismatches still populated.
+                pass
 
         # LLM-self-refusal: model read the context and emitted the canonical
         # "informação insuficiente" prefix. This is the strongest OOS signal
@@ -333,6 +384,8 @@ class RAGPipeline:
             classified_top_k=effective_top_k,
             pii_types_redacted=pii_types,
             hierarchy_warning=hier_warn,
+            prose_citation_mismatches=prose_mismatches,
+            prose_check_retried=prose_retried,
         )
 
     # ------------------------------------------------------------------
