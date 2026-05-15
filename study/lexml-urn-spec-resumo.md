@@ -257,6 +257,72 @@ Cada item foi confirmado pela RFC 9676 e/ou por exemplos reais no catálogo `lex
   - URN candidata para a Súmula Vinculante nº 11 (uso de algemas, 13/08/2008): `urn:lex:br:supremo.tribunal.federal:sumula.vinculante:2008-08-13;11`.
   - _A verificar abrindo o link candidato no resolver oficial._
 
+---
+
+## 9.5. Jurisprudência (Phase 6 — Tier-4) — esquema URN canônico
+
+> **Decisão de design (2026-05-15):** o RAG passa a indexar jurisprudência como
+> 4º _tier_ do corpus. Súmulas STF/STJ + temas de repercussão geral STF entram
+> com URNs próprias e _chunks_ atômicos (sem hierarquia LCP-95).
+
+### Tipos URN aceitos
+
+| Tipo URN | Autoridade | Rank | Justificativa |
+|---|---|---|---|
+| `sumula.vinculante` | `supremo.tribunal.federal` | **2** (= LC) | Efeito vinculante geral / erga omnes (CF art. 103-A, EC 45/2004; Lei 11.417/2006). Atos normativos posteriores não podem contrariar. |
+| `tema` | `supremo.tribunal.federal` | **3** (= LO) | Repercussão geral: vincula instâncias inferiores **uma vez fixada a tese**. Tema pendente (sem tese) cai no infralegal — distinção via `nav.status`, não via tipo. |
+| `sumula` | `superior.tribunal.justica` ou `supremo.tribunal.federal` | **5** (infralegal) | Súmula simples é orientativa; não tem efeito erga omnes. Vincula apenas internamente ao órgão emissor. |
+
+### Sintaxe canônica
+
+Mesma forma geral `urn:lex:br:<autoridade>:<tipo>:<data>;<id>` da spec RFC 9676 §5:
+
+```
+urn:lex:br:supremo.tribunal.federal:sumula.vinculante:2008-08-13;11
+urn:lex:br:supremo.tribunal.federal:tema:786
+urn:lex:br:superior.tribunal.justica:sumula:1985-04-25;227
+```
+
+**Convenções específicas para jurisprudência:**
+
+- **Data**: data de **publicação/aprovação do enunciado** (não da sessão de
+  julgamento). Para temas STF onde a data é menos saliente que o número, a
+  segmento `<data>;` pode ser omitido — `tema:786` em vez de
+  `tema:2018-02-22;786` — porque o número de tema é universalmente único no STF.
+- **Partição** (`~<part>`): jurisprudência é atômica. Convenção:
+  - `~tese` — texto da tese fixada (para `tema` com tese)
+  - `~enunciado` — texto da súmula (para `sumula` / `sumula.vinculante`)
+  - `~ementa` — ementa do acórdão paradigma (opcional, para `tema`)
+- **`nav` mínimo recomendado**: `tribunal`, `numero`, `status` (`fixada` /
+  `pendente` / `cancelada`), `data_aprovacao`, `referencia` (links para tese /
+  acórdão paradigma).
+
+### Implicações no `legal_rank` (`rag_leis/legal_rank.py`)
+
+A tabela `LEGAL_RANK_BY_TYPE` foi estendida para refletir os ranks acima.
+Súmula vinculante elevada de _infralegal_ → _Lei Complementar_ porque seu efeito
+vinculante geral (erga omnes) é estruturalmente equivalente a uma norma de
+hierarquia constitucional-derivada — citá-la junto a uma LO/Decreto **não**
+deve disparar `hierarchy_warning`. Tema com tese fixada elevado a _LO_ pelo
+mesmo princípio (vinculante difusa).
+
+### Por que jurisprudência não usa `ChunkKind` artigo/§/inciso
+
+Súmulas e teses são unidades semânticas únicas, não estruturas hierárquicas.
+Forçá-las no esquema LCP-95 (`artigo` → `§` → `inc` → `ali`) seria uma
+falsificação. Phase 6.0 introduz `ChunkKind = "jurisprudencia"` como novo
+valor literal, ortogonal aos cinco originais. O parser dedicado emite **um
+chunk por súmula/tese**, sem `parent_partition`.
+
+### Referências
+
+- CF/88 art. 103-A (incluído pela EC 45/2004) — instituição da súmula vinculante
+- Lei 11.417/2006 — regulamenta edição/revisão/cancelamento de súmulas vinculantes
+- CPC/2015 art. 927 — rol de precedentes obrigatórios (inclui temas de repercussão geral)
+- RISTF (Regimento Interno do STF) — procedimento de afetação e fixação de tese
+
+_Fonte: `study/phase-6-jurisprudencia-plan.md`; convenção LexML observada para subtipos com `.`._
+
 - [x] **Provimentos do CNJ — entram como `federal:resolucao` ou autoridade dedicada?**
   → **Autoridade dedicada `conselho.nacional.justica`.** Resoluções do CNJ estão claramente indexadas: `urn:lex:br:conselho.nacional.justica:resolucao:2007-12-18;48`. Provimentos, no entanto, são emitidos pela **Corregedoria** do CNJ, não pelo Plenário. A convenção LexML para sub-órgãos usa `;` (visto em `supremo.tribunal.federal;plenario` para acórdãos do plenário do STF). Por extensão, provimentos da Corregedoria seriam: `urn:lex:br:conselho.nacional.justica;corregedoria:provimento:YYYY-MM-DD;N`.
   - URN candidata para o Provimento CN-CNJ nº 52/2016 (14/03/2016, reprodução assistida): `urn:lex:br:conselho.nacional.justica;corregedoria:provimento:2016-03-14;52`.
@@ -299,4 +365,4 @@ A lista por _tier_ vive em arquivos separados — cada um pronto para alimentar 
 - [Projeto LexML — histórico institucional](https://projeto.lexml.gov.br/institucional/historia)
 - Catálogo público em `lexml.gov.br/urn/` — utilizado para validar convenções de autoridade e tipo
 
-**Última atualização:** 11 de maio de 2026
+**Última atualização:** 15 de maio de 2026 (§9.5 — Jurisprudência Tier-4 / Phase 6.0)

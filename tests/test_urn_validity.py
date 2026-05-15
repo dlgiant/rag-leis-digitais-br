@@ -30,12 +30,14 @@ CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks"
 # urn:lex:<jurisdição>:<autoridade>:<tipo>:<YYYY-MM-DD>;<id>
 # jurisdição: 'br' opcionalmente seguido de ';<unidade>'
 # autoridade/tipo: tokens com pontos (ex.: 'decreto.lei', 'autoridade.nacional.protecao.dados')
+# Forma 1: legislação — sempre tem data + id
+# Forma 2: jurisprudência tipo 'tema' STF — id universal sem data (`tema:786`)
 DOC_URN_RE = re.compile(
     r"^urn:lex:"
     r"br(?:;[a-z0-9._-]+)*:"        # jurisdição
     r"[a-z0-9._-]+:"                # autoridade
-    r"[a-z0-9._-]+:"                # tipo (lei, decreto, decreto.lei, constituicao, ...)
-    r"\d{4}-\d{2}-\d{2};"           # data ISO
+    r"[a-z0-9._-]+:"                # tipo (lei, decreto, sumula.vinculante, tema, ...)
+    r"(?:\d{4}-\d{2}-\d{2};)?"      # data ISO opcional (Phase 6 — tema STF dispensa)
     r"[A-Za-z0-9._-]+$"             # identificador
 )
 
@@ -45,7 +47,11 @@ PARTITION_SEGMENT_RE = re.compile(
     r"|par\d+"
     r"|inc\d+"
     r"|ali-[a-z]"
-    r"|item\d+)$"
+    r"|item\d+"
+    # Phase 6 — jurisprudência: chunks atômicos (uma tese / um enunciado / uma ementa).
+    r"|tese"
+    r"|enunciado"
+    r"|ementa)$"
 )
 
 # Maps the partition segment prefix to the expected `kind` value.
@@ -55,6 +61,8 @@ _KIND_BY_TAIL = (
     (re.compile(r"^inc\d+$"), "inciso"),
     (re.compile(r"^ali-[a-z]$"), "alinea"),
     (re.compile(r"^item\d+$"), "item"),
+    # Phase 6 — jurisprudência atômica.
+    (re.compile(r"^(?:tese|enunciado|ementa)$"), "jurisprudencia"),
 )
 
 KNOWN_DOC_URNS = {d.urn for d in TIER_1} | {d.urn for d in TIER_2} | {d.urn for d in TIER_3}
