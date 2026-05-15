@@ -10,6 +10,7 @@ import numpy as np
 import yaml
 
 from rag_leis.embeddings import Embedder, Vec
+from rag_leis.vigencia import Vigencia
 
 
 @dataclass(frozen=True)
@@ -19,6 +20,7 @@ class IndexChunk:
     nav_text: str
     caput_text: str  # concatenation of all ancestor caput texts (artigo→…→parent), "" for top-level chunks
     citation: str  # joined label chain ("Art. 7, I" / "Art. 18, § 2") — empty for top-level if label missing
+    vigencia: Vigencia | None = None  # overlay metadata; None means default "vigente"
 
 
 @dataclass(frozen=True)
@@ -42,12 +44,21 @@ class Query:
         return 0
 
 
-def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
+def load_chunks(
+    chunks_dir: Path,
+    min_text_chars: int = 10,
+    overlays_path: Path | None = None,
+) -> list[IndexChunk]:
     """Load all chunks from `chunks_dir`, recursively.
 
     Accepts either a tier-specific dir (`data/chunks/tier-1`, legacy) or the
     chunks root (`data/chunks/`). Uses rglob so multi-tier layouts work
     transparently without callers touching paths.
+
+    If `overlays_path` is provided (or the canonical path
+    `data/vigencia/overlays.yaml` exists relative to the chunks dir), each
+    matching chunk is annotated with its `Vigencia` record so downstream
+    rendering can flag sub-judice / suspenso / etc. dispositivos.
     """
     # First pass: read all raw rows (before the empty-chunk filter) into a urn→row
     # map. We need the unfiltered set because a child's caput may itself be too
@@ -104,6 +115,20 @@ def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
         return ", ".join(reversed(labels))
 
     from rag_leis.chunks import is_revoked_text
+    from rag_leis.vigencia import load_overlays
+
+    # Load overlays from explicit path, or auto-discover the canonical
+    # location relative to this project. Empty dict if file absent — fresh
+    # checkouts shouldn't crash.
+    if overlays_path is None:
+        # chunks_dir is typically <project>/data/chunks (or a child of it).
+        # Walk up to the data/ ancestor and look for vigencia/overlays.yaml.
+        for ancestor in [chunks_dir, *chunks_dir.parents]:
+            candidate = ancestor / "vigencia" / "overlays.yaml"
+            if candidate.exists():
+                overlays_path = candidate
+                break
+    overlays = load_overlays(overlays_path) if overlays_path else {}
 
     out: list[IndexChunk] = []
     for obj in raw_by_urn.values():
@@ -123,6 +148,7 @@ def load_chunks(chunks_dir: Path, min_text_chars: int = 10) -> list[IndexChunk]:
                 nav_text=nav_text,
                 caput_text=caput_text,
                 citation=citation,
+                vigencia=overlays.get(obj["urn"]),
             )
         )
     return out

@@ -1,0 +1,166 @@
+# Vigência overlays — v0 (2026-05-14)
+#
+# Reviewer round 2 (legal-domain) flagged that `is_revoked_text` only
+# catches Planalto markers `(Revogado)`/`(Vetado)`/`(Suprimido)`. It misses
+# the legally-load-bearing categories: revogação tácita, suspensão,
+# sub judice, vacatio legis parcial, eficácia limitada por regulamentação.
+# Without these, the RAG commits the parecerista's worst error: treating
+# formally-vigente text as applicable while ignoring active controversy.
+#
+# Schema:
+#   urn               — must resolve in the corpus (validated at load time)
+#   status            — one of:
+#                         vigente               (default; not overlaid here)
+#                         sub_judice            (controvérsia constitucional pendente)
+#                         suspenso              (eficácia suspensa por liminar)
+#                         vacatio_legis         (promulgado mas ainda não em vigor)
+#                         eficacia_limitada     (depende de regulamentação infralegal)
+#                         revogado_tacito       (incompatível com norma posterior)
+#                         alterado_por_ec       (constitucional, EC modificadora — informativo)
+#                         atualizado_recentemente (lei alteradora recente; informativo)
+#   fundamento        — processo (STF/STJ), ato normativo, ou EC
+#   desde             — data ISO (afetação, edição, etc.)
+#   descricao_curta   — 1-3 frases que vão para o warning no answer
+#
+# v0 cobre 13 dispositivos selecionados por pegar os casos canônicos da
+# crítica do reviewer + linkagem EC + alterações recentes do CP. Lista
+# pra expandir conforme novos casos surgirem (ANPD jurisprudência STF/STJ
+# em Phase 6 Tier-4).
+
+# ============================================================================
+# sub_judice — STF / STJ pendente
+# ============================================================================
+
+- urn: urn:lex:br:federal:lei:2014-04-23;12965~art19
+  status: sub_judice
+  fundamento: STF RE 1.037.396 (Tema 987 da repercussão geral)
+  desde: 2017-09-29  # afetação como repercussão geral
+  descricao_curta: |
+    Aplicação em discussão no STF. Tema 987 da repercussão geral
+    questiona constitucionalidade do regime que condiciona a
+    responsabilidade do provedor de aplicações por conteúdo de
+    terceiros à existência de ordem judicial específica.
+
+- urn: urn:lex:br:federal:lei:2014-04-23;12965~art21
+  status: sub_judice
+  fundamento: STF RE 1.037.396 (Tema 987)
+  desde: 2017-09-29
+  descricao_curta: |
+    Conexo ao Tema 987 do STF. Discussão sobre o regime de remoção
+    independentemente de ordem judicial em casos de imagens íntimas
+    pode ser afetada pela tese de repercussão geral.
+
+# ============================================================================
+# eficacia_limitada — depende de regulamentação infralegal
+# ============================================================================
+
+- urn: urn:lex:br:federal:lei:2018-08-14;13709~art52
+  status: eficacia_limitada
+  fundamento: ANPD Resolução CD/ANPD 4/2023 (dosimetria)
+  desde: 2023-02-24
+  descricao_curta: |
+    A aplicação das sanções administrativas depende da metodologia de
+    dosimetria estabelecida pela ANPD na Res. CD/ANPD 4/2023 (não
+    indexada neste corpus — Phase 4 Tier-3). Dispositivos VII, VIII e
+    IX foram vetados na sanção presidencial.
+
+- urn: urn:lex:br:federal:lei:2018-08-14;13709~art52;par1
+  status: eficacia_limitada
+  fundamento: ANPD Resolução CD/ANPD 4/2023
+  desde: 2023-02-24
+  descricao_curta: |
+    A dosimetria das sanções (gradação, agravantes, atenuantes) é
+    operacionalizada pela Res. CD/ANPD 4/2023, não pela própria LGPD.
+    Consultar a resolução para o cálculo concreto.
+
+- urn: urn:lex:br:federal:lei:2018-08-14;13709~art41;par3
+  status: eficacia_limitada
+  fundamento: ANPD Resolução CD/ANPD 2/2022 (agentes de pequeno porte)
+  desde: 2022-01-27
+  descricao_curta: |
+    A dispensa da nomeação de encarregado para agentes de pequeno porte
+    é operacionalizada pela Res. CD/ANPD 2/2022 (não indexada neste
+    corpus — Phase 4 Tier-3).
+
+- urn: urn:lex:br:federal:lei:2018-08-14;13709~art55-a
+  status: eficacia_limitada
+  fundamento: Lei 13.853/2019 (cria a ANPD); Decreto 10.474/2020 (estrutura regimental)
+  desde: 2019-07-08
+  descricao_curta: |
+    A ANPD foi criada pela Lei 13.853/2019 e tem estrutura regimental
+    definida pelo Decreto 10.474/2020 (não indexado neste corpus —
+    Phase 4 / Phase 6).
+
+# ============================================================================
+# vacatio_legis — informativo histórico (já vigente, mas relevante para
+# casos antigos e para entender a entrada escalonada)
+# ============================================================================
+
+- urn: urn:lex:br:federal:lei:2018-08-14;13709~art65
+  status: vacatio_legis
+  fundamento: Lei 14.010/2020 (RJET) postergou as sanções
+  desde: 2020-08-01
+  descricao_curta: |
+    Vigência escalonada da LGPD: arts. 52, 53 e 54 (sanções) entraram
+    em vigor em 1º de agosto de 2021 (Lei 14.010/2020 art. 20). Demais
+    dispositivos vigoraram em 18 de setembro de 2020. Hoje toda a Lei
+    está vigente; este overlay serve apenas para datar fatos pretéritos.
+
+# ============================================================================
+# alterado_por_ec — origem constitucional via EC (informativo)
+# ============================================================================
+
+- urn: urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc79
+  status: alterado_por_ec
+  fundamento: Emenda Constitucional 115/2022
+  desde: 2022-02-10
+  descricao_curta: |
+    Inciso LXXIX inserido pela EC 115/2022, elevando a proteção de dados
+    pessoais (inclusive nos meios digitais) à categoria de direito
+    fundamental. Antes da EC, a proteção decorria de leitura combinada
+    do art. 5º, X, e da LGPD (Lei 13.709/2018).
+
+# ============================================================================
+# atualizado_recentemente — lei alteradora dentro dos últimos ~5 anos
+# (informativo: pena ou tipo modificado, jurisprudência em formação)
+# ============================================================================
+
+- urn: urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a
+  status: atualizado_recentemente
+  fundamento: Lei 12.737/2012 (introduziu) + Lei 14.155/2021 (aumentou penas e qualificadoras)
+  desde: 2021-05-27
+  descricao_curta: |
+    Tipo introduzido pela Lei Carolina Dieckmann (12.737/2012) e
+    significativamente alterado pela Lei 14.155/2021, que aumentou as
+    penas e ampliou as qualificadoras (§§ 3º a 5º). Jurisprudência ainda
+    em formação sobre a nova redação.
+
+- urn: urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-b
+  status: atualizado_recentemente
+  fundamento: Lei 12.737/2012 (introduziu) + Lei 14.155/2021
+  desde: 2021-05-27
+  descricao_curta: |
+    Regra de ação penal para o art. 154-A. A Lei 14.155/2021 alterou as
+    hipóteses de ação penal pública incondicionada para o tipo de
+    invasão de dispositivo informático.
+
+- urn: urn:lex:br:federal:decreto.lei:1940-12-07;2848~art218-c
+  status: atualizado_recentemente
+  fundamento: Lei 13.718/2018 (introduziu)
+  desde: 2018-09-25
+  descricao_curta: |
+    Tipo de divulgação de cena de estupro, sexo, nudez ou pornografia
+    introduzido pela Lei 13.718/2018. Conduta tipicamente associada a
+    publicações em redes sociais e mensageiros — verificar interação
+    com MCI art. 21 e jurisprudência STF/STJ em formação.
+
+- urn: urn:lex:br:federal:decreto.lei:1940-12-07;2848~art171
+  status: atualizado_recentemente
+  fundamento: Lei 14.155/2021 (introduziu §§ 2º-A e 2º-B — fraude eletrônica)
+  desde: 2021-05-27
+  descricao_curta: |
+    A Lei 14.155/2021 introduziu o §§ 2º-A (fraude eletrônica — pena
+    aumentada quando o estelionato é cometido com uso de dispositivo
+    eletrônico que não titulariza o agente) e 2º-B (qualificadora pelo
+    valor envolvido). Atenção ao texto Planalto onde os §§ podem estar
+    fundidos no chunk do § 2º.

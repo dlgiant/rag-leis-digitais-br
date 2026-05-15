@@ -35,6 +35,7 @@ from rag_leis.embeddings import Embedder, Vec, get_embedder
 from rag_leis.eval_harness import IndexChunk, format_texts, load_chunks
 from rag_leis.llm import AnthropicLLM
 from rag_leis.verify import verify_citations
+from rag_leis.vigencia import Vigencia, vigencia_warning
 
 DEFAULT_TOP_K = 10
 # Cosine threshold below which we refuse before paying for the LLM call.
@@ -138,12 +139,34 @@ o que faltou.
 mas que não esteja sustentada pelo contexto. Idealmente vazia.
 
 5. Responda em português, em tom formal e técnico, mas claro.
+
+6. **Vigência ressalvada — REGRA CRÍTICA**: se uma `<fonte>` tiver atributo \
+`vigencia=`, a aplicação do dispositivo está RESSALVADA (sub judice, suspensa, \
+eficácia limitada por regulamentação, etc.). Sempre que sua resposta usar uma \
+fonte assim, INCLUA, ao final do parágrafo correspondente (ou em parágrafo \
+próprio), uma sentença iniciando com "⚠️ Atenção:" reproduzindo o conteúdo \
+da ressalva — status, fundamento (processo / ato normativo) e o que isso \
+significa para a aplicação do dispositivo. Não silencie a ressalva, mesmo \
+que o usuário não tenha perguntado sobre ela.
 """
 
 
 # ----------------------------------------------------------------------------
 # Data classes
 # ----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class FlaggedVigencia:
+    """One cited URN that carries a vigência overlay. Computed
+    deterministically from the verified citations + overlays — not from
+    the LLM. Surfaces what the model SHOULD have warned about so callers
+    can post-validate (e.g., assert the answer text contains the warning
+    for each entry here)."""
+    urn: str
+    status: str
+    fundamento: str
+    descricao_curta: str
 
 
 @dataclass
@@ -162,6 +185,7 @@ class RAGAnswer:
     refused: bool
     refusal_reason: str | None
     raw_retrieval: list[tuple[str, float]]         # (urn, cosine_sim) top-K
+    flagged_vigencia: list[FlaggedVigencia] = field(default_factory=list)
 
 
 # ----------------------------------------------------------------------------
@@ -221,6 +245,8 @@ class RAGPipeline:
         # text and any citations the model managed to attach (could still
         # be useful for "I can't answer but here's what I found"-style UIs).
         self_refused = _is_self_refusal(answer_text)
+
+        flagged = self._collect_flagged_vigencia(verified)
         return RAGAnswer(
             answer=answer_text,
             citations=verified,
@@ -229,7 +255,33 @@ class RAGPipeline:
             refused=self_refused,
             refusal_reason="llm-self-refusal" if self_refused else None,
             raw_retrieval=retrieved,
+            flagged_vigencia=flagged,
         )
+
+    # ------------------------------------------------------------------
+
+    def _collect_flagged_vigencia(self, cited_urns: list[str]) -> list[FlaggedVigencia]:
+        """For each verified citation, surface its overlay (if any).
+
+        Deterministic — does not ask the LLM. Caller can cross-check
+        against the answer prose to assert the model rendered a ⚠️
+        warning for each entry here.
+        """
+        out: list[FlaggedVigencia] = []
+        for urn in cited_urns:
+            chunk = self.chunks_by_urn.get(urn)
+            if chunk is None or chunk.vigencia is None:
+                continue
+            v: Vigencia = chunk.vigencia
+            out.append(
+                FlaggedVigencia(
+                    urn=urn,
+                    status=v.status,
+                    fundamento=v.fundamento,
+                    descricao_curta=v.descricao_curta,
+                )
+            )
+        return out
 
     # ------------------------------------------------------------------
 
@@ -249,8 +301,14 @@ class RAGPipeline:
             citation = chunk.citation or "(sem rótulo)"
             nav = chunk.nav_text or ""
             header = f"[{citation}]" if not nav else f"[{citation}] — {nav}"
+            # Vigência overlay rendered as XML attribute when present. The
+            # SYSTEM_PROMPT instructs the model to emit a ⚠️ warning when
+            # a cited <fonte> carries this attribute.
+            vig_attr = ""
+            if chunk.vigencia is not None:
+                vig_attr = f' vigencia="{vigencia_warning(chunk.vigencia)}"'
             parts.append(
-                f'<fonte urn="{urn}">\n{header}\n{chunk.text}\n</fonte>'
+                f'<fonte urn="{urn}"{vig_attr}>\n{header}\n{chunk.text}\n</fonte>'
             )
         return "\n\n".join(parts)
 
