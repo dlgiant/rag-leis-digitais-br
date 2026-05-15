@@ -21,6 +21,9 @@ data/raw/
 data/chunks/
 data/index/
 data/metadata/
+# PII audit log — production telemetry; never commit (contains hashes
+# of real user queries + redacted text; would defeat the LGPD purpose).
+data/audit/
 CLAUDE.md
 STUDY-*
 SUMMARY_*
