@@ -49,14 +49,25 @@ LEGAL_RANK_BY_TYPE: dict[str, int] = {
     "medida.provisoria": RANK_LEI_ORDINARIA,
     # Rank 4 — Decreto (regulamentar)
     "decreto": RANK_DECRETO,
-    # Rank 5 — Infralegal (resoluções, portarias, instruções normativas)
+    # Rank 2 — Súmula Vinculante STF tem efeito vinculante GERAL (CF art. 103-A,
+    # incluído pela EC 45/2004). Atos normativos posteriores não podem
+    # contrariá-la; juízes devem aplicá-la. Trata-se como rank 2 (alongside
+    # Lei Complementar) por essa generalidade vinculante. (Phase 6 — Tier-4)
+    "sumula.vinculante": RANK_LEI_COMPLEMENTAR,
+    # Rank 3 — Tema com tese de repercussão geral STF: vinculante difusa
+    # (precedente vincula instâncias inferiores, mas só após tese fixada).
+    # Pendente (sem tese) cai no infralegal por convenção; distinção vem
+    # via nav.status, não via URN type. (Phase 6 — Tier-4)
+    "tema": RANK_LEI_ORDINARIA,
+    # Rank 5 — Infralegal (resoluções, portarias, instruções normativas,
+    # súmulas simples STJ/STF)
     "resolucao": RANK_INFRALEGAL,
     "resolucao.cd": RANK_INFRALEGAL,  # ANPD Conselho Diretor (Phase 4.3.a/b)
     "portaria": RANK_INFRALEGAL,
     "instrucao.normativa": RANK_INFRALEGAL,
-    "sumula": RANK_INFRALEGAL,            # STJ/STF súmulas (future Tier-4)
-    "sumula.vinculante": RANK_INFRALEGAL,  # STF vinculantes (future Tier-4)
-    "tema": RANK_INFRALEGAL,               # STF temas (future Tier-4)
+    # Súmula simples (não-vinculante) é orientativa — vincula só os tribunais
+    # internos do órgão emissor; não tem efeito erga omnes. (Phase 6 — Tier-4)
+    "sumula": RANK_INFRALEGAL,
 }
 
 # When a URN type is not in the map, default to lowest authority. The
@@ -67,10 +78,10 @@ DEFAULT_RANK = RANK_INFRALEGAL
 # Human-readable rank names for warnings/UI.
 RANK_NAMES: dict[int, str] = {
     RANK_CONSTITUCIONAL: "Constituição/EC",
-    RANK_LEI_COMPLEMENTAR: "Lei Complementar",
-    RANK_LEI_ORDINARIA: "Lei Ordinária",
+    RANK_LEI_COMPLEMENTAR: "Lei Complementar / Súmula Vinculante",
+    RANK_LEI_ORDINARIA: "Lei Ordinária / Tema STF (tese fixada)",
     RANK_DECRETO: "Decreto",
-    RANK_INFRALEGAL: "Resolução/Portaria/Infralegal",
+    RANK_INFRALEGAL: "Resolução/Portaria/Súmula simples/Infralegal",
 }
 
 

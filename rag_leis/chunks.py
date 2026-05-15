@@ -4,7 +4,17 @@ import re
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
-ChunkKind = Literal["artigo", "paragrafo", "inciso", "alinea", "item"]
+ChunkKind = Literal[
+    "artigo",
+    "paragrafo",
+    "inciso",
+    "alinea",
+    "item",
+    # Phase 6 — Tier-4 jurisprudência. Súmulas STF/STJ + temas de
+    # repercussão geral STF não têm hierarquia LCP-95 (artigo/§/inc) —
+    # são unidades atômicas (uma "tese" ou "enunciado" por chunk).
+    "jurisprudencia",
+]
 
 
 class Parser(Protocol):

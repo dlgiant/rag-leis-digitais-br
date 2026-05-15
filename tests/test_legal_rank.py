@@ -29,16 +29,22 @@ from rag_leis.legal_rank import (
         ("urn:lex:br:federal:constituicao:1988-10-05;1988", RANK_CONSTITUCIONAL),
         ("urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc4", RANK_CONSTITUCIONAL),
         ("urn:lex:br:federal:emenda.constitucional:2022-02-10;115", RANK_CONSTITUCIONAL),
-        # Rank 2 — Lei Complementar
+        # Rank 2 — Lei Complementar + Súmula Vinculante STF (CF art. 103-A)
         ("urn:lex:br:federal:lei.complementar:1998-02-26;95", RANK_LEI_COMPLEMENTAR),
-        # Rank 3 — Lei Ordinária + Decreto-Lei + MP
+        (
+            "urn:lex:br:supremo.tribunal.federal:sumula.vinculante:2008-08-13;11",
+            RANK_LEI_COMPLEMENTAR,
+        ),
+        # Rank 3 — Lei Ordinária + Decreto-Lei + MP + STF Tema (tese fixada)
         ("urn:lex:br:federal:lei:2018-08-14;13709", RANK_LEI_ORDINARIA),  # LGPD
         ("urn:lex:br:federal:lei:2014-04-23;12965", RANK_LEI_ORDINARIA),  # MCI
         ("urn:lex:br:federal:decreto.lei:1940-12-07;2848", RANK_LEI_ORDINARIA),  # CP
         ("urn:lex:br:federal:medida.provisoria:2001-08-24;2200-2", RANK_LEI_ORDINARIA),
+        ("urn:lex:br:supremo.tribunal.federal:tema:786", RANK_LEI_ORDINARIA),
+        ("urn:lex:br:supremo.tribunal.federal:tema:987", RANK_LEI_ORDINARIA),
         # Rank 4 — Decreto
         ("urn:lex:br:federal:decreto:2016-05-11;8771", RANK_DECRETO),  # regulamenta MCI
-        # Rank 5 — ANPD Resolução (Phase 4.3 corpus)
+        # Rank 5 — ANPD Resolução (Phase 4.3 corpus) + Súmula simples STJ
         (
             "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15",
             RANK_INFRALEGAL,
@@ -47,6 +53,8 @@ from rag_leis.legal_rank import (
             "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4",
             RANK_INFRALEGAL,
         ),
+        ("urn:lex:br:superior.tribunal.justica:sumula:1985-04-25;227", RANK_INFRALEGAL),
+        ("urn:lex:br:superior.tribunal.justica:sumula:2009-12-09;479", RANK_INFRALEGAL),
     ],
 )
 def test_legal_rank_for_known_types(urn, expected):
