@@ -148,24 +148,72 @@ Exemplo do que isso captura:
 - Decisão sobre como tratar respostas que ficam no nível "lenient
   ok mas não judicial-strict"
 
-### 5. OOS taxonomy — adversarial cases
+### 5. OOS taxonomy — adversarial cases (UPDATED 2026-05-15 com cross-check empírico)
 
-`eval/answer_queries.yaml` tem 3 OOS rows, todas "outra área
-inteira" (IRPF, divórcio, INPI). Reviewer round 2 (item 9) flagou
-que o risco real é **adjacent OOS** — query que toca a vizinhança
-do corpus mas não tem resposta:
+`eval/answer_queries.yaml` agora tem 15 OOS rows distribuídas em 5
+subtypes (Phase 5.1):
 
-- Subtypes (a-e): outra área / adjacent sem cobertura / projeto de
-  lei não promulgado / matéria estadual-municipal / doutrina sem
-  positivação
+  - (a) other domain entirely (4 rows)
+  - (b) adjacent without coverage (4 rows)
+  - (c) projeto de lei não promulgado (3 rows)
+  - (d) matéria estadual/municipal (2 rows)
+  - (e) doutrina sem positivação (2 rows)
+
+**Cross-validação Anthropic vs Marítaca (2026-05-15)** revelou
+divergência grave entre providers — Marítaca Sabiá-3.1 (default
+production per D9) tem refusal accuracy MUITO inferior em OOS:
+
+| Subtype | Anthropic Sonnet 4.5 | Marítaca Sabiá-3.1 |
+|---|---|---|
+| (a) other domain | 4/4 ✅ | 2/4 ⚠️ |
+| (b) adjacent | 2/4 ⚠️ | **0/4 ❌** |
+| (c) PL não promulgado | 3/3 ✅ | **0/3 ❌** |
+| (d) estadual/municipal | 2/2 ✅ | 1/2 ⚠️ |
+| (e) doutrina | 1/2 ⚠️ | **0/2 ❌** |
+| **Total** | **12/15 (0.897)** | **3/15 (0.586)** |
+
+**Implicações para production**:
+
+1. **PL não promulgado é crítico**: Sabiá pode CONFABULAR sobre Lei
+   das Fake News (PL 2630), Lei dos Criptoativos (PL 4408), Lei de
+   IA (PL 2338) — todos em tramitação. Resposta autoritativa sobre
+   "norma vigente" quando NÃO HÁ é risco profissional sério para
+   advogado que use a saída.
+2. **Doutrina sem positivação**: Sabiá responde sobre "direito ao
+   esquecimento como princípio autônomo" — REJEITADO pelo STF Tema
+   786 em 2021. Resposta confidente onde a posição jurídica é a
+   negativa.
+3. **Adjacent OOS**: Sabiá responde queries que misturam corpus +
+   não-corpus (Meta + LGPD; interceptação telefônica + MCI). Risco
+   de resposta partial-mas-confidente.
+
+**Mitigações em ordem de esforço**:
+
+1. **D7 lawyer review**: validar que os 15 OOS rows curados refletem
+   adversarial cases realistas. Se sim, mantemos; se não, refinar.
+2. **SYSTEM_PROMPT fortalecer refusal**: adicionar instrução
+   explícita "se a query menciona PL, projeto de lei, direito
+   estadual/municipal, ou doutrina, refuse explicitamente".
+   Re-rodar eval e medir.
+3. **Hybrid generator (D9 amendment)**: usar Sabiá pra in-scope
+   (rank PT-BR + custo), Anthropic pra refusal-prone queries.
+   Critério: se query_type=parafrase E top-1 score baixo, escalonar
+   pra Anthropic. Adiciona complexidade arquitetural.
+4. **Pre-LLM gate**: regex pra "PL", "projeto de lei", "estadual",
+   "municipal", "doutrina" → forçar refusal SEM call ao LLM. Mais
+   robusto mas frágil aos rephrasings.
 
 **O que precisa de validação jurídica**:
 
-- Quais 12+ queries adversariais um advogado consideraria
-  "armadilhas plausíveis"? Especialmente type (b) e (c) — o RAG é
-  mais frágil aí.
-- Para cada OOS, qual seria a refusal jurídica adequada (vs apenas
-  "não há informação")?
+- Quais OUTROS PLs em tramitação merecem rows OOS? (Lei do Marco
+  Civil de IA tem múltiplos PLs concorrentes; PL 21/2020, PL
+  2338/2023, PL 5051/2019. Quais são canônicos?)
+- "Doutrina sem positivação" tem casos sutis: princípio do menor
+  prejuízo, accountability, transparência radical — são
+  doutrinários ou positivados? Decisão sutil.
+- Categoria nova: "matéria com STF decision pendente". Ex: Tema 987
+  MCI 19. Hoje classificamos via vigência overlay; deveria também
+  ter OOS row?
 
 ### 6. PII redactor — coverage gaps
 

@@ -74,6 +74,13 @@ class AnswerQuery:
     # score_citations(). Defaults to empty (strict == lenient).
     alternative_acceptable_urns: frozenset[str]
     expected_paragraph: str
+    # Phase 5.1: OOS subtype taxonomy (a-e). Empty when oos=False.
+    #   a = other domain entirely
+    #   b = adjacent without coverage
+    #   c = projeto de lei não promulgado
+    #   d = matéria estadual / municipal
+    #   e = doutrina sem positivação
+    oos_subtype: str = ""
 
 
 @dataclass
@@ -180,6 +187,7 @@ def load_answer_queries(path: Path) -> list[AnswerQuery]:
                     item.get("alternative_acceptable_urns") or []
                 ),
                 expected_paragraph=str(item.get("expected_paragraph", "")),
+                oos_subtype=str(item.get("oos_subtype", "")),
             )
         )
     return out
@@ -281,6 +289,9 @@ class Aggregate:
     refusal_accuracy: float
     rejected_citation_rate: float  # |rejected| / |cited+rejected|
     by_type: dict[str, dict[str, float]] = field(default_factory=dict)
+    # Phase 5.1: per-OOS-subtype refusal accuracy. Surfaces where the
+    # pipeline is fragile (typically subtype b — adjacent OOS).
+    refusal_accuracy_by_oos_subtype: dict[str, float] = field(default_factory=dict)
 
 
 def _mean(xs: list[float]) -> float:
@@ -316,6 +327,16 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
             "refusal_accuracy": _mean([1.0 if r.refused_correctly else 0.0 for r in group]),
         }
 
+    # Phase 5.1: per-OOS-subtype refusal accuracy
+    by_subtype: dict[str, list[EvalRow]] = defaultdict(list)
+    for r in oos:
+        sub = r.query.oos_subtype or "unspecified"
+        by_subtype[sub].append(r)
+    refusal_acc_by_subtype = {
+        sub: _mean([1.0 if r.refused_correctly else 0.0 for r in group])
+        for sub, group in by_subtype.items()
+    }
+
     return Aggregate(
         n_total=len(rows),
         n_inscope=len(inscope),
@@ -330,6 +351,7 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
         refusal_accuracy=_mean([1.0 if r.refused_correctly else 0.0 for r in rows]),
         rejected_citation_rate=_safe_div(total_rejected, total_cited),
         by_type=by_type,
+        refusal_accuracy_by_oos_subtype=refusal_acc_by_subtype,
     )
 
 
@@ -375,6 +397,21 @@ def print_report(rows: list[EvalRow], agg: Aggregate, verbose: bool) -> None:
     print(f"  Faithfulness               (mean, in-scope)  : {agg.faithfulness_mean:.2f} / 5")
     print(f"  Refusal accuracy           (all rows)         : {agg.refusal_accuracy:.3f}")
     print(f"  Rejected citation rate     (all rows)         : {agg.rejected_citation_rate:.3f}")
+
+    if agg.refusal_accuracy_by_oos_subtype:
+        print()
+        print("OOS refusal accuracy by subtype (Phase 5.1):")
+        subtype_labels = {
+            "a": "(a) other domain entirely",
+            "b": "(b) adjacent without coverage",
+            "c": "(c) projeto de lei não promulgado",
+            "d": "(d) matéria estadual/municipal",
+            "e": "(e) doutrina sem positivação",
+        }
+        for sub, acc in sorted(agg.refusal_accuracy_by_oos_subtype.items()):
+            label = subtype_labels.get(sub, sub)
+            mark = "✅" if acc >= 1.0 else ("⚠️" if acc >= 0.5 else "❌")
+            print(f"  {mark} {label:<40} {acc:.3f}")
 
     print()
     print("By type (in-scope metrics; refusal_accuracy includes OOS):")
