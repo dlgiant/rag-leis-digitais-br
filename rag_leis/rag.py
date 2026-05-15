@@ -34,6 +34,8 @@ import numpy as np
 from rag_leis.embeddings import Embedder, Vec, get_embedder
 from rag_leis.eval_harness import IndexChunk, format_texts, load_chunks
 from rag_leis.llm import LLM, get_llm
+from rag_leis.pii import RedactedQuery, redact
+from rag_leis.pii_audit import write_audit
 from rag_leis.query_type import (
     TOP_K_PER_TYPE,
     classify_query,
@@ -43,6 +45,7 @@ from rag_leis.verify import verify_citations
 from rag_leis.vigencia import Vigencia, vigencia_warning
 
 DEFAULT_TOP_K = 10
+DEFAULT_AUDIT_LOG_PATH = Path(__file__).resolve().parents[1] / "data" / "audit" / "pii-redactions.jsonl"
 # Cosine threshold below which we refuse before paying for the LLM call.
 # Phase 2.7 measured the OOS-vs-in-scope distribution: OOS top-1 sims
 # (0.52-0.65) overlap the in-scope range (0.56-0.75), so no clean cosine
@@ -196,6 +199,9 @@ class RAGAnswer:
     # fast-path (no classifier run, no retrieval beyond top-1).
     classified_type: str | None = None
     classified_top_k: int | None = None
+    # Phase 4.2: PII types redacted before query crossed provider boundary.
+    # Empty list when the query had no PII OR when redact_pii=False.
+    pii_types_redacted: list[str] = field(default_factory=list)
 
 
 # ----------------------------------------------------------------------------
@@ -217,6 +223,12 @@ class RAGPipeline:
     top_k: int = DEFAULT_TOP_K
     oos_threshold: float = DEFAULT_OOS_THRESHOLD
     adaptive_top_k: bool = True
+    # Phase 4.2: PII redaction before query crosses provider boundary.
+    # Default ON in production framing — system that handles LGPD must
+    # itself comply. Disable in tests where deterministic embeddings of
+    # raw query are needed.
+    redact_pii: bool = True
+    pii_audit_log: Path | None = DEFAULT_AUDIT_LOG_PATH
     corpus_urns: frozenset[str] = field(init=False)
 
     def __post_init__(self) -> None:
@@ -225,17 +237,38 @@ class RAGPipeline:
     # ------------------------------------------------------------------
 
     def answer(self, query: str) -> RAGAnswer:
-        # Classifier runs FIRST, before retrieval, because its output
-        # determines the retrieval depth. Pure-regex; no API call.
+        # PII redaction comes FIRST — before classifier, retrieval, LLM.
+        # The query crosses no provider boundary in its original form.
+        # The classifier operates on the redacted query (placeholders
+        # preserve the semantic shape — "vazaram [CPF#1] do [PERSON#1]"
+        # still classifies as paráfrase, which is the right call).
+        import contextlib
+
+        rq: RedactedQuery | None = None
+        if self.redact_pii:
+            rq = redact(query)
+            query_for_pipeline = rq.redacted_text
+            if self.pii_audit_log is not None:
+                # Audit log write failure is non-fatal for the query path.
+                # Production should monitor this via logging; for v0 we
+                # silently degrade (better to serve the user than 500).
+                with contextlib.suppress(OSError):
+                    write_audit(rq, self.pii_audit_log)
+        else:
+            query_for_pipeline = query
+
+        # Classifier runs on the redacted query (preserves semantic shape).
         if self.adaptive_top_k:
-            classified = classify_query(query)
+            classified = classify_query(query_for_pipeline)
             effective_top_k = TOP_K_PER_TYPE.get(classified, self.top_k)
         else:
             classified = None
             effective_top_k = self.top_k
 
-        retrieved = self._retrieve(query, effective_top_k)
+        retrieved = self._retrieve(query_for_pipeline, effective_top_k)
         top1_score = retrieved[0][1] if retrieved else 0.0
+
+        pii_types = sorted(rq.pii_types_found) if rq else []
 
         # Fast-path OOS: cosine top-1 too low to bother calling the LLM.
         # Threshold is intentionally lenient; the LLM does the substantive
@@ -253,15 +286,18 @@ class RAGPipeline:
                 raw_retrieval=retrieved,
                 classified_type=classified,
                 classified_top_k=effective_top_k,
+                pii_types_redacted=pii_types,
             )
 
         context = self._build_context(retrieved)
         # Per-type prompt snippet (Phase 4.1) — appended to the base
         # SYSTEM_PROMPT so the model gets shape-specific guidance without
         # losing the load-bearing rules (cite-and-verify, vigência flag).
-        snippet = prompt_snippet_for_query(query) if self.adaptive_top_k else ""
+        snippet = (
+            prompt_snippet_for_query(query_for_pipeline) if self.adaptive_top_k else ""
+        )
         system_prompt = SYSTEM_PROMPT + ("\n\n" + snippet if snippet else "")
-        user_msg = f"Pergunta: {query}\n\nFontes:\n{context}"
+        user_msg = f"Pergunta: {query_for_pipeline}\n\nFontes:\n{context}"
         result = self.llm.complete_structured(system_prompt, user_msg, ANSWER_TOOL)
 
         answer_text = str(result.get("answer", ""))
@@ -289,6 +325,7 @@ class RAGPipeline:
             flagged_vigencia=flagged,
             classified_type=classified,
             classified_top_k=effective_top_k,
+            pii_types_redacted=pii_types,
         )
 
     # ------------------------------------------------------------------
