@@ -34,6 +34,11 @@ import numpy as np
 from rag_leis.embeddings import Embedder, Vec, get_embedder
 from rag_leis.eval_harness import IndexChunk, format_texts, load_chunks
 from rag_leis.llm import LLM, get_llm
+from rag_leis.query_type import (
+    TOP_K_PER_TYPE,
+    classify_query,
+    prompt_snippet_for_query,
+)
 from rag_leis.verify import verify_citations
 from rag_leis.vigencia import Vigencia, vigencia_warning
 
@@ -186,6 +191,11 @@ class RAGAnswer:
     refusal_reason: str | None
     raw_retrieval: list[tuple[str, float]]         # (urn, cosine_sim) top-K
     flagged_vigencia: list[FlaggedVigencia] = field(default_factory=list)
+    # Phase 4.1 observability: which type the classifier assigned + the
+    # effective top_k used. None when the pipeline refused on the cosine
+    # fast-path (no classifier run, no retrieval beyond top-1).
+    classified_type: str | None = None
+    classified_top_k: int | None = None
 
 
 # ----------------------------------------------------------------------------
@@ -200,8 +210,13 @@ class RAGPipeline:
     doc_vecs: Vec
     chunks_by_urn: dict[str, IndexChunk]
     llm: LLM
+    # `top_k` is now the FALLBACK / classifier-disabled default. When the
+    # classifier is enabled (default True), it picks top_k per query type
+    # from query_type.TOP_K_PER_TYPE. Callers can disable classifier to
+    # restore Phase 2 behavior for A/B comparison.
     top_k: int = DEFAULT_TOP_K
     oos_threshold: float = DEFAULT_OOS_THRESHOLD
+    adaptive_top_k: bool = True
     corpus_urns: frozenset[str] = field(init=False)
 
     def __post_init__(self) -> None:
@@ -210,7 +225,16 @@ class RAGPipeline:
     # ------------------------------------------------------------------
 
     def answer(self, query: str) -> RAGAnswer:
-        retrieved = self._retrieve(query)
+        # Classifier runs FIRST, before retrieval, because its output
+        # determines the retrieval depth. Pure-regex; no API call.
+        if self.adaptive_top_k:
+            classified = classify_query(query)
+            effective_top_k = TOP_K_PER_TYPE.get(classified, self.top_k)
+        else:
+            classified = None
+            effective_top_k = self.top_k
+
+        retrieved = self._retrieve(query, effective_top_k)
         top1_score = retrieved[0][1] if retrieved else 0.0
 
         # Fast-path OOS: cosine top-1 too low to bother calling the LLM.
@@ -227,11 +251,18 @@ class RAGPipeline:
                     f"cosine fast-path: top-1 {top1_score:.3f} < {self.oos_threshold:.3f}"
                 ),
                 raw_retrieval=retrieved,
+                classified_type=classified,
+                classified_top_k=effective_top_k,
             )
 
         context = self._build_context(retrieved)
+        # Per-type prompt snippet (Phase 4.1) — appended to the base
+        # SYSTEM_PROMPT so the model gets shape-specific guidance without
+        # losing the load-bearing rules (cite-and-verify, vigência flag).
+        snippet = prompt_snippet_for_query(query) if self.adaptive_top_k else ""
+        system_prompt = SYSTEM_PROMPT + ("\n\n" + snippet if snippet else "")
         user_msg = f"Pergunta: {query}\n\nFontes:\n{context}"
-        result = self.llm.complete_structured(SYSTEM_PROMPT, user_msg, ANSWER_TOOL)
+        result = self.llm.complete_structured(system_prompt, user_msg, ANSWER_TOOL)
 
         answer_text = str(result.get("answer", ""))
         cited = [str(u) for u in result.get("citations", [])]
@@ -256,6 +287,8 @@ class RAGPipeline:
             refusal_reason="llm-self-refusal" if self_refused else None,
             raw_retrieval=retrieved,
             flagged_vigencia=flagged,
+            classified_type=classified,
+            classified_top_k=effective_top_k,
         )
 
     # ------------------------------------------------------------------
@@ -285,10 +318,14 @@ class RAGPipeline:
 
     # ------------------------------------------------------------------
 
-    def _retrieve(self, query: str) -> list[tuple[str, float]]:
+    def _retrieve(self, query: str, top_k: int | None = None) -> list[tuple[str, float]]:
+        """Retrieve top_k chunks. `top_k=None` falls back to the pipeline
+        default (set at construction). Callers pass an explicit `top_k`
+        when the classifier has picked a type-specific value."""
+        k = top_k if top_k is not None else self.top_k
         q_vec = self.embedder.embed_query(query)
         sims = self.doc_vecs @ q_vec
-        top_idx = np.argsort(-sims)[: self.top_k]
+        top_idx = np.argsort(-sims)[:k]
         return [(self.urns[i], float(sims[i])) for i in top_idx]
 
     def _build_context(self, retrieved: list[tuple[str, float]]) -> str:

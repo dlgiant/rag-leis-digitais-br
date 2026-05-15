@@ -461,6 +461,8 @@ def serialize_row(r: EvalRow) -> dict[str, Any]:
             }
             for fv in r.answer.flagged_vigencia
         ],
+        "classified_type": r.answer.classified_type,
+        "classified_top_k": r.answer.classified_top_k,
         "cit_precision": r.cit_precision,
         "cit_precision_lenient": r.cit_precision_lenient,
         "cit_recall": r.cit_recall,
