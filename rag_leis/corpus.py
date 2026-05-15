@@ -71,6 +71,14 @@ TIER_1: tuple[Document, ...] = (
         title="Código de Defesa do Consumidor (Lei 8.078/1990)",
         planalto_url="https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm",
     ),
+    # Habeas data procedimento — fecha o gold de habeas data que estava
+    # incompleto desde Phase 2.5 (CF art.5;LXXII define o remédio; sem
+    # esta lei, não tem o procedimento que um advogado responderia).
+    Document(
+        urn="urn:lex:br:federal:lei:1997-11-12;9507",
+        title="Lei 9.507/1997 — disciplina o direito de acesso a informações e o procedimento do habeas data",
+        planalto_url="https://www.planalto.gov.br/ccivil_03/leis/l9507.htm",
+    ),
 )
 
 

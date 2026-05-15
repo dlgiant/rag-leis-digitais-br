@@ -98,13 +98,32 @@
     - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"
     - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a"
     - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b"
+  alternative_acceptable_urns:
+    # Lei 9.507/97 disciplina o procedimento (added Phase 3.2). The CF gives
+    # the remédio; this lei gives the rito + acrescenta uma 3ª hipótese
+    # (anotação) que NÃO está na CF. art.2/4 são procedimento administrativo
+    # (pré-judicial); art.7 + incs são as hipóteses de cabimento judicial,
+    # com inc1/inc2 mirrors of CF alíneas a/b e inc3 = hipótese adicional;
+    # art.8 = petição inicial.
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art2"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art4"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art7"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc3"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art8"
   expected_paragraph: |
     A Constituição (art. 5º, LXXII) prevê o habeas data como remédio
     constitucional para (a) assegurar o conhecimento de informações
     relativas à pessoa do impetrante constantes de registros ou bancos de
     dados de entidades governamentais ou de caráter público, e (b) para
     retificação desses dados quando não se prefira fazê-lo por processo
-    sigiloso, judicial ou administrativo.
+    sigiloso, judicial ou administrativo. O procedimento, tanto na via
+    administrativa quanto na judicial, é disciplinado pela Lei 9.507/1997
+    (art. 2º — requerimento administrativo; art. 4º — retificação; art.
+    7º — hipóteses de cabimento da ação judicial, incluindo, além das
+    duas hipóteses constitucionais, a anotação de contestação sobre dado
+    verdadeiro mas justificável (inc. III); art. 8º — petição inicial).
 
 # ============================================================================
 # ENUMERACAO (4)
@@ -274,21 +293,42 @@
     - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"
     - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a"
     - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b"
+    # Lei 9.507/97 — procedimento administrativo do habeas data, that
+    # mirrors directly the substantive rights LGPD operationalizes for
+    # the private-controller side. art.2 (requerimento) ≈ LGPD acesso;
+    # art.4 (retificação) ≈ LGPD correção.
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art2"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art4"
     # LGPD half: art. 18 II (acesso ≈ habeas data ali-a), III (correção ≈
     # habeas data ali-b retificação), IV (anonimização/bloqueio/eliminação).
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc3"
     - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc4"
+  alternative_acceptable_urns:
+    # 9.507 art.7 + incs (mirror of CF + additional hypothesis "anotação")
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art7"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc3"
+    # LGPD art.17 (titularidade — foundational) + procedural §§ of art.18
+    # describing how to exercise the rights (peticionar à ANPD, requerimento
+    # expresso, exercício perante órgão de defesa do consumidor).
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art17"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;par1"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;par3"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;par8"
   expected_paragraph: |
     A Constituição (art. 5º, LXXII) garante o habeas data para acesso a
     informações pessoais em registros governamentais ou de caráter público
-    e para sua retificação. A LGPD operacionaliza esses direitos na esfera
-    do controlador privado: o art. 18, II, assegura o direito de acesso
-    aos dados; o art. 18, III, o direito à correção de dados incompletos,
-    inexatos ou desatualizados (análogo à retificação do habeas data); e
-    o art. 18, IV, o direito à anonimização, bloqueio ou eliminação de
-    dados desnecessários, excessivos ou tratados em desconformidade com
-    a Lei.
+    e para sua retificação; o procedimento administrativo correspondente
+    é disciplinado pela Lei 9.507/1997 (art. 2º — requerimento de acesso;
+    art. 4º — pedido de retificação). A LGPD operacionaliza direitos
+    análogos na esfera do controlador privado: o art. 18, II, assegura o
+    direito de acesso aos dados; o art. 18, III, o direito à correção de
+    dados incompletos, inexatos ou desatualizados (análogo à retificação
+    do habeas data); e o art. 18, IV, o direito à anonimização, bloqueio
+    ou eliminação de dados desnecessários, excessivos ou tratados em
+    desconformidade com a Lei.
 
 # ============================================================================
 # Vigência overlay row (added 2026-05-14, Phase 3.1)
