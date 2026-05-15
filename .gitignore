@@ -18,7 +18,13 @@ build/
 # subdirs (instead of just `data/`) so curated layers like data/vigencia
 # can stay tracked.
 data/raw/
-data/chunks/
+# data/chunks/ — usar wildcard em vez de dir-exclusion para permitir
+# re-inclusão seletiva (git não permite re-include dentro de dir excluído).
+data/chunks/*
+# Tier 4 jurisprudência é fonte primária (manualmente escrita; sem parser
+# até Phase 6.3) — deve ser commitada.
+!data/chunks/tier-4/
+!data/chunks/tier-4/**
 data/index/
 data/metadata/
 # PII audit log — production telemetry; never commit (contains hashes

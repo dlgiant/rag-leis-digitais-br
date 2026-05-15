@@ -149,3 +149,64 @@ TIER_3: tuple[Document, ...] = (
     #     planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
     # ),
 )
+
+
+# Tier 4 — jurisprudência (Phase 6.1). Súmulas STJ + temas de repercussão geral
+# STF. Cada Document aqui é um enunciado/tese atômico — sem hierarquia LCP-95.
+# `planalto_url` repurposed para portal.stf.jus.br / scon.stj.jus.br (mesmo
+# precedent do Tier-3 ANPD: o struct é genérico, o caminho é canônico do tribunal).
+#
+# Ingestion: manual (Phase 6.1) — chunks escritos à mão pelo Claude Code com
+# texto verbatim de fontes públicas (STJ súmulas) ou stubs marcados como
+# `status: "pendente_revisao_juridica"` para itens cuja tese verbatim depende
+# de revisão D7 (lawyer-review-checklist.md item 5).
+#
+# Real scrapers contra portal.stf.jus.br + scon.stj.jus.br ficam para Phase 6.3
+# (gated). Hierarchy warning para distinguir tese-fixada vs pendente é Phase 6.5.
+TIER_4: tuple[Document, ...] = (
+    # STJ Súmulas — Segunda Seção / Corte Especial. Rank 5 (orientativa).
+    Document(
+        urn="urn:lex:br:superior.tribunal.justica:sumula:1999-09-08;227",
+        title="STJ Súmula 227 — Pessoa jurídica e dano moral",
+        planalto_url="https://scon.stj.jus.br/SCON/sumanot/toc.jsp?livre=(sumula%20adj1%20%27227%27).sub.",
+    ),
+    Document(
+        urn="urn:lex:br:superior.tribunal.justica:sumula:2009-10-28;403",
+        title="STJ Súmula 403 — Publicação não autorizada de imagem com fins econômicos",
+        planalto_url="https://scon.stj.jus.br/SCON/sumanot/toc.jsp?livre=(sumula%20adj1%20%27403%27).sub.",
+    ),
+    Document(
+        urn="urn:lex:br:superior.tribunal.justica:sumula:2012-06-27;479",
+        title="STJ Súmula 479 — Responsabilidade objetiva das instituições financeiras por fraude de terceiros",
+        planalto_url="https://scon.stj.jus.br/SCON/sumanot/toc.jsp?livre=(sumula%20adj1%20%27479%27).sub.",
+    ),
+    # STF Temas de Repercussão Geral. Rank 3 quando tese fixada.
+    # Tema 786 — tese fixada 11/02/2021 (ARE 833.248, Caso Aída Curi).
+    Document(
+        urn="urn:lex:br:supremo.tribunal.federal:tema:786",
+        title="STF Tema 786 — Direito ao esquecimento (incompatibilidade com a Constituição)",
+        planalto_url="https://portal.stf.jus.br/jurisprudenciaRepercussao/verAndamentoProcesso.asp?incidente=4623869&numeroProcesso=833248",
+    ),
+    # Tema 987 — RE 1.037.396 + RE 1.057.258. Julgamento concluído em jun/2024
+    # (declaração de inconstitucionalidade parcial do art. 19 MCI). Stub aqui:
+    # tese verbatim depende de revisão D7 antes de produção.
+    Document(
+        urn="urn:lex:br:supremo.tribunal.federal:tema:987",
+        title="STF Tema 987 — Constitucionalidade do art. 19 do Marco Civil da Internet",
+        planalto_url="https://portal.stf.jus.br/jurisprudenciaRepercussao/verAndamentoProcesso.asp?incidente=5160549&numeroProcesso=1037396",
+    ),
+    # Tema 533 — RE 601.314. Sigilo bancário e Receita Federal sem ordem judicial.
+    # Stub: tese verbatim depende de revisão D7.
+    Document(
+        urn="urn:lex:br:supremo.tribunal.federal:tema:533",
+        title="STF Tema 533 — Compartilhamento de dados bancários com a Receita Federal",
+        planalto_url="https://portal.stf.jus.br/jurisprudenciaRepercussao/verAndamentoProcesso.asp?incidente=2641697&numeroProcesso=601314",
+    ),
+    # Tema 815 — RE 1.058.244. Bloqueio judicial de aplicações por
+    # descumprimento. Stub: tese verbatim depende de revisão D7.
+    Document(
+        urn="urn:lex:br:supremo.tribunal.federal:tema:815",
+        title="STF Tema 815 — Bloqueio judicial de aplicações de internet por descumprimento de ordem",
+        planalto_url="https://portal.stf.jus.br/jurisprudenciaRepercussao/verTemasComRepercussaoGeral.asp",
+    ),
+)
