@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,44 @@ import yaml
 from rag_leis.embeddings import Embedder, Vec
 from rag_leis.legal_rank import DEFAULT_RANK, legal_rank_for_urn
 from rag_leis.vigencia import Vigencia
+
+# Phase 5.7: Emenda Constitucional reference patterns in chunk.notes.
+# Parser already strips "(Incluído pela EC nº X, de YYYY)" / "(Redação dada
+# pela EC nº X, de YYYY)" into the notes list at parse time. This regex
+# extracts the EC number+year into a structured form.
+_EC_NOTE_RE = re.compile(
+    r"(?:Inclu[ií]d[ao] pela|Reda[çc][ãa]o dada pela)\s+"
+    r"Emenda Constitucional\s+n[º°o]?\s*"
+    r"(\d+)\s*,\s*de\s*(\d{4})",
+    re.IGNORECASE,
+)
+
+
+def _extract_amended_by(notes: list[str]) -> list[str]:
+    """Parse parser-emitted notes for Emenda Constitucional references.
+
+    Returns short tokens like ["EC-115/2022", "EC-45/2004"] sorted by year
+    descending (most recent amendment first). Empty list when no EC
+    references found — covers original CF/88 dispositivos and
+    non-constitutional documents.
+    """
+    out: list[tuple[int, int, str]] = []
+    for note in notes:
+        for m in _EC_NOTE_RE.finditer(note):
+            num = int(m.group(1))
+            year = int(m.group(2))
+            token = f"EC-{num}/{year}"
+            out.append((year, num, token))
+    # Sort: most recent year first, ties by EC number desc
+    out.sort(key=lambda t: (-t[0], -t[1]))
+    # Dedup preserving order
+    seen: set[str] = set()
+    result: list[str] = []
+    for _, _, tok in out:
+        if tok not in seen:
+            seen.add(tok)
+            result.append(tok)
+    return result
 
 
 @dataclass(frozen=True)
@@ -32,6 +71,11 @@ class IndexChunk:
     # for the fetch+parse date. Used by RAGPipeline to render
     # "consultado em DD/MM/AAAA" footers — practitioner transparency.
     fetched_at: str = ""
+    # Phase 5.7: Emendas Constitucionais que introduziram ou alteraram o
+    # dispositivo. Empty for original CF text and non-CF documents.
+    # Extracted from chunk.notes at load time (parser already strips
+    # "(Incluído pela EC nº X)" patterns into notes).
+    amended_by: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -172,6 +216,7 @@ def load_chunks(
                 vigencia=overlays.get(obj["urn"]),
                 legal_rank=legal_rank_for_urn(obj["document_urn"]),
                 fetched_at=fetched_at_by_doc.get(obj["document_urn"], ""),
+                amended_by=tuple(_extract_amended_by(obj.get("notes", []))),
             )
         )
     return out

@@ -282,8 +282,46 @@
     indenização pelo dano material ou moral decorrente de sua violação.
 
 # ============================================================================
-# CROSS-DOC (1)
+# CROSS-DOC (2)
 # ============================================================================
+
+# Phase 5.8 — forces lei → decreto traversal. The MCI (lei, rank 3) defines
+# the duty to retain logs; the Decreto 8.771 (rank 4) regulates the security
+# requirements for that retention. A correct answer cites BOTH. If the model
+# cites only the Decreto, hierarchy_warning fires (Phase 5.2 signal).
+- query: "o que o decreto regulamentador do Marco Civil diz sobre guarda de logs e segurança dos dados retidos?"
+  type: cross-doc
+  oos: false
+  gold_urns:
+    # MCI side — the lei that creates the obligation
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art13"  # registros de conexão (1 ano)
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art15"  # registros de aplicação (6 meses)
+    # Decreto regulamentador — the concrete security requirements
+    - "urn:lex:br:federal:decreto:2016-05-11;8771~art13"
+  alternative_acceptable_urns:
+    # MCI siblings: § 2 do art.10 (sigilo das comunicações), art.10§3 (autoridade)
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art10"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art10;par2"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art10;par3"
+    # Decreto 8.771 art.13 incs (security diretrizes I-IV)
+    - "urn:lex:br:federal:decreto:2016-05-11;8771~art13;inc1"
+    - "urn:lex:br:federal:decreto:2016-05-11;8771~art13;inc2"
+    - "urn:lex:br:federal:decreto:2016-05-11;8771~art13;inc3"
+    - "urn:lex:br:federal:decreto:2016-05-11;8771~art13;inc4"
+  expected_paragraph: |
+    O Marco Civil da Internet (Lei 12.965/2014) estabelece o dever de
+    guarda dos registros: o art. 13 obriga o administrador de sistema
+    autônomo a manter os registros de conexão por 1 ano em ambiente
+    controlado e de segurança; o art. 15 impõe ao provedor de aplicações
+    constituído como pessoa jurídica e com fins econômicos manter os
+    registros de acesso a aplicações por 6 meses. O Decreto 8.771/2016,
+    que regulamenta o Marco Civil, detalha os padrões de segurança
+    aplicáveis a essa guarda no art. 13, exigindo dos provedores
+    diretrizes como controle estrito do acesso, mecanismos de
+    autenticação, inventário detalhado de acessos e uso de soluções de
+    gestão de registros. A primazia normativa é da Lei (MCI); o Decreto
+    regulamenta — uma resposta tecnicamente correta cita ambas, com a
+    Lei como fundamento e o Decreto como detalhamento operacional.
 
 - query: "habeas data e direitos do titular de dados"
   type: cross-doc
