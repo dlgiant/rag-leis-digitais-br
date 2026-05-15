@@ -2,6 +2,22 @@
 
 Itens identificados mas não-aplicados — pra retomar quando for prioridade.
 
+## ⚠️ Pre-launch dependency: lawyer review
+
+Antes de Phase 9 (compliance) acontecer, há trabalho de validação
+jurídica externa acumulando. Lista priorizada está em
+**`study/lawyer-review-checklist.md`** — referência canônica desse
+escopo. Inclui:
+
+- 🔴 Bloqueadores: hierarquia normativa quando fontes secundárias
+  mascaram primárias (ex: row 7 sanções), vigência overlay
+  insuficiente, cross-doc gold incompleto
+- 🟡 Importantes: 3rd precision tier, OOS adversariais, PII coverage
+- 🟢 Refinamentos: citation prose check, source-as-of-date
+
+D7 do `study/post-review-plan.md`: "vou conseguir antes de Phase 9 mas
+não agora". Quando contratar, esse doc é o handoff list.
+
 ## Eval / gold
 
 - **Revisar gold da query Tier-2 [T8] cross-doc** — "interação digital com o governo: proteção de dados e princípios". Proposta original em `eval/tier-2-queries-proposal.md` listava core = `14129 art.3 inc17` + `LGPD art.6` + `LGPD art.6;inc7`, supporting = `LGPD art.46` + `14063 art.5`. Cross-doc Tier-1×Tier-2 precisa validação manual: a query é abrangente e o gold pode estar incompleto (mesma classe de queries onde [13] foi corrigido em sessão anterior). Aplicar T1-T7 sem este, voltar com revisão dedicada.
