@@ -102,3 +102,46 @@ TIER_2: tuple[Document, ...] = (
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11419.htm",
     ),
 )
+
+
+# Tier 3 — ANPD resoluções. Synthetic URN scheme (Phase 4.3.a, decided
+# in study/lexml-urn-spec-resumo.md): `resolucao.cd` qualifies the type
+# because ANPD has not all-CD-issued acts. The `planalto_url` field is
+# repurposed for ANPD's gov.br canonical path (we keep the same struct
+# because the fetch_tier infrastructure is generic; ANPD has no Planalto
+# entry).
+#
+# CAVEAT — Phase 4.3.a only delivers Res. 15/2024 end-to-end (single-PDF
+# clean source via lgpd.ms.gov.br mirror). Res. 1/2021, 2/2022, 4/2023 are
+# distributed by ANPD as 274-917 page SEI bundles (ofícios + notas técnicas
+# + the regulamento). The 20-page Read tool limit makes Claude-Code
+# transcription impractical. They are GATED on Phase 4.3.b (real pdfplumber
+# parser) before production deploy.
+TIER_3: tuple[Document, ...] = (
+    Document(
+        urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15",
+        title="Resolução CD/ANPD nº 15/2024 — Regulamento de Comunicação de Incidente de Segurança",
+        planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
+    ),
+    # ----------------------------------------------------------------------
+    # The 3 below are GATED on Phase 4.3.b (real pdfplumber parser). They
+    # are listed in TIER_3 for API completeness (so corpus.py reflects the
+    # planned scope) but their JSONL files do NOT exist yet. parse_all_tier
+    # --tier 3 will fail loud on these until 4.3.b ships.
+    # ----------------------------------------------------------------------
+    # Document(
+    #     urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2021-10-28;1",
+    #     title="Resolução CD/ANPD nº 1/2021 — Regulamento do Processo de Fiscalização e Sancionador",
+    #     planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
+    # ),
+    # Document(
+    #     urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2022-01-27;2",
+    #     title="Resolução CD/ANPD nº 2/2022 — Aplicação da LGPD a agentes de tratamento de pequeno porte",
+    #     planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
+    # ),
+    # Document(
+    #     urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4",
+    #     title="Resolução CD/ANPD nº 4/2023 — Regulamento de Dosimetria e Aplicação de Sanções Administrativas",
+    #     planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
+    # ),
+)
