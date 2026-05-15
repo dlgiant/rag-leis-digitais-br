@@ -399,12 +399,28 @@
     constitucionalidade.
 
 # ============================================================================
-# OOS (3) — clearly outside the corpus; pipeline should refuse
+# OOS (15) — Phase 5.1 expanded taxonomy.
+#
+# Subtypes (per reviewer round 2):
+#   a) other_domain        — outras matérias inteiras (IRPF, divórcio)
+#   b) adjacent_no_coverage — direito digital adjacente, falta no corpus
+#                             (Meta vs usuário BR, Lei IA, interceptação)
+#   c) projeto_de_lei       — PLs em tramitação, não promulgados
+#   d) materia_estadual_municipal — fora competência federal indexada
+#   e) doutrina_sem_positivacao   — princípios não positivados
+#
+# Subtypes (b) and (c) são onde o pipeline é mais frágil — model finds
+# adjacent chunks via cosine, may answer partial instead of refuse.
+# Pipeline behavior should be: refuse + canonical message indicating
+# WHY (PL não promulgado / fora do corpus).
 # ============================================================================
+
+# --- Subtype (a) — other domain entirely (4 rows; 3 originals + 1 new) ----
 
 - query: "qual a alíquota do imposto de renda para pessoa física em 2025?"
   type: oos
   oos: true
+  oos_subtype: a
   gold_urns: []
   expected_paragraph: |
     O corpus do projeto cobre legislação digital brasileira (LGPD, MCI,
@@ -414,6 +430,7 @@
 - query: "como funciona o divórcio judicial no Brasil?"
   type: oos
   oos: true
+  oos_subtype: a
   gold_urns: []
   expected_paragraph: |
     O corpus do projeto cobre legislação digital brasileira (LGPD, MCI,
@@ -423,9 +440,151 @@
 - query: "quais os requisitos para registrar uma marca no INPI?"
   type: oos
   oos: true
+  oos_subtype: a
   gold_urns: []
   expected_paragraph: |
     O corpus do projeto cobre direitos autorais (Lei 9.610) e software
     (Lei 9.609), mas não propriedade industrial (Lei 9.279/1996 — marcas
     e patentes). A pipeline deve recusar com "fora do escopo da base" ou
     equivalente.
+
+- query: "qual o procedimento de licitação pela Nova Lei de Licitações (Lei 14.133/2021)?"
+  type: oos
+  oos: true
+  oos_subtype: a
+  gold_urns: []
+  expected_paragraph: |
+    Lei 14.133/2021 (Nova Lei de Licitações) não está indexada no corpus.
+    Pipeline deve recusar.
+
+# --- Subtype (b) — adjacent without coverage (4 rows) ---------------------
+
+- query: "Posso processar a Meta no Brasil pelo uso indevido de meus dados sem consentimento?"
+  type: oos
+  oos: true
+  oos_subtype: b
+  gold_urns: []
+  expected_paragraph: |
+    Embora envolva LGPD (cobrada no corpus), a resposta operacional
+    requer: regras de competência judicial (CPC arts. 21-25 — fora do
+    corpus), responsabilidade civil específica (CC arts. 186, 927 — fora
+    do corpus), regras de jurisdição internacional (LICC/LINDB — fora do
+    corpus), e jurisprudência sobre processamento de empresas estrangeiras
+    com filial no BR (não indexada — Tier-4 jurisprudência). Pipeline
+    deve refusar ou responder apenas a parte LGPD com aviso explícito de
+    que os aspectos processuais e de competência estão fora do escopo.
+
+- query: "Lei brasileira de Inteligência Artificial: o que muda para empresas que usam IA generativa?"
+  type: oos
+  oos: true
+  oos_subtype: b
+  gold_urns: []
+  expected_paragraph: |
+    Não há Lei de IA brasileira vigente. PL 2338/2023 está em tramitação
+    no Senado/Câmara mas NÃO foi promulgado. O corpus indexa LGPD (que
+    aplica-se a tratamento de dados por IA) mas NÃO PLs em tramitação.
+    Pipeline deve refusar e indicar que a base não acompanha PLs
+    pendentes.
+
+- query: "Como funciona a interceptação telefônica autorizada por juiz no Brasil?"
+  type: oos
+  oos: true
+  oos_subtype: b
+  gold_urns: []
+  expected_paragraph: |
+    Lei 9.296/1996 (interceptação de comunicações telefônicas) não está
+    indexada no corpus, ainda que MCI art. 10 §2 a referencie. Pipeline
+    deve refusar (ou responder apenas a referência cruzada do MCI sem
+    detalhar o procedimento).
+
+- query: "Marco Legal das Startups (LC 182/2021) e tratamento de dados de investidores"
+  type: oos
+  oos: true
+  oos_subtype: b
+  gold_urns: []
+  expected_paragraph: |
+    LC 182/2021 (Marco Legal das Startups) não está indexada no corpus.
+    Pipeline pode citar LGPD para a parte de tratamento de dados, mas
+    deve refusar a parte específica do Marco Legal das Startups.
+
+# --- Subtype (c) — projeto de lei não promulgado (3 rows) ------------------
+
+- query: "PL 2630/2020 sobre fake news: o que ficou aprovado?"
+  type: oos
+  oos: true
+  oos_subtype: c
+  gold_urns: []
+  expected_paragraph: |
+    PL 2630/2020 (Lei das Fake News) está em tramitação na Câmara dos
+    Deputados, ainda não foi aprovado e sancionado. NÃO é lei vigente.
+    Pipeline deve refusar e indicar canonicamente: "esta matéria não tem
+    norma federal vigente; existem PLs em tramitação que esta base não
+    acompanha."
+
+- query: "PL 4408/2021 sobre criptoativos: principais disposições"
+  type: oos
+  oos: true
+  oos_subtype: c
+  gold_urns: []
+  expected_paragraph: |
+    PL 4408/2021 ou outras propostas sobre criptoativos não são lei
+    vigente. Lei 14.478/2022 (Marco dos Criptoativos) também não está
+    indexada. Pipeline deve refusar — base cobre direito digital indexado,
+    não PLs pendentes.
+
+- query: "Marco Legal dos Games (PL 2796/2021): regras atuais para empresas"
+  type: oos
+  oos: true
+  oos_subtype: c
+  gold_urns: []
+  expected_paragraph: |
+    PL 2796/2021 está em tramitação. Não é lei vigente. Pipeline deve
+    refusar com mensagem indicando PL não promulgado.
+
+# --- Subtype (d) — matéria estadual / municipal (2 rows) -------------------
+
+- query: "Lei estadual paulista sobre câmeras de segurança em vias públicas"
+  type: oos
+  oos: true
+  oos_subtype: d
+  gold_urns: []
+  expected_paragraph: |
+    Corpus cobre apenas legislação federal. Leis estaduais de SP sobre
+    câmeras (vide Lei 17.245/2020 SP, decretos correlatos) NÃO estão
+    indexadas. Pipeline deve refusar.
+
+- query: "decreto municipal do Rio de Janeiro sobre dados em apps de transporte"
+  type: oos
+  oos: true
+  oos_subtype: d
+  gold_urns: []
+  expected_paragraph: |
+    Legislação municipal não está no corpus (apenas federal). Pipeline
+    deve refusar.
+
+# --- Subtype (e) — doutrina sem positivação (1 row) -----------------------
+
+- query: "Princípio da minimização excessiva como fundamento autônomo de invalidade do tratamento"
+  type: oos
+  oos: true
+  oos_subtype: e
+  gold_urns: []
+  expected_paragraph: |
+    "Minimização excessiva" não é um princípio positivado autônomo na
+    LGPD (art. 6, III menciona "necessidade" / minimização, sem o
+    qualificador "excessiva"). É construção doutrinária. Pipeline pode
+    citar art. 6, III mas deve refusar a parte doutrinária — corpus não
+    indexa doutrina.
+
+- query: "direito ao esquecimento na internet brasileira como princípio autônomo"
+  type: oos
+  oos: true
+  oos_subtype: e
+  gold_urns: []
+  expected_paragraph: |
+    STF Tema 786 (2021) REJEITOU o direito ao esquecimento como
+    princípio autônomo no ordenamento brasileiro. Antes do Tema 786,
+    era doutrina/jurisprudência divergente. Pipeline deve refusar
+    (corpus não indexa jurisprudência STF nem doutrina) ou — se citar
+    LGPD art. 18 IV (eliminação) e MCI art. 21 (imagens íntimas), deve
+    fazer aviso de que NÃO é direito ao esquecimento como princípio.

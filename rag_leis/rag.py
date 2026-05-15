@@ -400,7 +400,8 @@ class RAGPipeline:
             retry_msg = f"{user_msg}\n\n--- CORREÇÃO SOLICITADA ---\n{reprompt}"
             try:
                 retry_result = self.llm.complete_structured(
-                    system_prompt, retry_msg, ANSWER_TOOL
+                    system_prompt, retry_msg, ANSWER_TOOL,
+                    max_tokens=4096,  # bump for retry — reprompt adds context
                 )
                 # Take the retry's output regardless — even if mismatches
                 # remain. The flag tells the caller a retry happened.
@@ -410,11 +411,11 @@ class RAGPipeline:
                     cited, retrieved_urns, self.corpus_urns
                 )
                 prose_mismatches = check_prose_vs_citations(answer_text, verified)
-            except RuntimeError:
-                # If the retry call fails (e.g., LLM tool-call breakage),
-                # fall back to the original output + mismatches. Production
-                # observability picks this up via prose_retried=True with
-                # mismatches still populated.
+            except Exception:
+                # Best-effort retry. Failures (max_tokens hit, 429, tool-call
+                # breakage, transport error, etc.) fall back to the original
+                # output. prose_retried=True with mismatches still populated
+                # is the production observability signal.
                 pass
 
         # LLM-self-refusal: model read the context and emitted the canonical
