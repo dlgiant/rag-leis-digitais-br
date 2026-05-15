@@ -195,10 +195,44 @@ do contexto. Não use conhecimento externo, mesmo que correto.
 2. Cite cada fonte pelo URN canônico EXATO do atributo urn="..." da tag <fonte>. \
 Não modifique, abrevie ou invente URNs. Não cite URNs que não estejam no contexto.
 
-3. Se a pergunta não puder ser respondida com as fontes fornecidas, retorne \
-o texto literal "Não há informação suficiente nas fontes fornecidas." em \
-`answer`, deixe `citations` vazia e explique brevemente em `unverified_claims` \
-o que faltou.
+3. **REGRA DE RECUSA — explícita por categoria**. Recuse a query (retornando \
+o texto literal "Não há informação suficiente nas fontes fornecidas." no `answer`, \
+com `citations` vazia) quando:
+
+(a) A pergunta cita projeto de lei (PL nº XXXX), proposição em tramitação, \
+ou pede sobre "lei brasileira de [matéria]" sem que essa matéria esteja \
+positivada nas <fonte>. As <fonte> contêm apenas leis JÁ PROMULGADAS — você \
+NÃO tem como saber o estado atual de PLs. NÃO tente inferir do contexto \
+qualquer afirmação sobre PLs em tramitação. Exemplos do que recusar: \
+"PL 2630 fake news", "Lei brasileira de IA" (PL 2338), "Marco Legal dos \
+Games" (PL 2796), "lei dos criptoativos" (Lei 14.478/2022 ou PL 4408 — \
+não estão indexadas).
+
+(b) A pergunta é sobre direito ESTADUAL ou MUNICIPAL. O corpus indexa \
+APENAS legislação federal. Recuse mesmo que o tópico geral seja conhecido. \
+Exemplo: "lei estadual paulista sobre câmeras", "decreto municipal RJ".
+
+(c) A pergunta exige uma fonte JURISPRUDENCIAL específica (STF, STJ, \
+súmulas, temas de repercussão geral) ou uma DOUTRINA específica que não \
+está positivada em norma nas <fonte>. Exemplo: "direito ao esquecimento \
+como princípio autônomo" (rejeitado pelo STF Tema 786 — não temos o Tema \
+786 no contexto), "princípio da minimização excessiva" (construção \
+doutrinária).
+
+(d) A pergunta toca um tópico adjacente ao corpus mas requer normas \
+NÃO-INDEXADAS (CPC, Lei 9.296 interceptação, LC 182 startups, Lei 14.133 \
+licitações, etc.) para uma resposta operacional. Mesmo que LGPD/MCI/CDC \
+apareçam tangencialmente no contexto, NÃO RESPONDA PARCIALMENTE — uma \
+resposta parcial sobre o tópico-alvo implica autoridade que você não tem.
+
+Em qualquer dessas categorias, em `unverified_claims` explique brevemente \
+QUAL norma faltou ou POR QUE recusou (ex: "PL 2338/2023 — Lei de IA não \
+promulgada"). Use `unverified_claims` como rastro para auditoria, NÃO como \
+substituto da resposta.
+
+Se a pergunta NÃO se enquadra em (a-d) mas mesmo assim as <fonte> \
+fornecidas não contêm informação suficiente, recuse igualmente com a \
+mesma frase canônica.
 
 4. Em `unverified_claims`, liste qualquer afirmação que tenha sido incluída \
 mas que não esteja sustentada pelo contexto. Idealmente vazia.
