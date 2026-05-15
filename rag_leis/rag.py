@@ -33,7 +33,7 @@ import numpy as np
 
 from rag_leis.embeddings import Embedder, Vec, get_embedder
 from rag_leis.eval_harness import IndexChunk, format_texts, load_chunks
-from rag_leis.llm import AnthropicLLM
+from rag_leis.llm import LLM, get_llm
 from rag_leis.verify import verify_citations
 from rag_leis.vigencia import Vigencia, vigencia_warning
 
@@ -199,7 +199,7 @@ class RAGPipeline:
     urns: list[str]
     doc_vecs: Vec
     chunks_by_urn: dict[str, IndexChunk]
-    llm: AnthropicLLM
+    llm: LLM
     top_k: int = DEFAULT_TOP_K
     oos_threshold: float = DEFAULT_OOS_THRESHOLD
     corpus_urns: frozenset[str] = field(init=False)
@@ -324,6 +324,7 @@ def load_pipeline(
     *,
     embedder_name: str = DEFAULT_EMBEDDER,
     text_mode: str = DEFAULT_TEXT_MODE,
+    llm_provider: str = "anthropic",
     llm_model: str | None = None,
     top_k: int = DEFAULT_TOP_K,
     oos_threshold: float = DEFAULT_OOS_THRESHOLD,
@@ -335,6 +336,9 @@ def load_pipeline(
     or absent we raise — building the index from inside a query path
     would be a slow surprise; the caller should run `run_eval.py` once
     to populate it.
+
+    `llm_provider` selects the LLM provider; `llm_model` overrides the
+    provider's default. Provider-aware via rag_leis.llm.get_llm().
     """
     from rag_leis.cache import cache_is_fresh, texts_hash
 
@@ -357,7 +361,7 @@ def load_pipeline(
     doc_vecs = loaded["vecs"]
     chunks_by_urn = {c.urn: c for c in chunks}
 
-    llm = AnthropicLLM(model=llm_model) if llm_model else AnthropicLLM()
+    llm = get_llm(provider=llm_provider, model=llm_model)
 
     return RAGPipeline(
         embedder=embedder,

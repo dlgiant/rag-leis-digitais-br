@@ -337,7 +337,7 @@ Pré-requisito pra deploy.
 | **D6 NEW** | Quando é production launch? | (n/a) | **precisa data clara pra gating de Phase 4.3.b/9.x** |
 | **D7 NEW** | Compliance budget? Lawyer disponível? | (n/a) | **precisa SIM/NÃO antes de Phase 9** |
 | **D8 NEW** | Multi-tenancy ou single-tenant production? | (n/a) | impacta Phase 7 (auth, rate limit) e Phase 8 (deploy) |
-| **D9 NEW** | Brazilian region requirement? | (n/a) | impacta Phase 8 deploy + Phase 9 ToS |
+| **D9 NEW** | Brazilian region requirement? | (n/a) | **RESOLVED 2026-05-15 — YES, hard requirement; swap to Marítaca Sabiá-3.1 generator. See [llm-provider-decision-2026-05-15](llm-provider-decision-2026-05-15.md). Anthropic stays as judge + Phase 7.4 fallback.** |
 | **D10 NEW** | SLA target (uptime, latency)? | (n/a) | impacta Phase 7 (resiliência) e Phase 8 (on-call) |
 
 D6-D10 são pré-requisitos de planejamento real. **Recomendação: scoping

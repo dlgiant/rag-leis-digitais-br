@@ -1,22 +1,28 @@
-"""Anthropic LLM wrapper for the Phase 2 RAG pipeline.
+"""LLM provider abstraction for the RAG pipeline.
 
-Two surfaces:
+The pipeline talks to LLMs through the `LLM` Protocol (mirrors the
+`Embedder` pattern in rag_leis.embeddings). One protocol, multiple
+provider impls — currently `AnthropicLLM`; Phase 4.0 adds `MaritacaLLM`
+for the LGPD-residency comparison; future Phase 7.4 may add Bedrock or
+self-hosted impls for fallback.
+
+Two surfaces every impl must support:
 
 * `complete()` — free-form text completion (used by the faithfulness judge).
-* `complete_structured()` — forces a tool-call with `tool_choice`, so the
-  model can only respond by emitting a JSON payload matching the supplied
-  schema. We use this to enforce the `{answer, citations, unverified_claims}`
-  contract for the generator.
+* `complete_structured()` — emit JSON matching the supplied tool/function
+  schema. Anthropic forces this via `tool_choice`; OpenAI-compatible
+  providers via `tool_choice={"type": "function", ...}` or function-call
+  forcing. The contract from the pipeline's perspective is that the
+  returned dict matches the tool's `input_schema`.
 
-Keys come from `.env` via python-dotenv (matches the pattern set by the
-existing Voyage/Cohere integrations). Models hard-coded as defaults but
-overridable per-instance.
+Keys come from `.env` via python-dotenv. Models hard-coded as defaults
+but overridable per-instance.
 """
 
 from __future__ import annotations
 
 import os
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 from anthropic import Anthropic
 from anthropic.types import TextBlock, ToolUseBlock
@@ -29,7 +35,44 @@ DEFAULT_GENERATOR_MODEL = "claude-sonnet-4-5"
 DEFAULT_JUDGE_MODEL = "claude-opus-4-7"
 
 
+@runtime_checkable
+class LLM(Protocol):
+    """Provider-agnostic LLM interface.
+
+    Concrete impls expose `name` (model identifier — e.g., "claude-sonnet-4-5",
+    "sabia-3") and `provider` (vendor — e.g., "anthropic", "maritaca") for
+    logging, cost attribution, and per-provider fallback decisions.
+
+    `complete_structured` must return a dict that matches the supplied
+    `tool_schema["input_schema"]`. If the underlying provider can't force
+    the schema (e.g., JSON mode without strict validation), the impl is
+    expected to retry or raise — never return a partial / invalid dict.
+    """
+
+    name: str
+    provider: str
+
+    def complete(
+        self,
+        system: str,
+        user: str,
+        max_tokens: int = 1024,
+        temperature: float | None = None,
+    ) -> str: ...
+
+    def complete_structured(
+        self,
+        system: str,
+        user: str,
+        tool_schema: dict[str, Any],
+        max_tokens: int = 2048,
+        temperature: float | None = None,
+    ) -> dict[str, Any]: ...
+
+
 class AnthropicLLM:
+    provider: str = "anthropic"
+
     def __init__(self, model: str = DEFAULT_GENERATOR_MODEL, api_key: str | None = None):
         key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not key:
@@ -38,6 +81,7 @@ class AnthropicLLM:
             )
         self.client = Anthropic(api_key=key)
         self.model = model
+        self.name = model  # protocol field — alias of model for callers
 
     def complete(
         self,
@@ -95,3 +139,20 @@ class AnthropicLLM:
             f"LLM did not return a tool_use block for {tool_schema['name']!r}; "
             f"stop_reason={resp.stop_reason!r}"
         )
+
+
+def get_llm(provider: str = "anthropic", model: str | None = None) -> LLM:
+    """Factory: construct an LLM by provider name.
+
+    `model=None` uses each provider's default generator model. Use
+    DEFAULT_JUDGE_MODEL etc. directly when you need a non-default.
+    """
+    if provider == "anthropic":
+        return AnthropicLLM(model=model or DEFAULT_GENERATOR_MODEL)
+    if provider == "maritaca":
+        # Imported lazily so callers without openai installed can still
+        # use the Anthropic path.
+        from rag_leis.maritaca import MaritacaLLM
+
+        return MaritacaLLM(model=model)
+    raise ValueError(f"Unknown LLM provider: {provider!r}. Known: anthropic, maritaca.")
