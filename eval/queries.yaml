@@ -239,7 +239,17 @@
       - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc12"
     supporting:
       - "urn:lex:br:federal:lei:2018-08-14;13709~art52"
-  notes: "Caput introduz, incisos são as sanções. VII–IX foram vetados."
+      - "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3"
+      - "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc1"
+      - "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc2"
+      - "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc3"
+      - "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc4"
+      - "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc5"
+      - "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc6"
+      - "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc7"
+      - "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc8"
+      - "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art3;inc9"
+  notes: "Caput introduz, incisos são as sanções. VII–IX foram vetados. Supporting: ANPD Res 4/2023 art.3 (regulamento de dosimetria — replica a lista de sanções com critérios operacionais). Phase 6.6 audit fix."
 
 - query: "o que NÃO constitui ofensa aos direitos do titular de software?"
   type: enumeracao
@@ -492,10 +502,17 @@
 - query: "se vazaram meus dados, qual o caminho legal pra eu reclamar?"
   type: cross-doc
   relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art48"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc4"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art42"
-  notes: "LGPD art. 48 (notificação), art. 18 IV (correção/exclusão), art. 42 (responsabilidade civil)."
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art48"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc4"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art42"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art42;par3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art42;par4"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art45"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art52;par7"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art55-j;inc24"
+  notes: "LGPD art. 48 (notificação), art. 18 IV (correção/exclusão), art. 42 (responsabilidade civil). Supporting: §§3-4 do art.42 (ação coletiva + regresso); art.45 (CDC route); art.52 §7 (conciliação direta); art.55-J XXIV (canal de reclamação à ANPD). Phase 6.6 audit fix."
 
 - query: "responsabilidade do provedor de aplicações por conteúdo de usuários"
   type: enumeracao
@@ -507,9 +524,15 @@
 - query: "compartilhamento de dados entre órgãos do governo é permitido?"
   type: cross-doc
   relevant:
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art26"
-    - "urn:lex:br:federal:lei:2011-11-18;12527~art31"
-  notes: "LGPD art. 26 (compartilhamento por poder público) + LAI art. 31 (tratamento de info pessoal por órgão)."
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art26"
+      - "urn:lex:br:federal:lei:2011-11-18;12527~art31"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art26;par1;inc1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art26;par1;inc3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art27;inc2"
+      - "urn:lex:br:federal:lei:2021-03-29;14129~art3;inc9"
+  notes: "LGPD art. 26 (regra) + LAI art. 31 (tratamento info pessoal por órgão). Supporting: art.26 §1 I/III (hipóteses operativas); art.27 II (entre entes públicos); 14.129 art.3 IX (princípio do compartilhamento no gov digital). Phase 6.6 audit fix."
 
 # ============================================================================
 # V3 batch — coverage gap fill (CP, Direito Autoral, Constituição, decretos)
@@ -658,9 +681,12 @@
       - "urn:lex:br:federal:lei:1990-09-11;8078~art14"
       - "urn:lex:br:federal:lei:1990-09-11;8078~art39"
       - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art171"
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art298;par1"
     supporting:
       - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art155;par4;inc2"
-  notes: "CDC art. 14 (responsabilidade civil do fornecedor) + CDC art. 39 (práticas abusivas) + CP art. 171 (estelionato, fraude eletrônica após Lei 14155/21). Supporting: CP art. 155 § 4 II (furto qualificado mediante fraude)."
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art171;par2"
+      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a"
+  notes: "CDC art.14/39 + CP art.171 (estelionato) + art.298 §1 (equipara cartão a documento particular, Lei 12.737/12). Supporting: art.155 §4 II (furto qualif. mediante fraude); art.171 §2 (qualif. fraude eletrônica, Lei 14.155/21); art.154-A (invasão de dispositivo — quando a clonagem envolve intrusão). Phase 6.6 audit fix."
 
 - query: "publicaram fotos íntimas minhas sem autorização, isso é crime?"
   type: parafrase
@@ -756,10 +782,17 @@
 - query: "habeas data e direitos do titular de dados"
   type: cross-doc
   relevant:
-    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2"
-    - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc4"
-  notes: "CF garante habeas data; LGPD art. 18 II (acesso) + IV (correção) operacionalizam."
+    core:
+      - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc2"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc4"
+    supporting:
+      - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a"
+      - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b"
+      - "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art17"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art18"
+  notes: "CF garante habeas data; LGPD art. 18 II/IV operacionalizam. Supporting: alíneas a/b do inc72 (objeto + retificação); Lei 9.507 art. 7 I (procedimento do habeas data); LGPD art. 17 (umbrella) + art. 18 caput. Phase 6.6 audit fix."
 
 - query: "remoção de conteúdo na internet — quem decide e quando?"
   type: enumeracao
