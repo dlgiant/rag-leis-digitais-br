@@ -107,6 +107,32 @@ def legal_rank_for_urn(document_urn: str) -> int:
     return LEGAL_RANK_BY_TYPE.get(type_segment, DEFAULT_RANK)
 
 
+def effective_legal_rank(document_urn: str, nav: dict[str, str] | None = None) -> int:
+    """Resolved rank that takes runtime status into account.
+
+    URN type drives the *potential* rank (e.g. `tema` → 3). But for STF
+    temas, the vinculante difusa effect only kicks in once the tese is
+    fixed. A pendente tema (julgamento em andamento, ou tese pendente
+    de transcrição verbatim) does not have erga omnes/vinculante effect
+    and should be treated as infralegal/orientativa.
+
+    The convention (Phase 6 — see study/lexml-urn-spec-resumo.md §9.5):
+    when `nav["status"]` contains the substring "pendente", rank-down to
+    RANK_INFRALEGAL. Otherwise return the URN-derived rank.
+
+    Examples:
+        tema:786 + nav.status="tese-fixada"                              → 3
+        tema:987 + nav.status="tese-fixada-pendente-transcricao-verbatim" → 5
+        tema:815 + nav.status="pendente_julgamento"                       → 5
+        sumula.vinculante:11 + nav={}                                    → 2
+        lei:13709 + nav={}                                               → 3 (status irrelevant for legislação)
+    """
+    base = legal_rank_for_urn(document_urn)
+    if nav and "pendente" in (nav.get("status") or "").lower():
+        return RANK_INFRALEGAL
+    return base
+
+
 def rank_name(rank: int) -> str:
     """Human-readable name for a rank number."""
     return RANK_NAMES.get(rank, f"rank-{rank}")
