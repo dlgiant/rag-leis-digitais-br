@@ -108,23 +108,19 @@ def write_outputs(
     new_sha = diff.new_sha if diff is not None else None
     new_bytes = diff.new_bytes if diff is not None else None
 
+    # Phase 7 fix (2026-05-16): metadata tracked in git for cross-run diff
+    # MUST be deterministic across environments. LexML resolver returns
+    # different content from GitHub Actions runner IPs (rate-limit /
+    # blocked) than from local IPs — would create a false diff on every
+    # CI run. Dropped from tracked metadata; LexML lookup still runs
+    # (best-effort enrichment) and is printed at fetch-time for human
+    # visibility, but NOT persisted.
     meta_path.write_text(
         json.dumps(
             {
                 "urn": doc.urn,
                 "title": doc.title,
                 "planalto_url": doc.planalto_url,
-                "lexml": {
-                    "matched": record is not None,
-                    "title": record.title if record else None,
-                    "date": record.date if record else None,
-                    "ementa": record.ementa if record else None,
-                    "apelidos": list(record.apelidos) if record else [],
-                    "locality": record.locality if record else None,
-                    "authority": record.authority if record else None,
-                    "publication_date": record.publication_date if record else None,
-                    "fields": record.fields if record else {},
-                },
                 "html": {
                     "status_code": html_doc.status_code if html_doc else None,
                     "encoding": html_doc.encoding if html_doc else None,
