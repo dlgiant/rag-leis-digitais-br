@@ -1,7 +1,7 @@
 """End-to-end RAG pipeline with structured-output + cite-and-verify guards.
 
 Wires together what the rest of the project produced separately:
-  * retrieval (voyage dense, `label+nav+caput+text`, top-K)
+  * retrieval (voyage dense, `title+label+nav+caput+text`, top-K)
   * generation (Anthropic, claude-sonnet-4-5, tool_choice forced)
   * verification (URN ∈ corpus ∧ ∈ top-K)
   * OOS gating (top-1 cosine < threshold → refuse before paying for the LLM)
@@ -111,7 +111,18 @@ DEFAULT_AUDIT_LOG_PATH = Path(__file__).resolve().parents[1] / "data" / "audit" 
 # language); the load-bearing OOS detection happens at the LLM-self-refusal
 # level, since the model has full context to make that call.
 DEFAULT_OOS_THRESHOLD = 0.40
-DEFAULT_TEXT_MODE = "label+nav+caput+text"
+# Phase 6.6 r4 (2026-05-16): switched from `label+nav+caput+text` to
+# `title+label+nav+caput+text`. Hypothesis test surfaced by Phase 6.6 audit
+# (art.13 MCI vs Decreto 8.771 art.13 cross-corpus collision): prepending the
+# document title to every chunk text disambiguates lei/decreto/súmula at the
+# dense embedder level. Empirical lift on the 104-query eval (vs prior default):
+#   nDCG@10  : 0.7031 → 0.7223 (+0.019)
+#   MRR@10   : 0.7785 → 0.8040 (+0.026)
+#   Recall@20: 0.8772 → 0.8705 (-0.007 — single-digit regression accepted)
+# Per-type: citacao-literal MRR +0.130 (biggest single-category win in project).
+# Trade documented in scripts/eval_hybrid_router.py (the hybrid alternative
+# was dominated for our nDCG-optimized RAG-to-LLM use case).
+DEFAULT_TEXT_MODE = "title+label+nav+caput+text"
 DEFAULT_EMBEDDER = "voyage-3-large"
 
 # Prefix patterns that mean "the LLM examined the context and decided it

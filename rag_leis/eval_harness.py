@@ -76,6 +76,13 @@ class IndexChunk:
     # Extracted from chunk.notes at load time (parser already strips
     # "(Incluído pela EC nº X)" patterns into notes).
     amended_by: tuple[str, ...] = ()
+    # Phase 6.6 r4 (post-audit): document title (e.g., "Marco Civil da
+    # Internet (Lei 12.965/2014)") looked up from corpus.py TIER lists by
+    # document_urn. Used only by the `title+...` text-mode to disambiguate
+    # cross-corpus literal-article-number collisions (MISS 2: art.13 MCI vs
+    # Decreto 8.771 art.13). Empty when document not in any TIER (e.g.,
+    # synthetic test fixtures).
+    document_title: str = ""
 
 
 @dataclass(frozen=True)
@@ -180,7 +187,14 @@ def load_chunks(
         return ", ".join(reversed(labels))
 
     from rag_leis.chunks import is_revoked_text
+    from rag_leis.corpus import TIER_1, TIER_2, TIER_3, TIER_4
     from rag_leis.vigencia import load_overlays
+
+    # urn → title lookup for title-prefix text-modes. Built once per
+    # load_chunks call. Tier-4 jurisprudência titles come from TIER_4.
+    title_by_doc_urn: dict[str, str] = {
+        d.urn: d.title for d in (*TIER_1, *TIER_2, *TIER_3, *TIER_4)
+    }
 
     # Load overlays from explicit path, or auto-discover the canonical
     # location relative to this project. Empty dict if file absent — fresh
@@ -217,6 +231,7 @@ def load_chunks(
                 legal_rank=effective_legal_rank(obj["document_urn"], obj.get("nav") or {}),
                 fetched_at=fetched_at_by_doc.get(obj["document_urn"], ""),
                 amended_by=tuple(_extract_amended_by(obj.get("notes", []))),
+                document_title=title_by_doc_urn.get(obj["document_urn"], ""),
             )
         )
     return out
@@ -315,6 +330,20 @@ def format_texts(chunks: list[IndexChunk], mode: str) -> list[str]:
             body = f"{c.caput_text} {c.text}".strip() if c.caput_text else c.text
             mid = f"{c.nav_text} :: {body}" if c.nav_text else body
             out.append(f"{c.citation} :: {mid}" if c.citation else mid)
+        return out
+    if mode == "title+label+nav+caput+text":
+        # Phase 6.6 r4: prefixes the document title (e.g., "Marco Civil da
+        # Internet (Lei 12.965/2014)") to disambiguate cross-corpus literal
+        # article-number collisions — the canonical MISS case is "art.13 do
+        # Marco Civil" returning Decreto 8.771 art.13 (regulamento) instead
+        # of MCI art.13 (lei). Title-prefix gives the dense embedder explicit
+        # lei-vs-decreto signal at the start of every chunk.
+        out = []
+        for c in chunks:
+            body = f"{c.caput_text} {c.text}".strip() if c.caput_text else c.text
+            mid = f"{c.nav_text} :: {body}" if c.nav_text else body
+            tail = f"{c.citation} :: {mid}" if c.citation else mid
+            out.append(f"{c.document_title} :: {tail}" if c.document_title else tail)
         return out
     raise ValueError(f"Unknown text mode: {mode!r}")
 

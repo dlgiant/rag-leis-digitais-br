@@ -48,6 +48,7 @@ def main() -> int:
             "caput+text",
             "nav+caput+text",
             "label+nav+caput+text",
+            "title+label+nav+caput+text",
         ],
         default="text",
     )
