@@ -6,11 +6,19 @@ import sys
 from pathlib import Path
 
 from rag_leis.corpus import TIER_1, TIER_2, Document
+from rag_leis.diff_audit import (
+    DiffEntry,
+    append_audit_log,
+    format_diff_summary,
+    make_diff_entry,
+    read_prior_sha256,
+)
 from rag_leis.lexml_resolver import LexmlResolverClient, ResolverRecord
 from rag_leis.planalto import PlanaltoDocument, PlanaltoScraper
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
+AUDIT_LOG = DATA_DIR / "audit" / "corpus_updates.jsonl"
 
 _TIERS: dict[str, tuple[tuple[Document, ...], str]] = {
     "1": (TIER_1, "tier-1"),
@@ -73,14 +81,33 @@ def write_outputs(
     error: str | None,
     raw_dir: Path,
     meta_dir: Path,
-) -> None:
+) -> DiffEntry | None:
+    """Write HTML + metadata. Returns a DiffEntry capturing whether the
+    fetched HTML differs from the previously-recorded SHA-256 (Phase 7.1).
+    Returns None when the fetch failed (no HTML to hash).
+    """
     base = urn_to_filename(doc.urn)
+    meta_path = meta_dir / f"{base}.json"
+
+    # Phase 7.1 — compute diff vs prior fetch BEFORE overwriting metadata.
+    diff: DiffEntry | None = None
+    prior_sha = read_prior_sha256(meta_path)
+    prior_bytes: int | None = None
+    if prior_sha is not None:
+        try:
+            prior_meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            prior_bytes = (prior_meta.get("html") or {}).get("size_bytes")
+        except (json.JSONDecodeError, OSError):
+            pass
 
     if html_doc is not None:
         raw_path = raw_dir / f"{base}.html"
         raw_path.write_text(html_doc.html, encoding="utf-8")
+        diff = make_diff_entry(doc.urn, html_doc.html, prior_sha, prior_bytes)
 
-    meta_path = meta_dir / f"{base}.json"
+    new_sha = diff.new_sha if diff is not None else None
+    new_bytes = diff.new_bytes if diff is not None else None
+
     meta_path.write_text(
         json.dumps(
             {
@@ -102,7 +129,10 @@ def write_outputs(
                     "status_code": html_doc.status_code if html_doc else None,
                     "encoding": html_doc.encoding if html_doc else None,
                     "final_url": html_doc.final_url if html_doc else None,
-                    "size_bytes": len(html_doc.html.encode("utf-8")) if html_doc else None,
+                    "size_bytes": new_bytes if new_bytes is not None else (
+                        len(html_doc.html.encode("utf-8")) if html_doc else None
+                    ),
+                    "sha256": new_sha,  # Phase 7.1 — canonical "current state" of doc
                 },
                 "error": error,
             },
@@ -111,11 +141,15 @@ def write_outputs(
         ),
         encoding="utf-8",
     )
+    return diff
 
 
 async def _fetch_one_tier(
     docs: tuple[Document, ...], tier_dir: str
-) -> int:
+) -> tuple[int, list[DiffEntry]]:
+    """Fetch a tier and return (failure_count, diff_entries) for the
+    caller to aggregate into the audit log and the run-wide summary.
+    """
     raw_dir = DATA_DIR / "raw" / tier_dir
     meta_dir = DATA_DIR / "metadata" / tier_dir
     raw_dir.mkdir(parents=True, exist_ok=True)
@@ -129,8 +163,11 @@ async def _fetch_one_tier(
         results = await asyncio.gather(*(fetch_one(doc, lexml, planalto) for doc in docs))
 
     failures = 0
+    diffs: list[DiffEntry] = []
     for doc, record, html_doc, error in results:
-        write_outputs(doc, record, html_doc, error, raw_dir, meta_dir)
+        diff = write_outputs(doc, record, html_doc, error, raw_dir, meta_dir)
+        if diff is not None:
+            diffs.append(diff)
         if error and html_doc is None:
             marker = "[FAIL]"
             failures += 1
@@ -140,13 +177,16 @@ async def _fetch_one_tier(
             marker = "[OK]"
         size_kb = f"{len(html_doc.html.encode('utf-8')) // 1024} KB" if html_doc else "—"
         lexml_status = "✓" if record else "?"
-        print(f"{marker:9} html={size_kb:>8}  lexml={lexml_status}  {doc.urn}")
+        # Phase 7.1 — surface diff status inline so the operator sees changes
+        # as the fetch progresses (CHANGED / NEW / UNCHANGED).
+        diff_tag = f" [{diff.status.upper()}]" if diff is not None else ""
+        print(f"{marker:9} html={size_kb:>8}  lexml={lexml_status}{diff_tag}  {doc.urn}")
         if error:
             print(f"          └─ {error}")
 
     print(f"Done {tier_dir}: {len(docs) - failures}/{len(docs)} downloaded.")
     print()
-    return failures
+    return failures, diffs
 
 
 async def main() -> int:
@@ -165,9 +205,19 @@ async def main() -> int:
 
     tiers_to_run = ["1", "2"] if args.tier == "all" else [args.tier]
     total_failures = 0
+    all_diffs: list[DiffEntry] = []
     for t in tiers_to_run:
         docs, tier_dir = _TIERS[t]
-        total_failures += await _fetch_one_tier(docs, tier_dir)
+        failures, diffs = await _fetch_one_tier(docs, tier_dir)
+        total_failures += failures
+        all_diffs.extend(diffs)
+
+    # Phase 7.1 — diff summary + audit log append (CHANGED+NEW only;
+    # UNCHANGED docs are skipped to keep the log signal-only).
+    print(format_diff_summary(all_diffs))
+    appended = append_audit_log(AUDIT_LOG, all_diffs)
+    if appended:
+        print(f"\nAppended {appended} entries to {AUDIT_LOG.relative_to(PROJECT_ROOT)}")
 
     return 0 if total_failures == 0 else 1
 
