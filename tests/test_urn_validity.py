@@ -45,7 +45,7 @@ PARTITION_SEGMENT_RE = re.compile(
     r"^(?:adct"
     r"|art\d+(?:-[a-z])?"
     r"|par\d+(?:-[a-z])?"          # Phase 6.6 r3 — Lei 14.155/21 §2-A/§4-B etc.
-    r"|inc\d+"
+    r"|inc\d+(?:-[a-z])?"          # Phase 6.6 r5 — EC 45/2004 inc I-A/II-A etc.
     r"|ali-[a-z]"
     r"|item\d+"
     # Phase 6 — jurisprudência: chunks atômicos (uma tese / um enunciado / uma ementa).
@@ -58,7 +58,7 @@ PARTITION_SEGMENT_RE = re.compile(
 _KIND_BY_TAIL = (
     (re.compile(r"^art\d+(?:-[a-z])?$"), "artigo"),
     (re.compile(r"^par\d+(?:-[a-z])?$"), "paragrafo"),  # Phase 6.6 r3 — sub-§ suffix
-    (re.compile(r"^inc\d+$"), "inciso"),
+    (re.compile(r"^inc\d+(?:-[a-z])?$"), "inciso"),     # Phase 6.6 r5 — inc-suffix
     (re.compile(r"^ali-[a-z]$"), "alinea"),
     (re.compile(r"^item\d+$"), "item"),
     # Phase 6 — jurisprudência atômica.

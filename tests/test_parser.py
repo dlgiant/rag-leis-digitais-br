@@ -263,3 +263,55 @@ def test_cp_art171_par2_separator_hyphen_consumed(cp_chunks):
     assert c.text.startswith("Nas mesmas penas"), (
         f"separator hyphen leaked into text: {c.text[:40]!r}"
     )
+
+
+# ----------------------------------------------------------------------------
+# Phase 6.6 r5 — inciso suffix capture (EC 45/2004 etc).
+# Until 2026-05-16 _INCISO_HEAD captured only `([IVXLCDM]+)`, collapsing
+# I + I-A into the same partition `inc1` (and dedup_keep_last destroyed
+# the original I). Surfaced by coverage-auditor agent. Fix mirrors the
+# §-suffix pattern (commit 0effdc8): optional suffix with strict adjacency.
+# These tests pin the recovered chunks on CF art.92 (EC 45/2004 added I-A
+# for CNJ, EC 92/2016 added II-A for TST) and CF art.93 (VIII-A, VIII-B).
+# ----------------------------------------------------------------------------
+
+
+def test_cf_art92_inc1_stf_intact(cf_chunks):
+    """CF art.92 inc I — STF — must NOT be overwritten by inc I-A's CNJ
+    text. This was the symptom of the collapse bug."""
+    c = _find_chunk(cf_chunks, "~art92;inc1")
+    assert c.label == "I"
+    assert "Supremo Tribunal Federal" in c.text
+
+
+def test_cf_art92_inc1a_cnj_present(cf_chunks):
+    """CF art.92 inc I-A — CNJ (incluído pela EC 45/2004) must exist as
+    its own partition, not collapsed into inc1."""
+    c = _find_chunk(cf_chunks, "~art92;inc1-a")
+    assert c.label == "I-A"
+    assert "Conselho Nacional de Justiça" in c.text
+
+
+def test_cf_art92_inc2a_tst_present(cf_chunks):
+    """CF art.92 inc II-A — TST (incluído pela EC 92/2016) — same
+    pattern as inc1-a."""
+    c = _find_chunk(cf_chunks, "~art92;inc2-a")
+    assert c.label == "II-A"
+    assert "Tribunal Superior do Trabalho" in c.text
+
+
+def test_cf_art93_inc8_remocao_intact(cf_chunks):
+    """CF art.93 inc VIII — disponibilidade do magistrado — original
+    inciso must be present (was clobbered by VIII-A before fix)."""
+    c = _find_chunk(cf_chunks, "~art93;inc8")
+    assert c.label == "VIII"
+    assert "remoção" in c.text.lower() or "disponibilidade" in c.text.lower()
+
+
+def test_cf_art93_inc8a_inc8b_present(cf_chunks):
+    """CF art.93 incs VIII-A (remoção a pedido) and VIII-B (permuta)
+    — both added by EC 45/2004, both lost before the suffix fix."""
+    a = _find_chunk(cf_chunks, "~art93;inc8-a")
+    assert a.label == "VIII-A"
+    b = _find_chunk(cf_chunks, "~art93;inc8-b")
+    assert b.label == "VIII-B"
