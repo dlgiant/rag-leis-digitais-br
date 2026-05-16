@@ -53,8 +53,18 @@ _PARAGRAFO_HEAD = re.compile(
     re.IGNORECASE,
 )
 _PAR_UNICO_HEAD = re.compile(r"^\s*Par[áa]grafo\s+[úu]nico\s*[.:]?\s*", re.IGNORECASE)
+# Captures both `I - texto` (classic) and `I-A texto` (Lei suffix, e.g.,
+# EC 45/2004 added CF art.92 inc I-A=CNJ, II-A=TST; LGPD has art.55-C
+# V-A=Procuradoria, V-B=Auditoria). Same shape as _PARAGRAFO_HEAD fix.
+#
+# Group 1 = Roman numeral; Group 2 = optional [A-Z] suffix.
+# Alternation:
+#   (a) `-X` suffix with strict adjacency, then optional separator hyphen
+#   (b) no suffix, but mandatory separator hyphen (preserves old disambiguation
+#       so `II Disposi\u00e7\u00f5es Finais` isn't mis-parsed as inciso II)
 _INCISO_HEAD = re.compile(
-    "^\\s*([IVXLCDM]+)\\s*[-\u2013]\\s*",
+    r"^\s*([IVXLCDM]+)"
+    r"(?:-([A-Z])(?=[\s,;:.]|$)\s*[-\u2013]?\s*|\s*[-\u2013]\s*)",
     re.IGNORECASE,
 )
 _ALINEA_HEAD = re.compile(r"^\s*([a-z])\)\s*", re.IGNORECASE)
@@ -347,15 +357,21 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
         m_inc = _INCISO_HEAD.match(text)
         if m_inc and current_inciso_parent is not None:
             roman = m_inc.group(1).upper()
+            inc_suffix = m_inc.group(2)
             inc_num = _roman_to_int(roman)
-            partition = f"{current_inciso_parent};inc{inc_num}"
+            if inc_suffix:
+                partition = f"{current_inciso_parent};inc{inc_num}-{inc_suffix.lower()}"
+                label = f"{roman}-{inc_suffix.upper()}"
+            else:
+                partition = f"{current_inciso_parent};inc{inc_num}"
+                label = roman
             cleaned, notes = _strip_notes(text[m_inc.end() :].strip())
             raw.append(
                 Chunk(
                     document_urn=document_urn,
                     partition=partition,
                     kind="inciso",
-                    label=roman,
+                    label=label,
                     text=cleaned,
                     parent_partition=current_inciso_parent,
                     nav=dict(nav),
