@@ -149,8 +149,14 @@ def main() -> int:
         return _exit(1, "CC filter failed.")
 
     # 4. pytest gate (parser regressions, schema invariants, etc.)
+    # CI compatibility: skip tests that depend on data NOT in git
+    # (ANPD source PDFs are gitignored, not fetched by fetch_tier).
+    # Network tests skip via @skipif when keys absent.
     print("[refresh_corpus] Step 3/6: pytest gate ...")
-    if _run(["uv", "run", "pytest", "-q"], label="pytest") != 0:
+    if _run(
+        ["uv", "run", "pytest", "-q", "-m", "not requires_anpd_pdf"],
+        label="pytest",
+    ) != 0:
         return _exit(1, "pytest failed; aborting BEFORE re-embed (saves $$).")
 
     # 5. Backup current index

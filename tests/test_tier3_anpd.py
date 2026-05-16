@@ -9,6 +9,13 @@ Failures here mean either:
 Phase 4.3.b (real pdfplumber parser) MUST produce chunks that pass these
 same tests — that's the contract for swapping the parser body without
 breaking downstream consumers.
+
+CI note (Phase 7): the entire module is marked `requires_anpd_pdf`
+because the AnpdPdfParser reads source PDFs under data/raw/tier-3 (~50MB
+SEI bundles, gitignored, not fetched by `fetch_tier`). The refresh
+orchestrator and smoke workflow skip via `-m "not requires_anpd_pdf"`.
+Run locally — and only after manually downloading the PDFs per
+study/corpus-tier-3-anpd.md.
 """
 
 from __future__ import annotations
@@ -18,6 +25,8 @@ from pathlib import Path
 import pytest
 
 from rag_leis.parsers.anpd_pdf import AnpdPdfParser
+
+pytestmark = pytest.mark.requires_anpd_pdf
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RES_15_URN = "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15"

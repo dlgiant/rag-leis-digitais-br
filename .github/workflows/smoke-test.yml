@@ -1,31 +1,23 @@
-name: Smoke test (post-merge)
+name: Smoke test (manual)
 
-# Phase 7.5 — guard against post-merge regressions in the production
-# pipeline. Triggered on every push to main (typically PR merges from
-# the refresh-corpus.yml weekly workflow, but also manual edits).
+# Phase 7.5 — verifies the production pipeline end-to-end:
+# pytest (post fetch+parse) → 10 canonical queries via Sabiá generator.
 #
-# Two-stage gate:
-#   1. pytest (no network) — schema invariants, parser tests, unit logic
-#   2. live RAG smoke — 10 canonical queries via Sabiá (the production
-#      generator per study/llm-provider-decision-2026-05-15.md)
+# Trigger: workflow_dispatch ONLY (manual button in Actions tab).
+# Auto-trigger on push was tried and removed because:
+#   - Most pytest tests require local corpus (raw HTMLs + parsed chunks)
+#     which are gitignored. Without fetch+parse setup steps, pytest fails
+#     in CI even on a clean main.
+#   - Doing fetch+parse+Voyage embed + Sabiá on every push to main costs
+#     ~$0.55/push, which compounds quickly in active development.
 #
-# Cost: pytest ~free; Sabiá smoke ~$0.05/run × ~4 merges/month ≈ $0.20/month.
+# Cost: ~$0.55 per manual invocation (one fetch + one Voyage re-embed +
+# 10 Sabiá calls). Operator triggers from the Actions tab after merging
+# a refresh-corpus PR or when investigating a suspected regression.
+#
+# See docs/runbook-corpus-refresh.md Cenário 3 for triage guidance.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      # Skip pure-docs pushes (study/, posts/) — they don't affect runtime.
-      - 'rag_leis/**'
-      - 'tests/**'
-      - 'scripts/**'
-      - 'data/metadata/**'
-      - 'data/audit/**'
-      - 'data/chunks/tier-4/**'
-      - 'eval/**'
-      - 'pyproject.toml'
-      - 'uv.lock'
-      - '.github/workflows/**'
   workflow_dispatch:
 
 permissions:
@@ -56,22 +48,37 @@ jobs:
         # production path).
         run: uv sync --extra voyage
 
-      - name: Run pytest (no network)
-        # Skip live-network tests in CI — the smoke step below covers the
-        # one end-to-end live test we care about (Sabiá generation).
-        run: uv run pytest -m "not network"
+      - name: Fetch corpus (Planalto HTML)
+        # Pull raw HTMLs onto the ephemeral runner so subsequent steps
+        # (parse, pytest, run_eval, smoke) can find them. Doesn't update
+        # tracked metadata jsons (orchestrator does that on the weekly cron).
+        run: uv run python -m rag_leis.fetch_tier --tier all
+
+      - name: Parse corpus
+        run: |
+          uv run python -m rag_leis.parse_all_tier --tier 1
+          uv run python -m rag_leis.parse_all_tier --tier 2
+          uv run python -m scripts.filter_cc_personalidade
+
+      - name: Run pytest (no network, skip ANPD-PDF tests)
+        # ANPD PDFs (tier-3 sources) are not in git nor fetched by
+        # fetch_tier — those tests need a manual download per
+        # study/corpus-tier-3-anpd.md. Network tests skip via @skipif
+        # when the relevant keys aren't set.
+        run: uv run pytest -m "not network and not requires_anpd_pdf"
+
+      - name: Build Voyage index (re-embed if cache stale)
+        env:
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+        run: |
+          uv run python -m rag_leis.run_eval --model voyage-3-large \
+              --text-mode title+label+nav+caput+text
 
       - name: Sabiá smoke test
-        # 10 canonical queries through the full RAG pipeline. Checks: no
-        # crashes, no empty answers, no unexpected refusals on in-scope
-        # queries. Doesn't gate on metric thresholds — that's the weekly
-        # refresh's job.
-        #
-        # Gracefully skips when MARITACA_API_KEY isn't set (first runs
-        # before operator configures repo secrets). pytest above is the
-        # always-on guard; this is the live-API supplementary check.
+        # 10 canonical queries through the full Voyage + Sabiá pipeline.
+        # Failures: crash / empty answer / unexpected refusal / no citations.
+        # Not a metric gate — that's the weekly refresh's job.
         id: smoke
-        if: env.MARITACA_API_KEY != '' && env.VOYAGE_API_KEY != ''
         env:
           MARITACA_API_KEY: ${{ secrets.MARITACA_API_KEY }}
           VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
@@ -79,14 +86,6 @@ jobs:
           set +e
           uv run python -m scripts.smoke_test_rag 2>&1 | tee smoke.log
           echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
-
-      - name: Smoke skipped notice
-        if: env.MARITACA_API_KEY == '' || env.VOYAGE_API_KEY == ''
-        env:
-          MARITACA_API_KEY: ${{ secrets.MARITACA_API_KEY }}
-          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
-        run: |
-          echo "::notice::Live smoke test skipped: VOYAGE_API_KEY or MARITACA_API_KEY not configured in repo secrets. See docs/runbook-corpus-refresh.md."
 
       - name: Open issue on smoke failure
         if: steps.smoke.outputs.exit_code != '0'
