@@ -151,10 +151,26 @@ EOF
 **Resolução:** estender `_F5_CSPM_RE` (ou adicionar segundo padrão) em
 `rag_leis/diff_audit.py`. Adicionar test que pinna o novo padrão.
 
-## Cenário 3 — Issue `Post-merge smoke FAILED — <sha>`
+## Cenário 3 — Smoke test manual
 
-**Quando aparece:** smoke-test.yml achou regression depois de um merge em
-main (geralmente o próprio PR do refresh, ou um merge manual de feature).
+**smoke-test.yml é workflow_dispatch only** (não dispara automaticamente).
+Custo de cada invocação: ~$0.55 (fetch + Voyage re-embed + 10 Sabiá calls).
+
+**Quando rodar:**
+- Depois de mergear um PR `corpus-refresh/*` que mexeu em chunks operativos
+- Quando suspeitar de regressão pós-merge (Sabiá começou a refusar in-scope?)
+- Antes de uma release / antes de demonstrar pra cliente
+- Periodicamente (1x/mês) como sanity check geral
+
+**Como rodar:**
+1. Repo no GitHub → **Actions** tab → **Smoke test (manual)** → **Run workflow** → seleciona branch `main` → **Run workflow**
+2. OU via CLI: `gh workflow run smoke-test.yml`
+
+Aguarda ~10 min. Verifica resultado:
+- Verde ✓: pipeline production OK
+- Vermelho ✗: issue `production-degradation` foi aberta automaticamente
+
+### Quando smoke falha
 
 **Diagnose:**
 ```bash

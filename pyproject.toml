@@ -65,4 +65,5 @@ testpaths = ["tests"]
 addopts = "-p no:cacheprovider -p no:launch -p no:launch_ros -p no:launch_testing"
 markers = [
     "network: hits external services (skipped unless explicitly selected with `-m network`).",
+    "requires_anpd_pdf: needs ANPD source PDFs under data/raw/tier-3 (not in git; skipped in CI; tier-3 chunks are also derived state).",
 ]
