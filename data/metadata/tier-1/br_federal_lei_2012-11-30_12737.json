@@ -2,32 +2,6 @@
   "urn": "urn:lex:br:federal:lei:2012-11-30;12737",
   "title": "Lei Carolina Dieckmann (Lei 12.737/2012)",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12737.htm",
-  "lexml": {
-    "matched": true,
-    "title": "Lei nº 12.737, de 30 de Novembro de 2012",
-    "date": "30/11/2012",
-    "ementa": "Dispõe sobre a tipificação criminal de delitos informáticos; altera o Decreto-Lei nº 2.848, de 7 de dezembro de 1940 - Código Penal; e dá outras providências.",
-    "apelidos": [
-      "Lei Carolina Dieckmann; Lei de Crimes Cibernéticos",
-      "LEI-12737-2012-11-30 , Lei de Crimes Cibernéticos"
-    ],
-    "locality": "Brasil",
-    "authority": "Federal",
-    "publication_date": "2012-12-03",
-    "fields": {
-      "Localidade": "Brasil",
-      "Autoridade": "Federal",
-      "Título": "Lei nº 12.737, de 30 de Novembro de 2012",
-      "Data": "30/11/2012",
-      "Apelido": "Lei Carolina Dieckmann; Lei de Crimes Cibernéticos",
-      "Ementa": "Dispõe sobre a tipificação criminal de delitos informáticos; altera o Decreto-Lei nº 2.848, de 7 de dezembro de 1940 - Código Penal; e dá outras providências.",
-      "Nome Uniforme": "urn:lex:br:federal:lei:2012-11-30;12737",
-      "Mais detalhes": "Senado Federal",
-      "Projeto de Origem": "[ Projeto de Lei (CD) nº 2793/2011 &gt; Projeto de Lei da Câmara nº 35/2012 : Lei nº 12.737 de 30/11/2012 ]",
-      "Publicação Original": "2012-12-03",
-      "Texto Atualizado": "Multivigente"
-    }
-  },
   "html": {
     "status_code": 200,
     "encoding": "ISO-8859-1",

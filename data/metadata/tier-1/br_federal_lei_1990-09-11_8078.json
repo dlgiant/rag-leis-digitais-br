@@ -2,33 +2,6 @@
   "urn": "urn:lex:br:federal:lei:1990-09-11;8078",
   "title": "Código de Defesa do Consumidor (Lei 8.078/1990)",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm",
-  "lexml": {
-    "matched": true,
-    "title": "Lei nº 8.078, de 11 de Setembro de 1990",
-    "date": "11/09/1990",
-    "ementa": "Dispõe sobre a proteção do consumidor e dá outras providências.",
-    "apelidos": [
-      "Código de Defesa do Consumidor (1990)",
-      "LEI-8078-1990-09-11 , Código de Proteção e Defesa do Consumidor"
-    ],
-    "locality": "Brasil",
-    "authority": "Federal",
-    "publication_date": "1990-09-12",
-    "fields": {
-      "Localidade": "Brasil",
-      "Autoridade": "Federal",
-      "Título": "Lei nº 8.078, de 11 de Setembro de 1990",
-      "Data": "11/09/1990",
-      "Apelido": "Código de Defesa do Consumidor (1990)",
-      "Ementa": "Dispõe sobre a proteção do consumidor e dá outras providências.",
-      "Nome Uniforme": "urn:lex:br:federal:lei:1990-09-11;8078",
-      "Mais detalhes": "Senado Federal",
-      "Projeto de Origem": "[ Projeto de Lei do Senado nº 97/1989 &gt; Projeto de Lei (CD) nº 3683/1989 &gt; Mensagem nº 159/1990 : Lei nº 8.078 de 11/09/1990 ]",
-      "Publicação Original": "1990-09-12",
-      "Retificação": "2007-01-10",
-      "Texto Atualizado": "Multivigente"
-    }
-  },
   "html": {
     "status_code": 200,
     "encoding": "ISO-8859-1",

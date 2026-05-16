@@ -2,32 +2,6 @@
   "urn": "urn:lex:br:federal:lei:2011-11-18;12527",
   "title": "Lei de Acesso à Informação (Lei 12.527/2011)",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12527.htm",
-  "lexml": {
-    "matched": true,
-    "title": "Lei nº 12.527, de 18 de Novembro de 2011",
-    "date": "18/11/2011",
-    "ementa": "Regula o acesso a informações previsto no inciso XXXIII do art. 5º, no inciso II do § 3º do art. 37 e no § 2º do art. 216 da Constituição Federal; altera a Lei nº 8.112, de 11 de dezembro de 1990; revoga a Lei nº 11.111, de 5 de maio de 2005, e dispositivos da Lei nº 8.159, de 8 de janeiro de 1991; e dá outras providências.",
-    "apelidos": [
-      "Lei de Acesso à Informação (2011)",
-      "LEI-12527-2011-11-18 , Lei de Acesso à Informação"
-    ],
-    "locality": "Brasil",
-    "authority": "Federal",
-    "publication_date": "2011-11-18",
-    "fields": {
-      "Localidade": "Brasil",
-      "Autoridade": "Federal",
-      "Título": "Lei nº 12.527, de 18 de Novembro de 2011",
-      "Data": "18/11/2011",
-      "Apelido": "Lei de Acesso à Informação (2011)",
-      "Ementa": "Regula o acesso a informações previsto no inciso XXXIII do art. 5º, no inciso II do § 3º do art. 37 e no § 2º do art. 216 da Constituição Federal; altera a Lei nº 8.112, de 11 de dezembro de 1990; revoga a Lei nº 11.111, de 5 de maio de 2005, e dispositivos da Lei nº 8.159, de 8 de janeiro de 1991; e dá outras providências.",
-      "Nome Uniforme": "urn:lex:br:federal:lei:2011-11-18;12527",
-      "Mais detalhes": "Senado Federal",
-      "Projeto de Origem": "[ Projeto de Lei (CD) nº 219/2003 &gt; Projeto de Lei da Câmara nº 41/2010 &gt; Veto nº 32/2011 : Lei nº 12.527 de 18/11/2011 ]",
-      "Publicação Original": "2011-11-18",
-      "Texto Atualizado": "Multivigente"
-    }
-  },
   "html": {
     "status_code": 200,
     "encoding": "ISO-8859-1",

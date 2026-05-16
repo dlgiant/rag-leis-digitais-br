@@ -2,37 +2,11 @@
   "urn": "urn:lex:br:federal:lei:2019-07-08;13853",
   "title": "Lei 13.853/2019 — criação da ANPD",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2019/lei/l13853.htm",
-  "lexml": {
-    "matched": true,
-    "title": "Lei nº 13.853, de 8 de Julho de 2019",
-    "date": "08/07/2019",
-    "ementa": "Altera a Lei nº 13.709, de 14 de agosto de 2018, para dispor sobre a proteção de dados pessoais e para criar a Autoridade Nacional de Proteção de Dados; e dá outras providências.",
-    "apelidos": [
-      "LEI-13853-2019-07-08"
-    ],
-    "locality": "Brasil",
-    "authority": "Federal",
-    "publication_date": "2019-07-09",
-    "fields": {
-      "Localidade": "Brasil",
-      "Autoridade": "Federal",
-      "Título": "Lei nº 13.853, de 8 de Julho de 2019",
-      "Data": "08/07/2019",
-      "Apelido": "LEI-13853-2019-07-08",
-      "Ementa": "Altera a Lei nº 13.709, de 14 de agosto de 2018, para dispor sobre a proteção de dados pessoais e para criar a Autoridade Nacional de Proteção de Dados; e dá outras providências.",
-      "Nome Uniforme": "urn:lex:br:federal:lei:2019-07-08;13853",
-      "Mais detalhes": "Senado Federal",
-      "Projeto de Origem": "MPV 869/2018",
-      "Publicação de Veto Parcialmente Rejeitado": "2019-12-20",
-      "Publicação Original": "2019-07-09",
-      "Texto Atualizado": "Multivigente"
-    }
-  },
   "html": {
     "status_code": 200,
     "encoding": "ISO-8859-1",
     "final_url": "https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2019/lei/l13853.htm",
-    "size_bytes": 85701,
+    "size_bytes": 87260,
     "sha256": "509e7bbfd5bc79d8de443f0893ae33aa7c4c0db6fdecc5861c6af5dab3b82356"
   },
   "error": null
