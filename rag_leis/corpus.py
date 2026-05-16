@@ -101,6 +101,22 @@ TIER_2: tuple[Document, ...] = (
         title="Lei 11.419/2006 — informatização do processo judicial",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11419.htm",
     ),
+    # Código Civil — escopo CIRÚRGICO. Indexamos apenas os arts. 11-21
+    # (Capítulo II — Dos Direitos da Personalidade) por serem o pilar do
+    # direito de imagem / intimidade / honra que entra em queries digitais
+    # (Súmula STJ 403, Tema STF 786, etc.). NÃO indexar o CC inteiro
+    # (~2.789 chunks) — adicionaria noise e divergiria do escopo digital.
+    #
+    # IMPORTANT: o parser run em parse_all_tier produz TODOS os chunks do
+    # CC. O JSONL atual em data/chunks/tier-2/cc_personalidade.jsonl é
+    # o resultado de filtragem manual (Phase post-6.6 Súmula 403 fix);
+    # se rodar parse_all_tier --tier 2, sobrescreve com o CC inteiro.
+    # Re-aplicar o filtro: ver scripts/filter_cc_personalidade.py.
+    Document(
+        urn="urn:lex:br:federal:lei:2002-01-10;10406",
+        title="Código Civil (Lei 10.406/2002) — escopo: arts. 11-21 (Direitos da Personalidade)",
+        planalto_url="https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm",
+    ),
 )
 
 

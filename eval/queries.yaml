@@ -964,8 +964,15 @@
 
 - query: "preciso de autorização para usar a foto de uma pessoa em uma propaganda?"
   type: parafrase
-  relevant: ["urn:lex:br:superior.tribunal.justica:sumula:2009-10-28;403~enunciado"]
-  notes: "Paráfrase da Súmula 403 — uso de imagem com fins comerciais."
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2002-01-10;10406~art20"
+      - "urn:lex:br:superior.tribunal.justica:sumula:2009-10-28;403~enunciado"
+    supporting:
+      - "urn:lex:br:federal:lei:2002-01-10;10406~art18"
+      - "urn:lex:br:federal:lei:2002-01-10;10406~art20;par1"
+      - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"
+  notes: "Resposta canônica: CC art.20 (uso da imagem como direito da personalidade) + Súmula 403 STJ (publicação não autorizada com fins econômicos = dano in re ipsa). Supporting: CC art.18 (nome em propaganda — tratamento paralelo); art.20 §1 (legitimidade post-mortem); CF art.5 X (intimidade/imagem como base constitucional). Phase 6.6+ CC indexing fix."
 
 - query: "se um terceiro usa meus dados bancários para fraude, o banco responde?"
   type: parafrase
@@ -998,3 +1005,39 @@
     supporting:
       - "urn:lex:br:federal:lei:2014-04-23;12965~art21"
   notes: "Cross-doc Tier-4 + Tier-1 (MCI). Tema 987 é stub (D7 pendente para tese verbatim); MCI art.19 é o dispositivo cuja constitucionalidade o STF apreciou. art.21 entra como supporting (notificação extrajudicial, regime alternativo)."
+
+# ============================================================================
+# Código Civil — Direitos da Personalidade (arts. 11-21). Indexado em
+# 2026-05-16 (Phase 6.6+ CC indexing fix). Cobre o gap surfado pela auditoria
+# do Phase 6.6: queries sobre uso de imagem, nome, vida privada não tinham
+# fundamento legal canônico no corpus (LDA não é a fonte; CC sim).
+# ============================================================================
+
+- query: "qual a regra do Código Civil sobre o uso da imagem da pessoa?"
+  type: definicao
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2002-01-10;10406~art20"
+    supporting:
+      - "urn:lex:br:federal:lei:2002-01-10;10406~art20;par1"
+  notes: "CC art. 20 — divulgação/exposição/utilização da imagem só com autorização; ressalva administração da justiça e ordem pública; dano à honra/boa fama/respeitabilidade ou fim comercial = proibição + indenização."
+
+- query: "a vida privada é protegida pela lei?"
+  type: parafrase
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2002-01-10;10406~art21"
+      - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art2;inc1"
+  notes: "CF art.5 X (inviolabilidade da intimidade/vida privada) + CC art.21 (vida privada inviolável; juiz adota providências) + LGPD art.2 I (respeito à privacidade como fundamento). Cross-doc constitucional + civil + LGPD."
+
+- query: "posso usar o nome de outra pessoa em uma propaganda comercial?"
+  type: definicao
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2002-01-10;10406~art18"
+    supporting:
+      - "urn:lex:br:federal:lei:2002-01-10;10406~art17"
+      - "urn:lex:br:federal:lei:2002-01-10;10406~art20"
+  notes: "CC art.18 — sem autorização, não se pode usar o nome alheio em propaganda comercial. Supporting: art.17 (proteção geral do nome contra publicações que exponham a desprezo) + art.20 (regime paralelo da imagem)."
