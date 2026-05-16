@@ -398,15 +398,10 @@
   relevant:
     core:
       - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc3"
+    supporting:
       - "urn:lex:br:federal:lei:1998-02-19;9610~art46"
-      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc1"
-      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc2"
-      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc4"
       - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc6"
-      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc7"
-      - "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc8"
-      - "urn:lex:br:federal:lei:1998-02-19;9610~art29;inc8;ali-a"
-  notes: "DA art. 46 — limitações ao direito autoral. Múltiplos incisos respondem a uso didático/citação (inc III canônico, mas inc I/II/IV/VI/VII/VIII também aplicáveis). art. 29 VIII a (representação/declamação) inclusive."
+  notes: "LDA art. 46 III — citação de trecho para fim de estudo, crítica ou polêmica é a regra canônica. Supporting: caput (umbrella das limitações) + inc VI (representação em estabelecimento de ensino). Phase 6.6 r2 audit fix — incs I/II/IV/VII/VIII e art.29 VIII a removidos (não respondem citação acadêmica)."
 
 - query: "a empresa pode usar dados de uma criança sem dizer pros pais?"
   type: parafrase
@@ -678,15 +673,13 @@
   type: parafrase
   relevant:
     core:
-      - "urn:lex:br:federal:lei:1990-09-11;8078~art14"
-      - "urn:lex:br:federal:lei:1990-09-11;8078~art39"
       - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art171"
       - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art298;par1"
     supporting:
+      - "urn:lex:br:federal:lei:1990-09-11;8078~art14"
       - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art155;par4;inc2"
-      - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art171;par2"
       - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a"
-  notes: "CDC art.14/39 + CP art.171 (estelionato) + art.298 §1 (equipara cartão a documento particular, Lei 12.737/12). Supporting: art.155 §4 II (furto qualif. mediante fraude); art.171 §2 (qualif. fraude eletrônica, Lei 14.155/21); art.154-A (invasão de dispositivo — quando a clonagem envolve intrusão). Phase 6.6 audit fix."
+  notes: "CP art.171 (estelionato) + art.298 §1 (equipara cartão a documento particular, Lei 12.737/12). Supporting: CDC art.14 (responsabilidade objetiva do fornecedor — base civil da reclamação) + art.155 §4 II (furto qualif. mediante fraude) + art.154-A (invasão de dispositivo — quando há intrusão). NOTA: §2-A do art.171 (estelionato eletrônico, Lei 14.155/21) deveria estar aqui mas o parser perdeu; ver memory project-parser-bug-dedup. Phase 6.6 r2 audit cleanup."
 
 - query: "publicaram fotos íntimas minhas sem autorização, isso é crime?"
   type: parafrase
@@ -733,8 +726,7 @@
       - "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art140"
     supporting:
       - "urn:lex:br:federal:lei:2014-04-23;12965~art10;par1"
-      - "urn:lex:br:federal:constituicao:1988-10-05;1988~art220"
-  notes: "Resposta literal: CP art. 138 (calúnia), 139 (difamação), 140 (injúria) — crimes que podem ser imputados. Supporting: MCI art. 10 § 1 (provedor disponibiliza dados que identificam o usuário, operacionaliza o não-anonimato); CF art. 220 (liberdade de manifestação como contexto de proteção)."
+  notes: "Resposta literal: CP art. 138 (calúnia), 139 (difamação), 140 (injúria) — crimes que podem ser imputados. Supporting: MCI art. 10 § 1 (provedor disponibiliza dados que identificam o usuário, operacionaliza o não-anonimato). Phase 6.6 r2 audit fix — CF art.220 removido (off-topic; não trata de processabilidade)."
 
 - query: "minha empresa precisa nomear alguém responsável pelos dados dos clientes?"
   type: parafrase
@@ -967,12 +959,12 @@
   relevant:
     core:
       - "urn:lex:br:federal:lei:2002-01-10;10406~art20"
-      - "urn:lex:br:superior.tribunal.justica:sumula:2009-10-28;403~enunciado"
     supporting:
+      - "urn:lex:br:superior.tribunal.justica:sumula:2009-10-28;403~enunciado"
       - "urn:lex:br:federal:lei:2002-01-10;10406~art18"
       - "urn:lex:br:federal:lei:2002-01-10;10406~art20;par1"
       - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"
-  notes: "Resposta canônica: CC art.20 (uso da imagem como direito da personalidade) + Súmula 403 STJ (publicação não autorizada com fins econômicos = dano in re ipsa). Supporting: CC art.18 (nome em propaganda — tratamento paralelo); art.20 §1 (legitimidade post-mortem); CF art.5 X (intimidade/imagem como base constitucional). Phase 6.6+ CC indexing fix."
+  notes: "Core: CC art.20 (uso da imagem como direito da personalidade — resposta literal sobre necessidade de autorização). Supporting: Súmula 403 STJ (consequência processual — dano in re ipsa, dispensa prova; é resposta à pergunta derivativa, não à pergunta literal); CC art.18 (regime paralelo do nome); art.20 §1 (legitimidade post-mortem); CF art.5 X (base constitucional). Phase 6.6 r2 audit fix — S 403 demoted from core to supporting."
 
 - query: "se um terceiro usa meus dados bancários para fraude, o banco responde?"
   type: parafrase
@@ -1041,3 +1033,41 @@
       - "urn:lex:br:federal:lei:2002-01-10;10406~art17"
       - "urn:lex:br:federal:lei:2002-01-10;10406~art20"
   notes: "CC art.18 — sem autorização, não se pode usar o nome alheio em propaganda comercial. Supporting: art.17 (proteção geral do nome contra publicações que exponham a desprezo) + art.20 (regime paralelo da imagem)."
+
+# ============================================================================
+# Phase 6.6 r2 — coverage gap fill. Áreas under-representadas no eval set
+# (audit 2026-05-16): habeas data procedimental (Lei 9.507), LAI procedimento,
+# LGPD pequeno porte. Lei 14.155/21 (estelionato/furto eletrônicos) também
+# under-rep mas suas chunks dependem do parser bug — ver memory
+# project-parser-bug-dedup.
+# ============================================================================
+
+- query: "tenho um e-commerce pequeno, preciso seguir todas as regras da LGPD?"
+  type: parafrase
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art41;par3"
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art55-j;inc18"
+    supporting:
+      - "urn:lex:br:federal:lei:2018-08-14;13709~art41"
+  notes: "LGPD art.41 §3 (ANPD pode dispensar encarregado para microempresa/pequeno porte) + art.55-J XVIII (regulamentação específica para pequeno porte). Lay register, cobre dúvida real de empreendedor pequeno."
+
+- query: "como faço pra pedir uma informação pra uma prefeitura?"
+  type: parafrase
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:2011-11-18;12527~art10"
+      - "urn:lex:br:federal:lei:2011-11-18;12527~art11"
+    supporting:
+      - "urn:lex:br:federal:lei:2011-11-18;12527~art12"
+  notes: "LAI procedimental — pedido de acesso (art.10), prazo de resposta imediata ou em 20 dias (art.11), gratuidade (art.12). Lay register, cobre uso prático da LAI."
+
+- query: "meu pedido administrativo de retificação de dados foi negado, e agora?"
+  type: parafrase
+  relevant:
+    core:
+      - "urn:lex:br:federal:lei:1997-11-12;9507~art8"
+    supporting:
+      - "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2"
+      - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b"
+  notes: "Lei 9.507 art.8 — cabimento do habeas data quando negado o pedido administrativo. Cobre o procedimento (gap até hoje: Lei 9.507 só tinha 1 query no eval)."
