@@ -28,7 +28,30 @@ _ARTIGO_HEAD = re.compile(
     re.IGNORECASE,
 )
 _ARTIGO_NUM_CONTINUATION = re.compile(r"^(\d+)\.\s")
-_PARAGRAFO_HEAD = re.compile(r"^\s*§\s*(\d+)\s*[º°.]?\s*", re.IGNORECASE)
+# Captures both `§ 2º` (number) and `§ 2º-A` (Lei 14.155/21-style sub-§).
+# Group 1: integer; Group 2: optional uppercase letter suffix.
+#
+# Without the suffix capture the previous regex collapsed §2, §2-A, §2-B into
+# the same partition `par2`, then `_dedup_keep_last` discarded all but the
+# last — silently losing the sub-§ chunks (CP art.171 §2-A, art.155 §4-B etc).
+#
+# CRITICAL: the suffix lookahead `(?=[.\s,;:]|$)` distinguishes a real sub-§
+# letter (`§ 2º-A.`) from Planalto's `§ Nº - Texto...` separator pattern
+# (where the hyphen is followed by a regular sentence — "Se o criminoso é
+# primário..." — and the first letter must NOT be captured as a suffix).
+_PARAGRAFO_HEAD = re.compile(
+    r"^\s*§\s*(\d+)\s*"                    # § num
+    r"[º°]?\s*"                             # optional ordinal marker
+    r"(?:[-–]([A-Z])(?=[.\s,;:]|$))?"      # optional letter suffix: hyphen and
+                                            # letter must be ADJACENT (no space)
+                                            # — distinguishes real Lei 14.155-style
+                                            # `§ 2º-A.` from Planalto's separator
+                                            # `§ 2º - O presidente`.
+    r"\s*[-–]?\s*"                          # eat Planalto separator hyphen
+                                            # `§ Nº - Texto…` when no suffix matched
+    r"\.?\s*",                              # optional trailing period
+    re.IGNORECASE,
+)
 _PAR_UNICO_HEAD = re.compile(r"^\s*Par[áa]grafo\s+[úu]nico\s*[.:]?\s*", re.IGNORECASE)
 _INCISO_HEAD = re.compile(
     "^\\s*([IVXLCDM]+)\\s*[-\u2013]\\s*",
@@ -273,14 +296,20 @@ def parse(document_urn: str, html: str) -> list[Chunk]:
         m_par = _PARAGRAFO_HEAD.match(text)
         if m_par and current_artigo is not None:
             par_num = int(m_par.group(1))
-            partition = f"{current_artigo};par{par_num}"
+            par_suffix = m_par.group(2)
+            if par_suffix:
+                partition = f"{current_artigo};par{par_num}-{par_suffix.lower()}"
+                label = f"§ {par_num}º-{par_suffix.upper()}"
+            else:
+                partition = f"{current_artigo};par{par_num}"
+                label = f"§ {par_num}º"
             cleaned, notes = _strip_notes(text[m_par.end() :].strip())
             raw.append(
                 Chunk(
                     document_urn=document_urn,
                     partition=partition,
                     kind="paragrafo",
-                    label=f"§ {par_num}º",
+                    label=label,
                     text=cleaned,
                     parent_partition=current_artigo,
                     nav=dict(nav),

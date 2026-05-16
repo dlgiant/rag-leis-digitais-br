@@ -44,7 +44,7 @@ DOC_URN_RE = re.compile(
 PARTITION_SEGMENT_RE = re.compile(
     r"^(?:adct"
     r"|art\d+(?:-[a-z])?"
-    r"|par\d+"
+    r"|par\d+(?:-[a-z])?"          # Phase 6.6 r3 — Lei 14.155/21 §2-A/§4-B etc.
     r"|inc\d+"
     r"|ali-[a-z]"
     r"|item\d+"
@@ -57,7 +57,7 @@ PARTITION_SEGMENT_RE = re.compile(
 # Maps the partition segment prefix to the expected `kind` value.
 _KIND_BY_TAIL = (
     (re.compile(r"^art\d+(?:-[a-z])?$"), "artigo"),
-    (re.compile(r"^par\d+$"), "paragrafo"),
+    (re.compile(r"^par\d+(?:-[a-z])?$"), "paragrafo"),  # Phase 6.6 r3 — sub-§ suffix
     (re.compile(r"^inc\d+$"), "inciso"),
     (re.compile(r"^ali-[a-z]$"), "alinea"),
     (re.compile(r"^item\d+$"), "item"),

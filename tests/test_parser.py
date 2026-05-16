@@ -212,3 +212,54 @@ def test_cp_arts_187_to_191_present_and_revoked(cp_chunks):
         c = _find_chunk(cp_chunks, f"~art{n}")
         assert c.kind == "artigo"
         assert c.is_revoked, f"art{n} should be is_revoked (revogado pela Lei 9.279)"
+
+
+# ----------------------------------------------------------------------------
+# Phase 6.6 r3 — sub-paragraph suffix capture (Lei 14.155/21).
+# Until 2026-05-16 _PARAGRAFO_HEAD captured only `(\d+)`, collapsing §2,
+# §2-A and §2-B into the same partition `par2`. _dedup_keep_last then
+# discarded all but the last seen — silently losing CP art.171 §2-A
+# (Estelionato Eletrônico) and art.155 §4-B (Furto Eletrônico). Fix
+# extends the regex with an optional `-[A-Z]` suffix anchored by a
+# punctuation lookahead (so `§ Nº - Texto` separators don't false-match).
+# These tests pin the corrected behavior so the bug can't silently regress.
+# ----------------------------------------------------------------------------
+
+
+def test_cp_art171_par2a_estelionato_eletronico(cp_chunks):
+    """CP art. 171 §2-A — Estelionato Eletrônico (Lei 14.155/21) must be
+    indexed as its own partition, not collapsed into par2."""
+    c = _find_chunk(cp_chunks, "~art171;par2-a")
+    assert c.kind == "paragrafo"
+    assert c.label == "§ 2º-A"
+    assert "fraude" in c.text.lower()
+
+
+def test_cp_art171_par2_caput_intact(cp_chunks):
+    """CP art. 171 §2 caput ("Nas mesmas penas incorre quem:") must NOT be
+    overwritten by §2-B text. The dedup bug used to swap them."""
+    c = _find_chunk(cp_chunks, "~art171;par2")
+    assert c.kind == "paragrafo"
+    assert "Nas mesmas penas" in c.text
+    # Sanity: the §2-B text DOES NOT live here.
+    assert "§ 2º-A" not in c.text
+
+
+def test_cp_art155_par4b_furto_eletronico(cp_chunks):
+    """CP art. 155 §4-B — Furto Eletrônico (Lei 14.155/21) must exist and
+    not be clobbered by §4-C (the next sub-§)."""
+    c = _find_chunk(cp_chunks, "~art155;par4-b")
+    assert c.kind == "paragrafo"
+    assert c.label == "§ 4º-B"
+    assert "reclusão" in c.text.lower()
+
+
+def test_cp_art171_par2_separator_hyphen_consumed(cp_chunks):
+    """The Planalto separator `§ 2º - Nas mesmas penas...` should leave
+    text starting with 'Nas', not '- Nas' — the regex eats the separator
+    hyphen when no real suffix follows. This is also the boundary case
+    that the lookahead must NOT confuse with `§ 2º-A` form."""
+    c = _find_chunk(cp_chunks, "~art171;par2")
+    assert c.text.startswith("Nas mesmas penas"), (
+        f"separator hyphen leaked into text: {c.text[:40]!r}"
+    )

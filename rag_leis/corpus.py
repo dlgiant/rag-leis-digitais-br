@@ -105,13 +105,13 @@ TIER_2: tuple[Document, ...] = (
     # (Capítulo II — Dos Direitos da Personalidade) por serem o pilar do
     # direito de imagem / intimidade / honra que entra em queries digitais
     # (Súmula STJ 403, Tema STF 786, etc.). NÃO indexar o CC inteiro
-    # (~2.789 chunks) — adicionaria noise e divergiria do escopo digital.
+    # (~3.658 chunks) — adicionaria noise e divergiria do escopo digital.
     #
     # IMPORTANT: o parser run em parse_all_tier produz TODOS os chunks do
-    # CC. O JSONL atual em data/chunks/tier-2/cc_personalidade.jsonl é
-    # o resultado de filtragem manual (Phase post-6.6 Súmula 403 fix);
-    # se rodar parse_all_tier --tier 2, sobrescreve com o CC inteiro.
-    # Re-aplicar o filtro: ver scripts/filter_cc_personalidade.py.
+    # CC e escreve em br_federal_lei_2002-01-10_10406.jsonl. Re-aplicar
+    # scripts/filter_cc_personalidade.py logo após — ele SOBRESCREVE o
+    # JSONL com a versão filtrada (15 chunks). Se esquecer, load_chunks
+    # vai puxar o CC completo e adicionar 3.643 chunks de noise.
     Document(
         urn="urn:lex:br:federal:lei:2002-01-10;10406",
         title="Código Civil (Lei 10.406/2002) — escopo: arts. 11-21 (Direitos da Personalidade)",
