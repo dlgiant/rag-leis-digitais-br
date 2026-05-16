@@ -3,10 +3,6 @@
   "title": "LGPD — Lei Geral de Proteção de Dados Pessoais (Lei 13.709/2018)",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
   "html": {
-    "status_code": 200,
-    "encoding": "ISO-8859-1",
-    "final_url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
-    "size_bytes": 314607,
     "sha256": "4ad5c4f3770c77b2a422e1a57b418d764688ecda71bc903fcbccde41a364ed85"
   },
   "error": null

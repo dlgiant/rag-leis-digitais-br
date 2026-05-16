@@ -3,10 +3,6 @@
   "title": "Código Civil (Lei 10.406/2002) — escopo: arts. 11-21 (Direitos da Personalidade)",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm",
   "html": {
-    "status_code": 200,
-    "encoding": "ISO-8859-1",
-    "final_url": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm",
-    "size_bytes": 948098,
     "sha256": "d1c96f7f8da3280819ca0ac766b94079f7851848f4bdd5729bc46910944053d5"
   },
   "error": null

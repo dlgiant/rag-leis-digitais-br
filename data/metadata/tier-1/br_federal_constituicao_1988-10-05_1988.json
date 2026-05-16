@@ -3,10 +3,6 @@
   "title": "Constituição da República Federativa do Brasil de 1988",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm",
   "html": {
-    "status_code": 200,
-    "encoding": "ISO-8859-1",
-    "final_url": "https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm",
-    "size_bytes": 1876307,
     "sha256": "d60417ca137b4c93a1828f394efeaabb567ca36df4fa2a635247d9ab59d209f0"
   },
   "error": null

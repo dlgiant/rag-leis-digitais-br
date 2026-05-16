@@ -3,10 +3,6 @@
   "title": "Código Penal (Decreto-Lei 2.848/1940) — texto compilado",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848compilado.htm",
   "html": {
-    "status_code": 200,
-    "encoding": "ISO-8859-1",
-    "final_url": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848compilado.htm",
-    "size_bytes": 677515,
     "sha256": "0a2798c563f60173eb208fe6360793d8979b679a7dc126e8889b5de22c6c1f98"
   },
   "error": null

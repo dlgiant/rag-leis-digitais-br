@@ -3,10 +3,6 @@
   "title": "Marco Civil da Internet (Lei 12.965/2014)",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm",
   "html": {
-    "status_code": 200,
-    "encoding": "ISO-8859-1",
-    "final_url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm",
-    "size_bytes": 121827,
     "sha256": "ef6d28a4a6c737de2c9562fdd80f3a91031e8c39dc77fac22927c84f1f4f6dff"
   },
   "error": null

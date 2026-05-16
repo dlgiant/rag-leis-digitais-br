@@ -3,10 +3,6 @@
   "title": "Código de Defesa do Consumidor (Lei 8.078/1990)",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm",
   "html": {
-    "status_code": 200,
-    "encoding": "ISO-8859-1",
-    "final_url": "https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm",
-    "size_bytes": 172571,
     "sha256": "18a30998a38d702dfba69dd2aa5b0c54adc228584fb50ad0a9bef934b4894e1b"
   },
   "error": null

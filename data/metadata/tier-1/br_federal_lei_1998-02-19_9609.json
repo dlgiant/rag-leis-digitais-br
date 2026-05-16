@@ -3,10 +3,6 @@
   "title": "Lei do Software (Lei 9.609/1998)",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/leis/l9609.htm",
   "html": {
-    "status_code": 200,
-    "encoding": "ISO-8859-1",
-    "final_url": "https://www.planalto.gov.br/ccivil_03/leis/l9609.htm",
-    "size_bytes": 22460,
     "sha256": "a9087db05369291993a3435d9b9f5ed4ef9124b2bd64b2795a6c3ee4d91dee32"
   },
   "error": null
