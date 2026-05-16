@@ -6,15 +6,19 @@ manter apenas o capítulo dos Direitos da Personalidade — pilar de queries
 sobre imagem, intimidade, honra, nome.
 
 Uso:
-  uv run python scripts/filter_cc_personalidade.py
+  uv run python -m scripts.filter_cc_personalidade
 
 Pré-requisito: data/raw/tier-2/<base>.html já existe (rode `fetch_tier --tier 2`).
 
-Saída: data/chunks/tier-2/cc_personalidade.jsonl (15 chunks: 11 artigos +
-4 parágrafos únicos em arts. 12, 13, 14, 20).
+Saída: SOBRESCREVE data/chunks/tier-2/br_federal_lei_2002-01-10_10406.jsonl
+com a versão filtrada (15 chunks: 11 artigos + 4 parágrafos únicos em
+arts. 12, 13, 14, 20). Sobrescrever em vez de criar arquivo paralelo
+evita duplicação de URN — load_chunks lê todos os JSONLs em data/chunks/,
+e se houver dois arquivos com os mesmos chunks o índice quebra
+(test_urns_are_unique).
 
 Re-aplicar sempre que parse_all_tier --tier 2 for executado, porque o
-parser sobrescreve o JSONL com TODO o CC.
+parser escreve TODO o CC nesse mesmo arquivo (3.658 chunks).
 """
 
 from __future__ import annotations
@@ -36,7 +40,8 @@ KEEP_PATTERN = re.compile(r"^art(1[1-9]|2[01])(;|$)")
 def main() -> int:
     base = urn_to_filename(CC_URN)
     html_path = PROJECT_ROOT / "data" / "raw" / "tier-2" / f"{base}.html"
-    out_path = PROJECT_ROOT / "data" / "chunks" / "tier-2" / "cc_personalidade.jsonl"
+    # Overwrite the canonical chunks file produced by parse_all_tier.
+    out_path = PROJECT_ROOT / "data" / "chunks" / "tier-2" / f"{base}.jsonl"
 
     if not html_path.exists():
         print(f"ERRO: {html_path} não existe. Rode `uv run python -m rag_leis.fetch_tier --tier 2` antes.", file=sys.stderr)
@@ -55,7 +60,7 @@ def main() -> int:
             f.write(json.dumps(payload, ensure_ascii=False) + "\n")
 
     print(f"CC parser produced {len(all_chunks)} chunks; kept {len(filtered)} (arts. 11-21).")
-    print(f"Wrote {out_path.relative_to(PROJECT_ROOT)}")
+    print(f"Overwrote {out_path.relative_to(PROJECT_ROOT)}")
     return 0
 
 
