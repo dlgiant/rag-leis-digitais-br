@@ -17,6 +17,7 @@ from rag_leis.legal_rank import (
     RANK_INFRALEGAL,
     RANK_LEI_COMPLEMENTAR,
     RANK_LEI_ORDINARIA,
+    effective_legal_rank,
     legal_rank_for_urn,
     rank_name,
 )
@@ -88,6 +89,75 @@ def test_rank_name_returns_human_readable():
     assert "Constituição" in rank_name(RANK_CONSTITUCIONAL)
     assert "Lei Ordinária" in rank_name(RANK_LEI_ORDINARIA)
     assert rank_name(99) == "rank-99"  # unknown — synthesized
+
+
+# Phase 6.5 — effective_legal_rank: status-aware downgrade for pendente
+# jurisprudência. URN type alone says "tema → 3", but a tema without
+# tese fixada doesn't have vinculante difusa effect → rank-down to 5.
+
+@pytest.mark.parametrize(
+    "urn,nav,expected",
+    [
+        # tese fixada — URN rank stands
+        (
+            "urn:lex:br:supremo.tribunal.federal:tema:786",
+            {"status": "tese-fixada"},
+            RANK_LEI_ORDINARIA,
+        ),
+        # pendente julgamento — rank-down
+        (
+            "urn:lex:br:supremo.tribunal.federal:tema:815",
+            {"status": "pendente_julgamento"},
+            RANK_INFRALEGAL,
+        ),
+        # tese fixada mas transcrição verbatim pendente (curador stub) — rank-down
+        # (a tese existe juridicamente, mas o RAG não pode citar verbatim com
+        # confiança, então se comporta como infralegal para evitar overreach)
+        (
+            "urn:lex:br:supremo.tribunal.federal:tema:987",
+            {"status": "tese-fixada-pendente-transcricao-verbatim"},
+            RANK_INFRALEGAL,
+        ),
+        # nav ausente / sem status → comporta como legal_rank_for_urn puro
+        ("urn:lex:br:supremo.tribunal.federal:tema:786", {}, RANK_LEI_ORDINARIA),
+        ("urn:lex:br:supremo.tribunal.federal:tema:786", None, RANK_LEI_ORDINARIA),
+        # status que NÃO contém "pendente" — sem rank-down
+        (
+            "urn:lex:br:supremo.tribunal.federal:tema:786",
+            {"status": "tese-fixada"},
+            RANK_LEI_ORDINARIA,
+        ),
+        # Caso estranho: lei com nav.status pendente — status só faz sentido
+        # para jurisprudência, mas a regra é uniforme. Aceitamos rank-down.
+        # (Hoje nenhum chunk de lei tem nav.status, mas defensivo.)
+        (
+            "urn:lex:br:federal:lei:2018-08-14;13709",
+            {"status": "algo_pendente_aqui"},
+            RANK_INFRALEGAL,
+        ),
+        # Súmula vinculante sempre rank 2, status irrelevante quando ausente
+        (
+            "urn:lex:br:supremo.tribunal.federal:sumula.vinculante:2008-08-13;11",
+            {},
+            RANK_LEI_COMPLEMENTAR,
+        ),
+        # Súmula simples já é rank 5 — nada muda mesmo com pendente
+        (
+            "urn:lex:br:superior.tribunal.justica:sumula:1999-09-08;227",
+            {"status": "vigente"},
+            RANK_INFRALEGAL,
+        ),
+    ],
+)
+def test_effective_legal_rank_with_status(urn, nav, expected):
+    assert effective_legal_rank(urn, nav) == expected
+
+
+def test_effective_rank_pendente_substring_is_case_insensitive():
+    """Defensive: 'PENDENTE_JULGAMENTO' (uppercase) should also rank-down."""
+    urn = "urn:lex:br:supremo.tribunal.federal:tema:815"
+    assert effective_legal_rank(urn, {"status": "PENDENTE_JULGAMENTO"}) == RANK_INFRALEGAL
+    assert effective_legal_rank(urn, {"status": "Pendente"}) == RANK_INFRALEGAL
 
 
 def test_all_rank_constants_in_table():

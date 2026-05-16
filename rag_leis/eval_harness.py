@@ -11,7 +11,7 @@ import numpy as np
 import yaml
 
 from rag_leis.embeddings import Embedder, Vec
-from rag_leis.legal_rank import DEFAULT_RANK, legal_rank_for_urn
+from rag_leis.legal_rank import DEFAULT_RANK, effective_legal_rank
 from rag_leis.vigencia import Vigencia
 
 # Phase 5.7: Emenda Constitucional reference patterns in chunk.notes.
@@ -214,7 +214,7 @@ def load_chunks(
                 caput_text=caput_text,
                 citation=citation,
                 vigencia=overlays.get(obj["urn"]),
-                legal_rank=legal_rank_for_urn(obj["document_urn"]),
+                legal_rank=effective_legal_rank(obj["document_urn"], obj.get("nav") or {}),
                 fetched_at=fetched_at_by_doc.get(obj["document_urn"], ""),
                 amended_by=tuple(_extract_amended_by(obj.get("notes", []))),
             )
