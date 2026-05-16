@@ -1,0 +1,39 @@
+{
+  "urn": "urn:lex:br:federal:lei:2021-03-29;14129",
+  "title": "Lei 14.129/2021 — Lei do Governo Digital",
+  "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14129.htm",
+  "lexml": {
+    "matched": true,
+    "title": "Lei nº 14.129, de 29 de Março de 2021",
+    "date": "29/03/2021",
+    "ementa": "Dispõe sobre princípios, regras e instrumentos para o Governo Digital e para o aumento da eficiência pública e altera a Lei nº 7.116, de 29 de agosto de 1983, a Lei nº 12.527, de 18 de novembro de 2011 (Lei de Acesso à Informação), a Lei nº 12.682, de 9 de julho de 2012, e a Lei nº 13.460, de 26 de junho de 2017.",
+    "apelidos": [
+      "Lei do Governo Digital",
+      "LEI-14129-2021-03-29"
+    ],
+    "locality": "Brasil",
+    "authority": "Federal",
+    "publication_date": "2021-03-30",
+    "fields": {
+      "Localidade": "Brasil",
+      "Autoridade": "Federal",
+      "Título": "Lei nº 14.129, de 29 de Março de 2021",
+      "Data": "29/03/2021",
+      "Apelido": "Lei do Governo Digital",
+      "Ementa": "Dispõe sobre princípios, regras e instrumentos para o Governo Digital e para o aumento da eficiência pública e altera a Lei nº 7.116, de 29 de agosto de 1983, a Lei nº 12.527, de 18 de novembro de 2011 (Lei de Acesso à Informação), a Lei nº 12.682, de 9 de julho de 2012, e a Lei nº 13.460, de 26 de junho de 2017.",
+      "Nome Uniforme": "urn:lex:br:federal:lei:2021-03-29;14129",
+      "Mais detalhes": "Senado Federal",
+      "Publicação de Veto Parcialmente Rejeitado": "2021-06-11",
+      "Publicação Original": "2021-03-30",
+      "Texto Atualizado": "Multivigente"
+    }
+  },
+  "html": {
+    "status_code": 200,
+    "encoding": "ISO-8859-1",
+    "final_url": "https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14129.htm",
+    "size_bytes": 142063,
+    "sha256": "793a1f51f80ce16bf641691d88c38e4c32305bfc482995de177f30576ddd8227"
+  },
+  "error": null
+}

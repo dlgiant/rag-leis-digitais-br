@@ -1,0 +1,121 @@
+name: Smoke test (post-merge)
+
+# Phase 7.5 — guard against post-merge regressions in the production
+# pipeline. Triggered on every push to main (typically PR merges from
+# the refresh-corpus.yml weekly workflow, but also manual edits).
+#
+# Two-stage gate:
+#   1. pytest (no network) — schema invariants, parser tests, unit logic
+#   2. live RAG smoke — 10 canonical queries via Sabiá (the production
+#      generator per study/llm-provider-decision-2026-05-15.md)
+#
+# Cost: pytest ~free; Sabiá smoke ~$0.05/run × ~4 merges/month ≈ $0.20/month.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      # Skip pure-docs pushes (study/, posts/) — they don't affect runtime.
+      - 'rag_leis/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'data/metadata/**'
+      - 'data/audit/**'
+      - 'data/chunks/tier-4/**'
+      - 'eval/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write  # open issue on smoke failure
+
+concurrency:
+  group: smoke-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install Python dependencies
+        # Voyage needed for any retrieval that hits the cached index.
+        # `bge` not needed for smoke (the cached voyage index is the
+        # production path).
+        run: uv sync --extra voyage
+
+      - name: Run pytest (no network)
+        # Skip live-network tests in CI — the smoke step below covers the
+        # one end-to-end live test we care about (Sabiá generation).
+        run: uv run pytest -m "not network"
+
+      - name: Sabiá smoke test
+        # 10 canonical queries through the full RAG pipeline. Checks: no
+        # crashes, no empty answers, no unexpected refusals on in-scope
+        # queries. Doesn't gate on metric thresholds — that's the weekly
+        # refresh's job.
+        #
+        # Gracefully skips when MARITACA_API_KEY isn't set (first runs
+        # before operator configures repo secrets). pytest above is the
+        # always-on guard; this is the live-API supplementary check.
+        id: smoke
+        if: env.MARITACA_API_KEY != '' && env.VOYAGE_API_KEY != ''
+        env:
+          MARITACA_API_KEY: ${{ secrets.MARITACA_API_KEY }}
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+        run: |
+          set +e
+          uv run python -m scripts.smoke_test_rag 2>&1 | tee smoke.log
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke skipped notice
+        if: env.MARITACA_API_KEY == '' || env.VOYAGE_API_KEY == ''
+        env:
+          MARITACA_API_KEY: ${{ secrets.MARITACA_API_KEY }}
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+        run: |
+          echo "::notice::Live smoke test skipped: VOYAGE_API_KEY or MARITACA_API_KEY not configured in repo secrets. See docs/runbook-corpus-refresh.md."
+
+      - name: Open issue on smoke failure
+        if: steps.smoke.outputs.exit_code != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tail -n 80 smoke.log > tail.log
+          body=$(cat <<EOF
+          The post-merge smoke test failed after commit ${{ github.sha }}.
+
+          ## Workflow run
+          - $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+
+          ## Last 80 lines of smoke.log
+          \`\`\`
+          $(cat tail.log)
+          \`\`\`
+
+          ## Next steps
+          1. Open the workflow run above. The failure is one of:
+             - Crash (likely parser/pipeline regression; check stack trace)
+             - Empty/refused answer on a query that should be in-scope (LLM behavior shift)
+             - Voyage / Sabiá API outage (transient — re-run)
+          2. If a code change introduced the regression, revert or fix-forward.
+          3. If Sabiá refused something legitimate, the SYSTEM_PROMPT may need an iteration — see \`study/llm-provider-decision-2026-05-15.md\`.
+          4. Close once resolved.
+          EOF
+          )
+          gh issue create \
+            --title "Post-merge smoke FAILED — $(git rev-parse --short HEAD)" \
+            --label "production-degradation" \
+            --body "$body"

@@ -1,0 +1,39 @@
+{
+  "urn": "urn:lex:br:federal:lei:1998-02-19;9610",
+  "title": "Lei de Direitos Autorais (Lei 9.610/1998)",
+  "planalto_url": "https://www.planalto.gov.br/ccivil_03/leis/l9610.htm",
+  "lexml": {
+    "matched": true,
+    "title": "Lei nº 9.610, de 19 de Fevereiro de 1998",
+    "date": "19/02/1998",
+    "ementa": "Altera, atualiza e consolida a legislação sobre direitos autorais e dá outras providências.",
+    "apelidos": [
+      "Lei dos Direitos Autorais (1998)",
+      "LEI-9610-1998-02-19 , Lei dos Direitos Autorais"
+    ],
+    "locality": "Brasil",
+    "authority": "Federal",
+    "publication_date": "1998-02-20",
+    "fields": {
+      "Localidade": "Brasil",
+      "Autoridade": "Federal",
+      "Título": "Lei nº 9.610, de 19 de Fevereiro de 1998",
+      "Data": "19/02/1998",
+      "Apelido": "Lei dos Direitos Autorais (1998)",
+      "Ementa": "Altera, atualiza e consolida a legislação sobre direitos autorais e dá outras providências.",
+      "Nome Uniforme": "urn:lex:br:federal:lei:1998-02-19;9610",
+      "Mais detalhes": "Senado Federal",
+      "Projeto de Origem": "[ Projeto de Lei do Senado nº 249/1989 &gt; Projeto de Lei (CD) nº 5430/1990 &gt; Mensagem nº 223/1998 : Lei nº 9.610 de 19/02/1998 ]",
+      "Publicação Original": "1998-02-20",
+      "Texto Atualizado": "Multivigente"
+    }
+  },
+  "html": {
+    "status_code": 200,
+    "encoding": "ISO-8859-1",
+    "final_url": "https://www.planalto.gov.br/ccivil_03/leis/l9610.htm",
+    "size_bytes": 151743,
+    "sha256": "ee01465e70babec37f38aefb07eecc1ed696bacec477c5d78d909e56199c40fb"
+  },
+  "error": null
+}

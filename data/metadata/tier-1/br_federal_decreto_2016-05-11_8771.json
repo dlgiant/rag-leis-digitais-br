@@ -1,0 +1,37 @@
+{
+  "urn": "urn:lex:br:federal:decreto:2016-05-11;8771",
+  "title": "Decreto 8.771/2016 — regulamenta o Marco Civil da Internet",
+  "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2016/decreto/d8771.htm",
+  "lexml": {
+    "matched": true,
+    "title": "Decreto nº 8.771 de 11/05/2016",
+    "date": "11/05/2016",
+    "ementa": "REGULAMENTA A LEI Nº 12.965, DE 23 DE ABRIL DE 2014, PARA TRATAR DAS HIPÓTESES ADMITIDAS DE DISCRIMINAÇÃO DE PACOTES DE DADOS NA INTERNET E DE DEGRADAÇÃO DE TRÁFEGO, INDICAR PROCEDIMENTOS PARA GUARDA E PROTEÇÃO DE DADOS POR PROVEDORES DE CONEXÃO E DE APLICAÇÕES, APONTAR MEDIDAS DE TRANSPARÊNCIA NA REQUISIÇÃO DE DADOS CADASTRAIS PELA ADMINISTRAÇÃO PÚBLICA E ESTABELECER PARÂMETROS PARA FISCALIZAÇÃO E APURAÇÃO DE INFRAÇÕES.",
+    "apelidos": [
+      "DEC-8771-2016-05-11"
+    ],
+    "locality": "Brasil",
+    "authority": "Federal",
+    "publication_date": "2016-05-11",
+    "fields": {
+      "Localidade": "Brasil",
+      "Autoridade": "Federal",
+      "Título": "Decreto nº 8.771 de 11/05/2016",
+      "Data": "11/05/2016",
+      "Apelido": "DEC-8771-2016-05-11",
+      "Ementa": "REGULAMENTA A LEI Nº 12.965, DE 23 DE ABRIL DE 2014, PARA TRATAR DAS HIPÓTESES ADMITIDAS DE DISCRIMINAÇÃO DE PACOTES DE DADOS NA INTERNET E DE DEGRADAÇÃO DE TRÁFEGO, INDICAR PROCEDIMENTOS PARA GUARDA E PROTEÇÃO DE DADOS POR PROVEDORES DE CONEXÃO E DE APLICAÇÕES, APONTAR MEDIDAS DE TRANSPARÊNCIA NA REQUISIÇÃO DE DADOS CADASTRAIS PELA ADMINISTRAÇÃO PÚBLICA E ESTABELECER PARÂMETROS PARA FISCALIZAÇÃO E APURAÇÃO DE INFRAÇÕES.",
+      "Nome Uniforme": "urn:lex:br:federal:decreto:2016-05-11;8771",
+      "Mais detalhes": "Senado Federal",
+      "Publicação Original": "2016-05-11",
+      "Texto Atualizado": "Multivigente"
+    }
+  },
+  "html": {
+    "status_code": 200,
+    "encoding": "ISO-8859-1",
+    "final_url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2016/decreto/d8771.htm",
+    "size_bytes": 38694,
+    "sha256": "e3f960c992cc2c922c260912386af3bf3a2f5b2c1704a90541889c729fe0524a"
+  },
+  "error": null
+}

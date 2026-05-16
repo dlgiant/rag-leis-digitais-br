@@ -1,0 +1,39 @@
+{
+  "urn": "urn:lex:br:federal:lei:2014-04-23;12965",
+  "title": "Marco Civil da Internet (Lei 12.965/2014)",
+  "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm",
+  "lexml": {
+    "matched": true,
+    "title": "Lei nº 12.965, de 23 de Abril de 2014",
+    "date": "23/04/2014",
+    "ementa": "Estabelece princípios, garantias, direitos e deveres para o uso da Internet no Brasil.",
+    "apelidos": [
+      "Marco Civil da Internet (2014)",
+      "LEI-12965-2014-04-23 , Marco Civil da Internet"
+    ],
+    "locality": "Brasil",
+    "authority": "Federal",
+    "publication_date": "2014-04-24",
+    "fields": {
+      "Localidade": "Brasil",
+      "Autoridade": "Federal",
+      "Título": "Lei nº 12.965, de 23 de Abril de 2014",
+      "Data": "23/04/2014",
+      "Apelido": "Marco Civil da Internet (2014)",
+      "Ementa": "Estabelece princípios, garantias, direitos e deveres para o uso da Internet no Brasil.",
+      "Nome Uniforme": "urn:lex:br:federal:lei:2014-04-23;12965",
+      "Mais detalhes": "Senado Federal",
+      "Projeto de Origem": "[ Projeto de Lei (CD) nº 2126/2011 &gt; Projeto de Lei da Câmara nº 21/2014 : Lei nº 12.965 de 23/04/2014 ]",
+      "Publicação Original": "2014-04-24",
+      "Texto Atualizado": "Multivigente"
+    }
+  },
+  "html": {
+    "status_code": 200,
+    "encoding": "ISO-8859-1",
+    "final_url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm",
+    "size_bytes": 121827,
+    "sha256": "ef6d28a4a6c737de2c9562fdd80f3a91031e8c39dc77fac22927c84f1f4f6dff"
+  },
+  "error": null
+}

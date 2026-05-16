@@ -26,10 +26,18 @@ data/chunks/*
 !data/chunks/tier-4/
 !data/chunks/tier-4/**
 data/index/
-data/metadata/
-# PII audit log — production telemetry; never commit (contains hashes
-# of real user queries + redacted text; would defeat the LGPD purpose).
-data/audit/
+# data/metadata/ — Phase 7 (production infra): metadata jsons (~1KB each,
+# ~17 docs = ~17KB total) carregam html.sha256 que é o estado durável
+# do diff cycle. Sem isso, GitHub Actions runner efêmero veria todos os
+# docs como NEW a cada run. Sem PII (só urn, title, lexml record, SHA).
+# Files: data/metadata/<tier>/<urn>.json — tracked.
+# data/audit/ — Phase 7: queremos tracked APENAS o estado de gate +
+# history de mudanças. PII audit log (production telemetry com hashes
+# de queries reais) DEVE seguir ignorado — usa nome distinto pra
+# preservar essa fronteira (data/audit/pii_*.jsonl, etc.).
+data/audit/*
+!data/audit/last_eval_metrics.json
+!data/audit/corpus_updates.jsonl
 CLAUDE.md
 STUDY-*
 SUMMARY_*
