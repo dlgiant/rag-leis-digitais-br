@@ -108,13 +108,17 @@ def write_outputs(
     new_sha = diff.new_sha if diff is not None else None
     new_bytes = diff.new_bytes if diff is not None else None
 
-    # Phase 7 fix (2026-05-16): metadata tracked in git for cross-run diff
-    # MUST be deterministic across environments. LexML resolver returns
-    # different content from GitHub Actions runner IPs (rate-limit /
-    # blocked) than from local IPs — would create a false diff on every
-    # CI run. Dropped from tracked metadata; LexML lookup still runs
-    # (best-effort enrichment) and is printed at fetch-time for human
-    # visibility, but NOT persisted.
+    # Phase 7 fix (2026-05-16): tracked metadata must be byte-identical
+    # across local + CI for the diff system to work. Two sources of
+    # non-determinism removed:
+    #   - LexML enrichment (rate-limited from GitHub Actions IPs)
+    #   - html.size_bytes (counts the RAW response including the F5
+    #     anti-bot token, which varies in length between requests).
+    # What survives in tracked metadata: urn, title, planalto_url,
+    # html.sha256 (SHA is over the F5-stripped body → stable).
+    # Per-fetch context (status_code, final_url, encoding, size_bytes)
+    # still printed inline at fetch time for human visibility but not
+    # persisted to disk.
     meta_path.write_text(
         json.dumps(
             {
@@ -122,13 +126,7 @@ def write_outputs(
                 "title": doc.title,
                 "planalto_url": doc.planalto_url,
                 "html": {
-                    "status_code": html_doc.status_code if html_doc else None,
-                    "encoding": html_doc.encoding if html_doc else None,
-                    "final_url": html_doc.final_url if html_doc else None,
-                    "size_bytes": new_bytes if new_bytes is not None else (
-                        len(html_doc.html.encode("utf-8")) if html_doc else None
-                    ),
-                    "sha256": new_sha,  # Phase 7.1 — canonical "current state" of doc
+                    "sha256": new_sha,  # Phase 7.1 — canonical state of doc
                 },
                 "error": error,
             },

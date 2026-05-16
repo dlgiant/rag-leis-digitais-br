@@ -3,10 +3,6 @@
   "title": "Lei de Acesso à Informação (Lei 12.527/2011)",
   "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12527.htm",
   "html": {
-    "status_code": 200,
-    "encoding": "ISO-8859-1",
-    "final_url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12527.htm",
-    "size_bytes": 111536,
     "sha256": "5f094ff01eddff76da4ecfed779593bea557b8d1a566421701b3f596571e3a6b"
   },
   "error": null
