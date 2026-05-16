@@ -32,12 +32,12 @@ jobs:
     timeout-minutes: 30  # full cycle takes <10 min; 30 is the cap
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0  # need history so PR branch base is correct
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
           cache-dependency-glob: "uv.lock"

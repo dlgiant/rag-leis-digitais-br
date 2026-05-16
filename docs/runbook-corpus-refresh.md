@@ -13,6 +13,24 @@ ou uma issue de `corpus-update-failed` / `production-degradation`.
 | `MARITACA_API_KEY` | Sim para smoke test | https://chat.maritaca.ai/ |
 | `ANTHROPIC_API_KEY` | Opcional — só para futuras extensões | https://console.anthropic.com/ |
 
+**⚠️ Repo-level setting (obrigatório para auto-PR funcionar):**
+
+`Settings → Actions → General → Workflow permissions`:
+- [x] Read and write permissions
+- [x] **Allow GitHub Actions to create and approve pull requests**
+
+Sem esse checkbox, `refresh-corpus.yml` consegue commitar a branch mas
+**falha ao abrir o PR** com erro `GitHub Actions is not permitted to
+create or approve pull requests`. Confirmado empiricamente em 2026-05-16.
+
+**Labels do repo (já criadas via gh CLI; recriar se necessário):**
+
+```bash
+gh label create "corpus-update" --color "0e8a16" --description "Auto PR from weekly refresh"
+gh label create "corpus-update-failed" --color "d73a4a" --description "Weekly refresh failed"
+gh label create "production-degradation" --color "b60205" --description "Smoke detected regression"
+```
+
 **Cost guard recomendado:**
 - Voyage: setar billing alert em $5/mês (steady-state esperado ~$1-2/mês)
 - Marítaca: alerta em $5/mês (~$0.20/mês esperado)
