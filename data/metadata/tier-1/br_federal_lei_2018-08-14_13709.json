@@ -1,0 +1,39 @@
+{
+  "urn": "urn:lex:br:federal:lei:2018-08-14;13709",
+  "title": "LGPD — Lei Geral de Proteção de Dados Pessoais (Lei 13.709/2018)",
+  "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
+  "lexml": {
+    "matched": true,
+    "title": "Lei nº 13.709, de 14 de Agosto de 2018",
+    "date": "14/08/2018",
+    "ementa": "Dispõe sobre a proteção de dados pessoais e altera a Lei nº 12.965, de 23 de abril de 2014 (Marco Civil da Internet).",
+    "apelidos": [
+      "Lei Geral de Proteção de Dados Pessoais (LGPDP) (2018)",
+      "LEI-13709-2018-08-14 , Lei Geral de Proteção de Dados"
+    ],
+    "locality": "Brasil",
+    "authority": "Federal",
+    "publication_date": "2018-08-15",
+    "fields": {
+      "Localidade": "Brasil",
+      "Autoridade": "Federal",
+      "Título": "Lei nº 13.709, de 14 de Agosto de 2018",
+      "Data": "14/08/2018",
+      "Apelido": "Lei Geral de Proteção de Dados Pessoais (LGPDP) (2018)",
+      "Ementa": "Dispõe sobre a proteção de dados pessoais e altera a Lei nº 12.965, de 23 de abril de 2014 (Marco Civil da Internet).",
+      "Nome Uniforme": "urn:lex:br:federal:lei:2018-08-14;13709",
+      "Mais detalhes": "Senado Federal",
+      "Projeto de Origem": "[ Projeto de Lei (CD) nº 4060/2012 &gt; Projeto de Lei da Câmara nº 53/2018 &gt; Veto nº 33/2018 : Lei nº 13.709 de 14/08/2018 ]",
+      "Publicação Original": "2018-08-15",
+      "Texto Atualizado": "Multivigente"
+    }
+  },
+  "html": {
+    "status_code": 200,
+    "encoding": "ISO-8859-1",
+    "final_url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
+    "size_bytes": 313048,
+    "sha256": "4ad5c4f3770c77b2a422e1a57b418d764688ecda71bc903fcbccde41a364ed85"
+  },
+  "error": null
+}

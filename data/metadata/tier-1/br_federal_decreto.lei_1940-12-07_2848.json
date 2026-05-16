@@ -1,0 +1,39 @@
+{
+  "urn": "urn:lex:br:federal:decreto.lei:1940-12-07;2848",
+  "title": "Código Penal (Decreto-Lei 2.848/1940) — texto compilado",
+  "planalto_url": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848compilado.htm",
+  "lexml": {
+    "matched": true,
+    "title": "Decreto-Lei nº 2.848, de 7 de Dezembro de 1940",
+    "date": "07/12/1940",
+    "ementa": "Código Penal.",
+    "apelidos": [
+      "Código Penal (1940)",
+      "DEL-2848-1940-12-07 , Código Penal"
+    ],
+    "locality": "Brasil",
+    "authority": "Federal",
+    "publication_date": "1940-12-31",
+    "fields": {
+      "Localidade": "Brasil",
+      "Autoridade": "Federal",
+      "Título": "Decreto-Lei nº 2.848, de 7 de Dezembro de 1940",
+      "Data": "07/12/1940",
+      "Apelido": "Código Penal (1940)",
+      "Ementa": "Código Penal.",
+      "Nome Uniforme": "urn:lex:br:federal:decreto.lei:1940-12-07;2848",
+      "Mais detalhes": "Senado Federal",
+      "Publicação Original": "1940-12-31",
+      "Retificação": "1941-01-03",
+      "Texto Atualizado": "Multivigente"
+    }
+  },
+  "html": {
+    "status_code": 200,
+    "encoding": "ISO-8859-1",
+    "final_url": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848compilado.htm",
+    "size_bytes": 679074,
+    "sha256": "0a2798c563f60173eb208fe6360793d8979b679a7dc126e8889b5de22c6c1f98"
+  },
+  "error": null
+}

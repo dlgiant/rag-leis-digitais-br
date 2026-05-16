@@ -1,0 +1,39 @@
+{
+  "urn": "urn:lex:br:federal:lei:2002-01-10;10406",
+  "title": "Código Civil (Lei 10.406/2002) — escopo: arts. 11-21 (Direitos da Personalidade)",
+  "planalto_url": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm",
+  "lexml": {
+    "matched": true,
+    "title": "Lei nº 10.406, de 10 de Janeiro de 2002",
+    "date": "10/01/2002",
+    "ementa": "Institui o Código Civil.",
+    "apelidos": [
+      "Código Civil (2002)",
+      "LEI-10406-2002-01-10 , Código Civil"
+    ],
+    "locality": "Brasil",
+    "authority": "Federal",
+    "publication_date": "2002-01-11",
+    "fields": {
+      "Localidade": "Brasil",
+      "Autoridade": "Federal",
+      "Título": "Lei nº 10.406, de 10 de Janeiro de 2002",
+      "Data": "10/01/2002",
+      "Apelido": "Código Civil (2002)",
+      "Ementa": "Institui o Código Civil.",
+      "Nome Uniforme": "urn:lex:br:federal:lei:2002-01-10;10406",
+      "Mais detalhes": "Senado Federal",
+      "Projeto de Origem": "[ Projeto de Lei (CD) nº 634/1975 &gt; Projeto de Lei da Câmara nº 118/1984 : Lei nº 10.406 de 10/01/2002 ]",
+      "Publicação Original": "2002-01-11",
+      "Texto Atualizado": "Multivigente"
+    }
+  },
+  "html": {
+    "status_code": 200,
+    "encoding": "ISO-8859-1",
+    "final_url": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm",
+    "size_bytes": 948098,
+    "sha256": "d1c96f7f8da3280819ca0ac766b94079f7851848f4bdd5729bc46910944053d5"
+  },
+  "error": null
+}

@@ -1,0 +1,39 @@
+{
+  "urn": "urn:lex:br:federal:lei:1997-11-12;9507",
+  "title": "Lei 9.507/1997 — disciplina o direito de acesso a informações e o procedimento do habeas data",
+  "planalto_url": "https://www.planalto.gov.br/ccivil_03/leis/l9507.htm",
+  "lexml": {
+    "matched": true,
+    "title": "Lei nº 9.507, de 12 de Novembro de 1997",
+    "date": "12/11/1997",
+    "ementa": "Regula o direito de acesso a informações e disciplina o rito processual do habeas data.",
+    "apelidos": [
+      "Lei do Habeas Data (1997)",
+      "LEI-9507-1997-11-12 , Lei do Habeas Data"
+    ],
+    "locality": "Brasil",
+    "authority": "Federal",
+    "publication_date": "1997-11-13",
+    "fields": {
+      "Localidade": "Brasil",
+      "Autoridade": "Federal",
+      "Título": "Lei nº 9.507, de 12 de Novembro de 1997",
+      "Data": "12/11/1997",
+      "Apelido": "Lei do Habeas Data (1997)",
+      "Ementa": "Regula o direito de acesso a informações e disciplina o rito processual do habeas data.",
+      "Nome Uniforme": "urn:lex:br:federal:lei:1997-11-12;9507",
+      "Mais detalhes": "Senado Federal",
+      "Projeto de Origem": "[ Projeto de Lei do Senado nº 259/1989 &gt; Projeto de Lei (CD) nº 4392/1989 &gt; Mensagem nº 212/1998 : Lei nº 9.507 de 12/11/1997 ]",
+      "Publicação Original": "1997-11-13",
+      "Texto Atualizado": "Multivigente"
+    }
+  },
+  "html": {
+    "status_code": 200,
+    "encoding": "ISO-8859-1",
+    "final_url": "https://www.planalto.gov.br/ccivil_03/leis/l9507.htm",
+    "size_bytes": 17611,
+    "sha256": "3a493ab79dec16fade7d20cee666b951b45980810f9f16e40735a5d0a4a485a8"
+  },
+  "error": null
+}

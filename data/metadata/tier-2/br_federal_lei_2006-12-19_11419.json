@@ -1,0 +1,39 @@
+{
+  "urn": "urn:lex:br:federal:lei:2006-12-19;11419",
+  "title": "Lei 11.419/2006 — informatização do processo judicial",
+  "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11419.htm",
+  "lexml": {
+    "matched": true,
+    "title": "Lei nº 11.419, de 19 de Dezembro de 2006",
+    "date": "19/12/2006",
+    "ementa": "Dispõe sobre a informatização do processo judicial; altera a Lei nº 5.869, de 11 de janeiro de 1973 - Código de Processo Civil; e dá outras providências.",
+    "apelidos": [
+      "Lei do Processo Judicial Eletrônico",
+      "LEI-11419-2006-12-19 , Lei do Processo Judicial Eletrônico"
+    ],
+    "locality": "Brasil",
+    "authority": "Federal",
+    "publication_date": "2006-12-20",
+    "fields": {
+      "Localidade": "Brasil",
+      "Autoridade": "Federal",
+      "Título": "Lei nº 11.419, de 19 de Dezembro de 2006",
+      "Data": "19/12/2006",
+      "Apelido": "Lei do Processo Judicial Eletrônico",
+      "Ementa": "Dispõe sobre a informatização do processo judicial; altera a Lei nº 5.869, de 11 de janeiro de 1973 - Código de Processo Civil; e dá outras providências.",
+      "Nome Uniforme": "urn:lex:br:federal:lei:2006-12-19;11419",
+      "Mais detalhes": "Senado Federal",
+      "Projeto de Origem": "[ Projeto de Lei (CD) nº 5828/2001 &gt; Projeto de Lei da Câmara nº 71/2002 &gt; Veto nº 29/2006 : Lei nº 11.419 de 19/12/2006 ]",
+      "Publicação Original": "2006-12-20",
+      "Texto Atualizado": "Multivigente"
+    }
+  },
+  "html": {
+    "status_code": 200,
+    "encoding": "ISO-8859-1",
+    "final_url": "https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11419.htm",
+    "size_bytes": 47259,
+    "sha256": "2937067719952cf10aaf94bc4de4e01ff6b88ee421f0dead8b092b414969f820"
+  },
+  "error": null
+}

@@ -1,0 +1,37 @@
+{
+  "urn": "urn:lex:br:federal:lei:2021-05-27;14155",
+  "title": "Lei 14.155/2021 — Crimes Cibernéticos",
+  "planalto_url": "https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14155.htm",
+  "lexml": {
+    "matched": true,
+    "title": "Lei nº 14.155, de 27 de Maio de 2021",
+    "date": "27/05/2021",
+    "ementa": "Altera o Decreto-Lei nº 2.848, de 7 de dezembro de 1940 (Código Penal), para tornar mais graves os crimes de violação de dispositivo informático, furto e estelionato cometidos de forma eletrônica ou pela internet; e o Decreto-Lei nº 3.689, de 3 de outubro de 1941 (Código de Processo Penal), para definir a competência em modalidades de estelionato.",
+    "apelidos": [
+      "LEI-14155-2021-05-27"
+    ],
+    "locality": "Brasil",
+    "authority": "Federal",
+    "publication_date": "2021-05-28",
+    "fields": {
+      "Localidade": "Brasil",
+      "Autoridade": "Federal",
+      "Título": "Lei nº 14.155, de 27 de Maio de 2021",
+      "Data": "27/05/2021",
+      "Apelido": "LEI-14155-2021-05-27",
+      "Ementa": "Altera o Decreto-Lei nº 2.848, de 7 de dezembro de 1940 (Código Penal), para tornar mais graves os crimes de violação de dispositivo informático, furto e estelionato cometidos de forma eletrônica ou pela internet; e o Decreto-Lei nº 3.689, de 3 de outubro de 1941 (Código de Processo Penal), para definir a competência em modalidades de estelionato.",
+      "Nome Uniforme": "urn:lex:br:federal:lei:2021-05-27;14155",
+      "Mais detalhes": "Senado Federal",
+      "Publicação Original": "2021-05-28",
+      "Texto Atualizado": "Multivigente"
+    }
+  },
+  "html": {
+    "status_code": 200,
+    "encoding": "ISO-8859-1",
+    "final_url": "https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14155.htm",
+    "size_bytes": 21068,
+    "sha256": "249fb9108f9e28e6508b5f2f7cbf8d50b76d6a803852885a9532d37975e2d859"
+  },
+  "error": null
+}
