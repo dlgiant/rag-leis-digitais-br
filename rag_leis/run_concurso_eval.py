@@ -96,6 +96,12 @@ class ConcursoAggregate:
     oos_b_refusal_rate: float = 0.0
     # Combined refusal accuracy (oos_a + oos_b should refuse; inscope should not)
     overall_refusal_accuracy: float = 0.0
+    # Phase 7.5.2 — cost + token aggregates (RAGAnswer fields summed across rows).
+    cost_total_usd: float = 0.0
+    cost_mean_usd: float = 0.0
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
+    total_llm_calls: int = 0
 
 
 def load_rows(path: Path) -> list[ConcursoRow]:
@@ -159,6 +165,16 @@ def aggregate(records: list[ConcursoEvalRecord]) -> ConcursoAggregate:
     def _safe_mean(xs: list[float]) -> float:
         return sum(xs) / len(xs) if xs else 0.0
 
+    # Phase 7.5.2 — sum cost + token usage across rows.
+    cost_total = sum(getattr(r.answer, "cost_estimate_usd", 0.0) or 0.0 for r in records)
+    in_tok = sum(
+        (getattr(r.answer, "tokens_used", {}) or {}).get("input_tokens", 0) for r in records
+    )
+    out_tok = sum(
+        (getattr(r.answer, "tokens_used", {}) or {}).get("output_tokens", 0) for r in records
+    )
+    llm_calls = sum(getattr(r.answer, "llm_calls", 0) or 0 for r in records)
+
     return ConcursoAggregate(
         n_total=len(records),
         n_inscope=len(inscope),
@@ -179,6 +195,11 @@ def aggregate(records: list[ConcursoEvalRecord]) -> ConcursoAggregate:
         overall_refusal_accuracy=_safe_mean(
             [1.0 if r.refused_correctly else 0.0 for r in records]
         ),
+        cost_total_usd=round(cost_total, 6),
+        cost_mean_usd=round(cost_total / len(records), 6) if records else 0.0,
+        total_input_tokens=in_tok,
+        total_output_tokens=out_tok,
+        total_llm_calls=llm_calls,
     )
 
 
@@ -210,6 +231,13 @@ def print_report(records: list[ConcursoEvalRecord], agg: ConcursoAggregate) -> N
           f"({agg.n_oos_b} rows)")
     print(f"\n--- OVERALL ---")
     print(f"  overall_refusal_accuracy:           {agg.overall_refusal_accuracy:.3f}")
+    if agg.cost_total_usd > 0 or agg.total_llm_calls > 0:
+        print(f"\n--- COST (Phase 7.5.2 instrumentation) ---")
+        print(f"  cost_total_usd:                     ${agg.cost_total_usd:.4f}")
+        print(f"  cost_mean_usd (per query):          ${agg.cost_mean_usd:.6f}")
+        print(f"  total_llm_calls (incl. retries):    {agg.total_llm_calls}")
+        print(f"  total_input/output tokens:          "
+              f"{agg.total_input_tokens:,} / {agg.total_output_tokens:,}")
 
 
 def serialize_record(r: ConcursoEvalRecord) -> dict[str, Any]:
@@ -232,6 +260,10 @@ def serialize_record(r: ConcursoEvalRecord) -> dict[str, Any]:
             "rejected_citations": r.answer.rejected_citations,
             "unverified_claims": r.answer.unverified_claims,
             "hierarchy_warning": r.answer.hierarchy_warning,
+            # Phase 7.5.2 — per-row cost/token accounting
+            "cost_estimate_usd": getattr(r.answer, "cost_estimate_usd", 0.0),
+            "tokens_used": getattr(r.answer, "tokens_used", {}),
+            "llm_calls": getattr(r.answer, "llm_calls", 0),
         },
         "scoring": {
             "refused_correctly": r.refused_correctly,
@@ -255,8 +287,14 @@ def main() -> int:
     args = p.parse_args()
 
     eval_path = Path(args.eval)
+    if not eval_path.is_absolute():
+        eval_path = (PROJECT_ROOT / eval_path).resolve()
     rows = load_rows(eval_path)
-    print(f"Loaded {len(rows)} rows from {eval_path.relative_to(PROJECT_ROOT)}")
+    try:
+        shown = eval_path.relative_to(PROJECT_ROOT)
+    except ValueError:
+        shown = eval_path
+    print(f"Loaded {len(rows)} rows from {shown}")
 
     print(f"Building pipeline (Voyage + {args.llm_provider}, "
           f"text_mode={DEFAULT_TEXT_MODE}, top_k={args.top_k}) ...")
