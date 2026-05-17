@@ -287,7 +287,27 @@ class Aggregate:
     cit_f1_mean: float
     faithfulness_mean: float
     refusal_accuracy: float
-    rejected_citation_rate: float  # |rejected| / |cited+rejected|
+    # Phase 7.5.1 — refusal split into the two confusion-matrix dimensions.
+    # `refusal_accuracy` above (the macro avg of both) collapsed two distinct
+    # production-quality dimensions into one number; the split surfaces them:
+    #
+    #   false_refusal_rate = |inscope ∩ refused| / |inscope|
+    #     — fraction of in-scope queries where the pipeline incorrectly
+    #     refused. User-facing quality bug; should approach 0.
+    #
+    #   oos_refusal_recall = |oos ∩ refused| / |oos|
+    #     — fraction of OOS queries where the pipeline correctly refused.
+    #     Safety success; should approach 1.
+    #
+    # Surfacing both lets us see the trade-off explicitly: a SYSTEM_PROMPT
+    # iteration that increases OOS recall at the cost of false refusals is
+    # different from one that fixes both. Concurso pilot (2026-05-17)
+    # measured false_refusal_rate=0% in-scope but oos_refusal_recall=44%
+    # — the macro `refusal_accuracy` of 62.5% hid that the OOS side was the
+    # problem.
+    false_refusal_rate: float = 0.0
+    oos_refusal_recall: float = 0.0
+    rejected_citation_rate: float = 0.0  # |rejected| / |cited+rejected|
     by_type: dict[str, dict[str, float]] = field(default_factory=dict)
     # Phase 5.1: per-OOS-subtype refusal accuracy. Surfaces where the
     # pipeline is fragile (typically subtype b — adjacent OOS).
@@ -337,6 +357,11 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
         for sub, group in by_subtype.items()
     }
 
+    # Phase 7.5.1 — explicit confusion matrix dimensions:
+    # in-scope refused (false refusal) vs OOS refused (recall).
+    inscope_refused = sum(1 for r in inscope if r.answer.refused)
+    oos_refused = sum(1 for r in oos if r.answer.refused)
+
     return Aggregate(
         n_total=len(rows),
         n_inscope=len(inscope),
@@ -349,6 +374,8 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
         cit_f1_mean=_mean([r.cit_f1 or 0.0 for r in inscope]),
         faithfulness_mean=_mean([float(r.faithfulness or 0) for r in inscope]),
         refusal_accuracy=_mean([1.0 if r.refused_correctly else 0.0 for r in rows]),
+        false_refusal_rate=_safe_div(inscope_refused, len(inscope)),
+        oos_refusal_recall=_safe_div(oos_refused, len(oos)),
         rejected_citation_rate=_safe_div(total_rejected, total_cited),
         by_type=by_type,
         refusal_accuracy_by_oos_subtype=refusal_acc_by_subtype,
@@ -395,7 +422,14 @@ def print_report(rows: list[EvalRow], agg: Aggregate, verbose: bool) -> None:
     print(f"  Citation recall            (mean, in-scope)  : {agg.cit_recall_mean:.3f}")
     print(f"  Citation F1 (strict)       (mean, in-scope)  : {agg.cit_f1_mean:.3f}")
     print(f"  Faithfulness               (mean, in-scope)  : {agg.faithfulness_mean:.2f} / 5")
-    print(f"  Refusal accuracy           (all rows)         : {agg.refusal_accuracy:.3f}")
+    print(f"  Refusal accuracy           (all rows, macro)  : {agg.refusal_accuracy:.3f}")
+    # Phase 7.5.1 — split refusal into the two confusion-matrix dimensions.
+    # In-scope side: should approach 0 (refusing real questions is a bug).
+    # OOS side: should approach 1 (refusing OOS is the safety success).
+    print(f"  False refusal rate         (in-scope refused) : {agg.false_refusal_rate:.3f}  "
+          f"(target: 0; lower = better)")
+    print(f"  OOS refusal recall         (OOS refused)      : {agg.oos_refusal_recall:.3f}  "
+          f"(target: 1; higher = better)")
     print(f"  Rejected citation rate     (all rows)         : {agg.rejected_citation_rate:.3f}")
 
     if agg.refusal_accuracy_by_oos_subtype:
