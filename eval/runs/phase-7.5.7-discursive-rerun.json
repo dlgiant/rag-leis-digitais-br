@@ -1,0 +1,245 @@
+{
+  "config": {
+    "embedder": "voyage-3-large",
+    "text_mode": "title+label+nav+caput+text",
+    "llm_provider": "maritaca",
+    "top_k": 10,
+    "oos_threshold": 0.4
+  },
+  "aggregate": {
+    "n_total": 5,
+    "n_inscope": 0,
+    "n_oos_a": 0,
+    "n_oos_b": 0,
+    "inscope_answer_rate": 0.0,
+    "inscope_any_gold_cited_rate": 0.0,
+    "inscope_coverage_mean": 0.0,
+    "inscope_coverage_jaccard_mean": 0.0,
+    "oos_a_refusal_rate": 0.0,
+    "oos_b_refusal_rate": 0.0,
+    "overall_refusal_accuracy": 1.0,
+    "n_rule_recall": 0,
+    "rule_recall_hit_rate": 0.0,
+    "rule_recall_answered_rate": 0.0,
+    "n_discursive": 5,
+    "discursive_mean_pct": 0.54,
+    "discursive_answered_rate": 1.0,
+    "cost_total_usd": 0.37471,
+    "cost_mean_usd": 0.074942,
+    "total_input_tokens": 36636,
+    "total_output_tokens": 6737,
+    "total_llm_calls": 11,
+    "latency_p50_ms": 6757.9,
+    "latency_p95_ms": 13506.4,
+    "latency_p99_ms": 13506.4,
+    "latency_mean_ms": 7121.8,
+    "error_count": 0,
+    "error_rate": 0.0
+  },
+  "records": [
+    {
+      "row": {
+        "source_id": "maritaca-ai/oab-bench/39_direito_civil_questao_3",
+        "category": "discursive",
+        "query": "QUESTÃO\n\nMaria cadastrou-se e adquiriu serviço de aprendizagem on-line de língua estrangeira na sociedade empresária Hello English Ltda., dando consentimento, informado nos termos de uso e autorização, para tratamento de seus dados pessoais. Após 1 (um) ano de curso, decidiu romper o vínculo, mas continuou recebendo muitas notificações indesejadas da sociedade empresária.\nMesmo sem visualizar qualquer ilegalidade quanto ao tratamento de seus dados pessoais, formulou requerimento expresso via canal de comunicação da empresa para (i) retirar o consentimento no tratamento de dados; e (ii) eliminar os seus dados cadastrais em definitivo, para fins de publicidade e marketing.\nEm resposta, a sociedade empresária informou que não atenderia à solicitação porque a operadora dos dados (SuperData Ltda.) informou que os dados foram tratados dentro da lei, e que Maria não teria direito a pedir a eliminação dos dados para os fins desejados (evitar a publicidade e marketing), considerando que os dados não são sensíveis.\nIrritada, até porque continuou a receber material publicitário, Maria ajuizou ação judicial contra a sociedade empresária SuperData Ltda., e notificou a Autoridade Nacional de Proteção de Dados (ANPD) sobre a conduta adotada por ambas as empresas.\nA sociedade empresária ré (SuperData Ltda.) alega que sua responsabilidade é apenas tratar os dados, não sendo ela quem determina a exclusão dos dados, mas somente a controladora (Hello English Ltda.), razão pela qual não responde pelo pedido de Maria, pois nunca recebeu uma ordem da controladora para excluir os dados de Maria.\nSobre a hipótese apresentada, responda aos itens a seguir",
+        "question_type": null,
+        "expected_oos_subtype": null,
+        "gold_urns": [],
+        "notes": "LGPD art.8 §5 + art.15 III — consent revocation + dados elimination. Direct hit on LGPD in our corpus."
+      },
+      "answer": {
+        "text": "Maria possui o direito de revogar o consentimento concedido para o tratamento de seus dados pessoais, bem como o direito de solicitar a eliminação dos dados tratados com base nesse consentimento, conforme previsto no art. 18, inciso VI, da Lei Geral de Proteção de Dados Pessoais (LGPD), em combinação com o art. 18, inciso IX, que trata especificamente da revogação do consentimento. O exercício desses direitos é formalizado mediante manifestação expressa do titular, conforme disposto no art. 8, § 5º da LGPD, e deve ser atendido pelo agente de tratamento, salvo nas hipóteses excepcionais do art. 16 da mesma lei, que não se aplicam ao caso de revogação do consentimento para marketing, pois essa hipótese não está entre as causas de impedimento à eliminação.\n\nA empresa SuperData Ltda., na qualidade de operadora, tem o dever de cumprir as ordens do controlador e, caso receba uma solicitação válida do titular por intermédio do controlador (Hello English Ltda.), deve efetuar a eliminação ou anonimização dos dados e comunicar imediatamente os demais agentes com quem houve uso compartilhado, nos termos do art. 18, § 6º da LGPD. Ademais, o operador responde solidariamente pelos danos causados caso descumpra obrigações da LGPD ou não siga instruções lícitas do controlador, conforme art. 42, § 1º, inciso I da LGPD, salvo hipóteses de exclusão previstas no art. 43 da lei. Portanto, mesmo que a SuperData alegue dependência de ordem do controlador, ela não pode se eximir do dever de atuar conforme determinado pelo titular ou pelo controlador após o recebimento da solicitação válida.\n\nQuanto à alegação da empresa de que os dados não são sensíveis e, por isso, não caberia eliminação para fins de marketing, tal justificativa é insuficiente, pois a LGPD garante ao titular o direito à eliminação dos dados tratados com base em seu consentimento, independentemente da sensibilidade dos dados, conforme art. 18, VI. A manutenção do tratamento para finalidade de marketing após revogação do consentimento caracteriza descumprimento da lei, podendo ensejar responsabilização solidária da operadora se não atender à solicitação.\n\n⚠️ Atenção: O art. 18, § 6º da LGPD está em vigor e obriga o agente de tratamento a comunicar imediatamente aos terceiros com quem compartilhou os dados sobre a eliminação ou anonimização solicitada, exceto quando impossível ou desproporcional.\n\n—\nFontes consultadas em: LGPD — Lei Geral de Proteção de Dados Pessoais (Lei 13.709/2018) (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc6",
+          "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc9",
+          "urn:lex:br:federal:lei:2018-08-14;13709~art8;par5",
+          "urn:lex:br:federal:lei:2018-08-14;13709~art18;par6",
+          "urn:lex:br:federal:lei:2018-08-14;13709~art42;par1;inc1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.088742,
+        "tokens_used": {
+          "input_tokens": 9750,
+          "output_tokens": 2591
+        },
+        "llm_calls": 3,
+        "latency_ms": 13506.413
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": 0.8,
+        "discursive_reasoning": "O candidato afirmou corretamente que Maria pode revogar o consentimento e citou o art. 8º, §5º da LGPD (cobre A1 integralmente). Quanto à A2, mencionou o art. 16 da LGPD e tratou da eliminação dos dados, mas não citou expressamente o art. 15, III, nem mencionou claramente o \"término do tratamento\" como consequência da revogação — embora a ideia esteja implícita ao falar em eliminação. A citação do art. 16 atende ao requisito alternativo do gabarito (Art. 15, III OU Art. 16). A fundamentação sobre eliminação está presente, então A2 pode ser considerada parcialmente atendida."
+      }
+    },
+    {
+      "row": {
+        "source_id": "maritaca-ai/oab-bench/39_direito_constitucional_questao_1",
+        "category": "discursive",
+        "query": "QUESTÃO\n\nA Lei Complementar Federal nº XX condicionou o exercício de determinada atividade econômica, não mencionada expressamente na ordem constitucional, à prévia autorização do órgão público competente. Poucos anos depois, a Lei Ordinária Federal nº YY dispôs que a autorização somente seria concedida com o preenchimento de requisitos diversos, o que se mostrava mais restritivo para os interessados. Acresça-se que tanto a Lei Complementar Federal nº XX, como a Lei Ordinária Federal nº YY, foram editadas sob a égide da Constituição da República de 1988.\nA sociedade empresária Alfa contratou você, como advogado(a), e formulou os seguintes questionamentos",
+        "question_type": null,
+        "expected_oos_subtype": null,
+        "gold_urns": [],
+        "notes": "Lei Complementar restringindo atividade econômica não constitucionalmente prevista. CF/88 art. 170 IV/V (livre iniciativa) — in-corpus."
+      },
+      "answer": {
+        "text": "A Constituição da República de 1988 estabelece, como regra geral, o livre exercício de qualquer atividade econômica, vedando a exigência de autorização prévia de órgãos públicos, salvo nos casos expressamente previstos em lei (Art. 170, Parágrafo único, da CRFB/88). Isso significa que a Lei Complementar Federal nº XX só poderia condicionar a atividade econômica à autorização se a própria Constituição permitisse tal exigência ou se a atividade estivesse inserida em hipótese excepcional nela prevista. A edição posterior da Lei Ordinária Federal nº YY, ao tornar os requisitos mais restritivos, não afeta a validade da norma anterior no que tange à existência do requisito de autorização, mas pode ser questionada quanto à sua conformidade com o princípio da legalidade estrita e da proporcionalidade, pois a restrição ao livre exercício da atividade deve estar justificada por norma constitucionalmente válida. Caso a atividade não se enquadre em qualquer exceção constitucionalmente admitida, a exigência de autorização, ainda que regulamentada por lei mais restritiva posteriormente, poderia ser considerada inconstitucional. Não há, nas fontes fornecidas, previsão constitucional específica que autorize a restrição ao livre exercício de atividade econômica não mencionada expressamente na ordem constitucional, o que torna a exigência de autorização potencialmente violadora do Art. 170, parágrafo único, da CRFB/88.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art170;par1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.065374,
+        "tokens_used": {
+          "input_tokens": 5681,
+          "output_tokens": 699
+        },
+        "llm_calls": 2,
+        "latency_ms": 3853.336
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": 0.15,
+        "discursive_reasoning": "O candidato citou o Art. 170, parágrafo único, da CRFB/88, mas não respondeu objetivamente \"Sim\" à possibilidade de alteração da LC por LO, nem afirmou que a matéria deve ser disciplinada por lei ordinária, tampouco concluiu que a LC pode ser alterada por LO (tese da inconstitucionalidade formal não configurada). Ao contrário, sugeriu inconstitucionalidade material da exigência, fugindo do ponto central do gabarito. Pontua apenas pela menção ao dispositivo (0,10/1,25)."
+      }
+    },
+    {
+      "row": {
+        "source_id": "maritaca-ai/oab-bench/40_direito_constitucional_questao_2",
+        "category": "discursive",
+        "query": "QUESTÃO\n\nTrês Estados de determinada região do país tinham grande destaque no plano nacional em razão da produção de determinado gênero alimentício, que crescia ano após ano, o que gerava um grande fluxo de receitas para a população desses entes federativos e, em particular, para os cofres públicos.\nEm comum acordo, cada um desses entes federativos editou uma lei ordinária de idêntico teor, na qual era reconhecido o fluxo forçado da denominada “unidade regional de valor”, no território de cada um deles, sendo o valor dessa unidade definido de comum acordo, mês a mês, conforme a produção agrícola do período. A emissão dessas unidades, por sua vez, seria realizada pelos três Estados, observados os limites de emissão fixados de comum acordo, devendo ser aceita não só nas transações comerciais em geral, como, também, no pagamento de tributos.\nSobre a hipótese apresentada, responda aos questionamentos a seguir",
+        "question_type": null,
+        "expected_oos_subtype": null,
+        "gold_urns": [],
+        "notes": "Pacto federativo + ICMS interestadual. CF/88 arts. sobre competência tributária — likely in-corpus partially; full answer needs CTN (OUT)."
+      },
+      "answer": {
+        "text": "A hipótese apresentada envolve a edição de leis estaduais que instituem uma \"unidade regional de valor\" com emissão conjunta por três Estados, cuja circulação é obrigatória inclusive para o pagamento de tributos. A análise jurídica deve ser feita à luz das competências tributárias e monetárias estabelecidas pela Constituição Federal de 1988.\n\nPrimeiramente, a emissão de moeda é competência exclusiva da União, exercida por meio do Banco Central, conforme dispõe o art. 21, VII e o art. 164 da Constituição Federal. Embora a \"unidade regional de valor\" possa não ser tecnicamente denominada \"moeda\", sua atribuição de curso forçado e aceitação obrigatória para pagamento de tributos a confere caráter de meio de pagamento com funções centrais do sistema monetário. A competência para legislar sobre sistema monetário é, igualmente, privativa da União, conforme o art. 22, VI da Constituição. Portanto, os Estados não possuem competência constitucional para instituir e regular qualquer tipo de moeda ou sistema monetário paralelo, ainda que de caráter regional.\n\nAdemais, a possibilidade de estabelecer condições diferenciadas para enquadramento tributário, prevista no art. 146, § 1º, II, refere-se a requisitos para fins de benefícios fiscais ou regimes especiais dentro do próprio sistema tributário nacional, não autorizando a criação de moedas locais ou sistemas paralelos de pagamento de tributos.\n\nNo que tange à possibilidade de os Estados diferenciarem impostos ou fixarem alíquotas específicas, o art. 155, § 4º, IV (alíneas a e b) trata de diferenciações no Imposto sobre Circulação de Mercadorias e Serviços (ICMS) em relação a produtos e bases de cálculo, e não de criação de moedas regionais. A competência para resolução de conflitos entre Estados sobre alíquotas de ICMS é igualmente da União, nos termos do art. 155, § 2º, V, b, e não autoriza a criação de sistemas monetários alternativos.\n\nA compatibilização das funções das instituições oficiais de crédito, prevista no art. 163, VII, destina-se a harmonizar o desenvolvimento regional, mas não confere aos Estados autonomia para instituir instrumentos monetários próprios.\n\nPor fim, embora o art. 164, § 3º preveja que as disponibilidades de caixa dos Estados devam ser mantidas em instituições financeiras oficiais, essa norma reforça a exclusividade do sistema financeiro nacional e não autoriza a criação de moedas locais para fins de caixa público.\n\nAssim, as leis estaduais em questão violam a competência exclusiva da União para emitir moeda e legislar sobre sistema monetário, sendo inconstitucionais por usurpar atribuição federal e desrespeitar o princípio da unidade monetária nacional.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art21;inc7",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art22;inc6",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art164",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art146;par1;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par4;inc4;ali-a",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc5;ali-b",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art163;inc7",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art164;par3"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.069442,
+        "tokens_used": {
+          "input_tokens": 6100,
+          "output_tokens": 1277
+        },
+        "llm_calls": 2,
+        "latency_ms": 6757.918
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": 1.0,
+        "discursive_reasoning": "O candidato respondeu corretamente \"Não\" e identificou a competência exclusiva da União para emitir moeda, citando expressamente o art. 21, VII, da CRFB/88, que é o dispositivo central exigido pelo gabarito. A fundamentação foi ampla e correta, ainda que tenha trazido dispositivos adicionais (art. 22, VI; art. 164) que não prejudicam a resposta. Cobertura integral do gabarito."
+      }
+    },
+    {
+      "row": {
+        "source_id": "maritaca-ai/oab-bench/39_direito_penal_questao_1",
+        "category": "discursive",
+        "query": "QUESTÃO\n\nGuilherme, insatisfeito com o resultado das eleições para o cargo de Presidente do seu clube de futebol, em que saiu vitorioso o grupo político adversário, decidiu se vingar. Para tanto, colocou diversos explosivos em pontos estratégicos do campo de treinamento do seu time, os quais pretendia explodir durante o repouso noturno e assim causar terror generalizado para a gestão política eleita.\nNão obstante, a polícia havia sido alertada sobre a possibilidade de Guilherme praticar algum ato ilícito. Por isso, o Delegado de Polícia que presidia o inquérito correspondente determinou a um agente de polícia a infiltração em um grupo de aplicativo de mensagens para, assim, acompanhar os passos de Guilherme e suas conversas privadas com seu grupo político, o que, após conquistar a confiança dos membros do grupo, foi efetivamente conseguido pelo agente infiltrado virtualmente. Foi dessa forma que a polícia logrou descobrir o plano de Guilherme, que foi preso, identificado como autor do atentado (por ter sido efetivamente o responsável por colocar os explosivos no centro de treinamento do clube, conforme mostraram as conversas obtidas pelo agente virtualmente infiltrado) e processado pelo delito de terrorismo, previsto no Art. 2º, § 1º, inciso I, da Lei nº 13.260/16. Os explosivos colocados por Guilherme foram localizados e desarmados antes que houvesse qualquer incidente.\nNa qualidade de advogado de Guilherme, responda às questões a seguir",
+        "question_type": null,
+        "expected_oos_subtype": null,
+        "gold_urns": [],
+        "notes": "Peça penal — defesa em ação por crime eleitoral / coação. CP partially in-corpus; eleitoral OUT."
+      },
+      "answer": {
+        "text": "Como advogado de Guilherme, apresento as seguintes teses de defesa, com base exclusivamente nas fontes fornecidas.",
+        "citations": [],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.057084,
+        "tokens_used": {
+          "input_tokens": 7766,
+          "output_tokens": 225
+        },
+        "llm_calls": 2,
+        "latency_ms": 2177.171
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": 0.0,
+        "discursive_reasoning": "O candidato não apresentou qualquer resposta substantiva, limitando-se a uma frase introdutória vazia. Não abordou a atipicidade, a motivação política, a ausência de especial fim de agir nem citou o Art. 2º da Lei nº 13.260/2016. Recusa/omissão indevida."
+      }
+    },
+    {
+      "row": {
+        "source_id": "maritaca-ai/oab-bench/39_direito_civil_questao_1",
+        "category": "discursive",
+        "query": "QUESTÃO\n\nJoão, em 2011, celebra contrato escrito com sua sobrinha Maria (maior e capaz), sem prazo determinado, por via do qual empresta uma loja comercial de 350m2, situada em área urbana, transferindo-lhe a posse com a finalidade estrita de dar-lhe oportunidade de explorar atividade empresarial para a sua subsistência. Passados 12 (doze) anos (2023), João descobre que Maria passou a residir no imóvel, desde que desistiu de empreender, há quatro anos (2019), e conseguiu emprego formal na iniciativa privada.\nInconformado, João notifica Maria para que ela restitua o bem imóvel no prazo de 30 (trinta) dias, denunciando unilateralmente o contrato. Três semanas depois, recebe citação eletrônica em ação de usucapião promovida por Maria, na qual requer a declaração de usucapião, considerando o uso pacífico e contínuo da posse por mais de 10 (dez) anos, com base na usucapião extraordinária com redução de prazo, considerando o estabelecimento de moradia e serviços de caráter produtivo.\nEm sua defesa, João afirma que ele é o proprietário do imóvel e Maria é quem está obrigada a restituir -lhe o bem, em razão da extinção do contrato outrora firmado entre as partes.\nDiante do caso narrado, responda aos itens a seguir",
+        "question_type": null,
+        "expected_oos_subtype": null,
+        "gold_urns": [],
+        "notes": "Comodato (contrato de empréstimo gratuito). CC arts. 579-585 — OUT of our 11-21 indexed range. Sub-corpus gap probe."
+      },
+      "answer": {
+        "text": "A situação jurídica envolve a análise da possibilidade de usucapião por Maria sobre o imóvel cedido por João e a consequente extinção do contrato de comodato. A seguir, serão respondidos os pontos centrais da questão com base nas normas constitucionais fornecidas.\n\n1. **Possibilidade de usucapião extraordinária urbana com prazo reduzido (Art. 183 da Constituição Federal)**\n\nA usucapião extraordinária urbana, prevista no Art. 183 da Constituição Federal, exige a posse ininterrupta e sem oposição por cinco anos, utilizando o imóvel para moradia ou de sua família, e que o possuidor não seja proprietário de outro imóvel urbano ou rural. Maria alega ter exercido posse por mais de dez anos com estabelecimento de moradia e serviços de caráter produtivo. Contudo, o imóvel foi entregue a ela por meio de um contrato de comodato (empréstimo gratuito de coisa infungível para uso), com finalidade específica de exploração empresarial.\n\nNesse contexto, a jurisprudência e a doutrina majoritárias entendem que a posse decorrente de comodato não é apta a gerar usucapião, pois carece de *animus domini* (intenção de agir como proprietário), elemento essencial para a aquisição originária da propriedade por usucapião. A posse do comodatário é precária e subordinada ao vínculo contratual, o que impede a configuração do requisito subjetivo exigido pela norma constitucional. Portanto, mesmo que tenham se passado mais de cinco anos, a ausência de *animus domini* obsta a pretensão de usucapião extraordinária urbana (Art. 183, CF/88). <fonte urn=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art183\"/>\n\n2. **Extinção do contrato e dever de restituição (comodato sem prazo)**\n\nO comodato sem prazo determinado pode ser denunciado por qualquer das partes, com prazo razoável para desocupação, conforme regra geral de direito civil (embora não explicitada no corpus fornecido, o entendimento é extraído da natureza do contrato e das normas gerais aplicáveis à relação de posse e obrigação). João, como comodante, notificou Maria para restituir o bem no prazo de 30 dias, o que configura exercício regular de seu direito de rescisão unilateral do contrato. A denúncia é válida, pois, finda a finalidade contratual — exploração empresarial — e tendo Maria passado a utilizar o imóvel para moradia sem autorização, a continuidade do contrato torna-se ilícita, justificando a restituição. O fato de Maria ter desistido da atividade empresarial e passado a residir no imóvel não altera a obrigação de devolução, pois o contrato não se transformou tacitamente em locação sem consentimento do comodante. <fonte urn=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art183\"/>\n\n3. **Imóveis públicos e usucapião (Art. 183, § 3º e Art. 191, parágrafo único, CF/88)**\n\nAs normas constitucionais expressamente vedam a aquisição de imóveis públicos por usucapião. Contudo, o imóvel em questão é de João, particular, não havendo indicação de que seja público. Logo, essa vedação não se aplica diretamente ao caso. A proibição, entretanto, reforça que a usucapião é instituto restrito a bens privados, e a análise deve centrar-se nos requisitos subjetivos (como o *animus domini*) e objetivos do Art. 183. <fonte urn=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art183;par3\"/><fonte urn=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art191;par1\"/>\n\n4. **Considerações sobre o prazo único de usucapião (Art. 183, § 2º, CF/88)**\n\nO Art. 183, § 2º, estabelece que o direito de usucapir não será reconhecido ao mesmo possuidor mais de uma vez. Embora esse dispositivo não seja diretamente aplicável para impedir a pretensão de Maria neste caso (pois ela não usucapiu outro imóvel), ele reforça a natureza excepcional do instituto, reforçando a necessidade de estrita observância dos requisitos constitucionais para sua configuração. <fonte urn=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art183;par2\"/>\n\n**Conclusão:**\nMaria não pode obter a usucapião do imóvel, pois sua posse decorreu de contrato de comodato, sem *animus domini*, requisito essencial para usucapião. João, como proprietário e comodante, pode exigir a restituição do bem após a denúncia válida do contrato sem prazo. A ação de usucapião proposta por Maria deve ser julgada improcedente. As demais disposições constitucionais sobre imóveis públicos e enfiteuse não se aplicam diretamente ao caso, pois o bem é privado e não está sob regime de enfiteuse.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art183",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art183;par3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art183;par2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art191;par1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A jurisprudência majoritária entende que o comodato não gera usucapião por ausência de animus domini. Essa afirmação é extraída de entendimento consolidado em doutrina e jurisprudência, mas não está positivada nas fontes fornecidas. No entanto, foi usada para fundamentar a resposta com base na lógica do dispositivo constitucional citado (Art. 183)."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.094068,
+        "tokens_used": {
+          "input_tokens": 7339,
+          "output_tokens": 1945
+        },
+        "llm_calls": 2,
+        "latency_ms": 9314.119
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": 0.75,
+        "discursive_reasoning": "A resposta acerta a conclusão (não cabe usucapião), identifica corretamente o comodato e a ausência de animus domini como fundamento central. Porém, fundamenta no Art. 183 da CF em vez do Art. 1.238, caput e parágrafo único, do CC, que é o dispositivo exigido pelo gabarito (usucapião extraordinária com prazo reduzido). A omissão do dispositivo correto e o uso de fundamento legal equivocado (constitucional ao invés do civil) gera perda parcial, mas a tese central (comodato + ausência de animus domini) está bem desenvolvida, o que justifica nota intermediária-alta."
+      }
+    }
+  ]
+}

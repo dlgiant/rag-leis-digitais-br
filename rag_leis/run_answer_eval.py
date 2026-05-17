@@ -250,6 +250,22 @@ def score_in_scope(
         faithfulness, reasoning = judge_faithfulness(
             judge, q.expected_paragraph, answer.answer
         )
+        # Phase 7.5.7 — fold judge cost into RAGAnswer (bug fix; prior to
+        # 7.5.7 the judge spend was tracked nowhere, causing eval logs to
+        # under-report total cost by the judge's share — often dominant
+        # when judge=opus and generator=Sabiá).
+        from rag_leis.cost import estimate as _cost_estimate
+        usage = getattr(judge, "last_call_usage", None)
+        if usage:
+            in_t = int(usage.get("input_tokens", 0))
+            out_t = int(usage.get("output_tokens", 0))
+            judge_cost = _cost_estimate(judge.provider, judge.name, in_t, out_t)
+            answer.cost_estimate_usd = round(answer.cost_estimate_usd + judge_cost, 6)
+            if not answer.tokens_used:
+                answer.tokens_used = {"input_tokens": 0, "output_tokens": 0}
+            answer.tokens_used["input_tokens"] = answer.tokens_used.get("input_tokens", 0) + in_t
+            answer.tokens_used["output_tokens"] = answer.tokens_used.get("output_tokens", 0) + out_t
+            answer.llm_calls = (answer.llm_calls or 0) + 1
     return EvalRow(
         query=q,
         answer=answer,
@@ -323,6 +339,16 @@ class Aggregate:
     total_input_tokens: int = 0
     total_output_tokens: int = 0
     total_llm_calls: int = 0
+    # Phase 7.5.7 — SRE Golden Signals (Beyer et al., Google SRE Book ch.6).
+    # Same shape as ConcursoAggregate; mean is informational only because RAG
+    # latency distributions are heavy-tailed (long LLM-retry rows skew the
+    # tail). p95/p99 are the load-bearing SLO targets for Phase 8.
+    latency_p50_ms: float = 0.0
+    latency_p95_ms: float = 0.0
+    latency_p99_ms: float = 0.0
+    latency_mean_ms: float = 0.0
+    error_count: int = 0
+    error_rate: float = 0.0
 
 
 def _mean(xs: list[float]) -> float:
@@ -373,7 +399,8 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
     inscope_refused = sum(1 for r in inscope if r.answer.refused)
     oos_refused = sum(1 for r in oos if r.answer.refused)
 
-    # Phase 7.5.2 — cost + token totals across all eval rows.
+    # Phase 7.5.2 — cost + token totals across all eval rows. (Judge cost
+    # folded into RAGAnswer fields by score_in_scope() since Phase 7.5.7.)
     cost_total = sum(getattr(r.answer, "cost_estimate_usd", 0.0) or 0.0 for r in rows)
     in_tok = sum(
         (getattr(r.answer, "tokens_used", {}) or {}).get("input_tokens", 0) for r in rows
@@ -382,6 +409,25 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
         (getattr(r.answer, "tokens_used", {}) or {}).get("output_tokens", 0) for r in rows
     )
     llm_calls = sum(getattr(r.answer, "llm_calls", 0) or 0 for r in rows)
+
+    # Phase 7.5.7 — SRE Golden Signals. Exclude error-marked rows from latency
+    # distribution (time-to-fail isn't a meaningful user-perceived latency).
+    latencies = sorted(
+        float(getattr(r.answer, "latency_ms", 0.0) or 0.0)
+        for r in rows
+        if not (r.answer.refusal_reason or "").startswith("ERROR:")
+    )
+    error_n = sum(
+        1 for r in rows if (r.answer.refusal_reason or "").startswith("ERROR:")
+    )
+
+    def _pct(xs: list[float], p: float) -> float:
+        if not xs:
+            return 0.0
+        import math
+        rank = max(1, math.ceil(len(xs) * p))
+        return xs[min(rank, len(xs)) - 1]
+    latency_mean_ms_v = sum(latencies) / len(latencies) if latencies else 0.0
 
     return Aggregate(
         n_total=len(rows),
@@ -405,6 +451,12 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
         total_input_tokens=in_tok,
         total_output_tokens=out_tok,
         total_llm_calls=llm_calls,
+        latency_p50_ms=round(_pct(latencies, 0.50), 1),
+        latency_p95_ms=round(_pct(latencies, 0.95), 1),
+        latency_p99_ms=round(_pct(latencies, 0.99), 1),
+        latency_mean_ms=round(latency_mean_ms_v, 1),
+        error_count=error_n,
+        error_rate=round(error_n / len(rows), 4) if rows else 0.0,
     )
 
 
@@ -457,13 +509,19 @@ def print_report(rows: list[EvalRow], agg: Aggregate, verbose: bool) -> None:
     print(f"  OOS refusal recall         (OOS refused)      : {agg.oos_refusal_recall:.3f}  "
           f"(target: 1; higher = better)")
     print(f"  Rejected citation rate     (all rows)         : {agg.rejected_citation_rate:.3f}")
-    # Phase 7.5.2 — cost reporting. Total = sum across rows; mean = per-query.
+    # Phase 7.5.2 — cost reporting (includes folded judge cost since 7.5.7).
     if agg.cost_total_usd > 0 or agg.total_llm_calls > 0:
         print(f"  Cost total                 (USD, this run)    : ${agg.cost_total_usd:.4f}")
         print(f"  Cost per query             (USD, mean)        : ${agg.cost_mean_usd:.6f}")
-        print(f"  LLM calls total            (incl. retries)    : {agg.total_llm_calls}")
+        print(f"  LLM calls total            (incl. judge)      : {agg.total_llm_calls}")
         print(f"  Tokens total               (input / output)   : "
               f"{agg.total_input_tokens:,} / {agg.total_output_tokens:,}")
+    # Phase 7.5.7 — SRE Golden Signals
+    print(f"  Latency p50/p95/p99/mean ms                   : "
+          f"{agg.latency_p50_ms:.1f} / {agg.latency_p95_ms:.1f} / "
+          f"{agg.latency_p99_ms:.1f} / {agg.latency_mean_ms:.1f}")
+    print(f"  Error count / error rate                       : "
+          f"{agg.error_count} / {agg.error_rate:.4f}")
 
     if agg.refusal_accuracy_by_oos_subtype:
         print()
@@ -579,6 +637,12 @@ def serialize_row(r: EvalRow) -> dict[str, Any]:
         ],
         "prose_check_retried": r.answer.prose_check_retried,
         "sources_consulted_at": r.answer.sources_consulted_at,
+        # Phase 7.5.2 — cost/tokens (includes judge cost since 7.5.7)
+        "cost_estimate_usd": getattr(r.answer, "cost_estimate_usd", 0.0),
+        "tokens_used": getattr(r.answer, "tokens_used", {}),
+        "llm_calls": getattr(r.answer, "llm_calls", 0),
+        # Phase 7.5.7 — SRE: end-to-end pipeline latency in ms
+        "latency_ms": getattr(r.answer, "latency_ms", 0.0),
         "cit_precision": r.cit_precision,
         "cit_precision_lenient": r.cit_precision_lenient,
         "cit_recall": r.cit_recall,
@@ -655,7 +719,22 @@ def main() -> int:
     for i, q in enumerate(queries):
         marker = "OOS" if q.oos else q.type
         print(f"  [{i+1}/{len(queries)}] ({marker}) {q.query[:70]}{'…' if len(q.query) > 70 else ''}")
-        ans = pipeline.answer(q.query)
+        # Phase 7.5.7 — pipeline error handling: one bad row shouldn't lose
+        # the whole eval. Mark with ERROR: prefix so aggregate counts it
+        # toward error_count + excludes from latency distribution.
+        try:
+            ans = pipeline.answer(q.query)
+        except Exception as e:
+            from rag_leis.rag import RAGAnswer as _RAGAnswer
+            ans = _RAGAnswer(
+                answer="",
+                citations=[],
+                unverified_claims=[],
+                rejected_citations=[],
+                refused=True,
+                refusal_reason=f"ERROR: {type(e).__name__}: {e}",
+                raw_retrieval=[],
+            )
         row = score_oos(q, ans) if q.oos else score_in_scope(q, ans, judge)
         rows.append(row)
 
