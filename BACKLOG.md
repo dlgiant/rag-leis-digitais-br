@@ -2,7 +2,7 @@
 
 Itens identificados mas não-aplicados — pra retomar quando for prioridade.
 
-## 📌 State snapshot (2026-05-17)
+## 📌 State snapshot (2026-05-17, post-Phase 7.5)
 
 **Phases completed:**
 - ✅ Phase 0 (parser foundations, dedup logging, cache)
@@ -13,26 +13,36 @@ Itens identificados mas não-aplicados — pra retomar quando for prioridade.
 - ✅ Phase 5 (legal_rank + hierarchy_warning; prose-citation check + retry; source-as-of-date; EC linkage; OOS subtype taxonomy a-e)
 - ✅ Phase 6 (Tier-4 jurisprudência v0: 7 chunks; URN spec §9.5)
 - ✅ Phase 7 (production infra: SHA-256 diff + F5 WAF strip + parser §-suffix/inc-suffix fixes + title-prefix default + orchestrator with gate+rollback + GitHub Actions weekly cron + smoke + runbook)
+- ✅ **Phase 7.5 (eval expansion — closed 2026-05-17)** — see [`study/phase-7.5-findings.md`](study/phase-7.5-findings.md). 6 of 7 sub-steps shipped (7.5.6 LGPD manual deferred to D7 lawyer engagement). Eval surface grew 45 → 139 rows (+209%). Headline finding: **internal OOS refusal accuracy of 93.8% overstated external measurement (12.2%) by 6.7×** — selection bias quantified.
 
 **Phases pending (large blocks):**
-- ⏸ Phase 8 — hosting/API/observability (need SRE Golden Signals from audit doc §4 gap #1 before)
-- ⏸ Phase 9 — compliance / lawyer review (depends on D7 contracting)
+- ⏸ Phase 8 — hosting/API/observability. **Entry priority shifted post-Phase 7.5**: refusal-discipline SYSTEM_PROMPT iteration against 49 legalbench OOS rows BEFORE hosting (see `phase-7.5-findings.md` §4 — "the load-bearing Phase 8 priority shifted"). SRE Golden Signals now instrumented (no longer Phase 8 dependency).
+- ⏸ Phase 9 — compliance / lawyer review (depends on D7 contracting); Phase 7.5.6 (LGPD manual curation) folded into D7 scope.
 
 **Corpus current:** ~7200 chunks across 4 tiers (13 Tier-1 + 4 Tier-2 + 2 Tier-3 + 7 Tier-4).
 
-**Eval current:** 104 retrieval queries + 29 answer queries (14 inscope + 15 OOS) + 16 concurso pilot (7 inscope + 9 OOS). Production metrics: nDCG@10=0.7235, MRR@10=0.7996, internal refusal_accuracy=0.938, external (concurso pilot) refusal_accuracy=**0.625** — the divergence motivates the query expansion below.
+**Eval current (post-Phase 7.5):** 104 retrieval queries + 29 internal answer queries + 16 concurso pilot + **49 legalbench OOS + 40 legalbench rule recall + 5 oab-bench discursive** = 243 total eval rows.
+- Production retrieval: nDCG@10=0.7235, MRR@10=0.7996 (unchanged from pre-7.5 — no corpus/embedder change)
+- **External rule recall (citation precision):** 97.5% (40 rows)
+- **External OOS refusal:** 12.2% (49 rows) — **the headline refusal-discipline gap**
+- **External discursive (OAB 2ª fase):** 54% mean (5 rows, bimodal — confirms gap)
+- **Latency p50/p95:** 6.8s / 13.5s (first instrumented 7.5.7)
+- **Cost per query:** $0.075 discursive / ~$0.002 short-answer (judge cost now correctly attributed)
 
-**Gold-standard metrics audit** (full at `study/rag-eval-metrics-audit.md`):
-- 17 ✅ Covered metrics across retrieval IR / RAGAS Faithfulness / AIS citation / OOS refusal / hierarchy+vigência / LGPD compliance / prose-citation check
-- 9 🟡 Partial (context precision proxied, false-refusal computable but not surfaced, etc.)
-- 13 ❌ Missing (mostly SRE Golden Signals: latency p50/p95/p99, cost/q, error rate, throughput; plus RAGAS Answer Relevance and claim-level Context Recall)
-- Top 5 ROI-ranked gaps: (1) SRE Golden Signals ~1d → required for Phase 8; (2) cost-per-query ~2h; (3) false_refusal_rate ~30min; (4) RAGAS Answer Relevance ~1d; (5) **superseded by query expansion plan below**.
+**Gold-standard metrics audit** (full at `study/rag-eval-metrics-audit.md`, post-Phase 7.5):
+- **20** ✅ Covered (was 17; +4 from 7.5.7 SRE: latency, cost, tokens, error rate; +1 from rule recall external)
+- **10** 🟡 Partial
+- **11** ❌ Missing (RAGAS Answer Relevance, claim-level Context Recall, provider availability/fallback, throughput QPS, jailbreak resistance, cache hit rate first-class, etc.)
+- Top remaining ROI gaps: (1) RAGAS Answer Relevance ~1d; (2) refusal-discipline SYSTEM_PROMPT iteration (NEW priority from 7.5 findings); (3) LegalBench US adaptation (future external anchor).
 
 ---
 
-## 🎯 Query expansion (post-pilot, post-audit)
+## 🎯 Query expansion (post-pilot, post-audit) — ✅ MOSTLY COMPLETE via Phase 7.5
 
 **Full plan:** [`study/query-expansion-plan.md`](study/query-expansion-plan.md).
+**Findings:** [`study/phase-7.5-findings.md`](study/phase-7.5-findings.md).
+
+**Status:** Sub-phases A (legalbench OOS), B (rule recall), C (oab-bench discursive) all shipped via Phase 7.5.3/4/5. Sub-phase D (OAB 39-44 LGPD manual) deferred to D7 lawyer engagement per Phase 7.5 closure rationale.
 
 **Why:** Concurso pilot (2026-05-17) exposed that internal answer-eval refusal_accuracy (93.8%) overstates production behavior by ~31pp — real external queries hit 62.5%. Plus our OOS coverage is too small (15 internal + 9 pilot = 24) for tight CI. Plus no LGPD-rich queries despite LGPD being core to our corpus pitch.
 
@@ -105,20 +115,25 @@ Most items below superseded by subsequent phases. Status updates:
 - ⏸ **Cosine fast-path threshold (0.40) calibration** — still uncalibrated; LLM self-refusal is primary signal but cosine gate worth a synthetic adversarial test.
 - ⏸ **Phase 3 candidates** (most superseded): retry policy ✅ via prose_check_retry; per-query latency/cost reporting ❌ (audit doc §4 gap #1+#2); hybrid generator (route enumeração to opus) ❌ still open.
 
-## OOS hardening (NEW — exposed by concurso pilot, 2026-05-17)
+## OOS hardening (refusal-discipline — NEW PRIORITY post-Phase 7.5)
 
-- 🚨 **OOS-B refusal 0/2 in concurso pilot** — ECA + Código Ética OAB queries over-answered using LGPD/MCI tangential context. SYSTEM_PROMPT subtype "d" (normas não-indexadas adjacentes) not firing. Phase 5.1b-style prompt iteration warranted using expanded OOS set from query expansion sub-phase A as adversarial training.
-- 🚨 **OOS-A refusal 43%** in concurso pilot vs 100% expected. Tax/labour-procedure queries pass cosine fast-path and LLM judges context applicable. Investigation needed: was the cosine top-1 above 0.40? If yes, threshold too lenient OR context retrieval too broad.
-- ⏸ **OOS-C category** (intentionally tricky CRIMINAL questions deceptively close to crimes cibernéticos) — propose adding via curated subset of CRIMINAL questions from `eduagarcia/oab_exams` and/or `legalbench.br`.
+Phase 7.5.3+4+5 converged on the same diagnosis across 3 eval surfaces: pipeline is excellent at finding in-corpus content (97.5% rule recall) and bad at refusing out-of-corpus content (12.2% OOS refusal). The internal eval set overstated refusal accuracy by 6.7× — see [`study/phase-7.5-findings.md`](study/phase-7.5-findings.md) Finding 2.
 
-## Production observability (NEW — from gold-standard audit, 2026-05-17)
+**Phase 8 entry priority (refusal-discipline must improve BEFORE hosting):**
 
-Full audit at `study/rag-eval-metrics-audit.md`. Top 4 implementable ROI gaps:
+- 🚨 **SYSTEM_PROMPT iteration against 49 legalbench OOS rows** (~1-2d) — close at least half the 88pp refusal gap before any hosting work. Eval surface already exists (`eval/legalbench_br_oos.yaml`); the validation regimen is defined. Specific 3 fixes documented in `phase-7.5.3-legalbench-oos-findings.md` §3.
+- 🚨 **`_is_self_refusal()` improvement** (~30 min) — scan full answer text, not just first 120 chars. Catches Pattern A from 7.5.3 (verbal refusal without flag).
+- 🚨 **Require `len(citations) > 0` for non-refusal valid answer** (~30 min) — Catches Pattern C (empty citations vacuously passing cite-and-verify).
+- ⏸ **OOS-C category** (intentionally tricky CRIMINAL questions deceptively close to crimes cibernéticos) — propose adding via curated subset of CRIMINAL questions from `eduagarcia/oab_exams` and/or `legalbench.br`. Lower priority than the 3 above.
 
-- ⏸ **SRE Four Golden Signals** (~1d eng) — latency p50/p95/p99, traffic QPS, error rate per provider, saturation. **Required for Phase 8 hosting** (audit doc §4 gap #1). Add `latency_ms` + `latency_breakdown` + `tokens_used` to `RAGAnswer` dataclass + module-level `rag_leis.metrics` counters.
-- ⏸ **Cost-per-query tracker** (~2h) — `rag_leis/cost.py` pricing table + `RAGAnswer.cost_estimate_usd` + `Aggregate.cost_mean_usd`. Promotes docstring estimates to first-class signal.
-- ⏸ **False refusal rate as first-class metric** (~30 min) — extract from existing `refusal_accuracy` mean; split into `false_refusal_rate` (in-scope refused / in-scope) + `oos_refusal_recall` (OOS refused / OOS) for honest refusal confusion matrix.
-- ⏸ **RAGAS Answer Relevance** (~1d, ~$0.10/run) — separate LLM-judge call: reverse-question method (Es et al. 2023, arxiv 2309.15217). Distinct from Faithfulness; catches "faithful but evasive" answer mode.
+## Production observability — ✅ MOSTLY COMPLETE via Phase 7.5.2 + 7.5.7
+
+Full audit at `study/rag-eval-metrics-audit.md`. Findings: [`study/phase-7.5.7-sre-golden-signals-findings.md`](study/phase-7.5.7-sre-golden-signals-findings.md).
+
+- ✅ **SRE Four Golden Signals: Latency + Errors** (Phase 7.5.7) — `RAGAnswer.latency_ms` + `Aggregate.latency_p50/p95/p99_ms` + per-row try/except + `error_count/rate`. Saturation/Throughput require Phase 8 HTTP harness.
+- ✅ **Cost-per-query tracker** (Phase 7.5.2 + judge-cost fix in 7.5.7) — `cost.py` pricing table + `RAGAnswer.cost_estimate_usd` + `Aggregate.cost_mean_usd`. Judge spend now correctly attributed (was 13× under-reported pre-7.5.7).
+- ✅ **False refusal rate as first-class metric** (Phase 7.5.1) — `Aggregate.false_refusal_rate` + `oos_refusal_recall` separately surfaced.
+- ⏸ **RAGAS Answer Relevance** (~1d, ~$0.10/run) — separate LLM-judge call: reverse-question method (Es et al. 2023, arxiv 2309.15217). Still ❌ in audit doc; defer until Phase 8 entry items above resolve.
 
 ## Posts (`posts/`, gitignored)
 
