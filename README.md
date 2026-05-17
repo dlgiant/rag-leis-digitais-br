@@ -58,9 +58,16 @@ Dois eval sets distintos + 15 runs phase-tagged preservados em `eval/runs/`:
 (Voyage, 104 queries, post-title-prefix + parser fixes 2026-05-16).
 
 **Auditor's gold-standard analysis:** [`study/rag-eval-metrics-audit.md`](study/rag-eval-metrics-audit.md)
-— mapeia as 17 métricas instrumentadas vs RAGAS/AIS/BEIR/SRE com
-gap analysis ROI-ranked (top 5 gaps + LegalBench como external anchor
-futuro).
+— mapeia as 20 métricas instrumentadas vs RAGAS/AIS/BEIR/SRE com
+gap analysis ROI-ranked. Post-Phase 7.5: 4 SRE gaps fechados.
+
+**Phase 7.5 — eval expansion findings (2026-05-17):**
+[`study/phase-7.5-findings.md`](study/phase-7.5-findings.md). Eval
+surface cresceu 45 → 139 rows (+209%) via 3 fontes externas
+(legalbench.br OOS + rule recall, oab-bench discursive). Headline:
+**refusal accuracy interno (93.8%) overstated medição externa (12.2%)
+em 6.7×** — selection bias quantificada. External rule recall: 97.5%
+em 40 rows. Latency p50/p95 (primeira instrumentação): 6.8s / 13.5s.
 
 ## Production infra (Phase 7)
 
@@ -149,15 +156,19 @@ Production-grade (não learning project). Production-grade signals:
 - Source-as-of-date footer "Fontes consultadas em DD/MM/AAAA"
 - Audit log persistido (`data/audit/`)
 - Weekly cron + diff + gate + rollback infra
-- 347 tests (pytest)
+- 364 tests (pytest)
 - Refresh orchestrator com pytest gate + nDCG threshold + backup/restore
+- SRE Golden Signals instrumentados (latency p50/p95/p99, cost/q, error
+  rate) — Phase 7.5.7
 
 Out of scope até decisão de hosting (Phase 8):
 
 - API/frontend deploy
-- Latency / cost / throughput observability (Four Golden Signals — ver
-  audit doc §4 gap #1)
+- Throughput / QPS / saturation observability (precisa HTTP harness)
 - Sabiá rotation + rate limit handling
+- Refusal-discipline SYSTEM_PROMPT iteration vs `eval/legalbench_br_oos.yaml`
+  (load-bearing Phase 8 entry item — ver
+  [`study/phase-7.5-findings.md`](study/phase-7.5-findings.md) §4)
 
 ## License
 
