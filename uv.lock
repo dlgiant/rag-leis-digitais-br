@@ -2487,6 +2487,9 @@ dependencies = [
 bge = [
     { name = "flagembedding" },
 ]
+concurso = [
+    { name = "datasets" },
+]
 reranker = [
     { name = "flagembedding" },
 ]
@@ -2505,6 +2508,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "anthropic", specifier = ">=0.40" },
+    { name = "datasets", marker = "extra == 'concurso'", specifier = ">=4.0" },
     { name = "flagembedding", marker = "extra == 'bge'", specifier = ">=1.3" },
     { name = "flagembedding", marker = "extra == 'reranker'", specifier = ">=1.3" },
     { name = "httpx", specifier = ">=0.28.1" },
@@ -2515,7 +2519,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "voyageai", marker = "extra == 'voyage'", specifier = ">=0.3" },
 ]
-provides-extras = ["bge", "voyage", "reranker"]
+provides-extras = ["bge", "voyage", "reranker", "concurso"]
 
 [package.metadata.requires-dev]
 dev = [

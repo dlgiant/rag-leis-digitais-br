@@ -16,6 +16,10 @@ dependencies = [
 bge = ["FlagEmbedding>=1.3"]
 voyage = ["voyageai>=0.3"]
 reranker = ["FlagEmbedding>=1.3"]
+# `datasets` is for the OAB/concurso eval pilot only — not load-bearing
+# for production retrieval. Installed via `uv sync --extra concurso` when
+# extending the eval set against eduagarcia/oab_exams etc.
+concurso = ["datasets>=4.0"]
 
 [dependency-groups]
 dev = [
