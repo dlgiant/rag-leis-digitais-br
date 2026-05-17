@@ -78,6 +78,11 @@ class ConcursoEvalRecord:
     coverage: float | None = None  # |cited ∩ gold| / |gold| for inscope
     coverage_jaccard: float | None = None
     any_gold_cited: bool | None = None  # binary "at least one hit"
+    # Phase 7.5.4 — rule_recall category: did pipeline cite the gold URN?
+    # Stricter than `any_gold_cited` (which uses set intersection on the
+    # whole gold set); for rule_recall the gold has ONE URN by construction
+    # and the pipeline must cite that specific URN. None when not applicable.
+    rule_recall_hit: bool | None = None
 
 
 @dataclass
@@ -96,6 +101,11 @@ class ConcursoAggregate:
     oos_b_refusal_rate: float = 0.0
     # Combined refusal accuracy (oos_a + oos_b should refuse; inscope should not)
     overall_refusal_accuracy: float = 0.0
+    # Phase 7.5.4 — rule_recall: external-anchored citation precision.
+    # Gold has 1 URN by construction; pipeline must cite that exact URN.
+    n_rule_recall: int = 0
+    rule_recall_hit_rate: float = 0.0
+    rule_recall_answered_rate: float = 0.0  # not-refused / total (precondition for hit)
     # Phase 7.5.2 — cost + token aggregates (RAGAnswer fields summed across rows).
     cost_total_usd: float = 0.0
     cost_mean_usd: float = 0.0
@@ -157,10 +167,29 @@ def _score_oos(row: ConcursoRow, ans: RAGAnswer) -> ConcursoEvalRecord:
     )
 
 
+def _score_rule_recall(row: ConcursoRow, ans: RAGAnswer) -> ConcursoEvalRecord:
+    """Rule recall row (Phase 7.5.4): gold has 1 URN, pipeline must cite
+    that specific URN. Pipeline answering at all is the precondition; rule
+    recall hit then checks the specific URN."""
+    cited = set(ans.citations)
+    gold = set(row.gold_urns)
+    # gold has exactly 1 URN by construction (see extract_legalbench_rule_recall)
+    hit = bool(cited & gold)
+    return ConcursoEvalRecord(
+        row=row,
+        answer=ans,
+        # "refused_correctly" for rule_recall = NOT refused (we want answers)
+        refused_correctly=not ans.refused,
+        any_gold_cited=hit,
+        rule_recall_hit=hit,
+    )
+
+
 def aggregate(records: list[ConcursoEvalRecord]) -> ConcursoAggregate:
     inscope = [r for r in records if r.row.category == "inscope"]
     oos_a = [r for r in records if r.row.category == "oos_a"]
     oos_b = [r for r in records if r.row.category == "oos_b"]
+    rule_recall = [r for r in records if r.row.category == "rule_recall"]
 
     def _safe_mean(xs: list[float]) -> float:
         return sum(xs) / len(xs) if xs else 0.0
@@ -193,7 +222,15 @@ def aggregate(records: list[ConcursoEvalRecord]) -> ConcursoAggregate:
         oos_a_refusal_rate=_safe_mean([1.0 if r.refused_correctly else 0.0 for r in oos_a]),
         oos_b_refusal_rate=_safe_mean([1.0 if r.refused_correctly else 0.0 for r in oos_b]),
         overall_refusal_accuracy=_safe_mean(
-            [1.0 if r.refused_correctly else 0.0 for r in records]
+            [1.0 if r.refused_correctly else 0.0 for r in records
+             if r.row.category != "rule_recall"]  # rule_recall isn't a refusal task
+        ),
+        n_rule_recall=len(rule_recall),
+        rule_recall_hit_rate=_safe_mean(
+            [1.0 if r.rule_recall_hit else 0.0 for r in rule_recall]
+        ),
+        rule_recall_answered_rate=_safe_mean(
+            [1.0 if not r.answer.refused else 0.0 for r in rule_recall]
         ),
         cost_total_usd=round(cost_total, 6),
         cost_mean_usd=round(cost_total / len(records), 6) if records else 0.0,
@@ -229,6 +266,14 @@ def print_report(records: list[ConcursoEvalRecord], agg: ConcursoAggregate) -> N
           f"({agg.n_oos_a} rows)")
     print(f"  oos_b refusal_rate (adjacent):      {agg.oos_b_refusal_rate:.3f}  "
           f"({agg.n_oos_b} rows)")
+    if agg.n_rule_recall > 0:
+        print(f"\n--- RULE RECALL (Phase 7.5.4 — external-anchored citation precision) ---")
+        print(f"  n_rule_recall:                      {agg.n_rule_recall}")
+        print(f"  rule_recall_answered_rate:          {agg.rule_recall_answered_rate:.3f}  "
+              f"(precondition: not refused)")
+        print(f"  rule_recall_hit_rate:               {agg.rule_recall_hit_rate:.3f}  "
+              f"(gold URN in pipeline.citations)")
+
     print(f"\n--- OVERALL ---")
     print(f"  overall_refusal_accuracy:           {agg.overall_refusal_accuracy:.3f}")
     if agg.cost_total_usd > 0 or agg.total_llm_calls > 0:
@@ -311,11 +356,16 @@ def main() -> int:
         ans = pipe.answer(row.query)
         if row.category == "inscope":
             rec = _score_inscope(row, ans)
-        else:
+        elif row.category == "rule_recall":
+            rec = _score_rule_recall(row, ans)
+        else:  # oos_a or oos_b
             rec = _score_oos(row, ans)
         records.append(rec)
         mark = "✓" if rec.refused_correctly else "✗"
-        print(f" {mark} refused={ans.refused}")
+        extra = ""
+        if rec.rule_recall_hit is not None:
+            extra = f" hit={rec.rule_recall_hit}"
+        print(f" {mark} refused={ans.refused}{extra}")
 
     agg = aggregate(records)
     print_report(records, agg)

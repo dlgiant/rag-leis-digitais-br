@@ -1,0 +1,473 @@
+# legalbench.br rule recall — Phase 7.5.4 (2026-05-17).
+#
+# Source: celsowm/legalbench.br, closed_book_qa task, CC BY-SA 4.0.
+# Filter: legal_area in {Constitucional, Penal} — areas where the
+#         underlying law (CF/88, CP) is fully indexed in our corpus.
+#         Direito Civil rows skipped — all reference articles outside
+#         our 11-21 indexed range. Other 5 areas (Tributário,
+#         Trabalhista, Administrativo, Ambiental, Processual Civil)
+#         reference codes not in corpus (CTN, CLT, CPC, etc.).
+#
+# Total: 40 rule-recall rows (20 CF + 20 CP).
+#
+# Each row's `query` is the original prompt ("Qual é o artigo do
+# [code] com o texto: '[verbatim]' ?"). Gold = single URN for the
+# target article. Scoring (in run_concurso_eval.py rule_recall
+# category): pipeline must include the gold URN in its citations
+# (any-position; rank doesn't matter for this strict-match metric).
+#
+# This is an EXTERNAL-ANCHORED citation precision metric — gold
+# comes from a third-party benchmark, not from our self-curation.
+# Complements the internal cit_precision metric in answer_queries.yaml.
+#
+# Reproduce: uv run python -m scripts.extract_legalbench_rule_recall
+
+- source_id: celsowm/legalbench.br/841
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "As leis
+    complementares serão aprovadas por maioria absoluta." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art69
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art69. answer_key=''69''.'
+- source_id: celsowm/legalbench.br/842
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "São órgãos
+    da Justiça Federal: I - os Tribunais Regionais Federais; II - os Juízes Federais."
+    ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art106
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art106. answer_key=''106''.'
+- source_id: celsowm/legalbench.br/843
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "O Poder
+    Executivo é exercido pelo Presidente da República, auxiliado pelos Ministros de
+    Estado." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art76
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art76. answer_key=''76''.'
+- source_id: celsowm/legalbench.br/844
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "São penalmente
+    inimputáveis os menores de dezoito anos, sujeitos às normas da legislação especial."
+    ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art228
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art228. answer_key=''228''.'
+- source_id: celsowm/legalbench.br/845
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "São Poderes
+    da União, independentes e harmônicos entre si, o Legislativo, o Executivo e o
+    Judiciário." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art2
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art2. answer_key=''2''.'
+- source_id: celsowm/legalbench.br/846
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "São órgãos
+    da Justiça Militar: I - o Superior Tribunal Militar; II - os Tribunais e juízes
+    militares instituídos por lei." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art122
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art122. answer_key=''122''.'
+- source_id: celsowm/legalbench.br/847
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "A União,
+    os Estados, o Distrito Federal e os Municípios promoverão e incentivarão o turismo
+    como fator de desenvolvimento social e econômico." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art180
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art180. answer_key=''180''.'
+- source_id: celsowm/legalbench.br/848
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "Para os
+    efeitos do disposto neste Capítulo, o Congresso Nacional instituirá, como órgão
+    auxiliar, o Conselho de Comunicação Social, na forma da lei." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art224
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art224. answer_key=''224''.'
+- source_id: celsowm/legalbench.br/849
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "O advogado
+    é indispensável à administração da justiça, sendo inviolável por seus atos e manifestações
+    no exercício da profissão, nos limites da lei." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art133
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art133. answer_key=''133''.'
+- source_id: celsowm/legalbench.br/850
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "A lei disciplinará,
+    com base no interesse nacional, os investimentos de capital estrangeiro, incentivará
+    os reinvestimentos e regulará a remessa de lucros." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art172
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art172. answer_key=''172''.'
+- source_id: celsowm/legalbench.br/851
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "A fiscalização
+    e o controle sobre o comércio exterior, essenciais à defesa dos interesses fazendários
+    nacionais, serão exercidos pelo Ministério da Fazenda." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art237
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art237. answer_key=''237''.'
+- source_id: celsowm/legalbench.br/852
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "A lei disporá
+    sobre a criação e extinção de Ministérios e órgãos da administração pública. (Artigo
+    com redação dada pela Emenda Constitucional nº 32, de 2001)" ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art88
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art88. answer_key=''88''.'
+- source_id: celsowm/legalbench.br/853
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "Aos membros
+    do Ministério Público junto aos Tribunais de Contas aplicam-se as disposições
+    desta Seção pertinentes a direitos, vedações e forma de investidura." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art130
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art130. answer_key=''130''.'
+- source_id: celsowm/legalbench.br/854
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "São órgãos
+    da Justiça Eleitoral: I - o Tribunal Superior Eleitoral; II - os Tribunais Regionais
+    Eleitorais; III - os juízes eleitorais; IV - as Juntas Eleitorais." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art118
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art118. answer_key=''118''.'
+- source_id: celsowm/legalbench.br/855
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "Os pais
+    têm o dever de assistir, criar e educar os filhos menores, e os filhos maiores
+    têm o dever de ajudar e amparar os pais na velhice, carência ou enfermidade."
+    ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art229
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art229. answer_key=''229''.'
+- source_id: celsowm/legalbench.br/856
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "Salvo disposição
+    constitucional em contrário, as deliberações de cada Casa e de suas comissões
+    serão tomadas por maioria dos votos, presente a maioria absoluta de seus membros."
+    ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art47
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art47. answer_key=''47''.'
+- source_id: celsowm/legalbench.br/857
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "É vedado
+    aos Estados, ao Distrito Federal e aos Municípios estabelecer diferença tributária
+    entre bens e serviços, de qualquer natureza, em razão de sua procedência ou destino."
+    ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art152
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art152. answer_key=''152''.'
+- source_id: celsowm/legalbench.br/858
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "O Presidente
+    e o Vice-Presidente da República não poderão, sem licença do Congresso Nacional,
+    ausentar-se do País por período superior a quinze dias, sob pena de perda do cargo."
+    ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art83
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art83. answer_key=''83''.'
+- source_id: celsowm/legalbench.br/859
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "O Poder
+    Legislativo é exercido pelo Congresso Nacional, que se compõe da Câmara dos Deputados
+    e do Senado Federal. Parágrafo único . Cada legislatura terá a duração de quatro
+    anos." ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art44
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art44. answer_key=''44''.'
+- source_id: celsowm/legalbench.br/860
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Constitucional
+  query: 'Qual é o artigo da Constituição Brasileira de 1988 com o texto: "Nas empresas
+    de mais de duzentos empregados, é assegurada a eleição de um representante destes
+    com a finalidade exclusiva de promover-lhes o entendimento direto com os empregadores."
+    ?'
+  gold_urns:
+  - urn:lex:br:federal:constituicao:1988-10-05;1988~art11
+  notes: 'Rule recall: given verbatim text of Direito Constitucional article, pipeline
+    must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art11. answer_key=''11''.'
+- source_id: celsowm/legalbench.br/881
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "Nos crimes previstos neste Capítulo, aplica-se o disposto
+    no art. 155, § 2º." ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art170
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art170. answer_key=''170''.'
+- source_id: celsowm/legalbench.br/882
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "As penas mais leves prescrevem com as mais graves. (Redação
+    dada pela Lei nº 7.209, de 11.7.1984)" ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art118
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art118. answer_key=''118''.'
+- source_id: celsowm/legalbench.br/883
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "Nos casos do art. 163, do inciso IV do seu parágrafo e
+    do art. 164, somente se procede mediante queixa." ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art167
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art167. answer_key=''167''.'
+- source_id: celsowm/legalbench.br/884
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "Aplica-se o disposto no art. 258 aos crimes previstos neste
+    Capítulo, salvo quanto ao definido no art. 267." ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art285
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art285. answer_key=''285''.'
+- source_id: celsowm/legalbench.br/885
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "Se o agente é funcionário público, e comete o crime prevalecendo-se
+    do cargo, aumenta-se a pena de sexta parte." ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art295
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art295. answer_key=''295''.'
+- source_id: celsowm/legalbench.br/886
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "A representação será irretratável depois de oferecida a
+    denúncia. (Redação dada pela Lei nº 7.209, de 11.7.1984)" ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art102
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art102. answer_key=''102''.'
+- source_id: celsowm/legalbench.br/887
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "No concurso de infrações, executar-se-á primeiramente a
+    pena mais grave. (Redação dada pela Lei nº 7.209, de 11.7.1984)" ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art76
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art76. answer_key=''76''.'
+- source_id: celsowm/legalbench.br/888
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "A suspensão não se estende às penas restritivas de direitos
+    nem à multa. (Redação dada pela Lei nº 7.209, de 11.7.1984)" ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art80
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art80. answer_key=''80''.'
+- source_id: celsowm/legalbench.br/889
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "A sentença especificará as condições a que fica subordinado
+    o livramento. (Redação dada pela Lei nº 7.209, de 11.7.1984)" ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art85
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art85. answer_key=''85''.'
+- source_id: celsowm/legalbench.br/890
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "Provocar aborto, sem o consentimento da gestante: Pena
+    - reclusão, de três a dez anos. Pena - reclusão, de três a dez anos." ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art125
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art125. answer_key=''125''.'
+- source_id: celsowm/legalbench.br/891
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "Vilipendiar cadáver ou suas cinzas: Pena - detenção, de
+    um a três anos, e multa. Pena - detenção, de um a três anos, e multa." ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art212
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art212. answer_key=''212''.'
+- source_id: celsowm/legalbench.br/892
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "É suspensa a execução da pena de multa, se sobrevém ao
+    condenado doença mental. (Redação dada pela Lei nº 7.209, de 11.7.1984)" ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art52
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art52. answer_key=''52''.'
+- source_id: celsowm/legalbench.br/893
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "No concurso de crimes, as penas de multa são aplicadas
+    distinta e integralmente. (Redação dada pela Lei nº 7.209, de 11.7.1984)" ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art72
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art72. answer_key=''72''.'
+- source_id: celsowm/legalbench.br/894
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "Não há crime sem lei anterior que o defina. Não há pena
+    sem prévia cominação legal. (Redação dada pela Lei nº 7.209, de 11.7.1984)" ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art1
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art1. answer_key=''1''.'
+- source_id: celsowm/legalbench.br/895
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "Provocar aborto em si mesma ou consentir que outrem lho
+    provoque: (Vide ADPF 54) (Vide ADPF 54) Pena - detenção, de um a três anos." ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art124
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art124. answer_key=''124''.'
+- source_id: celsowm/legalbench.br/896
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "As penas que correspondem a infrações diversas devem somar-se
+    para efeito do livramento. (Redação dada pela Lei nº 7.209, de 11.7.1984)" ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art84
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art84. answer_key=''84''.'
+- source_id: celsowm/legalbench.br/897
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "A sentença que conceder perdão judicial não será considerada
+    para efeitos de reincidência. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
+    ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art120
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art120. answer_key=''120''.'
+- source_id: celsowm/legalbench.br/898
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "Violar ou profanar sepultura ou urna funerária: Pena -
+    reclusão, de um a três anos, e multa. Pena - reclusão, de um a três anos, e multa."
+    ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art210
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art210. answer_key=''210''.'
+- source_id: celsowm/legalbench.br/899
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: 'Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro
+    de 1940) com o texto: "Destruir, subtrair ou ocultar cadáver ou parte dele: Pena
+    - reclusão, de um a três anos, e multa. Pena - reclusão, de um a três anos, e
+    multa." ?'
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art211
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art211. answer_key=''211''.'
+- source_id: celsowm/legalbench.br/900
+  category: rule_recall
+  question_type: citacao-literal
+  legal_area: Direito Penal
+  query: "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro\
+    \ de 1940) com o texto: \"Nos crimes previstos neste Título a pena é aumentada:\
+    \ (Incluído pela Lei nº 12.015, de 2009) (Incluído pela Lei nº 12.015, de 2009)\
+    \ I \x96 (VETADO)\" ?"
+  gold_urns:
+  - urn:lex:br:federal:decreto.lei:1940-12-07;2848~art234-a
+  notes: 'Rule recall: given verbatim text of Direito Penal article, pipeline must
+    retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art234-a. answer_key=''234-A''.'

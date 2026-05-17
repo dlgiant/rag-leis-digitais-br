@@ -1,0 +1,1491 @@
+{
+  "config": {
+    "embedder": "voyage-3-large",
+    "text_mode": "title+label+nav+caput+text",
+    "llm_provider": "maritaca",
+    "top_k": 10,
+    "oos_threshold": 0.4
+  },
+  "aggregate": {
+    "n_total": 40,
+    "n_inscope": 0,
+    "n_oos_a": 0,
+    "n_oos_b": 0,
+    "inscope_answer_rate": 0.0,
+    "inscope_any_gold_cited_rate": 0.0,
+    "inscope_coverage_mean": 0.0,
+    "inscope_coverage_jaccard_mean": 0.0,
+    "oos_a_refusal_rate": 0.0,
+    "oos_b_refusal_rate": 0.0,
+    "overall_refusal_accuracy": 0.0,
+    "n_rule_recall": 40,
+    "rule_recall_hit_rate": 0.975,
+    "rule_recall_answered_rate": 1.0,
+    "cost_total_usd": 0.06717,
+    "cost_mean_usd": 0.001679,
+    "total_input_tokens": 107011,
+    "total_output_tokens": 6831,
+    "total_llm_calls": 44
+  },
+  "records": [
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/841",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"As leis complementares serão aprovadas por maioria absoluta.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art69"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art69. answer_key='69'."
+      },
+      "answer": {
+        "text": "O artigo da Constituição Federal de 1988 que dispõe que 'as leis complementares serão aprovadas por maioria absoluta' é o Art. 69.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art69"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001466,
+        "tokens_used": {
+          "input_tokens": 2503,
+          "output_tokens": 107
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/842",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"São órgãos da Justiça Federal: I - os Tribunais Regionais Federais; II - os Juízes Federais.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art106"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art106. answer_key='106'."
+      },
+      "answer": {
+        "text": "O texto citado, \"São órgãos da Justiça Federal: I - os Tribunais Regionais Federais; II - os Juízes Federais.\", está previsto no Art. 106 da Constituição Federal de 1988.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art106",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art106;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art106;inc2"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001662,
+        "tokens_used": {
+          "input_tokens": 2521,
+          "output_tokens": 201
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/843",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"O Poder Executivo é exercido pelo Presidente da República, auxiliado pelos Ministros de Estado.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art76"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art76. answer_key='76'."
+      },
+      "answer": {
+        "text": "O texto \"O Poder Executivo é exercido pelo Presidente da República, auxiliado pelos Ministros de Estado.\" está previsto no Art. 76 da Constituição da República Federativa do Brasil de 1988.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art76"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001406,
+        "tokens_used": {
+          "input_tokens": 2404,
+          "output_tokens": 102
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/844",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"São penalmente inimputáveis os menores de dezoito anos, sujeitos às normas da legislação especial.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art228"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art228. answer_key='228'."
+      },
+      "answer": {
+        "text": "O texto 'São penalmente inimputáveis os menores de dezoito anos, sujeitos às normas da legislação especial.' está previsto no Art. 228 da Constituição Federal de 1988.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art228"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001486,
+        "tokens_used": {
+          "input_tokens": 2521,
+          "output_tokens": 113
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/845",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"São Poderes da União, independentes e harmônicos entre si, o Legislativo, o Executivo e o Judiciário.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art2"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art2. answer_key='2'."
+      },
+      "answer": {
+        "text": "O texto 'São Poderes da União, independentes e harmônicos entre si, o Legislativo, o Executivo e o Judiciário.' está previsto no Art. 2 da Constituição Federal de 1988.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art2"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001479,
+        "tokens_used": {
+          "input_tokens": 2526,
+          "output_tokens": 108
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/846",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"São órgãos da Justiça Militar: I - o Superior Tribunal Militar; II - os Tribunais e juízes militares instituídos por lei.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art122"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art122. answer_key='122'."
+      },
+      "answer": {
+        "text": "O artigo da Constituição Federal de 1988 que contém o texto \"São órgãos da Justiça Militar: I - o Superior Tribunal Militar; II - os Tribunais e juízes militares instituídos por lei\" é o Art. 122. O inciso I do referido artigo lista o Superior Tribunal Militar, e o inciso II menciona os Tribunais e juízes militares instituídos por lei.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art122",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art122;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art122;inc2"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001775,
+        "tokens_used": {
+          "input_tokens": 2621,
+          "output_tokens": 232
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/847",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"A União, os Estados, o Distrito Federal e os Municípios promoverão e incentivarão o turismo como fator de desenvolvimento social e econômico.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art180"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art180. answer_key='180'."
+      },
+      "answer": {
+        "text": "O texto 'A União, os Estados, o Distrito Federal e os Municípios promoverão e incentivarão o turismo como fator de desenvolvimento social e econômico' está previsto no Art. 180, inciso VII, da Constituição Federal de 1988.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art180"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001517,
+        "tokens_used": {
+          "input_tokens": 2499,
+          "output_tokens": 134
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/848",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"Para os efeitos do disposto neste Capítulo, o Congresso Nacional instituirá, como órgão auxiliar, o Conselho de Comunicação Social, na forma da lei.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art224"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art224. answer_key='224'."
+      },
+      "answer": {
+        "text": "O artigo da Constituição Federal de 1988 que contém o texto 'Para os efeitos do disposto neste Capítulo, o Congresso Nacional instituirá, como órgão auxiliar, o Conselho de Comunicação Social, na forma da lei.' é o Art. 224.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art224"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.00149,
+        "tokens_used": {
+          "input_tokens": 2444,
+          "output_tokens": 134
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/849",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"O advogado é indispensável à administração da justiça, sendo inviolável por seus atos e manifestações no exercício da profissão, nos limites da lei.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art133"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art133. answer_key='133'."
+      },
+      "answer": {
+        "text": "O texto mencionado está previsto no artigo 133 da Constituição Federal de 1988.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art133"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001515,
+        "tokens_used": {
+          "input_tokens": 2685,
+          "output_tokens": 86
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/850",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"A lei disciplinará, com base no interesse nacional, os investimentos de capital estrangeiro, incentivará os reinvestimentos e regulará a remessa de lucros.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art172"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art172. answer_key='172'."
+      },
+      "answer": {
+        "text": "O artigo da Constituição Federal de 1988 que contém o texto \"A lei disciplinará, com base no interesse nacional, os investimentos de capital estrangeiro, incentivará os reinvestimentos e regulará a remessa de lucros\" é o Art. 172, da Seção I - Dos Princípios Gerais da Atividade Econômica, do Capítulo VII - Da Ordem Econômica e Financeira.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art172"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001627,
+        "tokens_used": {
+          "input_tokens": 2614,
+          "output_tokens": 160
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/851",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"A fiscalização e o controle sobre o comércio exterior, essenciais à defesa dos interesses fazendários nacionais, serão exercidos pelo Ministério da Fazenda.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art237"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art237. answer_key='237'."
+      },
+      "answer": {
+        "text": "O texto solicitado está previsto no Art. 237 da Constituição Federal de 1988, que dispõe: \"A fiscalização e o controle sobre o comércio exterior, essenciais à defesa dos interesses fazendários nacionais, serão exercidos pelo Ministério da Fazenda.\"\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art237"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.00143,
+        "tokens_used": {
+          "input_tokens": 2333,
+          "output_tokens": 132
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/852",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"A lei disporá sobre a criação e extinção de Ministérios e órgãos da administração pública. (Artigo com redação dada pela Emenda Constitucional nº 32, de 2001)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art88"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art88. answer_key='88'."
+      },
+      "answer": {
+        "text": "O dispositivo constitucional que dispõe sobre a criação e extinção de Ministérios e órgãos da administração pública está previsto no Art. 88 da Constituição da República Federativa do Brasil de 1988. O texto original foi alterado pela Emenda Constitucional nº 32, de 2001, e corresponde ao inciso IV do referido artigo, que atribui à lei a competência para tratar da matéria.\n\nAlternativamente, o Art. 48, XI, da Constituição Federal também atribui ao Congresso Nacional a competência para legislar sobre a criação e extinção de Ministérios e órgãos da administração pública, conforme disciplinado pelo Art. 61, § 1º, II, e, que especifica que tal competência legislativa se submete ao disposto no Art. 84, VI.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art88",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art48;inc11",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art61;par1;inc2;ali-e",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art84;inc6;ali-a"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002019,
+        "tokens_used": {
+          "input_tokens": 2522,
+          "output_tokens": 379
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/853",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"Aos membros do Ministério Público junto aos Tribunais de Contas aplicam-se as disposições desta Seção pertinentes a direitos, vedações e forma de investidura.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art130"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art130. answer_key='130'."
+      },
+      "answer": {
+        "text": "O artigo da Constituição Federal de 1988 que contém o texto \"Aos membros do Ministério Público junto aos Tribunais de Contas aplicam-se as disposições desta Seção pertinentes a direitos, vedações e forma de investidura.\" é o Art. 130.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art130"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.00152,
+        "tokens_used": {
+          "input_tokens": 2555,
+          "output_tokens": 121
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/854",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"São órgãos da Justiça Eleitoral: I - o Tribunal Superior Eleitoral; II - os Tribunais Regionais Eleitorais; III - os juízes eleitorais; IV - as Juntas Eleitorais.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art118"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art118. answer_key='118'."
+      },
+      "answer": {
+        "text": "O texto solicitado está previsto no Art. 118 da Constituição Federal de 1988, que enumera os órgãos da Justiça Eleitoral. Especificamente, o caput do Art. 118 dispõe: \"São órgãos da Justiça Eleitoral:\" e seus incisos detalham os órgãos, incluindo o Tribunal Superior Eleitoral (inciso I), os Tribunais Regionais Eleitorais (inciso II), os juízes eleitorais (inciso III) e as Juntas Eleitorais (inciso IV).\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art118",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art118;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art118;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art118;inc3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art118;inc4"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001883,
+        "tokens_used": {
+          "input_tokens": 2439,
+          "output_tokens": 332
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/855",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"Os pais têm o dever de assistir, criar e educar os filhos menores, e os filhos maiores têm o dever de ajudar e amparar os pais na velhice, carência ou enfermidade.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art229"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art229. answer_key='229'."
+      },
+      "answer": {
+        "text": "O artigo da Constituição da República Federativa do Brasil de 1988 que contém o texto \"Os pais têm o dever de assistir, criar e educar os filhos menores, e os filhos maiores têm o dever de ajudar e amparar os pais na velhice, carência ou enfermidade.\" é o Art. 229.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art229"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001515,
+        "tokens_used": {
+          "input_tokens": 2485,
+          "output_tokens": 136
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/856",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"Salvo disposição constitucional em contrário, as deliberações de cada Casa e de suas comissões serão tomadas por maioria dos votos, presente a maioria absoluta de seus membros.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art47"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art47. answer_key='47'."
+      },
+      "answer": {
+        "text": "O artigo da Constituição Federal de 1988 que contém o texto \"Salvo disposição constitucional em contrário, as deliberações de cada Casa e de suas comissões serão tomadas por maioria dos votos, presente a maioria absoluta de seus membros\" é o Art. 47.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art47"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001631,
+        "tokens_used": {
+          "input_tokens": 2734,
+          "output_tokens": 132
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/857",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"É vedado aos Estados, ao Distrito Federal e aos Municípios estabelecer diferença tributária entre bens e serviços, de qualquer natureza, em razão de sua procedência ou destino.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art152"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art152. answer_key='152'."
+      },
+      "answer": {
+        "text": "O artigo da Constituição Federal de 1988 que contém o texto \"É vedado aos Estados, ao Distrito Federal e aos Municípios estabelecer diferença tributária entre bens e serviços, de qualquer natureza, em razão de sua procedência ou destino.\" é o Art. 152.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art152"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001593,
+        "tokens_used": {
+          "input_tokens": 2674,
+          "output_tokens": 128
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/858",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"O Presidente e o Vice-Presidente da República não poderão, sem licença do Congresso Nacional, ausentar-se do País por período superior a quinze dias, sob pena de perda do cargo.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art83"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art83. answer_key='83'."
+      },
+      "answer": {
+        "text": "O texto 'O Presidente e o Vice-Presidente da República não poderão, sem licença do Congresso Nacional, ausentar-se do País por período superior a quinze dias, sob pena de perda do cargo.' consta no Art. 83 da Constituição Federal de 1988.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art83"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003221,
+        "tokens_used": {
+          "input_tokens": 5391,
+          "output_tokens": 263
+        },
+        "llm_calls": 2
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/859",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"O Poder Legislativo é exercido pelo Congresso Nacional, que se compõe da Câmara dos Deputados e do Senado Federal. Parágrafo único . Cada legislatura terá a duração de quatro anos.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art44"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art44. answer_key='44'."
+      },
+      "answer": {
+        "text": "O texto \"O Poder Legislativo é exercido pelo Congresso Nacional, que se compõe da Câmara dos Deputados e do Senado Federal.\" está previsto no Art. 44 da Constituição Federal de 1988. Já a disposição \"Cada legislatura terá a duração de quatro anos.\" consta no Parágrafo único do mesmo Art. 44.\n\nPortanto, o dispositivo completo que contém ambos os trechos solicitados é o Art. 44 e seu parágrafo único da Constituição Federal de 1988.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art44",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art44;par1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001612,
+        "tokens_used": {
+          "input_tokens": 2343,
+          "output_tokens": 220
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/860",
+        "category": "rule_recall",
+        "query": "Qual é o artigo da Constituição Brasileira de 1988 com o texto: \"Nas empresas de mais de duzentos empregados, é assegurada a eleição de um representante destes com a finalidade exclusiva de promover-lhes o entendimento direto com os empregadores.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art11"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Constitucional article, pipeline must retrieve+cite urn:lex:br:federal:constituicao:1988-10-05;1988~art11. answer_key='11'."
+      },
+      "answer": {
+        "text": "O artigo da Constituição Federal de 1988 que contém o texto \"Nas empresas de mais de duzentos empregados, é assegurada a eleição de um representante destes com a finalidade exclusiva de promover-lhes o entendimento direto com os empregadores.\" é o Art. 11.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art11"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.00156,
+        "tokens_used": {
+          "input_tokens": 2600,
+          "output_tokens": 130
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/881",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"Nos crimes previstos neste Capítulo, aplica-se o disposto no art. 155, § 2º.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art170"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art170. answer_key='170'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que contém o texto \"Nos crimes previstos neste Capítulo, aplica-se o disposto no art. 155, § 2º.\" é o art. 170.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art170"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002498,
+        "tokens_used": {
+          "input_tokens": 4025,
+          "output_tokens": 243
+        },
+        "llm_calls": 2
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/882",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"As penas mais leves prescrevem com as mais graves. (Redação dada pela Lei nº 7.209, de 11.7.1984)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art118"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art118. answer_key='118'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que contém o texto \"As penas mais leves prescrevem com as mais graves.\" é o Art. 118.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art118"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001349,
+        "tokens_used": {
+          "input_tokens": 2313,
+          "output_tokens": 96
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/883",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"Nos casos do art. 163, do inciso IV do seu parágrafo e do art. 164, somente se procede mediante queixa.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art167"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art167. answer_key='167'."
+      },
+      "answer": {
+        "text": "O dispositivo do Código Penal Brasileiro que contém o texto \"Nos casos do art. 163, do inciso IV do seu parágrafo e do art. 164, somente se procede mediante queixa\" é o Art. 167.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art167"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002607,
+        "tokens_used": {
+          "input_tokens": 4301,
+          "output_tokens": 228
+        },
+        "llm_calls": 2
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/884",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"Aplica-se o disposto no art. 258 aos crimes previstos neste Capítulo, salvo quanto ao definido no art. 267.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art285"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art285. answer_key='285'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que contém o texto \"Aplica-se o disposto no art. 258 aos crimes previstos neste Capítulo, salvo quanto ao definido no art. 267\" é o Art. 285 do Decreto-Lei nº 2.848, de 7 de dezembro de 1940.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art285"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.00255,
+        "tokens_used": {
+          "input_tokens": 4081,
+          "output_tokens": 255
+        },
+        "llm_calls": 2
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/885",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"Se o agente é funcionário público, e comete o crime prevalecendo-se do cargo, aumenta-se a pena de sexta parte.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art295"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art295. answer_key='295'."
+      },
+      "answer": {
+        "text": "O texto solicitado está previsto no Art. 295 do Código Penal Brasileiro, que trata dos crimes contra a fé pública, especificamente na subseção relativa à falsidade de títulos e outros papéis públicos. O dispositivo dispõe que, se o agente é funcionário público e comete o crime prevalecendo-se do cargo, aumenta-se a pena de sexta parte.\n\nAdicionalmente, o mesmo aumento de pena de sexta parte aplica-se a outras hipóteses de crimes contra a fé pública cometidos por funcionário público em razão do cargo, conforme os arts. 296, § 2º e 297, § 1º do Código Penal.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art295",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art296;par2",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art297;par1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001838,
+        "tokens_used": {
+          "input_tokens": 2512,
+          "output_tokens": 291
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/886",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"A representação será irretratável depois de oferecida a denúncia. (Redação dada pela Lei nº 7.209, de 11.7.1984)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art102"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art102. answer_key='102'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que contém o texto \"A representação será irretratável depois de oferecida a denúncia\" é o Art. 102, conforme registrado na fonte fornecida.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art102"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001401,
+        "tokens_used": {
+          "input_tokens": 2381,
+          "output_tokens": 105
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/887",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"No concurso de infrações, executar-se-á primeiramente a pena mais grave. (Redação dada pela Lei nº 7.209, de 11.7.1984)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art76"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art76. answer_key='76'."
+      },
+      "answer": {
+        "text": "O texto \"No concurso de infrações, executar-se-á primeiramente a pena mais grave\" está previsto no Art. 76 do Código Penal Brasileiro (Decreto-Lei nº 2.848, de 7 de dezembro de 1940).\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art76"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001528,
+        "tokens_used": {
+          "input_tokens": 2585,
+          "output_tokens": 118
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/888",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"A suspensão não se estende às penas restritivas de direitos nem à multa. (Redação dada pela Lei nº 7.209, de 11.7.1984)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art80"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art80. answer_key='80'."
+      },
+      "answer": {
+        "text": "O texto \"A suspensão não se estende às penas restritivas de direitos nem à multa\" está previsto no Art. 80 do Código Penal Brasileiro (Decreto-Lei Nº 2.848, de 7 de dezembro de 1940).\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art80"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001468,
+        "tokens_used": {
+          "input_tokens": 2455,
+          "output_tokens": 120
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/889",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"A sentença especificará as condições a que fica subordinado o livramento. (Redação dada pela Lei nº 7.209, de 11.7.1984)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art85"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art85. answer_key='85'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que contém o texto \"A sentença especificará as condições a que fica subordinado o livramento\" é o Art. 85.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art85"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001367,
+        "tokens_used": {
+          "input_tokens": 2361,
+          "output_tokens": 93
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/890",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"Provocar aborto, sem o consentimento da gestante: Pena - reclusão, de três a dez anos. Pena - reclusão, de três a dez anos.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art125"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art125. answer_key='125'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que tipifica a conduta de 'provocar aborto, sem o consentimento da gestante' é o Art. 125. A pena cominada é de reclusão, de três a dez anos. Este dispositivo trata do aborto não consentido pela gestante, caracterizando-o como um crime mais grave em comparação com as hipóteses de aborto com consentimento ou em situações excepcionais legalmente previstas.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art125"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001516,
+        "tokens_used": {
+          "input_tokens": 2356,
+          "output_tokens": 169
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/891",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"Vilipendiar cadáver ou suas cinzas: Pena - detenção, de um a três anos, e multa. Pena - detenção, de um a três anos, e multa.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art212"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art212. answer_key='212'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que tipifica a conduta de vilipendiar cadáver ou suas cinzas com a pena de detenção, de um a três anos, e multa, é o Art. 212 do Decreto-Lei Nº 2.848, de 7 de dezembro de 1940.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art212"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001471,
+        "tokens_used": {
+          "input_tokens": 2381,
+          "output_tokens": 140
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/892",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"É suspensa a execução da pena de multa, se sobrevém ao condenado doença mental. (Redação dada pela Lei nº 7.209, de 11.7.1984)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art52"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art52. answer_key='52'."
+      },
+      "answer": {
+        "text": "O texto solicitado está previsto no Art. 52 do Código Penal Brasileiro (Decreto-Lei Nº 2.848, de 7 de dezembro de 1940).\n\nArt. 52 — É suspensa a execução da pena de multa, se sobrevém ao condenado doença mental.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art52"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.00152,
+        "tokens_used": {
+          "input_tokens": 2523,
+          "output_tokens": 129
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/893",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"No concurso de crimes, as penas de multa são aplicadas distinta e integralmente. (Redação dada pela Lei nº 7.209, de 11.7.1984)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art72"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art72. answer_key='72'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que contém o texto \"No concurso de crimes, as penas de multa são aplicadas distinta e integralmente\" é o Art. 72.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art72"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001448,
+        "tokens_used": {
+          "input_tokens": 2508,
+          "output_tokens": 97
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/894",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"Não há crime sem lei anterior que o defina. Não há pena sem prévia cominação legal. (Redação dada pela Lei nº 7.209, de 11.7.1984)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art1"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art1. answer_key='1'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que contém o texto \"Não há crime sem lei anterior que o defina. Não há pena sem prévia cominação legal.\" é o Art. 1, conforme disposto na sua redação vigente. Essa norma consagra o princípio da legalidade penal, fundamental para o Estado de Direito, e foi reforçada pela redação dada pela Lei nº 7.209, de 11 de julho de 1984, conforme indicado na fonte específica do Art. 1 do Código Penal. Adicionalmente, o mesmo princípio é garantido no Art. 5, inciso XXXIX, da Constituição Federal de 1988, como direito fundamental.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026); Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc39"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001668,
+        "tokens_used": {
+          "input_tokens": 2264,
+          "output_tokens": 268
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/895",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"Provocar aborto em si mesma ou consentir que outrem lho provoque: (Vide ADPF 54) (Vide ADPF 54) Pena - detenção, de um a três anos.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art124"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art124. answer_key='124'."
+      },
+      "answer": {
+        "text": "O texto citado corresponde ao Art. 124 do Código Penal Brasileiro (Decreto-Lei Nº 2.848, de 7 de dezembro de 1940). O dispositivo prevê como conduta típica provocar aborto em si mesma ou consentir que outrem lho provoque, cominando a pena de detenção, de um a três anos.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art124"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001484,
+        "tokens_used": {
+          "input_tokens": 2367,
+          "output_tokens": 150
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/896",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"As penas que correspondem a infrações diversas devem somar-se para efeito do livramento. (Redação dada pela Lei nº 7.209, de 11.7.1984)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art84"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art84. answer_key='84'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que contém o texto solicitado é o Art. 84.\n\nSegundo o Art. 84 do Código Penal, 'As penas que correspondem a infrações diversas devem somar-se para efeito do livramento'. Essa redação foi dada pela Lei nº 7.209, de 11 de julho de 1984.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art84"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001596,
+        "tokens_used": {
+          "input_tokens": 2600,
+          "output_tokens": 148
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/897",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"A sentença que conceder perdão judicial não será considerada para efeitos de reincidência. (Redação dada pela Lei nº 7.209, de 11.7.1984)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art120"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art120. answer_key='120'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que contém o texto \"A sentença que conceder perdão judicial não será considerada para efeitos de reincidência\" é o Art. 120.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art120"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001324,
+        "tokens_used": {
+          "input_tokens": 2237,
+          "output_tokens": 103
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/898",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"Violar ou profanar sepultura ou urna funerária: Pena - reclusão, de um a três anos, e multa. Pena - reclusão, de um a três anos, e multa.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art210"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art210. answer_key='210'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que prevê o crime de violar ou profanar sepultura ou urna funerária com a pena de reclusão, de um a três anos, e multa é o Art. 210 do Código Penal. A descrição do tipo penal e a respectiva sanção estão contidas nesse dispositivo.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art210"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001473,
+        "tokens_used": {
+          "input_tokens": 2410,
+          "output_tokens": 134
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/899",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"Destruir, subtrair ou ocultar cadáver ou parte dele: Pena - reclusão, de um a três anos, e multa. Pena - reclusão, de um a três anos, e multa.\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art211"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art211. answer_key='211'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que tipifica como crime 'destruir, subtrair ou ocultar cadáver ou parte dele', com a pena correspondente de reclusão de um a três anos e multa, é o Art. 211.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art211"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.00145,
+        "tokens_used": {
+          "input_tokens": 2448,
+          "output_tokens": 113
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/900",
+        "category": "rule_recall",
+        "query": "Qual é o artigo do Código Penal Brasileiro (Lei Nº 2.848, de 7 de Dezembro de 1940) com o texto: \"Nos crimes previstos neste Título a pena é aumentada: (Incluído pela Lei nº 12.015, de 2009) (Incluído pela Lei nº 12.015, de 2009) I  (VETADO)\" ?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art234-a"
+        ],
+        "notes": "Rule recall: given verbatim text of Direito Penal article, pipeline must retrieve+cite urn:lex:br:federal:decreto.lei:1940-12-07;2848~art234-a. answer_key='234-A'."
+      },
+      "answer": {
+        "text": "O artigo do Código Penal Brasileiro que trata do aumento de pena nos crimes previstos no Título referente aos Crimes Contra a Dignidade Sexual é o Art. 226. Segundo o texto disponível nas fontes, o Art. 226 estabelece que a pena é aumentada em determinadas circunstâncias, como, por exemplo, se o crime é praticado mediante concurso de dois ou mais agentes (Art. 226, IV, alínea \"a\") ou para controlar o comportamento social ou sexual da vítima (Art. 226, IV, alínea \"b\"). No entanto, a fonte indicada para o Art. 226 não traz o inciso I com o texto \"(VETADO)\", nem qualquer menção explícita ao veto nesse dispositivo. Portanto, não é possível localizar no corpus fornecido o texto exato citado na pergunta (\"Nos crimes previstos neste Título a pena é aumentada: (Incluído pela Lei nº 12.015, de 2009) (Incluído pela Lei nº 12.015, de 2009) I – (VETADO)\") dentro das fontes disponíveis.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art226",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art226;inc4;ali-a",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art226;inc4;ali-b"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [
+          "O texto exato com o inciso I vetado está no Art. 226 do Código Penal, conforme alteração da Lei 12.015/2009, mas não foi localizado textualmente nas fontes fornecidas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002207,
+        "tokens_used": {
+          "input_tokens": 2489,
+          "output_tokens": 481
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": false
+      }
+    }
+  ]
+}
