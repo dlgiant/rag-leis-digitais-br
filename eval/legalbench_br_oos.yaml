@@ -1,0 +1,408 @@
+# legalbench.br OOS expansion — Phase 7.5.3 (2026-05-17).
+#
+# Source: celsowm/legalbench.br, multiple_choice_qa task, CC BY-SA 4.0.
+# Filter: legal_area in {Tributário, Trabalhista, Ambiental, Previdenciário,
+#   Processual Penal, Processual Civil, Internacional, Eleitoral, Empresarial}.
+# Sample: stratified by area, ~7 per area, seed=42.
+# Total: 49 OOS rows.
+#
+# Each row's `query` is the `Enunciado:` line ONLY — the discipline
+# prefix ("Disciplina: Direito Tributário") was stripped because it
+# would trivially leak the domain to the model and let refusal pass
+# on token match alone. We want refusal to fire on the SEMANTIC
+# OOS-ness (no LGPD/MCI/CDC norm exists to support this answer).
+#
+# Expected production behavior: pipeline refuses with subtype 'a'
+# (other domain entirely). Current baseline (concurso pilot 2026-05-17):
+# OOS-A refusal_rate = 43%. Target post-expansion + SYSTEM_PROMPT
+# iteration: ≥80%.
+#
+# Reproduce: uv run python -m scripts.extract_legalbench_oos
+
+- source_id: celsowm/legalbench.br/182
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Durante um processo, a parte ré levanta a questão de incompetência territorial
+    do juízo. Qual é o momento adequado para arguir essa incompetência?
+  notes: OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=a).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/149
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Quais são os requisitos essenciais da petição inicial, segundo o CPC?
+  notes: OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=b).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/143
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'O recurso cabível contra decisões interlocutórias que causam prejuízo imediato
+    à parte é:'
+  notes: OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=b).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/189
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Juliana é parte executada em um cumprimento de sentença e deseja alegar excesso
+    de execução. Qual é o meio processual adequado para apresentar essa alegação?
+  notes: OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=b).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/159
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Qual instituto processual permite ao réu discutir a incompetência do juízo
+    no momento inicial do processo?
+  notes: OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=b).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/157
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Qual é o prazo para cumprimento voluntário da sentença após intimação do
+    executado?
+  notes: OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=c).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/156
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Qual incidente processual é cabível para uniformizar decisões divergentes
+    dentro do mesmo tribunal?
+  notes: OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=d).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/247
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'O prazo máximo para conclusão do inquérito policial em caso de réu solto
+    é de:'
+  notes: OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=b).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/266
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: João, vítima de crime, deseja atuar diretamente como assistente da acusação.
+    Em que momento processual poderá fazê-lo?
+  notes: OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=b).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/246
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Em que situação cabe recurso em sentido estrito?
+  notes: OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=c).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/264
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Caio foi preso em flagrante. Qual é o prazo máximo para que o juiz decida
+    sobre a legalidade dessa prisão?
+  notes: OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=a).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/272
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Maria, testemunha essencial no processo, se recusa a comparecer para prestar
+    depoimento. Qual medida pode ser adotada pelo juiz?
+  notes: OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=a).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/260
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Em qual hipótese cabe ação penal privada subsidiária da pública?
+  notes: OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=a).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/245
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Qual instrumento processual deve ser utilizado para garantir a liberdade
+    de alguém preso ilegalmente?
+  notes: OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=c).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/301
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Luana é dispensada sem justa causa após 10 anos de trabalho. Quantos dias
+    de aviso prévio proporcional ela deve cumprir ou receber indenizados?
+  notes: OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=d). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/276
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Qual o prazo para ajuizar ação trabalhista após a extinção do contrato de
+    trabalho?
+  notes: OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=b). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/275
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'A jornada de trabalho padrão, sem compensação ou acordo específico, conforme
+    a CLT, é de:'
+  notes: OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=a). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/279
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'O contrato de experiência poderá ter duração máxima de:'
+  notes: OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/280
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Qual dessas situações caracteriza justa causa para rescisão contratual pelo
+    empregador?
+  notes: OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/281
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'O repouso semanal remunerado deve ser de, no mínimo:'
+  notes: OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/290
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'A jornada de trabalho máxima semanal permitida para menores aprendizes é
+    de:'
+  notes: OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=b). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/347
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: André, comerciante, não pagou o ICMS devido e agora responde criminalmente.
+    Que tipo de ilícito tributário foi cometido?
+  notes: OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=a). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/310
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: A alíquota do imposto sobre transmissão causa mortis (ITCMD) é definida por
+    qual ente federativo?
+  notes: OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=b). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/344
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Uma empresa vendeu produtos para outro Estado. Qual tributo estadual incidirá
+    sobre essa operação?
+  notes: OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/321
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'O princípio tributário da capacidade contributiva objetiva garantir:'
+  notes: OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=b). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/354
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Patrícia alugou um imóvel comercial próprio para terceiros. Sobre essa receita
+    obtida com aluguel, qual imposto incidirá?
+  notes: OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/350
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Carlos vendeu uma propriedade rural. Qual tributo incide sobre a transmissão
+    desse imóvel?
+  notes: OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=b). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/343
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Carlos recebeu cobrança de IPTU com aumento significativo sem que tenha havido
+    lei municipal autorizando esse reajuste. Essa cobrança viola qual princípio tributário?
+  notes: OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=b). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/372
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'O comerciante individual responde pelas obrigações contraídas pela empresa:'
+  notes: OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=b). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/366
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Qual é o prazo máximo de proteção legal para patentes de invenção no Brasil?
+  notes: OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/373
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Qual das seguintes situações pode levar à exclusão de um sócio de uma sociedade
+    limitada?
+  notes: OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/377
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: João, sócio majoritário, desvia recursos da empresa para uso pessoal. Essa
+    atitude configura qual infração empresarial?
+  notes: OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/367
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: A sociedade simples é registrada obrigatoriamente em qual órgão?
+  notes: OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=b). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/359
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Qual das seguintes formas societárias possui responsabilidade ilimitada dos
+    sócios pelas dívidas da empresa?
+  notes: OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=a). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/364
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: Qual das opções descreve uma característica essencial da sociedade em comandita
+    simples?
+  notes: OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/397
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Uma mineradora pretende explorar área localizada em terras indígenas. Conforme
+    a Constituição Federal, essa exploração é:'
+  notes: OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/389
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Eduardo promoveu queimada irregular em sua propriedade rural, causando danos
+    à fauna e flora locais. Conforme a Lei nº 9.605/98, Eduardo praticou:'
+  notes: OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/388
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Uma empresa de transportes derramou produtos químicos em uma rodovia causando
+    contaminação do solo. Sobre a responsabilidade ambiental da empresa é correto
+    afirmar que ela:'
+  notes: OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/386
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Maria decidiu transformar parte de sua propriedade rural em uma Reserva
+    Particular do Patrimônio Natural (RPPN). Para isso, Maria deve:'
+  notes: OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=b). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/387
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Carlos, empresário do ramo de mineração, pretende iniciar atividades de
+    grande impacto ambiental. Nesse caso, será exigido:'
+  notes: OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/398
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Antônio, agricultor familiar, realizou queimadas controladas em sua propriedade
+    sem autorização ambiental. Nesse caso, Antônio:'
+  notes: OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=c). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/385
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Uma indústria realizou lançamento irregular de resíduos no rio próximo à
+    sua sede, gerando danos ambientais. Sobre a reparação do dano ambiental causado,
+    assinale a alternativa correta:'
+  notes: OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=b). Pipeline
+    should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/402
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'No Direito Internacional Público, a imunidade de jurisdição absoluta é tradicionalmente
+    reconhecida para:'
+  notes: OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=c).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/412
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Antônio foi condenado criminalmente na Espanha e fugiu para o Brasil, seu
+    país de origem. Sobre o pedido de extradição feito pela Espanha, é correto afirmar
+    que:'
+  notes: OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=b).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/403
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Conforme a Convenção de Viena sobre Relações Diplomáticas, um agente diplomático
+    estrangeiro tem imunidade:'
+  notes: OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=c).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/405
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'A competência para declarar guerra, segundo a Constituição Federal brasileira,
+    pertence ao(à):'
+  notes: OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=b).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/413
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Uma embarcação brasileira em águas internacionais é atacada por piratas
+    estrangeiros. A jurisdição para julgar os piratas, segundo o Direito Internacional
+    Público, é:'
+  notes: OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=b).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/414
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Uma empresa brasileira contrata empregados estrangeiros que trabalham remotamente
+    em seus países. A legislação aplicável às relações trabalhistas será definida:'
+  notes: OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=c).
+    Pipeline should refuse because corpus doesn't index this area.
+- source_id: celsowm/legalbench.br/409
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: 'Um diplomata estrangeiro comete um crime comum em território brasileiro.
+    Nesse caso, o diplomata:'
+  notes: OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=c).
+    Pipeline should refuse because corpus doesn't index this area.
