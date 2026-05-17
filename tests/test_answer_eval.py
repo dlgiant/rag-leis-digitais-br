@@ -99,3 +99,121 @@ def test_alt_alone_does_not_count_as_recall_hit():
     _p_s, p_l, r, _f1 = score_citations(cited, gold, alt)
     assert r == 0.0
     assert p_l == 1.0  # both cited URNs are in alt
+
+
+# ----------------------------------------------------------------------------
+# Phase 7.5.1 — false_refusal_rate + oos_refusal_recall as first-class metrics.
+# Aggregate-level confusion-matrix split. The existing `refusal_accuracy`
+# (macro avg over both in-scope and OOS) collapsed two distinct dimensions;
+# these tests pin the explicit split.
+# ----------------------------------------------------------------------------
+
+from dataclasses import dataclass
+from typing import Optional
+
+from rag_leis.run_answer_eval import AnswerQuery, EvalRow, aggregate
+from rag_leis.rag import RAGAnswer
+
+
+def _row(*, oos: bool, refused: bool, query_type: str = "definicao") -> EvalRow:
+    """Minimal EvalRow construction for aggregate-level tests."""
+    aq = AnswerQuery(
+        query="q",
+        type=query_type,
+        oos=oos,
+        gold_urns=frozenset() if oos else frozenset({"u"}),
+        alternative_acceptable_urns=frozenset(),
+        expected_paragraph="" if oos else "p",
+    )
+    ans = RAGAnswer(
+        answer="" if refused else "a",
+        citations=[] if (refused or oos) else ["u"],
+        unverified_claims=[],
+        rejected_citations=[],
+        refused=refused,
+        refusal_reason="test" if refused else None,
+        raw_retrieval=[],
+    )
+    return EvalRow(
+        query=aq,
+        answer=ans,
+        cit_precision=None if oos else (1.0 if not refused else 0.0),
+        cit_precision_lenient=None if oos else (1.0 if not refused else 0.0),
+        cit_recall=None if oos else (1.0 if not refused else 0.0),
+        cit_f1=None if oos else (1.0 if not refused else 0.0),
+        faithfulness=None if oos else (5 if not refused else 0),
+        refused_correctly=(refused if oos else (not refused)),
+    )
+
+
+def test_false_refusal_rate_perfect_pipeline_is_zero():
+    """3 in-scope, all answered (refused=False). False refusal rate = 0."""
+    rows = [_row(oos=False, refused=False) for _ in range(3)]
+    agg = aggregate(rows)
+    assert agg.false_refusal_rate == 0.0
+    assert agg.n_inscope == 3
+    assert agg.n_oos == 0
+
+
+def test_false_refusal_rate_pipeline_refuses_one_inscope():
+    """3 in-scope, 1 refused. false_refusal_rate = 1/3."""
+    rows = [
+        _row(oos=False, refused=False),
+        _row(oos=False, refused=True),
+        _row(oos=False, refused=False),
+    ]
+    agg = aggregate(rows)
+    assert agg.false_refusal_rate == 1 / 3
+
+
+def test_oos_refusal_recall_perfect_pipeline_is_one():
+    """3 OOS, all refused. recall = 1."""
+    rows = [_row(oos=True, refused=True) for _ in range(3)]
+    agg = aggregate(rows)
+    assert agg.oos_refusal_recall == 1.0
+    assert agg.n_oos == 3
+
+
+def test_oos_refusal_recall_pipeline_misses_two_of_three_oos():
+    """3 OOS, 1 correctly refused, 2 wrongly answered. recall = 1/3."""
+    rows = [
+        _row(oos=True, refused=True),
+        _row(oos=True, refused=False),
+        _row(oos=True, refused=False),
+    ]
+    agg = aggregate(rows)
+    assert agg.oos_refusal_recall == 1 / 3
+
+
+def test_false_refusal_and_oos_recall_independent():
+    """Mixed: 2 in-scope (1 refused), 2 OOS (1 refused).
+    false_refusal_rate = 1/2 ; oos_refusal_recall = 1/2.
+    These ARE independent dimensions — the macro `refusal_accuracy` of 0.5
+    hides both being suboptimal."""
+    rows = [
+        _row(oos=False, refused=False),  # correct answer
+        _row(oos=False, refused=True),   # false refusal
+        _row(oos=True, refused=True),    # correct refusal
+        _row(oos=True, refused=False),   # false answer (missed OOS)
+    ]
+    agg = aggregate(rows)
+    assert agg.false_refusal_rate == 0.5
+    assert agg.oos_refusal_recall == 0.5
+    assert agg.refusal_accuracy == 0.5  # macro: 2 of 4 refused_correctly
+
+
+def test_empty_oos_subset_does_not_crash():
+    """All in-scope, no OOS. oos_refusal_recall = 0 by safe-div default."""
+    rows = [_row(oos=False, refused=False) for _ in range(2)]
+    agg = aggregate(rows)
+    assert agg.oos_refusal_recall == 0.0  # 0/0 → 0 by _safe_div
+    assert agg.false_refusal_rate == 0.0
+    assert agg.n_oos == 0
+
+
+def test_empty_inscope_subset_does_not_crash():
+    """All OOS, no in-scope. false_refusal_rate = 0 by safe-div default."""
+    rows = [_row(oos=True, refused=True) for _ in range(2)]
+    agg = aggregate(rows)
+    assert agg.false_refusal_rate == 0.0  # 0/0 → 0
+    assert agg.oos_refusal_recall == 1.0
