@@ -283,10 +283,10 @@ but not surfaced as first-class | ❌ Missing — not instrumented.
 | 21 | D. Refusal | OOS subtype taxonomy | Project + general RAG | ✅ | `run_answer_eval.py:335-338` (subtypes a-e) |
 | 22 | D. Safety | Prompt injection defense | Greshake 2023 | 🟡 | Parser strips `<script>` + amendment blockquotes; not tested against adversarial corpus |
 | 23 | D. Safety | Jailbreak resistance | Anthropic RSP | ❌ | No adversarial eval set |
-| 24 | E. SRE | Latency p50/p95/p99 | Google SRE Ch.6 | ❌ | No timing instrumentation |
-| 25 | E. SRE | Cost per query | Production practice | ❌ | Only in docstrings (`run_answer_eval.py:21-23`) |
-| 26 | E. SRE | Token usage (in/out) | Production practice | ❌ | Not tracked per call |
-| 27 | E. SRE | Error rate | Google SRE Ch.6 | ❌ | No exception accounting |
+| 24 | E. SRE | Latency p50/p95/p99 | Google SRE Ch.6 | ✅ | `rag.py:RAGAnswer.latency_ms` + `Aggregate.latency_p50/p95/p99_ms` (Phase 7.5.7) |
+| 25 | E. SRE | Cost per query | Production practice | ✅ | `cost.py:estimate` + `Aggregate.cost_total_usd/cost_mean_usd` (Phase 7.5.2 + judge cost folded 7.5.7) |
+| 26 | E. SRE | Token usage (in/out) | Production practice | ✅ | `RAGAnswer.tokens_used` + `Aggregate.total_input/output_tokens` (Phase 7.5.2) |
+| 27 | E. SRE | Error rate | Google SRE Ch.6 | ✅ | Per-row `try/except` + `Aggregate.error_count/error_rate` (Phase 7.5.7) |
 | 28 | E. SRE | Provider availability / fallback | Production practice | ❌ | No primary/fallback wiring |
 | 29 | E. SRE | Cache hit rate | Production practice | 🟡 | `rag_leis/cache.py` exists for index; hit rate not surfaced |
 | 30 | E. SRE | Throughput (QPS) | Google SRE Ch.6 | ❌ | Single-call CLI today |

@@ -116,6 +116,10 @@ def judge_discursive(
 
     max_score is informational (questions vary 0.65-1.25); score_pct is the
     normalized 0-1 fraction so we can mean across heterogeneous questions.
+
+    Cost note: caller is responsible for reading `judge.last_call_usage`
+    AFTER this returns and folding into the RAGAnswer cost fields. See
+    `_fold_judge_cost_into_answer()` for the canonical pattern.
     """
     user_msg = (
         f"<questao>\n{question.strip()}\n</questao>\n\n"
@@ -127,6 +131,35 @@ def judge_discursive(
     # Defensive clamp
     pct = max(0.0, min(1.0, pct))
     return pct, str(result["reasoning"])
+
+
+def _fold_judge_cost_into_answer(ans: RAGAnswer, judge: LLM) -> None:
+    """Phase 7.5.7 fix — accumulate the judge's last_call_usage into the
+    RAGAnswer cost/token/llm_calls fields, in-place.
+
+    Why: Phase 7.5.2 cost instrumentation only tracked pipeline.llm
+    (generation). Judge calls (opus on this codepath) were not measured,
+    causing eval logs to undercount LLM-judge runs by ~20× (judge tokens
+    × judge price typically dominates Sabiá generation cost). Folding into
+    the existing RAGAnswer fields keeps the aggregation logic unchanged
+    (sums across records still produce a correct total).
+
+    No-op if judge has no last_call_usage (e.g. judge call failed before
+    populating it, or judge implementation doesn't track usage).
+    """
+    from rag_leis.cost import estimate as _cost_estimate
+    usage = getattr(judge, "last_call_usage", None)
+    if not usage:
+        return
+    in_t = int(usage.get("input_tokens", 0))
+    out_t = int(usage.get("output_tokens", 0))
+    judge_cost = _cost_estimate(judge.provider, judge.name, in_t, out_t)
+    ans.cost_estimate_usd = round(ans.cost_estimate_usd + judge_cost, 6)
+    if not ans.tokens_used:
+        ans.tokens_used = {"input_tokens": 0, "output_tokens": 0}
+    ans.tokens_used["input_tokens"] = ans.tokens_used.get("input_tokens", 0) + in_t
+    ans.tokens_used["output_tokens"] = ans.tokens_used.get("output_tokens", 0) + out_t
+    ans.llm_calls = (ans.llm_calls or 0) + 1
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks"
@@ -203,6 +236,19 @@ class ConcursoAggregate:
     total_input_tokens: int = 0
     total_output_tokens: int = 0
     total_llm_calls: int = 0
+    # Phase 7.5.7 — SRE Golden Signals (Google SRE Book, Beyer et al. ch.6).
+    # Computed from RAGAnswer.latency_ms across rows. p50/p95/p99 are the
+    # canonical SLO targets for production; mean is informational only
+    # (latency distributions are typically heavy-tailed in RAG pipelines —
+    # mean understates tail).
+    latency_p50_ms: float = 0.0
+    latency_p95_ms: float = 0.0
+    latency_p99_ms: float = 0.0
+    latency_mean_ms: float = 0.0
+    # Error rate: per-row pipeline exceptions, surfaced via error_count.
+    # error_rate = error_count / n_total. SLO target in Phase 8: <1%.
+    error_count: int = 0
+    error_rate: float = 0.0
 
 
 def load_rows(path: Path) -> list[ConcursoRow]:
@@ -281,9 +327,14 @@ def _score_discursive(
         pct, reasoning = judge_discursive(
             judge, row.query, row.rubric, ans.answer, row.max_score
         )
+        # Phase 7.5.7 — fold judge cost in even on success path (this is the
+        # bug fix: prior to 7.5.7 the judge spend was never counted).
+        _fold_judge_cost_into_answer(ans, judge)
     except Exception as e:
         # Judge failure is rare but possible (rate limit, schema parse).
         # Mark as None so aggregation skips it; reasoning surfaces the cause.
+        # Still try to fold partial usage if the SDK populated it before raising.
+        _fold_judge_cost_into_answer(ans, judge)
         return ConcursoEvalRecord(
             row=row,
             answer=ans,
@@ -338,6 +389,29 @@ def aggregate(records: list[ConcursoEvalRecord]) -> ConcursoAggregate:
     )
     llm_calls = sum(getattr(r.answer, "llm_calls", 0) or 0 for r in records)
 
+    # Phase 7.5.7 — latency percentiles + error rate. Exclude error-marked
+    # rows from the latency distribution (their latency reflects time-to-fail,
+    # not user-perceived response time of a successful call).
+    latencies = sorted(
+        float(getattr(r.answer, "latency_ms", 0.0) or 0.0)
+        for r in records
+        if not (r.answer.refusal_reason or "").startswith("ERROR:")
+    )
+    error_n = sum(
+        1 for r in records if (r.answer.refusal_reason or "").startswith("ERROR:")
+    )
+
+    def _pct(xs: list[float], p: float) -> float:
+        if not xs:
+            return 0.0
+        # Nearest-rank percentile (per Beyer SRE Book; matches `numpy
+        # percentile(method='lower')` for small N). For n=5, p95 picks
+        # rank ceil(5*0.95)=5 (=max). Stable + zero-dep.
+        import math
+        rank = max(1, math.ceil(len(xs) * p))
+        return xs[min(rank, len(xs)) - 1]
+    latency_mean = sum(latencies) / len(latencies) if latencies else 0.0
+
     return ConcursoAggregate(
         n_total=len(records),
         n_inscope=len(inscope),
@@ -378,6 +452,12 @@ def aggregate(records: list[ConcursoEvalRecord]) -> ConcursoAggregate:
         total_input_tokens=in_tok,
         total_output_tokens=out_tok,
         total_llm_calls=llm_calls,
+        latency_p50_ms=round(_pct(latencies, 0.50), 1),
+        latency_p95_ms=round(_pct(latencies, 0.95), 1),
+        latency_p99_ms=round(_pct(latencies, 0.99), 1),
+        latency_mean_ms=round(latency_mean, 1),
+        error_count=error_n,
+        error_rate=round(error_n / len(records), 4) if records else 0.0,
     )
 
 
@@ -426,12 +506,19 @@ def print_report(records: list[ConcursoEvalRecord], agg: ConcursoAggregate) -> N
     print(f"\n--- OVERALL ---")
     print(f"  overall_refusal_accuracy:           {agg.overall_refusal_accuracy:.3f}")
     if agg.cost_total_usd > 0 or agg.total_llm_calls > 0:
-        print(f"\n--- COST (Phase 7.5.2 instrumentation) ---")
+        print(f"\n--- COST (Phase 7.5.2 instrumentation; judge cost folded since 7.5.7) ---")
         print(f"  cost_total_usd:                     ${agg.cost_total_usd:.4f}")
         print(f"  cost_mean_usd (per query):          ${agg.cost_mean_usd:.6f}")
         print(f"  total_llm_calls (incl. retries):    {agg.total_llm_calls}")
         print(f"  total_input/output tokens:          "
               f"{agg.total_input_tokens:,} / {agg.total_output_tokens:,}")
+
+    print(f"\n--- SRE GOLDEN SIGNALS (Phase 7.5.7) ---")
+    print(f"  latency p50/p95/p99/mean ms:        "
+          f"{agg.latency_p50_ms:.1f} / {agg.latency_p95_ms:.1f} / "
+          f"{agg.latency_p99_ms:.1f} / {agg.latency_mean_ms:.1f}")
+    print(f"  error_count / error_rate:           "
+          f"{agg.error_count} / {agg.error_rate:.4f}")
 
 
 def serialize_record(r: ConcursoEvalRecord) -> dict[str, Any]:
@@ -458,6 +545,8 @@ def serialize_record(r: ConcursoEvalRecord) -> dict[str, Any]:
             "cost_estimate_usd": getattr(r.answer, "cost_estimate_usd", 0.0),
             "tokens_used": getattr(r.answer, "tokens_used", {}),
             "llm_calls": getattr(r.answer, "llm_calls", 0),
+            # Phase 7.5.7 — SRE: end-to-end pipeline latency
+            "latency_ms": getattr(r.answer, "latency_ms", 0.0),
         },
         "scoring": {
             "refused_correctly": r.refused_correctly,
@@ -505,7 +594,24 @@ def main() -> int:
     records: list[ConcursoEvalRecord] = []
     for i, row in enumerate(rows, 1):
         print(f"  [{i:>2}/{len(rows)}] [{row.category}] {row.source_id} ...", end="", flush=True)
-        ans = pipe.answer(row.query)
+        # Phase 7.5.7 — pipeline error handling. Without this, one bad row
+        # (rate limit mid-run, transient transport error) would crash the
+        # whole eval and lose all completed work. We mark the row as errored,
+        # surface it in the error_count aggregate, and proceed. The error
+        # marker convention (refusal_reason starts with "ERROR:") is read
+        # by the aggregate function to count errors + exclude from latency.
+        try:
+            ans = pipe.answer(row.query)
+        except Exception as e:
+            ans = RAGAnswer(
+                answer="",
+                citations=[],
+                unverified_claims=[],
+                rejected_citations=[],
+                refused=True,
+                refusal_reason=f"ERROR: {type(e).__name__}: {e}",
+                raw_retrieval=[],
+            )
         if row.category == "inscope":
             rec = _score_inscope(row, ans)
         elif row.category == "rule_recall":

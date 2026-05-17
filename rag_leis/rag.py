@@ -330,6 +330,12 @@ class RAGAnswer:
     cost_estimate_usd: float = 0.0
     tokens_used: dict[str, int] = field(default_factory=dict)  # {input_tokens, output_tokens}
     llm_calls: int = 0  # count of LLM calls — 0 if cosine fast-path refused
+    # Phase 7.5.7 — SRE Golden Signal: end-to-end wall-clock latency from
+    # RAGPipeline.answer entry to return, in milliseconds. Includes PII
+    # redaction + classify + retrieval + LLM + optional retry + post-process.
+    # Fast-path OOS rows still get a latency reading (typically <50ms).
+    # Aggregated into latency_p50/p95/p99_ms by eval runners.
+    latency_ms: float = 0.0
 
 
 # ----------------------------------------------------------------------------
@@ -371,6 +377,11 @@ class RAGPipeline:
     # ------------------------------------------------------------------
 
     def answer(self, query: str) -> RAGAnswer:
+        # Phase 7.5.7 — SRE Golden Signal #1 (latency). monotonic, not
+        # wall-clock, so NTP corrections / DST never produce negatives.
+        import time as _time
+        _t0 = _time.monotonic()
+
         # PII redaction comes FIRST — before classifier, retrieval, LLM.
         # The query crosses no provider boundary in its original form.
         # The classifier operates on the redacted query (placeholders
@@ -423,6 +434,7 @@ class RAGPipeline:
                 pii_types_redacted=pii_types,
                 prose_citation_mismatches=[],
                 prose_check_retried=False,
+                latency_ms=(_time.monotonic() - _t0) * 1000.0,
             )
 
         context = self._build_context(retrieved)
@@ -535,6 +547,7 @@ class RAGPipeline:
             cost_estimate_usd=round(cost_total, 6),
             tokens_used=tokens_total,
             llm_calls=llm_call_count,
+            latency_ms=round((_time.monotonic() - _t0) * 1000.0, 3),
         )
 
     # ------------------------------------------------------------------
