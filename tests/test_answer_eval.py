@@ -217,3 +217,72 @@ def test_empty_inscope_subset_does_not_crash():
     agg = aggregate(rows)
     assert agg.false_refusal_rate == 0.0  # 0/0 → 0
     assert agg.oos_refusal_recall == 1.0
+
+
+# ----------------------------------------------------------------------------
+# Phase 7.5.2 — cost + token aggregates.
+# Pipeline populates RAGAnswer.{cost_estimate_usd, tokens_used, llm_calls};
+# aggregate() sums into the Aggregate dataclass. These tests use synthetic
+# RAGAnswer objects with pre-set cost fields to avoid mocking LLM.
+# ----------------------------------------------------------------------------
+
+
+def _row_with_cost(*, cost: float, in_tok: int, out_tok: int, calls: int) -> EvalRow:
+    """In-scope answered row with explicit cost fields set."""
+    aq = AnswerQuery(
+        query="q", type="definicao", oos=False,
+        gold_urns=frozenset({"u"}), alternative_acceptable_urns=frozenset(),
+        expected_paragraph="p",
+    )
+    ans = RAGAnswer(
+        answer="a", citations=["u"], unverified_claims=[], rejected_citations=[],
+        refused=False, refusal_reason=None, raw_retrieval=[],
+        cost_estimate_usd=cost,
+        tokens_used={"input_tokens": in_tok, "output_tokens": out_tok},
+        llm_calls=calls,
+    )
+    return EvalRow(
+        query=aq, answer=ans,
+        cit_precision=1.0, cit_precision_lenient=1.0, cit_recall=1.0, cit_f1=1.0,
+        faithfulness=5, refused_correctly=True,
+    )
+
+
+def test_cost_total_sums_across_rows():
+    rows = [
+        _row_with_cost(cost=0.01, in_tok=1000, out_tok=500, calls=1),
+        _row_with_cost(cost=0.02, in_tok=2000, out_tok=1000, calls=1),
+        _row_with_cost(cost=0.03, in_tok=3000, out_tok=1500, calls=2),  # retry fired
+    ]
+    agg = aggregate(rows)
+    assert agg.cost_total_usd == 0.06  # 0.01 + 0.02 + 0.03
+    assert agg.total_input_tokens == 6000
+    assert agg.total_output_tokens == 3000
+    assert agg.total_llm_calls == 4  # 1 + 1 + 2
+
+
+def test_cost_mean_per_query():
+    rows = [
+        _row_with_cost(cost=0.10, in_tok=0, out_tok=0, calls=1),
+        _row_with_cost(cost=0.30, in_tok=0, out_tok=0, calls=1),
+    ]
+    agg = aggregate(rows)
+    assert agg.cost_mean_usd == 0.20
+
+
+def test_cost_zero_when_pipeline_does_not_populate():
+    """Backwards-compat: pre-Phase-7.5.2 RAGAnswer instances lack the new
+    fields (default 0). Aggregate should still compute without crashing."""
+    rows = [_row(oos=False, refused=False) for _ in range(2)]
+    # `_row` uses bare RAGAnswer() which gets cost_estimate_usd=0 default
+    agg = aggregate(rows)
+    assert agg.cost_total_usd == 0.0
+    assert agg.cost_mean_usd == 0.0
+    assert agg.total_input_tokens == 0
+
+
+def test_aggregate_empty_rows_does_not_crash():
+    agg = aggregate([])
+    assert agg.cost_total_usd == 0.0
+    assert agg.cost_mean_usd == 0.0  # avoid div-by-zero
+    assert agg.n_total == 0

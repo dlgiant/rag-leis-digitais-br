@@ -312,6 +312,17 @@ class Aggregate:
     # Phase 5.1: per-OOS-subtype refusal accuracy. Surfaces where the
     # pipeline is fragile (typically subtype b — adjacent OOS).
     refusal_accuracy_by_oos_subtype: dict[str, float] = field(default_factory=dict)
+    # Phase 7.5.2 — cost + token aggregates across the eval run. Computed
+    # from each RAGAnswer.cost_estimate_usd and .tokens_used (which the
+    # pipeline populates via llm.last_call_usage + rag_leis.cost.estimate).
+    # Lets the operator see "this iteration cost $X" without digging into
+    # provider dashboards. cost_mean_usd is per-row mean cost; useful as
+    # SLA target ("p95 query under $0.05") in Phase 8.
+    cost_total_usd: float = 0.0
+    cost_mean_usd: float = 0.0
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
+    total_llm_calls: int = 0
 
 
 def _mean(xs: list[float]) -> float:
@@ -362,6 +373,16 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
     inscope_refused = sum(1 for r in inscope if r.answer.refused)
     oos_refused = sum(1 for r in oos if r.answer.refused)
 
+    # Phase 7.5.2 — cost + token totals across all eval rows.
+    cost_total = sum(getattr(r.answer, "cost_estimate_usd", 0.0) or 0.0 for r in rows)
+    in_tok = sum(
+        (getattr(r.answer, "tokens_used", {}) or {}).get("input_tokens", 0) for r in rows
+    )
+    out_tok = sum(
+        (getattr(r.answer, "tokens_used", {}) or {}).get("output_tokens", 0) for r in rows
+    )
+    llm_calls = sum(getattr(r.answer, "llm_calls", 0) or 0 for r in rows)
+
     return Aggregate(
         n_total=len(rows),
         n_inscope=len(inscope),
@@ -379,6 +400,11 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
         rejected_citation_rate=_safe_div(total_rejected, total_cited),
         by_type=by_type,
         refusal_accuracy_by_oos_subtype=refusal_acc_by_subtype,
+        cost_total_usd=round(cost_total, 6),
+        cost_mean_usd=round(cost_total / len(rows), 6) if rows else 0.0,
+        total_input_tokens=in_tok,
+        total_output_tokens=out_tok,
+        total_llm_calls=llm_calls,
     )
 
 
@@ -431,6 +457,13 @@ def print_report(rows: list[EvalRow], agg: Aggregate, verbose: bool) -> None:
     print(f"  OOS refusal recall         (OOS refused)      : {agg.oos_refusal_recall:.3f}  "
           f"(target: 1; higher = better)")
     print(f"  Rejected citation rate     (all rows)         : {agg.rejected_citation_rate:.3f}")
+    # Phase 7.5.2 — cost reporting. Total = sum across rows; mean = per-query.
+    if agg.cost_total_usd > 0 or agg.total_llm_calls > 0:
+        print(f"  Cost total                 (USD, this run)    : ${agg.cost_total_usd:.4f}")
+        print(f"  Cost per query             (USD, mean)        : ${agg.cost_mean_usd:.6f}")
+        print(f"  LLM calls total            (incl. retries)    : {agg.total_llm_calls}")
+        print(f"  Tokens total               (input / output)   : "
+              f"{agg.total_input_tokens:,} / {agg.total_output_tokens:,}")
 
     if agg.refusal_accuracy_by_oos_subtype:
         print()

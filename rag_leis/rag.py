@@ -319,6 +319,17 @@ class RAGAnswer:
     # as a "Fontes consultadas em: ..." footer for practitioner transparency.
     # Empty dict when no in-scope citations.
     sources_consulted_at: dict[str, str] = field(default_factory=dict)
+    # Phase 7.5.2: per-call cost + token accounting. Populated by RAGPipeline
+    # from `llm.last_call_usage` after each LLM call (initial + optional
+    # retry). Cost computed via rag_leis.cost.estimate. Zero for OOS rows
+    # that fast-pathed on cosine and skipped LLM. Surfaced into:
+    #   - per-query logs (eval/runs/*.json)
+    #   - Aggregate.cost_total_usd + cost_mean_usd in run_answer_eval
+    # Operator uses to spot expensive paths (prose_check_retried adds a
+    # second LLM call → cost roughly doubles for the affected row).
+    cost_estimate_usd: float = 0.0
+    tokens_used: dict[str, int] = field(default_factory=dict)  # {input_tokens, output_tokens}
+    llm_calls: int = 0  # count of LLM calls — 0 if cosine fast-path refused
 
 
 # ----------------------------------------------------------------------------
@@ -425,6 +436,22 @@ class RAGPipeline:
         user_msg = f"Pergunta: {query_for_pipeline}\n\nFontes:\n{context}"
         result = self.llm.complete_structured(system_prompt, user_msg, ANSWER_TOOL)
 
+        # Phase 7.5.2 — accumulate token usage + cost across LLM calls.
+        # First call (initial answer). Retry adds to the same counters below.
+        from rag_leis.cost import estimate as _cost_estimate
+        tokens_total = {"input_tokens": 0, "output_tokens": 0}
+        cost_total = 0.0
+        llm_call_count = 0
+        usage = getattr(self.llm, "last_call_usage", None)
+        if usage:
+            tokens_total["input_tokens"] += usage["input_tokens"]
+            tokens_total["output_tokens"] += usage["output_tokens"]
+            cost_total += _cost_estimate(
+                self.llm.provider, self.llm.name,
+                usage["input_tokens"], usage["output_tokens"],
+            )
+            llm_call_count += 1
+
         answer_text = str(result.get("answer", ""))
         cited = [str(u) for u in result.get("citations", [])]
         retrieved_urns = frozenset(u for u, _ in retrieved)
@@ -448,6 +475,16 @@ class RAGPipeline:
                     system_prompt, retry_msg, ANSWER_TOOL,
                     max_tokens=4096,  # bump for retry — reprompt adds context
                 )
+                # Phase 7.5.2 — accumulate retry tokens/cost.
+                usage = getattr(self.llm, "last_call_usage", None)
+                if usage:
+                    tokens_total["input_tokens"] += usage["input_tokens"]
+                    tokens_total["output_tokens"] += usage["output_tokens"]
+                    cost_total += _cost_estimate(
+                        self.llm.provider, self.llm.name,
+                        usage["input_tokens"], usage["output_tokens"],
+                    )
+                    llm_call_count += 1
                 # Take the retry's output regardless — even if mismatches
                 # remain. The flag tells the caller a retry happened.
                 answer_text = str(retry_result.get("answer", answer_text))
@@ -495,6 +532,9 @@ class RAGPipeline:
             prose_citation_mismatches=prose_mismatches,
             prose_check_retried=prose_retried,
             sources_consulted_at=sources_dates,
+            cost_estimate_usd=round(cost_total, 6),
+            tokens_used=tokens_total,
+            llm_calls=llm_call_count,
         )
 
     # ------------------------------------------------------------------
