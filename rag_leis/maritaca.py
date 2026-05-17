@@ -65,6 +65,12 @@ class MaritacaLLM:
         self.client = OpenAI(api_key=key, base_url=MARITACA_BASE_URL)
         self.model = model or DEFAULT_MARITACA_MODEL
         self.name = self.model  # protocol field — alias
+        # Phase 7.5.2: token usage from the most recent call, populated by
+        # complete() and complete_structured(). Marítaca returns OpenAI-style
+        # `usage` with `prompt_tokens` + `completion_tokens` — we map to
+        # the same `input_tokens`/`output_tokens` shape as AnthropicLLM so
+        # the caller sees a uniform schema across providers.
+        self.last_call_usage: dict[str, int] | None = None
 
     def complete(
         self,
@@ -84,6 +90,7 @@ class MaritacaLLM:
         if temperature is not None:
             kwargs["temperature"] = temperature
         resp = self.client.chat.completions.create(**kwargs)
+        self.last_call_usage = _extract_usage(resp)
         return resp.choices[0].message.content or ""
 
     def complete_structured(
@@ -122,6 +129,7 @@ class MaritacaLLM:
         if temperature is not None:
             kwargs["temperature"] = temperature
         resp = self.client.chat.completions.create(**kwargs)
+        self.last_call_usage = _extract_usage(resp)
         msg = resp.choices[0].message
         if not msg.tool_calls:
             raise RuntimeError(
@@ -141,6 +149,20 @@ class MaritacaLLM:
             raise RuntimeError(
                 f"Marítaca tool_call arguments not parseable as JSON: {tc.function.arguments!r}"
             ) from e
+
+
+def _extract_usage(resp: Any) -> dict[str, int] | None:
+    """Pull token usage from an OpenAI-compatible response, mapped to the
+    uniform `{input_tokens, output_tokens}` shape AnthropicLLM also uses.
+    Returns None if the response object doesn't expose `usage` (some
+    providers omit on streaming / partial responses)."""
+    u = getattr(resp, "usage", None)
+    if u is None:
+        return None
+    return {
+        "input_tokens": getattr(u, "prompt_tokens", 0) or 0,
+        "output_tokens": getattr(u, "completion_tokens", 0) or 0,
+    }
 
 
 def _to_openai_tool(anthropic_tool: dict[str, Any]) -> dict[str, Any]:

@@ -82,6 +82,11 @@ class AnthropicLLM:
         self.client = Anthropic(api_key=key)
         self.model = model
         self.name = model  # protocol field — alias of model for callers
+        # Phase 7.5.2: token usage from the most recent call, populated by
+        # complete() and complete_structured(). Pipeline reads after each
+        # call to attribute cost. Reset to None before each call to detect
+        # "did the LLM actually report usage?"
+        self.last_call_usage: dict[str, int] | None = None
 
     def complete(
         self,
@@ -101,6 +106,10 @@ class AnthropicLLM:
         if temperature is not None:
             kwargs["temperature"] = temperature
         resp = self.client.messages.create(**kwargs)
+        self.last_call_usage = {
+            "input_tokens": resp.usage.input_tokens,
+            "output_tokens": resp.usage.output_tokens,
+        }
         # Pull all text blocks (typically one) and join — tool blocks shouldn't
         # appear here since we didn't pass `tools=`.
         parts = [b.text for b in resp.content if isinstance(b, TextBlock)]
@@ -131,6 +140,10 @@ class AnthropicLLM:
         if temperature is not None:
             kwargs["temperature"] = temperature
         resp = self.client.messages.create(**kwargs)
+        self.last_call_usage = {
+            "input_tokens": resp.usage.input_tokens,
+            "output_tokens": resp.usage.output_tokens,
+        }
         for block in resp.content:
             if isinstance(block, ToolUseBlock) and block.name == tool_schema["name"]:
                 # block.input is already a parsed dict (Anthropic SDK validates).
