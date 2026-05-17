@@ -1,0 +1,178 @@
+# OAB concurso pilot eval — Phase 7-follow-up (2026-05-17).
+#
+# Source: eduagarcia/oab_exams (2210 MCQ from OAB exams 2010-2018).
+# Methodology: automated keyword filter (scripts/extract_oab_pilot.py) +
+# manual curation by Ricardo (this file). Question text NOT redistributed
+# verbatim per copyright caution — instead, `source_id` references the
+# original dataset row, `query` is the original text (factual, public exam
+# content), and gold_urns are operator-curated from the corpus we index.
+#
+# Schema differs from eval/answer_queries.yaml in two ways:
+#   1. `source_id`: original dataset ref, for traceability
+#   2. `correct_alternative_text`: kept so the runner can compute
+#      "did the pipeline's cited URNs cover the legal basis of the
+#      correct MCQ alternative?"
+#
+# Categories:
+#   - inscope (7): digital-law queries whose answer is in our corpus.
+#                  Pipeline must (a) answer non-refused, (b) cite URNs
+#                  that cover the gold_urns.
+#   - oos_a (15): random sample from TAXES / LABOUR-PROCEDURE /
+#                 INTERNATIONAL — domains entirely outside our federal
+#                 digital corpus. Pipeline must refuse.
+#   - oos_b (2): adjacent-without-coverage. Topic touches digital law
+#                (internet, dados pessoais) but specific norm needed
+#                (ECA, Código de Ética OAB) NOT indexed. Pipeline must
+#                refuse with subtype="b".
+
+# ============================================================================
+# IN-SCOPE — pipeline should answer with cited URNs covering gold
+# ============================================================================
+
+- source_id: "eduagarcia/oab_exams/2011-05_24"
+  category: inscope
+  question_type: citacao-literal
+  query: "O habeas data não pode ser impetrado em favor de terceiro PORQUE visa tutelar direito à informação relativa à pessoa do impetrante. A respeito do enunciado acima é correto afirmar que ambas as afirmativas são verdadeiras, e a primeira justifica a segunda. Por que?"
+  correct_alternative_text: "ambas as afirmativas são verdadeiras, e a primeira justifica a segunda."
+  gold_urns:
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1"
+  notes: "CF art.5 LXXII define habeas data; Lei 9.507 art.7 I confirma legitimidade restrita ao impetrante."
+
+- source_id: "eduagarcia/oab_exams/2011-05_46"
+  category: inscope
+  question_type: parafrase
+  query: "Quando a contratação ocorre por site da internet, o consumidor pode desistir da compra?"
+  correct_alternative_text: "Sim. Quando a compra é feita fora do estabelecimento comercial, o consumidor pode desistir do contrato no prazo de sete dias, mesmo sem apresentar seus motivos para a desistência."
+  gold_urns:
+    - "urn:lex:br:federal:lei:1990-09-11;8078~art49"
+  notes: "CDC art.49 — direito de arrependimento de 7 dias para compras fora do estabelecimento (engloba e-commerce)."
+
+- source_id: "eduagarcia/oab_exams/2012-07_37"
+  category: inscope
+  question_type: definicao
+  query: "Sobre os direitos da personalidade, é permitida a disposição gratuita do próprio corpo, para depois da morte, com finalidade altruística ou científica? Esse ato pode ser revogado?"
+  correct_alternative_text: "é permitida a disposição gratuita do próprio corpo, no todo ou em parte, com objetivo altruístico ou científico, para depois da morte, sendo que tal ato de disposição poderá ser revogado a qualquer tempo."
+  gold_urns:
+    - "urn:lex:br:federal:lei:2002-01-10;10406~art14"
+    - "urn:lex:br:federal:lei:2002-01-10;10406~art14;par1"
+  notes: "CC art.14 caput (disposição gratuita post-mortem, fins científicos/altruísticos) + §1 (revogação livre)."
+
+- source_id: "eduagarcia/oab_exams/2014-13_19"
+  category: inscope
+  question_type: citacao-literal
+  query: "A ação de habeas data, como instrumento de proteção de informações da pessoa, tem prioridade sobre outros atos judiciais?"
+  correct_alternative_text: "A ação de habeas data terá prioridade sobre todos os atos judiciais, com exceção ao habeas corpus e ao mandado de segurança."
+  gold_urns:
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art19"
+  notes: "Lei 9.507 art.19 — prioridade do habeas data sobre demais atos, exceto HC e MS."
+
+- source_id: "eduagarcia/oab_exams/2015-16_15"
+  category: inscope
+  question_type: parafrase
+  query: "Meu nome consta em banco de dados público como inadimplente. Posso pedir retificação/exclusão dessa informação via habeas data?"
+  correct_alternative_text: "Deve ser impetrado habeas data, pois, embora o texto constitucional não contemple a hipótese específica do caso concreto, a lei ordinária o faz, de modo a ampliar o âmbito de incidência do habeas data."
+  gold_urns:
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72"
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2"
+    - "urn:lex:br:federal:lei:1997-11-12;9507~art8"
+  notes: "Habeas data para retificação (CF inc72 alínea b + Lei 9.507 art.7 II e art.8)."
+
+- source_id: "eduagarcia/oab_exams/2014-13_46"
+  category: inscope
+  question_type: parafrase
+  query: "Seguradora apresentou proposta de seguro e o empregado preencheu/devolveu o formulário; a seguradora se recusa a contratar. Posso exigir o cumprimento da oferta?"
+  correct_alternative_text: "pode exigir o cumprimento forçado da obrigação nos termos do serviço apresentado, já que a oferta obriga a seguradora e a negativa constituiu prática abusiva pela recusa infundada de prestação de serviço."
+  gold_urns:
+    - "urn:lex:br:federal:lei:1990-09-11;8078~art30"
+    - "urn:lex:br:federal:lei:1990-09-11;8078~art31"
+    - "urn:lex:br:federal:lei:1990-09-11;8078~art35"
+  notes: "CDC art.30 (vinculação da oferta) + art.31 (informações precisas) + art.35 (recusa abusiva: cumprimento forçado, aceitar outro produto, ou rescisão com restituição)."
+
+- source_id: "eduagarcia/oab_exams/2017-23_44"
+  category: inscope
+  question_type: parafrase
+  query: "Meu nome foi anotado em cadastro restritivo de crédito por contratação de serviços de telefonia/internet que eu não fiz. Operadora tem responsabilidade?"
+  correct_alternative_text: "é consumidor por equiparação, aplicando-se a teoria do risco da atividade e devendo a operadora suportar os riscos do contrato fruto de fraude, caso não consiga comprovar a regularidade da contratação."
+  gold_urns:
+    - "urn:lex:br:federal:lei:1990-09-11;8078~art14"
+    - "urn:lex:br:federal:lei:1990-09-11;8078~art17"
+  notes: "CDC art.14 (responsabilidade objetiva do fornecedor de serviços) + art.17 (consumidor por equiparação às vítimas do evento)."
+
+# ============================================================================
+# OOS-A — clearly other domain (TAXES / LABOUR-PROCEDURE / INTERNATIONAL).
+# Pipeline must refuse with subtype "a" (other domain entirely).
+# ============================================================================
+# Question text deliberately NOT included verbatim — only enough for the
+# pipeline to classify. source_id lets anyone reproduce via HF dataset.
+
+- source_id: "eduagarcia/oab_exams/2010-01_57"
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: "Qual o prazo decadencial para impugnação de lançamento tributário em matéria de ICMS estadual?"
+  notes: "TAXES — fora do corpus federal digital."
+
+- source_id: "eduagarcia/oab_exams/2011-04_60"
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: "Quais as hipóteses de isenção de IPTU previstas no Código Tributário Nacional?"
+  notes: "TAXES — fora do corpus."
+
+- source_id: "eduagarcia/oab_exams/2012-09_71"
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: "Em uma execução fiscal, é admissível compensação tributária como matéria de defesa?"
+  notes: "TAXES — fora do corpus."
+
+- source_id: "eduagarcia/oab_exams/2014-15_72"
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: "Qual o procedimento para cabimento de ação rescisória trabalhista?"
+  notes: "LABOUR-PROCEDURE — fora do corpus."
+
+- source_id: "eduagarcia/oab_exams/2016-19_84"
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: "Em sede de execução trabalhista, qual a ordem preferencial para penhora de bens?"
+  notes: "LABOUR-PROCEDURE — fora do corpus."
+
+- source_id: "eduagarcia/oab_exams/2013-12_85"
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: "Quais os requisitos para extradição passiva no direito internacional brasileiro?"
+  notes: "INTERNATIONAL — fora do corpus."
+
+- source_id: "eduagarcia/oab_exams/2015-17_88"
+  category: oos_a
+  expected_oos_subtype: a
+  question_type: parafrase
+  query: "Qual a jurisdição da Corte Internacional de Justiça segundo o Estatuto de Roma?"
+  notes: "INTERNATIONAL — fora do corpus."
+
+# ============================================================================
+# OOS-B — adjacent without coverage. Topic touches our corpus' adjacency
+# (internet / minor / advocacia) but norma específica não-indexada (ECA,
+# Código de Ética OAB). Pipeline must refuse with subtype "b" — these are
+# the trickier OOS cases where the model might be tempted to over-answer.
+# ============================================================================
+
+- source_id: "eduagarcia/oab_exams/2016-19_44"
+  category: oos_b
+  expected_oos_subtype: b
+  question_type: parafrase
+  query: "Adolescente de 16 anos foi induzido por adulto a prática de infração penal via internet. Configura crime nos termos do ECA?"
+  notes: "Tópico tangencia internet (no corpus) mas norma operativa é ECA art.244-B (NÃO indexado). Adjacent-without-coverage. Pipeline correct path: recusar subtype b."
+
+- source_id: "eduagarcia/oab_exams/2017-22_1"
+  category: oos_b
+  expected_oos_subtype: b
+  question_type: parafrase
+  query: "Advogado convidado para matéria veiculada por portal de notícias na internet. O que é permitido incluir ao final (e-mail, telefone do escritório, OAB)?"
+  notes: "Tópico tangencia internet mas norma operativa é Código de Ética OAB (NÃO indexado). Subtype b."

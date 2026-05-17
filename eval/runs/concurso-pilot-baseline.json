@@ -1,0 +1,534 @@
+{
+  "config": {
+    "embedder": "voyage-3-large",
+    "text_mode": "title+label+nav+caput+text",
+    "llm_provider": "maritaca",
+    "top_k": 10,
+    "oos_threshold": 0.4
+  },
+  "aggregate": {
+    "n_total": 16,
+    "n_inscope": 7,
+    "n_oos_a": 7,
+    "n_oos_b": 2,
+    "inscope_answer_rate": 1.0,
+    "inscope_any_gold_cited_rate": 0.7142857142857143,
+    "inscope_coverage_mean": 0.5357142857142857,
+    "inscope_coverage_jaccard_mean": 0.20714285714285713,
+    "oos_a_refusal_rate": 0.42857142857142855,
+    "oos_b_refusal_rate": 0.0,
+    "overall_refusal_accuracy": 0.625
+  },
+  "records": [
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2011-05_24",
+        "category": "inscope",
+        "query": "O habeas data não pode ser impetrado em favor de terceiro PORQUE visa tutelar direito à informação relativa à pessoa do impetrante. A respeito do enunciado acima é correto afirmar que ambas as afirmativas são verdadeiras, e a primeira justifica a segunda. Por que?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1"
+        ],
+        "notes": "CF art.5 LXXII define habeas data; Lei 9.507 art.7 I confirma legitimidade restrita ao impetrante."
+      },
+      "answer": {
+        "text": "Sim, ambas as afirmativas são corretas e a segunda justifica a primeira.\n\nO habeas data é remédio constitucional previsto no art. 5º, LXXII, \"a\", da Constituição Federal e regulamentado pela Lei nº 9.507/1997, cujo objetivo principal é assegurar ao impetrante o conhecimento de informações relativas à sua própria pessoa que estejam em registros ou bancos de dados de entidades governamentais ou de caráter público (Art. 7, I, Lei 9.507/1997; Art. 5, LXXII, \"a\", CF/88). Assim, a legitimidade para impetrar o habeas data está vinculada à titularidade do direito à informação sobre si mesmo, o que explica por que ele não pode ser utilizado para tutelar direitos de terceiros.\n\nA vedação à impetração em favor de terceiros decorre justamente do caráter personalíssimo do direito protegido pelo habeas data, que visa garantir o controle individual sobre dados pessoais. Embora existam exceções legais que permitem acesso ou divulgação de informações pessoais por terceiros — como por previsão legal ou consentimento expresso do titular (Art. 31, §1º, II, Lei 12.527/2011) —, tais hipóteses não autorizam a substituição processual pelo terceiro no âmbito do habeas data, pois o instrumento é específico para a tutela do direito do próprio titular dos dados.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026); Lei 9.507/1997 — disciplina o direito de acesso a informações e o procedimento do habeas data (16/05/2026); Lei de Acesso à Informação (Lei 12.527/2011) (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art7",
+          "urn:lex:br:federal:lei:2011-11-18;12527~art31;par1;inc2"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": 0.5,
+        "coverage_jaccard": 0.2,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2011-05_46",
+        "category": "inscope",
+        "query": "Quando a contratação ocorre por site da internet, o consumidor pode desistir da compra?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:lei:1990-09-11;8078~art49"
+        ],
+        "notes": "CDC art.49 — direito de arrependimento de 7 dias para compras fora do estabelecimento (engloba e-commerce)."
+      },
+      "answer": {
+        "text": "Sim, quando a contratação ocorre por site da internet, o consumidor pode desistir da compra no prazo de 7 dias a contar do recebimento do produto ou serviço, em razão do direito de arrependimento previsto no artigo 49 do Código de Defesa do Consumidor (CDC).\n\nO referido dispositivo estabelece que o consumidor pode desistir do contrato sempre que a contratação de fornecimento de produtos e serviços ocorrer fora do estabelecimento comercial, especialmente por telefone ou a domicílio. A jurisprudência e a doutrina majoritárias entendem que a venda realizada por meio de site na internet se enquadra na categoria de contratação fora do estabelecimento comercial, aplicando-se, portanto, o direito de arrependimento.\n\nAdicionalmente, o artigo 7º, inciso XIII, da Lei nº 12.965/2014 (Marco Civil da Internet) determina a aplicação das normas de proteção e defesa do consumidor nas relações de consumo realizadas na internet, reforçando a incidência do CDC nesse contexto.\n\nSe o consumidor exercer o direito de arrependimento, os valores eventualmente pagos deverão ser devolvidos de imediato, monetariamente atualizados, conforme dispõe o parágrafo único do artigo 49 do CDC. Também é vedado ao fornecedor estabelecer cláusula que subtraia ao consumidor a opção de reembolso nos casos previstos no Código, conforme artigo 51, inciso II, do CDC.\n\n—\nFontes consultadas em: Código de Defesa do Consumidor (Lei 8.078/1990) (16/05/2026); Marco Civil da Internet (Lei 12.965/2014) (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:lei:1990-09-11;8078~art49",
+          "urn:lex:br:federal:lei:2014-04-23;12965~art7;inc13",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art49;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art51;inc2"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": 1.0,
+        "coverage_jaccard": 0.25,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2012-07_37",
+        "category": "inscope",
+        "query": "Sobre os direitos da personalidade, é permitida a disposição gratuita do próprio corpo, para depois da morte, com finalidade altruística ou científica? Esse ato pode ser revogado?",
+        "question_type": "definicao",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:lei:2002-01-10;10406~art14",
+          "urn:lex:br:federal:lei:2002-01-10;10406~art14;par1"
+        ],
+        "notes": "CC art.14 caput (disposição gratuita post-mortem, fins científicos/altruísticos) + §1 (revogação livre)."
+      },
+      "answer": {
+        "text": "Sim, é permitida a disposição gratuita do próprio corpo, no todo ou em parte, para depois da morte, com finalidade científica ou altruística, conforme previsto no art. 14 do Código Civil. Esse ato pode ser livremente revogado a qualquer tempo, ainda em vida, conforme disposto no parágrafo único do mesmo artigo. Trata-se de exceção expressa ao princípio geral da irrenunciabilidade dos direitos da personalidade, previsto no art. 11 do Código Civil, pois o ordenamento admite tal disposição quando destinada a fins científicos ou altruísticos. Ressalta-se que, especificamente para fins de transplante, a disposição está condicionada à forma estabelecida em lei especial, conforme o parágrafo único do art. 13 do Código Civil e o §4º do art. 199 da Constituição Federal, que vedam qualquer comercialização de órgãos e tecidos humanos.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026); Código Civil (Lei 10.406/2002) — escopo: arts. 11-21 (Direitos da Personalidade) (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:lei:2002-01-10;10406~art14",
+          "urn:lex:br:federal:lei:2002-01-10;10406~art14;par1",
+          "urn:lex:br:federal:lei:2002-01-10;10406~art11",
+          "urn:lex:br:federal:lei:2002-01-10;10406~art13;par1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art199;par4"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": 1.0,
+        "coverage_jaccard": 0.4,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2014-13_19",
+        "category": "inscope",
+        "query": "A ação de habeas data, como instrumento de proteção de informações da pessoa, tem prioridade sobre outros atos judiciais?",
+        "question_type": "citacao-literal",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:lei:1997-11-12;9507~art19"
+        ],
+        "notes": "Lei 9.507 art.19 — prioridade do habeas data sobre demais atos, exceto HC e MS."
+      },
+      "answer": {
+        "text": "Sim, a ação de habeas data tem prioridade sobre outros atos judiciais, conforme estabelecido no art. 19 da Lei nº 9.507/1997, que dispõe que os processos de habeas data terão prioridade sobre todos os atos judiciais, exceto habeas-corpus e mandado de segurança. Além disso, o parágrafo único do mesmo artigo determina que o prazo para a conclusão do processo não poderá exceder vinte e quatro horas, contadas da distribuição, reforçando a celeridade conferida a essa ação. Na instância superior, o julgamento deverá ocorrer na primeira sessão subsequente à conclusão ao relator.\n\n—\nFontes consultadas em: Lei 9.507/1997 — disciplina o direito de acesso a informações e o procedimento do habeas data (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:lei:1997-11-12;9507~art19",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art19;par1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": "⚠️ Atenção (hierarquia normativa): a resposta cita apenas fontes de rank 3 (Lei Ordinária / Tema STF (tese fixada)); o contexto continha fontes de rank superior — Constituição/EC (urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-a). Verifique se a hierarquia foi respeitada (CF > LC > LO > Decreto > Resolução)."
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": 1.0,
+        "coverage_jaccard": 0.5,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2015-16_15",
+        "category": "inscope",
+        "query": "Meu nome consta em banco de dados público como inadimplente. Posso pedir retificação/exclusão dessa informação via habeas data?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc72;ali-b",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art8"
+        ],
+        "notes": "Habeas data para retificação (CF inc72 alínea b + Lei 9.507 art.7 II e art.8)."
+      },
+      "answer": {
+        "text": "Sim, é possível pedir a retificação ou a anotação de contestação de informação em banco de dados público como inadimplente por meio do habeas data. A Lei nº 9.507/1997, que regula o habeas data, prevê expressamente em seu art. 7º, incisos I e II, o direito de o interessado assegurar o conhecimento de informações relativas à sua pessoa constantes de registros ou bancos de dados de entidades governamentais ou de caráter público, bem como o direito à retificação de dados quando não se prefira fazê-lo por processo sigiloso judicial ou administrativo (urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1, urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2).\n\nAlém disso, a Lei nº 9.507/1997 estabelece que, caso não se constate a inexatidão do dado, mas o interessado apresente explicação ou contestação justificando uma pendência sobre o fato, essa explicação deverá ser anotada no cadastro (art. 4º, § 2º; urn:lex:br:federal:lei:1997-11-12;9507~art4;par2), e também permite a anotação de contestação ou explicação sobre dado verdadeiro mas justificável sob pendência judicial ou amigável (art. 7º, III; urn:lex:br:federal:lei:1997-11-12;9507~art7;inc3).\n\nO conceito de banco de dados de caráter público é amplo: a própria Lei nº 9.507/1997 define que considera-se de caráter público todo registro ou banco de dados que possa ser transmitido a terceiros ou que não seja de uso privativo do órgão produtor (art. 1º, parágrafo único; urn:lex:br:federal:lei:1997-11-12;9507~art1;par1). Ademais, o Código de Defesa do Consumidor trata os bancos de dados de consumidores e serviços de proteção ao crédito como entidades de caráter público (art. 43, § 4º; urn:lex:br:federal:lei:1990-09-11;8078~art43;par4).\n\nA ação de habeas data é gratuita, conforme art. 21 da Lei nº 9.507/1997 (urn:lex:br:federal:lei:1997-11-12;9507~art21).\n\nPortanto, desde que a informação esteja em banco de dados de caráter público, o titular pode ingressar com habeas data para obter acesso, solicitar retificação da inexatidão ou requerer a anotação de sua explicação ou contestação.\n\n—\nFontes consultadas em: Código de Defesa do Consumidor (Lei 8.078/1990) (16/05/2026); Lei 9.507/1997 — disciplina o direito de acesso a informações e o procedimento do habeas data (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc2",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art4;par2",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art7;inc3",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art1;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art43;par4",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art21"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A exclusão automática do nome de cadastros de inadimplentes ocorre após a prescrição do débito, mas essa hipótese é regulada pelo Código de Defesa do Consumidor e não pelo habeas data."
+        ],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": 0.25,
+        "coverage_jaccard": 0.1,
+        "any_gold_cited": true
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2014-13_46",
+        "category": "inscope",
+        "query": "Seguradora apresentou proposta de seguro e o empregado preencheu/devolveu o formulário; a seguradora se recusa a contratar. Posso exigir o cumprimento da oferta?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:lei:1990-09-11;8078~art30",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art31",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art35"
+        ],
+        "notes": "CDC art.30 (vinculação da oferta) + art.31 (informações precisas) + art.35 (recusa abusiva: cumprimento forçado, aceitar outro produto, ou rescisão com restituição)."
+      },
+      "answer": {
+        "text": "Sim, é possível exigir o cumprimento forçado da oferta de seguro pelo empregado que preencheu e devolveu o formulário após a seguradora apresentar a proposta. O Código de Defesa do Consumidor estabelece que, se o fornecedor de serviços recusar o cumprimento da oferta, o consumidor poderá exigir o cumprimento forçado da obrigação nos termos da oferta apresentada (Art. 35, I, CDC). Além disso, declarações de vontade constantes de pré-contratos, como o formulário preenchido pelo consumidor, vinculam o fornecedor, ensejando inclusive execução específica (Art. 48, CDC). A cláusula que deixe ao fornecedor a opção de concluir ou não o contrato, embora obrigue o consumidor, é considerada abusiva e nula (Art. 51, IX, CDC). Portanto, a seguradora está obrigada a celebrar o contrato nos termos da proposta inicial, salvo impossibilidade técnica ou fato superveniente que impeça a execução específica, hipótese em que o consumidor poderá optar pela rescisão contratual com restituição de valores e indenização por perdas e danos (Art. 35, III, CDC).\n\n—\nFontes consultadas em: Código de Defesa do Consumidor (Lei 8.078/1990) (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:lei:1990-09-11;8078~art35;inc1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art48",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art51;inc9",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art35;inc3"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": 0.0,
+        "coverage_jaccard": 0.0,
+        "any_gold_cited": false
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2017-23_44",
+        "category": "inscope",
+        "query": "Meu nome foi anotado em cadastro restritivo de crédito por contratação de serviços de telefonia/internet que eu não fiz. Operadora tem responsabilidade?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": null,
+        "gold_urns": [
+          "urn:lex:br:federal:lei:1990-09-11;8078~art14",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art17"
+        ],
+        "notes": "CDC art.14 (responsabilidade objetiva do fornecedor de serviços) + art.17 (consumidor por equiparação às vítimas do evento)."
+      },
+      "answer": {
+        "text": "Sim, a operadora de telefonia/internet tem responsabilidade civil pelos danos decorrentes da anotação indevida do nome do consumidor em cadastro restritivo de crédito em razão de contratação de serviços que não foi realizada por ele, desde que configurada a falha no serviço e a omissão ou negligência na prevenção da fraude.\n\nO Código de Defesa do Consumidor estabelece que o fornecedor de serviços responde objetivamente pelos danos causados aos consumidores por defeitos relativos à prestação dos serviços (Art. 14, CDC). Para se eximir dessa responsabilidade, o fornecedor deve comprovar, nos termos do § 3º do mesmo artigo, uma das hipóteses de exclusão, como a inexistência do defeito ou a culpa exclusiva do consumidor ou de terceiro (Art. 14, § 3º, I e II, CDC). No caso de fraude, se a operadora não adotou medidas razoáveis de segurança para verificar a autenticidade da contratação (por exemplo, ausência de checagem de dados pessoais, falta de autenticação adequada), não consegue afastar sua responsabilidade.\n\nAlém disso, o consumidor tem direito à correção imediata de informações inexatas em cadastros de proteção ao crédito (Art. 33, Parágrafo único, CDC), e o descumprimento dessa obrigação caracteriza infração (Art. 73, CDC). Também é garantido ao consumidor o direito de obter o bloqueio ou a anulação de pagamentos indevidos decorrentes de uso fraudulento (Art. 54-G, III, CDC).\n\nNo âmbito do tratamento de dados pessoais, a Lei Geral de Proteção de Dados (LGPD) também prevê responsabilidade solidária do operador de dados quando descumprir suas obrigações legais ou não seguir as instruções lícitas do controlador, o que pode abranger a falha na verificação da legitimidade da contratação (Art. 42, § 1º, I, LGPD).\n\n—\nFontes consultadas em: Código de Defesa do Consumidor (Lei 8.078/1990) (16/05/2026); LGPD — Lei Geral de Proteção de Dados Pessoais (Lei 13.709/2018) (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:lei:1990-09-11;8078~art14;par3;inc1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art14;par3;inc2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art33;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art73",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art54-g;inc3",
+          "urn:lex:br:federal:lei:2018-08-14;13709~art42;par1;inc1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [
+          [
+            "not-in-context",
+            "urn:lex:br:federal:lei:1990-09-11;8078~art14"
+          ]
+        ],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": 0.0,
+        "coverage_jaccard": 0.0,
+        "any_gold_cited": false
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2010-01_57",
+        "category": "oos_a",
+        "query": "Qual o prazo decadencial para impugnação de lançamento tributário em matéria de ICMS estadual?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "TAXES — fora do corpus federal digital."
+      },
+      "answer": {
+        "text": "Não há informação suficiente nas fontes fornecidas para determinar o prazo decadencial específico para a impugnação de lançamento tributário em matéria de ICMS estadual. As fontes consultadas tratam de dispositivos constitucionais gerais sobre competências tributárias, prazos de resposta a pedidos de homologação e normas transitórias, mas não estabelecem o prazo para impugnação de lançamento tributário relativo ao ICMS. A disciplina desse prazo é matéria que demanda consulta à legislação infraconstitucional, em especial ao Código Tributário Nacional (CTN) ou à legislação tributária específica de cada Estado, que não estão incluídas no corpus fornecido.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2011-04_60",
+        "category": "oos_a",
+        "query": "Quais as hipóteses de isenção de IPTU previstas no Código Tributário Nacional?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "TAXES — fora do corpus."
+      },
+      "answer": {
+        "text": "O Código Tributário Nacional (CTN) não trata diretamente do Imposto sobre a Propriedade Territorial Urbana (IPTU), cuja competência tributária é municipal. As disposições constitucionais que abordam hipóteses de não incidência ou imunidade aplicáveis a impostos municipais, como o IPTU, estão previstas na Constituição Federal de 1988.\n\nAs hipóteses constitucionais de imunidade que podem impactar o IPTU, por não permitirem a cobrança do imposto, são as seguintes:\n\n- Imunidade sobre templos de qualquer culto e suas entidades associadas, ainda que sejam apenas locatárias do imóvel (Art. 156, § 1º-A, da Constituição Federal de 1988<fonte urn=\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par1-a"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2012-09_71",
+        "category": "oos_a",
+        "query": "Em uma execução fiscal, é admissível compensação tributária como matéria de defesa?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "TAXES — fora do corpus."
+      },
+      "answer": {
+        "text": "Fora do escopo da base.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "cosine fast-path: top-1 0.397 < 0.400",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2014-15_72",
+        "category": "oos_a",
+        "query": "Qual o procedimento para cabimento de ação rescisória trabalhista?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "LABOUR-PROCEDURE — fora do corpus."
+      },
+      "answer": {
+        "text": "Não há nas fontes fornecidas disposição específica sobre o procedimento para cabimento de ação rescisória na Justiça do Trabalho. As fontes consultadas tratam da competência constitucional de tribunais para julgar ações rescisórias em geral, mas não detalham o rito, os fundamentos ou as regras processuais aplicáveis às ações rescisórias trabalhistas. A Constituição Federal apenas estabelece que o Tribunal Superior do Trabalho, Tribunais Regionais do Trabalho e juízes do trabalho têm competência para processar e julgar matérias trabalhistas, e que ações rescisórias de seus julgados são de competência originária dos tribunais superiores competentes (artigos 102, I, j; 105, I, e; 108, I, b), mas não disciplinam o procedimento interno para o ajuizamento da ação rescisória trabalhista. Para o procedimento específico, seria necessária a consulta à legislação infraconstitucional, como o Código de Processo Civil (CPC) e a Consolidação das Leis do Trabalho (CLT), normas que não constam nas fontes apresentadas.",
+        "citations": [],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2016-19_84",
+        "category": "oos_a",
+        "query": "Em sede de execução trabalhista, qual a ordem preferencial para penhora de bens?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "LABOUR-PROCEDURE — fora do corpus."
+      },
+      "answer": {
+        "text": "A Constituição Federal de 1988 estabelece que os débitos de natureza alimentícia, compreendendo aqueles decorrentes da relação laboral, têm preferência para pagamento sobre todos os demais débitos, exceto sobre os previstos no § 2º do Art. 100 da Constituição. Especificamente, no âmbito da execução trabalhista, os créditos referentes a salários, vencimentos, proventos, pensões, benefícios previdenciários e indenizações por morte ou invalidez, fundadas em responsabilidade civil por sentença transitada em julgado, são considerados débitos alimentícios e, portanto, gozam de preferência absoluta na ordem de pagamento <fonte urn=\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art100;par1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art100;par1-a"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2013-12_85",
+        "category": "oos_a",
+        "query": "Quais os requisitos para extradição passiva no direito internacional brasileiro?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "INTERNATIONAL — fora do corpus."
+      },
+      "answer": {
+        "text": "No direito internacional brasileiro, os requisitos para a extradição passiva são definidos pela Constituição Federal e pelo Código Penal, com destaque para as seguintes condições:\n\n1. **Impossibilidade de extradição de brasileiro**:\n   - Nenhum brasileiro será extraditado, salvo o naturalizado, em caso de crime comum praticado antes da naturalização ou de comprovado envolvimento em tráfico ilícito de entorpecentes e drogas afins, na forma da lei. [Art. 5, LI] — A Constituição veda expressamente a extradição de brasileiros natos e naturalizados, exceto nas hipóteses legais especificadas.\n\n2. **Proibição de extradição por crime político ou de opinião**:\n   - Não será concedida extradição de estrangeiro por crime político ou de opinião, em linha com o princípio da concessão de asilo político previsto na Constituição. [Art. 5, LII; Art. 4, X]\n\n3. **Existência de tratado ou convenção internacional**:\n   - A extradição depende de existência de tratado ou convenção internacional que obrigue o Brasil a cooperar na repressão do crime. [Art. 7, II, a] — A aplicação da lei brasileira, nesse caso, exige o concurso de condições previstas em regulamento próprio, embora o texto específico dessas condições não esteja detalhado nas fontes fornecidas.\n\n4. **Competência para julgamento do pedido**:\n   - O Supremo Tribunal Federal é competente para processar e julgar o pedido de extradição formulado por Estado estrangeiro. [Art. 102, I, g]\n   - Os crimes previstos em tratado internacional são da competência dos juízes federais, conforme previsto no Art. 109, V, o que reforça o enquadramento processual da matéria na Justiça Federal. [Art. 109, V]\n\n5. **Reserva de autorização para requisições de natureza comercial**:\n   - A entrega de documentos ou informações comerciais solicitadas por autoridade estrangeira depende de autorização do poder competente, o que demonstra limites à cooperação internacional que podem impactar a viabilidade da extradição quando envolver dados sensíveis. [Art. 181]\n\n6. **Homologação da sentença estrangeira**:\n   - A sentença estrangeira pode ser homologada no Brasil para produzir efeitos como reparação de dano, restituições e outros efeitos civis, mas essa homologação não se confunde com a extradição propriamente dita. [Art. 9, Parágrafo único; Art. 9, I e II]\n\n⚠️ Atenção: O Art. 52 do Ato das Disposições Constitucionais Transitórias (vigência ressalvada) prevê exceções à vedação de extradição quando resultantes de acordos internacionais de reciprocidade ou de interesse do Governo brasileiro. No entanto, não há indicação de suspensão ou ressalva de vigência para o Art. 52 na presente coleção de fontes, mas trata-se de dispositivo de caráter transitório que pode ter sido superado ou aplicado pontualmente. A aplicação prática depende de ato normativo específico não presente no corpus fornecido.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026); Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc51",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc52",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art4;inc10",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;inc2;ali-a",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art102;inc1;ali-g",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;inc5",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art52;par1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [
+          "O conjunto completo das condições do Art. 7, § 2º do Código Penal não está explicitado nas fontes fornecidas, apenas a menção à sua existência."
+        ],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2015-17_88",
+        "category": "oos_a",
+        "query": "Qual a jurisdição da Corte Internacional de Justiça segundo o Estatuto de Roma?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "INTERNATIONAL — fora do corpus."
+      },
+      "answer": {
+        "text": "Não há informação suficiente nas fontes fornecidas para responder à pergunta sobre a jurisdição da Corte Internacional de Justiça segundo o Estatuto de Roma. As fontes citadas tratam da competência da Justiça brasileira em matéria penal internacional e da submissão do Brasil à jurisdição do Tribunal Penal Internacional, mas não contêm disposições sobre o Estatuto de Roma ou a estrutura e jurisdição da Corte Internacional de Justiça.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2016-19_44",
+        "category": "oos_b",
+        "query": "Adolescente de 16 anos foi induzido por adulto a prática de infração penal via internet. Configura crime nos termos do ECA?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "b",
+        "gold_urns": [],
+        "notes": "Tópico tangencia internet (no corpus) mas norma operativa é ECA art.244-B (NÃO indexado). Adjacent-without-coverage. Pipeline correct path: recusar subtype b."
+      },
+      "answer": {
+        "text": "A conduta descrita, na qual um adulto induz um adolescente de 16 anos à prática de infração penal via internet, pode configurar crime de induzimento à prática de infração penal, conforme previsto no artigo 244-B do Estatuto da Criança e do Adolescente (ECA). Esse dispositivo tipifica como crime induzir criança ou adolescente a praticar qualquer ato infracional ou a frequentar lugares ou ambientes que não lhes são recomendáveis.\n\nEmbora o Código Penal contenha tipos penais que envolvem menores de idade, eles se aplicam especificamente a condutas como corrupção de menores, exploração sexual, estupro de vulnerável e outros delitos de natureza sexual ou patrimonial, nos quais há requisitos etários ou condições específicas. Por exemplo, o artigo 217-A do Código Penal pune ter conjunção carnal com menor de 14 anos; o artigo 218-B trata da indução à prostituição de menor de 18 anos; e o artigo 247 do Código Penal criminaliza expor menor a espetáculos que possam pervertê-lo. Todavia, o tipo penal mais adequado à hipótese geral de induzimento a ato infracional por meio da internet é o artigo 244-B do ECA.\n\nPortanto, a indução direta de adolescente de 16 anos à prática de infração penal via internet enquadra-se na tipicidade do artigo 244-B do ECA, e não necessariamente em um dos crimes sexuais ou patrimoniais do Código Penal, salvo se a infração induzida for de uma dessas naturezas específicas e preencher os requisitos do tipo penal correspondente.\n\n⚠️ Atenção: A vigência do artigo 244-B do Estatuto da Criança e do Adolescente está sujeita à regulamentação e ao entendimento jurisprudencial sobre sua aplicabilidade prática, pois trata-se de norma de caráter penal que exige interpretação conforme a Constituição e os direitos fundamentais do adolescente. Não há indicação no contexto de suspensão ou ressalva de eficácia atual do dispositivo.",
+        "citations": [],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [
+          [
+            "not-in-corpus",
+            "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art244-b"
+          ]
+        ],
+        "unverified_claims": [
+          "A indução de adolescente à prática de infração penal pode configurar participação em crime (Art. 29 do Código Penal), mas o contexto não detalha os requisitos para tal enquadramento."
+        ],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null
+      }
+    },
+    {
+      "row": {
+        "source_id": "eduagarcia/oab_exams/2017-22_1",
+        "category": "oos_b",
+        "query": "Advogado convidado para matéria veiculada por portal de notícias na internet. O que é permitido incluir ao final (e-mail, telefone do escritório, OAB)?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "b",
+        "gold_urns": [],
+        "notes": "Tópico tangencia internet mas norma operativa é Código de Ética OAB (NÃO indexado). Subtype b."
+      },
+      "answer": {
+        "text": "A pergunta refere-se à possibilidade de um advogado incluir elementos de contato e identificação ao final de matéria jornalística na qual foi convidado a participar em portal de notícias na internet.\n\nDe acordo com a Lei de Acesso à Informação (Lei nº 12.527/2011), em seu artigo 8º, § 3º, inciso VII, é permitido indicar local e instruções que permitam ao interessado comunicar-se, por via eletrônica ou telefônica, com o órgão ou entidade detentora do sítio; contudo, tal dispositivo é voltado à transparência de órgãos públicos, não abrangendo diretamente a conduta de particulares em matérias jornalísticas (urn:lex:br:federal:lei:2011-11-18;12527~art8;par3;inc7).\n\nNo que concerne à identificação do autor de texto jornalístico, a Lei de Direitos Autorais (Lei nº 9.610/1998), em seu artigo 46, inciso I, alínea 'a', exige que artigos assinados mencionem o nome do autor e a publicação de onde foram transcritos, o que justifica a inclusão do nome do advogado como autor da opinião ou comentário, mas não obriga a inclusão de dados de contato profissional (urn:lex:br:federal:lei:1998-02-19;9610~art46;inc1;ali-a).\n\nA Lei nº 8.078/1990 (Código de Defesa do Consumidor), em seu artigo 33, parágrafo único, proíbe a publicidade de bens e serviços por telefone quando a chamada for onerosa ao consumidor que a origina; no entanto, essa norma não se aplica diretamente à inclusão de telefone de escritório em notas de opinião, pois não configura oferta comercial direta (urn:lex:br:federal:lei:1990-09-11;8078~art33;par1).\n\nNão há dispositivo legal nas fontes fornecidas que autorize ou restrinja especificamente a inclusão de e-mail, telefone do escritório ou número da OAB em matérias jornalísticas convidadas. Portanto, embora a menção do nome do autor seja obrigatória por regra autoral, a inclusão de dados de contato não é regulamentada de forma explícita pela legislação federal disponível nestas fontes, cabendo à praxe profissional e à política editorial do veículo decidir sua admissibilidade.\n\n—\nFontes consultadas em: Código de Defesa do Consumidor (Lei 8.078/1990) (16/05/2026); Lei de Direitos Autorais (Lei 9.610/1998) (16/05/2026); Lei de Acesso à Informação (Lei 12.527/2011) (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:lei:2011-11-18;12527~art8;par3;inc7",
+          "urn:lex:br:federal:lei:1998-02-19;9610~art46;inc1;ali-a",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art33;par1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null
+      }
+    }
+  ]
+}
