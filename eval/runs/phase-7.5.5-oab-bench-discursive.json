@@ -1,0 +1,236 @@
+{
+  "config": {
+    "embedder": "voyage-3-large",
+    "text_mode": "title+label+nav+caput+text",
+    "llm_provider": "maritaca",
+    "top_k": 10,
+    "oos_threshold": 0.4
+  },
+  "aggregate": {
+    "n_total": 5,
+    "n_inscope": 0,
+    "n_oos_a": 0,
+    "n_oos_b": 0,
+    "inscope_answer_rate": 0.0,
+    "inscope_any_gold_cited_rate": 0.0,
+    "inscope_coverage_mean": 0.0,
+    "inscope_coverage_jaccard_mean": 0.0,
+    "oos_a_refusal_rate": 0.0,
+    "oos_b_refusal_rate": 0.0,
+    "overall_refusal_accuracy": 1.0,
+    "n_rule_recall": 0,
+    "rule_recall_hit_rate": 0.0,
+    "rule_recall_answered_rate": 0.0,
+    "n_discursive": 5,
+    "discursive_mean_pct": 0.54,
+    "discursive_answered_rate": 1.0,
+    "cost_total_usd": 0.028302,
+    "cost_mean_usd": 0.00566,
+    "total_input_tokens": 27645,
+    "total_output_tokens": 7240,
+    "total_llm_calls": 8
+  },
+  "records": [
+    {
+      "row": {
+        "source_id": "maritaca-ai/oab-bench/39_direito_civil_questao_3",
+        "category": "discursive",
+        "query": "QUESTÃO\n\nMaria cadastrou-se e adquiriu serviço de aprendizagem on-line de língua estrangeira na sociedade empresária Hello English Ltda., dando consentimento, informado nos termos de uso e autorização, para tratamento de seus dados pessoais. Após 1 (um) ano de curso, decidiu romper o vínculo, mas continuou recebendo muitas notificações indesejadas da sociedade empresária.\nMesmo sem visualizar qualquer ilegalidade quanto ao tratamento de seus dados pessoais, formulou requerimento expresso via canal de comunicação da empresa para (i) retirar o consentimento no tratamento de dados; e (ii) eliminar os seus dados cadastrais em definitivo, para fins de publicidade e marketing.\nEm resposta, a sociedade empresária informou que não atenderia à solicitação porque a operadora dos dados (SuperData Ltda.) informou que os dados foram tratados dentro da lei, e que Maria não teria direito a pedir a eliminação dos dados para os fins desejados (evitar a publicidade e marketing), considerando que os dados não são sensíveis.\nIrritada, até porque continuou a receber material publicitário, Maria ajuizou ação judicial contra a sociedade empresária SuperData Ltda., e notificou a Autoridade Nacional de Proteção de Dados (ANPD) sobre a conduta adotada por ambas as empresas.\nA sociedade empresária ré (SuperData Ltda.) alega que sua responsabilidade é apenas tratar os dados, não sendo ela quem determina a exclusão dos dados, mas somente a controladora (Hello English Ltda.), razão pela qual não responde pelo pedido de Maria, pois nunca recebeu uma ordem da controladora para excluir os dados de Maria.\nSobre a hipótese apresentada, responda aos itens a seguir",
+        "question_type": null,
+        "expected_oos_subtype": null,
+        "gold_urns": [],
+        "notes": "LGPD art.8 §5 + art.15 III — consent revocation + dados elimination. Direct hit on LGPD in our corpus."
+      },
+      "answer": {
+        "text": "Maria possui o direito de revogar o consentimento para tratamento de seus dados pessoais, conforme previsto no art. 18, inciso IX, da Lei Geral de Proteção de Dados Pessoais (LGPD), bem como o direito de solicitar a eliminação dos dados tratados com base nesse consentimento, nos termos do art. 18, inciso VI, da mesma lei. A revogação do consentimento, prevista no § 5º do art. 8º da LGPD, pode ser exercida a qualquer momento por meio de manifestação expressa, gratuita e facilitada, e gera efeito imediato, ressalvados os tratamentos já realizados enquanto o consentimento permaneceu válido até o requerimento de eliminação (art. 8º, § 5º).\n\nA empresa SuperData Ltda., na condição de operadora, tem a obrigação de atender ao pedido de eliminação ou anonimização quando solicitado pelo titular, especialmente após comunicação da controladora ou quando identificar que os dados são tratados com base em consentimento revogado. Ademais, o art. 18, § 6º da LGPD determina que o responsável pelo tratamento deve informar, de maneira imediata, aos agentes com os quais compartilhou os dados a ocorrência de correção, eliminação, anonimização ou bloqueio, exceto nos casos de impossibilidade comprovada ou esforço desproporcional. Assim, ainda que a SuperData atue sob instruções da controladora Hello English Ltda., ela não pode se eximir da responsabilidade de implementar as medidas de proteção solicitadas pelo titular, caso tenha acesso aos dados ou participe do tratamento para fins de marketing.\n\nQuanto à responsabilidade, o art. 42, § 1º, inciso I, da LGPD estabelece que o operador responde solidariamente pelos danos causados quando descumprir obrigações legais de proteção de dados ou não seguir instruções lícitas do controlador. Portanto, se a SuperData continuou a utilizar os dados de Maria para fins publicitários após o pedido de revogação do consentimento e eliminação, mesmo que sem ordem expressa da controladora, pode ser responsabilizada solidariamente, pois o operador deve observar as normas de proteção de dados e não pode justificar o descumprimento com base exclusivamente na falta de instrução (art. 39 da LGPD).\n\nA alegação da empresa de que não recebeu ordem da controladora não afasta sua responsabilidade, pois cabe ao operador zelar pelo cumprimento da LGPD, inclusive comunicando irregularidades à controladora e adotando medidas para cessar o tratamento indevido quando identificado. Caso não seja possível ou desproporcional comunicar terceiros sobre a eliminação, tal fato deveria ser comprovado pela SuperData, o que não foi apresentado na hipótese.\n\n⚠️ Atenção: A vigência do art. 18, § 6º da LGPD está em vigor, conforme indicado na fonte correspondente, mas a aplicação de algumas disposições pode estar sujeita à regulamentação da Autoridade Nacional de Proteção de Dados (ANPD). Até a edição de regulamentações específicas, os dispositivos aplicam-se com base na interpretação da lei em vigor.\n\n—\nFontes consultadas em: LGPD — Lei Geral de Proteção de Dados Pessoais (Lei 13.709/2018) (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc9",
+          "urn:lex:br:federal:lei:2018-08-14;13709~art18;inc6",
+          "urn:lex:br:federal:lei:2018-08-14;13709~art8;par5",
+          "urn:lex:br:federal:lei:2018-08-14;13709~art18;par6",
+          "urn:lex:br:federal:lei:2018-08-14;13709~art42;par1;inc1",
+          "urn:lex:br:federal:lei:2018-08-14;13709~art39"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.007834,
+        "tokens_used": {
+          "input_tokens": 5976,
+          "output_tokens": 2423
+        },
+        "llm_calls": 2
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": 0.84,
+        "discursive_reasoning": "A resposta afirma corretamente que Maria pode revogar o consentimento e cita o art. 8º, §5º da LGPD (cobre A1 integralmente). Quanto a A2, menciona que a revogação gera direito à eliminação, citando art. 18, VI, mas o gabarito exige art. 15, III OU art. 16 da LGPD - o candidato não citou esses dispositivos específicos, embora tenha mencionado o efeito de eliminação/término do tratamento. Assim, ganha os 0,15 pela substância (término e eliminação), mas perde os 0,10 do dispositivo específico exigido."
+      }
+    },
+    {
+      "row": {
+        "source_id": "maritaca-ai/oab-bench/39_direito_constitucional_questao_1",
+        "category": "discursive",
+        "query": "QUESTÃO\n\nA Lei Complementar Federal nº XX condicionou o exercício de determinada atividade econômica, não mencionada expressamente na ordem constitucional, à prévia autorização do órgão público competente. Poucos anos depois, a Lei Ordinária Federal nº YY dispôs que a autorização somente seria concedida com o preenchimento de requisitos diversos, o que se mostrava mais restritivo para os interessados. Acresça-se que tanto a Lei Complementar Federal nº XX, como a Lei Ordinária Federal nº YY, foram editadas sob a égide da Constituição da República de 1988.\nA sociedade empresária Alfa contratou você, como advogado(a), e formulou os seguintes questionamentos",
+        "question_type": null,
+        "expected_oos_subtype": null,
+        "gold_urns": [],
+        "notes": "Lei Complementar restringindo atividade econômica não constitucionalmente prevista. CF/88 art. 170 IV/V (livre iniciativa) — in-corpus."
+      },
+      "answer": {
+        "text": "A Constituição da República de 1988 estabelece, como regra geral, a liberdade de exercício de qualquer atividade econômica, vedando a exigência de autorização de órgãos públicos, salvo nos casos expressamente previstos em lei, conforme dispõe o art. 170, parágrafo único, da Constituição Federal <urn:lex:br:federal:constituicao:1988-10-05;1988~art170;par1>. Portanto, tanto a Lei Complementar Federal nº XX quanto a Lei Ordinária Federal nº YY só podem impor a exigência de autorização prévia e estabelecer requisitos restritivos se estiverem amparadas em previsão legal constitucionalmente válida para tanto.\n\nNa hipótese de a atividade econômica não estar expressamente prevista na Constituição como sujeita a controle especial, a imposição de autorização prévia somente é legítima se fundamentada em lei infraconstitucional que se adeque à exceção prevista no dispositivo constitucional citado. A edição posterior de uma lei mais restritiva (Lei Ordinária nº YY) não afeta a validade ou a constitucionalidade da lei anterior (Lei Complementar nº XX), desde que ambas respeitem o princípio da legalidade e a exceção constitucional. A hierarquia normativa entre lei complementar e lei ordinária não altera o fato de que ambas devem observar os limites constitucionais à intervenção estatal na atividade econômica.\n\nNão há, nas fontes fornecidas, previsão constitucional específica que autorize a exigência de autorização prévia para a atividade econômica em questão, não mencionada expressamente na ordem constitucional. Assim, a validade de tais exigências depende de fundamento em alguma hipótese excepcional reconhecida pela própria Constituição, como poderia ser o caso de setor imprescindível ao desenvolvimento tecnológico nacional, hipótese que exige regulamentação específica nos termos do art. 171, § 1º, II, da Constituição <urn:lex:br:federal:constituicao:1988-10-05;1988~art171;par1;inc2>. No entanto, tal fundamento não está confirmado pelas fontes apresentadas como aplicável ao caso concreto.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art170;par1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art171;par1;inc2"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A análise de compatibilidade da Lei Ordinária nº YY com o princípio da proporcionalidade ou da razoabilidade não foi possível com base exclusivamente nas fontes fornecidas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002825,
+        "tokens_used": {
+          "input_tokens": 2819,
+          "output_tokens": 708
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": 0.25,
+        "discursive_reasoning": "A questão pedia resposta objetiva: Sim, a LC pode ser alterada por LO porque a matéria é materialmente de lei ordinária (art. 170, parágrafo único, CRFB). O candidato citou o art. 170, parágrafo único, mas não respondeu objetivamente \"sim\" à possibilidade de alteração da LC pela LO, nem explicitou a tese central de que, sendo matéria de lei ordinária, a LC é apenas formalmente complementar e pode ser alterada por LO. Pelo contrário, divagou sobre constitucionalidade e até citou o art. 171 (revogado). Cobertura mínima, com menção ao dispositivo correto, mas sem conclusão jurídica adequada."
+      }
+    },
+    {
+      "row": {
+        "source_id": "maritaca-ai/oab-bench/40_direito_constitucional_questao_2",
+        "category": "discursive",
+        "query": "QUESTÃO\n\nTrês Estados de determinada região do país tinham grande destaque no plano nacional em razão da produção de determinado gênero alimentício, que crescia ano após ano, o que gerava um grande fluxo de receitas para a população desses entes federativos e, em particular, para os cofres públicos.\nEm comum acordo, cada um desses entes federativos editou uma lei ordinária de idêntico teor, na qual era reconhecido o fluxo forçado da denominada “unidade regional de valor”, no território de cada um deles, sendo o valor dessa unidade definido de comum acordo, mês a mês, conforme a produção agrícola do período. A emissão dessas unidades, por sua vez, seria realizada pelos três Estados, observados os limites de emissão fixados de comum acordo, devendo ser aceita não só nas transações comerciais em geral, como, também, no pagamento de tributos.\nSobre a hipótese apresentada, responda aos questionamentos a seguir",
+        "question_type": null,
+        "expected_oos_subtype": null,
+        "gold_urns": [],
+        "notes": "Pacto federativo + ICMS interestadual. CF/88 arts. sobre competência tributária — likely in-corpus partially; full answer needs CTN (OUT)."
+      },
+      "answer": {
+        "text": "A hipótese apresentada — criação, por três Estados em comum acordo, de uma unidade regional de valor, com emissão coletiva e aceitação obrigatória em transações comerciais e no pagamento de tributos — viola expressamente a competência exclusiva da União para emitir moeda, conforme disposto no Art. 21, VII, da Constituição Federal, que atribui à União a competência para emitir moeda. Essa competência é exercida exclusivamente pelo Banco Central, conforme reforça o Art. 164 da Constituição Federal. A tentativa de instituir uma unidade de valor com caráter de meio circulante e instrumento de pagamento de tributos configura emissão de moeda por ente não autorizado, o que é vedado pela ordem constitucional. ⚠️ Atenção: O Art. 164 da Constituição Federal estabelece que a competência da União para emitir moeda será exercida exclusivamente pelo Banco Central, o que impede Estados e Municípios de emitir qualquer tipo de moeda ou unidade monetária própria.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art21;inc7",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art164"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.004872,
+        "tokens_used": {
+          "input_tokens": 5764,
+          "output_tokens": 995
+        },
+        "llm_calls": 2
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": 1.0,
+        "discursive_reasoning": "A resposta identifica corretamente que a conduta é inconstitucional (Não), aponta a competência exclusiva da União para emitir moeda e cita o Art. 21, VII, da CRFB/88, exatamente como exige o gabarito. O acréscimo do Art. 164 reforça a fundamentação sem prejudicar a resposta."
+      }
+    },
+    {
+      "row": {
+        "source_id": "maritaca-ai/oab-bench/39_direito_penal_questao_1",
+        "category": "discursive",
+        "query": "QUESTÃO\n\nGuilherme, insatisfeito com o resultado das eleições para o cargo de Presidente do seu clube de futebol, em que saiu vitorioso o grupo político adversário, decidiu se vingar. Para tanto, colocou diversos explosivos em pontos estratégicos do campo de treinamento do seu time, os quais pretendia explodir durante o repouso noturno e assim causar terror generalizado para a gestão política eleita.\nNão obstante, a polícia havia sido alertada sobre a possibilidade de Guilherme praticar algum ato ilícito. Por isso, o Delegado de Polícia que presidia o inquérito correspondente determinou a um agente de polícia a infiltração em um grupo de aplicativo de mensagens para, assim, acompanhar os passos de Guilherme e suas conversas privadas com seu grupo político, o que, após conquistar a confiança dos membros do grupo, foi efetivamente conseguido pelo agente infiltrado virtualmente. Foi dessa forma que a polícia logrou descobrir o plano de Guilherme, que foi preso, identificado como autor do atentado (por ter sido efetivamente o responsável por colocar os explosivos no centro de treinamento do clube, conforme mostraram as conversas obtidas pelo agente virtualmente infiltrado) e processado pelo delito de terrorismo, previsto no Art. 2º, § 1º, inciso I, da Lei nº 13.260/16. Os explosivos colocados por Guilherme foram localizados e desarmados antes que houvesse qualquer incidente.\nNa qualidade de advogado de Guilherme, responda às questões a seguir",
+        "question_type": null,
+        "expected_oos_subtype": null,
+        "gold_urns": [],
+        "notes": "Peça penal — defesa em ação por crime eleitoral / coação. CP partially in-corpus; eleitoral OUT."
+      },
+      "answer": {
+        "text": "Na qualidade de advogado de Guilherme, apresento os seguintes pareceres sobre os pontos levantados:\n\n**1. Dos Crimes Imputados e sua Correspondência Legal:**\n\nA conduta de Guilherme, consistente em colocar explosivos em local de uso coletivo com o propósito de causar terror e pânico, caracteriza o crime de explosão em perigo comum, tipificado no Art. 251 do Decreto-Lei nº 2.848, de 7 de dezembro de 1940 (Código Penal), que pune quem exponha a perigo a vida, a integridade física ou o patrimônio de outrem mediante explosão, arremesso ou simples colocação de engenho de dinamite ou substância de efeitos análogos. A imputação ao crime de terrorismo, com base no Art. 2º, § 1º, inciso I, da Lei nº 13.260/16, não pode ser sustentada pelas fontes disponíveis, pois a referida lei não está incluída no corpus fornecido para análise, e não há como verificar sua redação ou aplicação neste contexto. Por outro lado, o Art. 251, § 2º, do Código Penal prevê um aumento de pena se a conduta visar ou atingir coisas como instalações esportivas, o que se aplica diretamente ao caso do campo de treinamento do clube. Não há menção nas fontes à tipificação do terrorismo com os elementos específicos exigidos pela Lei 13.260/16, portanto, a conduta deve ser analisada sob o prisma do crime de explosão.\n\n**2. Da Legalidade da Prova Obtida por Meio de Infiltração Virtual:**\n\nA prova que fundamentou a acusação foi obtida por um agente de polícia infiltrado em um grupo de mensagens privado. A invasão de comunicação eletrônica privada é um ilícito penal, conforme o Art. 154-A do Código Penal, que pune a invasão de dispositivo informático com o fim de obter dados sem autorização. A legislação brasileira, no entanto, reconhece exceções para ações de investigação criminal. O Art. 5º, inciso XII, da Constituição Federal, assegura a inviolabilidade do sigilo das comunicações de dados, mas estabelece que ele pode ser quebrado por ordem judicial, para fins de investigação criminal ou instrução processual penal. Embora o contexto não detalhe a existência de uma ordem judicial específica para a infiltração e captação das mensagens, é um pressuposto da legalidade da prova que tal autorização tenha sido expedida pelo Poder Judiciário. Sem essa comprovação formal nas fontes fornecidas, a prova pode ser considerada ilícita por violação ao sigilo das comunicações, nos termos do Art. 5º, XII, da CF/88. A análise da legalidade da infiltração exige, portanto, a verificação do ato judicial que a autorizou, o que não é possível com as informações contidas no corpus. O Art. 154-A, § 3º, do Código Penal, que qualifica o crime quando há obtenção de segredos, não se aplica diretamente à captação de uma conversa para fins de prevenir um crime, mas sim à obtenção de dados sigilosos sem autorização para outros fins.\n\n⚠️ Atenção: O Art. 154-A do Código Penal possui vigência ressalvada, com alterações significativas pela Lei 14.155/2021, e sua aplicação ainda está em formação jurisprudencial, especialmente no que tange a operações de segurança pública. A vigência do dispositivo está condicionada ao cumprimento das formalidades legais, como a ordem judicial para a interceptação ou invasão de sistemas.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026); Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art251",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art251;par2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc12",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-a;par3"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A conduta de colocar explosivos em centro de treinamento configura local de reunião para efeitos do Art. 251, §2º, por analogia",
+          "A infiltração policial virtual é legalmente prevista e regulamentada no corpus fornecido"
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.010793,
+        "tokens_used": {
+          "input_tokens": 10238,
+          "output_tokens": 2837
+        },
+        "llm_calls": 2
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": 0.46,
+        "discursive_reasoning": "O candidato menciona a possibilidade de desclassificação para o crime de explosão (Art. 251 CP), o que é admitido pelo gabarito (0,30). Contudo, não fundamenta a tese central com base no Art. 2º, caput e §2º da Lei 13.260/2016, nem identifica adequadamente que a motivação política exclui a tipificação do terrorismo - ao contrário, recusa-se a analisar a lei alegando que ela não está no \"corpus fornecido\", o que é uma recusa indevida. Falta a fundamentação na motivação política/ausência de especial fim de agir (0,25) e a citação do dispositivo da Lei 13.260/16 (0,10). Pontua apenas pela desclassificação para explosão."
+      }
+    },
+    {
+      "row": {
+        "source_id": "maritaca-ai/oab-bench/39_direito_civil_questao_1",
+        "category": "discursive",
+        "query": "QUESTÃO\n\nJoão, em 2011, celebra contrato escrito com sua sobrinha Maria (maior e capaz), sem prazo determinado, por via do qual empresta uma loja comercial de 350m2, situada em área urbana, transferindo-lhe a posse com a finalidade estrita de dar-lhe oportunidade de explorar atividade empresarial para a sua subsistência. Passados 12 (doze) anos (2023), João descobre que Maria passou a residir no imóvel, desde que desistiu de empreender, há quatro anos (2019), e conseguiu emprego formal na iniciativa privada.\nInconformado, João notifica Maria para que ela restitua o bem imóvel no prazo de 30 (trinta) dias, denunciando unilateralmente o contrato. Três semanas depois, recebe citação eletrônica em ação de usucapião promovida por Maria, na qual requer a declaração de usucapião, considerando o uso pacífico e contínuo da posse por mais de 10 (dez) anos, com base na usucapião extraordinária com redução de prazo, considerando o estabelecimento de moradia e serviços de caráter produtivo.\nEm sua defesa, João afirma que ele é o proprietário do imóvel e Maria é quem está obrigada a restituir -lhe o bem, em razão da extinção do contrato outrora firmado entre as partes.\nDiante do caso narrado, responda aos itens a seguir",
+        "question_type": null,
+        "expected_oos_subtype": null,
+        "gold_urns": [],
+        "notes": "Comodato (contrato de empréstimo gratuito). CC arts. 579-585 — OUT of our 11-21 indexed range. Sub-corpus gap probe."
+      },
+      "answer": {
+        "text": "Diante do caso narrado, a análise jurídica se concentra na possibilidade de usucapião por Maria em face de João, bem como na eficácia da denúncia unilateral do contrato de comodato por parte do comodante.\n\nPrimeiramente, quanto à pretensão de usucapião extraordinária com redução de prazo, o Art. 183 da Constituição Federal prevê que a usucapião urbana especial exige posse por cinco anos ininterruptos e sem oposição, com utilização do imóvel para moradia e desde que o possuidor não seja proprietário de outro imóvel urbano ou rural. No caso, o imóvel possui 350 m², valor superior ao limite de 250 m² estabelecido no dispositivo. Portanto, Maria não preenche o requisito quantitativo do Art. 183 da Constituição Federal, o que afasta a usucapião urbana especial.<cite ref=\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art183"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001978,
+        "tokens_used": {
+          "input_tokens": 2848,
+          "output_tokens": 277
+        },
+        "llm_calls": 1
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": 0.15,
+        "discursive_reasoning": "O candidato acertou apenas a conclusão (\"Não\", Maria não tem direito à usucapião), mas a fundamentação está completamente equivocada: discutiu usucapião urbana especial do Art. 183 da CF (que sequer é o pedido da autora) e o limite de 250m², ignorando o ponto central do gabarito - a ausência do requisito subjetivo do animus domini em razão da relação contratual de comodato (Art. 1.238 do CC). Não citou comodato, animus domini nem o dispositivo correto. Resposta também incompleta/truncada."
+      }
+    }
+  ]
+}

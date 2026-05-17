@@ -1,0 +1,261 @@
+# OAB-bench discursive pilot — Phase 7.5.5 (2026-05-17).
+#
+# Source: maritaca-ai/oab-bench v2, Apache-2.0, OAB 2ª fase
+#         (peças jurídicas + dissertativas) editions 39-44.
+# Sample: 5 questions manually curated for digital-law adjacency
+#         + sub-corpus gap probing (see scripts/extract_oab_bench_discursive.py).
+# Format: discursive — pipeline drafts legal text; LLM judge scores
+#         pipeline answer against rubric (model answer). New runner
+#         category in rag_leis/run_concurso_eval.py.
+# Scoring: judge emits score_pct (0.0-1.0); aggregate is mean across rows.
+# Cost: ~$1-2 per pilot run (Sabiá generation + opus judge × 5 rows).
+#
+# Reproduce: uv run python -m scripts.extract_oab_bench_discursive
+
+- source_id: maritaca-ai/oab-bench/39_direito_civil_questao_3
+  category: discursive
+  legal_area: direito_civil
+  max_score: 1.25
+  query: 'QUESTÃO
+
+
+    Maria cadastrou-se e adquiriu serviço de aprendizagem on-line de língua estrangeira
+    na sociedade empresária Hello English Ltda., dando consentimento, informado nos
+    termos de uso e autorização, para tratamento de seus dados pessoais. Após 1 (um)
+    ano de curso, decidiu romper o vínculo, mas continuou recebendo muitas notificações
+    indesejadas da sociedade empresária.
+
+    Mesmo sem visualizar qualquer ilegalidade quanto ao tratamento de seus dados pessoais,
+    formulou requerimento expresso via canal de comunicação da empresa para (i) retirar
+    o consentimento no tratamento de dados; e (ii) eliminar os seus dados cadastrais
+    em definitivo, para fins de publicidade e marketing.
+
+    Em resposta, a sociedade empresária informou que não atenderia à solicitação porque
+    a operadora dos dados (SuperData Ltda.) informou que os dados foram tratados dentro
+    da lei, e que Maria não teria direito a pedir a eliminação dos dados para os fins
+    desejados (evitar a publicidade e marketing), considerando que os dados não são
+    sensíveis.
+
+    Irritada, até porque continuou a receber material publicitário, Maria ajuizou
+    ação judicial contra a sociedade empresária SuperData Ltda., e notificou a Autoridade
+    Nacional de Proteção de Dados (ANPD) sobre a conduta adotada por ambas as empresas.
+
+    A sociedade empresária ré (SuperData Ltda.) alega que sua responsabilidade é apenas
+    tratar os dados, não sendo ela quem determina a exclusão dos dados, mas somente
+    a controladora (Hello English Ltda.), razão pela qual não responde pelo pedido
+    de Maria, pois nunca recebeu uma ordem da controladora para excluir os dados de
+    Maria.
+
+    Sobre a hipótese apresentada, responda aos itens a seguir'
+  rubric: 'Sim. O Art. 8º, § 5º, da Lei nº 13.709/18 (LGPD) dispõe que “o consentimento
+    pode ser revogado a qualquer momento mediante manifestação expressa do titular,
+    por procedimento gratuito e facilitado, ratificados os tratamentos realizados
+    sob amparo do consentimento anteriormente manifestado, enquanto não houver requerimento
+    de eliminação”. Em razão disso, deve-se operar o término no tratamento de dados
+    (Art. 15, inciso III, da LGPD), com a consequente eliminação dos dados cadastrais
+    para os fins especificados (publicidade e marketing), na forma do Art. 16, caput,
+    da LGPD.
+
+
+    DISTRIBUIÇÃO DOS PONTOS
+
+
+    | ITEM                                                                                                                                                                                                                               |
+    PONTUAÇÃO      |
+
+    |:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------|
+
+    | A1. Sim. O consentimento do titular pode ser revogado a qualquer momento mediante
+    manifestação expressa do titular (0,30), na forma do Art. 8º, § 5º, da LGPD (0,10).                                                              |
+    0,00/0,30/0,40 |
+
+    | A2. Com a revogação do consentimento, opera-se o término do tratamento e a consequente
+    eliminação dos dados pessoais (0,15), na forma do Art. 15, inciso III, OU do Art.
+    16, ambos da LGPD (0,10).                                 | 0,00/0,15/0,25 |
+
+    '
+  notes: LGPD art.8 §5 + art.15 III — consent revocation + dados elimination. Direct
+    hit on LGPD in our corpus.
+- source_id: maritaca-ai/oab-bench/39_direito_constitucional_questao_1
+  category: discursive
+  legal_area: direito_constitucional
+  max_score: 1.25
+  query: 'QUESTÃO
+
+
+    A Lei Complementar Federal nº XX condicionou o exercício de determinada atividade
+    econômica, não mencionada expressamente na ordem constitucional, à prévia autorização
+    do órgão público competente. Poucos anos depois, a Lei Ordinária Federal nº YY
+    dispôs que a autorização somente seria concedida com o preenchimento de requisitos
+    diversos, o que se mostrava mais restritivo para os interessados. Acresça-se que
+    tanto a Lei Complementar Federal nº XX, como a Lei Ordinária Federal nº YY, foram
+    editadas sob a égide da Constituição da República de 1988.
+
+    A sociedade empresária Alfa contratou você, como advogado(a), e formulou os seguintes
+    questionamentos'
+  rubric: 'Sim. Como a matéria deve ser disciplinada em lei ordinária, nos termos
+    do Art. 170, parágrafo único, da CRFB/88, a Lei Complementar federal nº XX pode
+    ser alterada por diploma normativo da referida natureza.
+
+
+    DISTRIBUIÇÃO DOS PONTOS
+
+
+    | ITEM                                                                                                                                                                                                                                    |
+    PONTUAÇÃO                           |
+
+    |:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------|
+
+    | A. Sim. Como a matéria deve ser disciplinada em lei ordinária (0,30), a Lei
+    Complementar federal nº XX pode ser alterada por diploma normativo da referida
+    natureza (0,25), nos termos do Art. 170, parágrafo único, da CRFB/88 (0,10). |
+    0,00/0,25/0,30/0,35/ 0,40/0,55/0,65 |
+
+    '
+  notes: Lei Complementar restringindo atividade econômica não constitucionalmente
+    prevista. CF/88 art. 170 IV/V (livre iniciativa) — in-corpus.
+- source_id: maritaca-ai/oab-bench/40_direito_constitucional_questao_2
+  category: discursive
+  legal_area: direito_constitucional
+  max_score: 1.25
+  query: 'QUESTÃO
+
+
+    Três Estados de determinada região do país tinham grande destaque no plano nacional
+    em razão da produção de determinado gênero alimentício, que crescia ano após ano,
+    o que gerava um grande fluxo de receitas para a população desses entes federativos
+    e, em particular, para os cofres públicos.
+
+    Em comum acordo, cada um desses entes federativos editou uma lei ordinária de
+    idêntico teor, na qual era reconhecido o fluxo forçado da denominada “unidade
+    regional de valor”, no território de cada um deles, sendo o valor dessa unidade
+    definido de comum acordo, mês a mês, conforme a produção agrícola do período.
+    A emissão dessas unidades, por sua vez, seria realizada pelos três Estados, observados
+    os limites de emissão fixados de comum acordo, devendo ser aceita não só nas transações
+    comerciais em geral, como, também, no pagamento de tributos.
+
+    Sobre a hipótese apresentada, responda aos questionamentos a seguir'
+  rubric: 'Não. Compete à União emitir moeda, nos termos do Art. 21, inciso VII, da
+    CRFB/88.
+
+
+    DISTRIBUIÇÃO DOS PONTOS
+
+
+    | ITEM                                                                                               |
+    PONTUAÇÃO      |
+
+    |:---------------------------------------------------------------------------------------------------|:---------------|
+
+    | A. Não. Compete à União emitir moeda, (0,55) nos termos do Art. 21, inciso VII,
+    da CRFB/88. (0,10) | 0.00/0,55/0,65 |
+
+    '
+  notes: Pacto federativo + ICMS interestadual. CF/88 arts. sobre competência tributária
+    — likely in-corpus partially; full answer needs CTN (OUT).
+- source_id: maritaca-ai/oab-bench/39_direito_penal_questao_1
+  category: discursive
+  legal_area: direito_penal
+  max_score: 1.25
+  query: 'QUESTÃO
+
+
+    Guilherme, insatisfeito com o resultado das eleições para o cargo de Presidente
+    do seu clube de futebol, em que saiu vitorioso o grupo político adversário, decidiu
+    se vingar. Para tanto, colocou diversos explosivos em pontos estratégicos do campo
+    de treinamento do seu time, os quais pretendia explodir durante o repouso noturno
+    e assim causar terror generalizado para a gestão política eleita.
+
+    Não obstante, a polícia havia sido alertada sobre a possibilidade de Guilherme
+    praticar algum ato ilícito. Por isso, o Delegado de Polícia que presidia o inquérito
+    correspondente determinou a um agente de polícia a infiltração em um grupo de
+    aplicativo de mensagens para, assim, acompanhar os passos de Guilherme e suas
+    conversas privadas com seu grupo político, o que, após conquistar a confiança
+    dos membros do grupo, foi efetivamente conseguido pelo agente infiltrado virtualmente.
+    Foi dessa forma que a polícia logrou descobrir o plano de Guilherme, que foi preso,
+    identificado como autor do atentado (por ter sido efetivamente o responsável por
+    colocar os explosivos no centro de treinamento do clube, conforme mostraram as
+    conversas obtidas pelo agente virtualmente infiltrado) e processado pelo delito
+    de terrorismo, previsto no Art. 2º, § 1º, inciso I, da Lei nº 13.260/16. Os explosivos
+    colocados por Guilherme foram localizados e desarmados antes que houvesse qualquer
+    incidente.
+
+    Na qualidade de advogado de Guilherme, responda às questões a seguir'
+  rubric: 'No que toca ao argumento de direito material, nota-se que Guilherme foi
+    acusado de terrorismo. Contudo, por expressa disposição do Art. 2º, caput e §
+    2º, da Lei nº 13.260/2016, atos com motivação política são excluídos do âmbito
+    de incidência do tipo penal, que exige um especial fim de agir não descrito no
+    enunciado. Logo, deve ser defendida a atipicidade da conduta de Guilherme, diante
+    da motivação política do ato. Admite-se, igualmente, a desclassificação para o
+    delito de explosão.
+
+
+    DISTRIBUIÇÃO DOS PONTOS
+
+
+    | ITEM                                                                                                                                                                                                                                    |
+    PONTUAÇÃO                          |
+
+    |:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------|
+
+    | A. Atipicidade da conduta de Guilherme ou desclassificação para explosão (0,30),
+    diante da declarada motivação política ou ausência de especial fim de agir (0,25),
+    nos termos do Art. 2º, caput ou § 2º, da Lei nº 13.260/2016 (0,10). | 0,00/0,25/0,30/0,35
+    0,40/0,55/0,65 |
+
+    '
+  notes: Peça penal — defesa em ação por crime eleitoral / coação. CP partially in-corpus;
+    eleitoral OUT.
+- source_id: maritaca-ai/oab-bench/39_direito_civil_questao_1
+  category: discursive
+  legal_area: direito_civil
+  max_score: 1.25
+  query: 'QUESTÃO
+
+
+    João, em 2011, celebra contrato escrito com sua sobrinha Maria (maior e capaz),
+    sem prazo determinado, por via do qual empresta uma loja comercial de 350m2, situada
+    em área urbana, transferindo-lhe a posse com a finalidade estrita de dar-lhe oportunidade
+    de explorar atividade empresarial para a sua subsistência. Passados 12 (doze)
+    anos (2023), João descobre que Maria passou a residir no imóvel, desde que desistiu
+    de empreender, há quatro anos (2019), e conseguiu emprego formal na iniciativa
+    privada.
+
+    Inconformado, João notifica Maria para que ela restitua o bem imóvel no prazo
+    de 30 (trinta) dias, denunciando unilateralmente o contrato. Três semanas depois,
+    recebe citação eletrônica em ação de usucapião promovida por Maria, na qual requer
+    a declaração de usucapião, considerando o uso pacífico e contínuo da posse por
+    mais de 10 (dez) anos, com base na usucapião extraordinária com redução de prazo,
+    considerando o estabelecimento de moradia e serviços de caráter produtivo.
+
+    Em sua defesa, João afirma que ele é o proprietário do imóvel e Maria é quem está
+    obrigada a restituir -lhe o bem, em razão da extinção do contrato outrora firmado
+    entre as partes.
+
+    Diante do caso narrado, responda aos itens a seguir'
+  rubric: 'Não. Maria não tem direito a obter a declaração de usucapião do bem imóvel
+    em questão. A despeito de ter o tempo de posse suficiente e adequado ao seu pedido
+    (usucapião extraordinária de prazo reduzido – Art. 1.238, caput e parágrafo único,
+    do CC), com a demonstração dos requisitos da moradia e utilização do bem em caráter
+    produtivo, bem como as características objetivas da posse bem delineadas (posse
+    pacífica e ininterrupta), falta o requisito subjetivo do animus domini. Isso porque
+    havia relação contratual de comodato (empréstimo de coisa infungível), o que reflete
+    a ausência de intenção e consciência da comodatária de “possuir a coisa como sua”,
+    eis que era sabidamente comodatária.
+
+
+    DISTRIBUIÇÃO DOS PONTOS
+
+
+    | ITEM                                                                                                                                                                                             |
+    PONTUAÇÃO                          |
+
+    |:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------|
+
+    | A. Não. Como havia relação contratual de comodato (0,15), não foi cumprido o
+    requisito subjetivo do animus domini (possuir como seu o imóvel) (0,40), segundo
+    o Art. 1.238, caput, do CC (0,10). | 0,00/0,15/0,25/0,40 0,50/0,55/0,65 |
+
+    '
+  notes: Comodato (contrato de empréstimo gratuito). CC arts. 579-585 — OUT of our
+    11-21 indexed range. Sub-corpus gap probe.
