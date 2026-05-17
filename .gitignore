@@ -45,4 +45,14 @@ SUMMARY-*
 GLOSSARY.md
 posts/
 REVIEWER_NOTES_*.md
+# Personal Claude Code tooling — agent configs are local productivity
+# tooling, not project artifacts. Same convention as .vscode/ / .idea/.
+# Reference REVIEWER_NOTES_*.md (also gitignored). If we ever want to
+# showcase the AI tooling pattern, curate intentionally in docs/.
+.claude/agents/
+# OAB pilot intermediate working files — actual artifact is the curated
+# eval/oab_concurso_pilot.yaml. These contain verbatim OAB text we said
+# we wouldn't redistribute (study/concurso-pilot-findings.md §Methodology).
+# Regen via `uv run python -m scripts.extract_oab_pilot`.
+eval/oab_pilot_*_candidates.yaml
 
