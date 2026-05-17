@@ -42,6 +42,7 @@ from typing import Any
 import yaml
 from dotenv import load_dotenv
 
+from rag_leis.llm import DEFAULT_JUDGE_MODEL, LLM, get_llm
 from rag_leis.rag import (
     DEFAULT_EMBEDDER,
     DEFAULT_OOS_THRESHOLD,
@@ -50,6 +51,82 @@ from rag_leis.rag import (
     RAGAnswer,
     load_pipeline,
 )
+
+
+# Phase 7.5.5 — discursive judge (OAB 2ª-fase rubric scoring).
+DISCURSIVE_TOOL: dict[str, Any] = {
+    "name": "avaliar_dissertativa_oab",
+    "description": (
+        "Pontue a resposta da banca contra o gabarito da OAB. Score é normalizado "
+        "0.0-1.0 (fraction of max_score). Aplica os critérios FGV."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "score_pct": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": (
+                    "Fração do max_score atribuída à resposta. "
+                    "1.0 = cobre todos os pontos do gabarito com fundamentação correta; "
+                    "0.75 = cobre maioria com fundamentação OK, pode faltar 1 ponto; "
+                    "0.5 = cobre parte central com erro ou omissão relevante; "
+                    "0.25 = cobertura mínima ou fundamentação errada com tópico certo; "
+                    "0.0 = não respondeu OU completamente errado OU recusou indevidamente."
+                ),
+            },
+            "reasoning": {
+                "type": "string",
+                "description": "1-4 frases justificando: o que acertou, o que faltou, qual o veredicto na escala.",
+            },
+        },
+        "required": ["score_pct", "reasoning"],
+    },
+}
+
+DISCURSIVE_JUDGE_SYSTEM = """\
+Você é um avaliador rigoroso da segunda fase do Exame de Ordem da OAB \
+(banca FGV). Sua tarefa: pontuar a resposta de um candidato contra o \
+gabarito oficial.
+
+Critérios:
+- A resposta precisa identificar a tese jurídica correta, citar os \
+dispositivos legais corretos (artigos, leis, súmulas conforme o gabarito), \
+e fundamentar com lógica jurídica.
+- PENALIZE: omissão de dispositivo central, conclusão jurídica errada, \
+recusa indevida quando a questão é respondível, alucinação de dispositivo \
+inexistente, peça com endereçamento errado.
+- ACEITE: paráfrase de fundamentação se substância é igual; cobertura \
+parcial com transparência ("sem prejuízo de outros fundamentos") recebe \
+nota intermediária.
+- Em peças prático-profissionais (recursos, petições): exija \
+endereçamento + autoridade + razões + pedido. Falha em qualquer = score baixo.
+- Refusa indevida (responder "não há informação suficiente" quando o \
+gabarito tem conteúdo factual respondível) = score_pct ≤ 0.1.
+
+Use a ferramenta `avaliar_dissertativa_oab` pra emitir score_pct e reasoning.
+"""
+
+
+def judge_discursive(
+    judge: LLM, question: str, rubric: str, pipeline_answer: str, max_score: float
+) -> tuple[float, str]:
+    """Opus-4-7 judges pipeline_answer against rubric. Returns (score_pct, reasoning).
+
+    max_score is informational (questions vary 0.65-1.25); score_pct is the
+    normalized 0-1 fraction so we can mean across heterogeneous questions.
+    """
+    user_msg = (
+        f"<questao>\n{question.strip()}\n</questao>\n\n"
+        f"<gabarito_oab max_score={max_score}>\n{rubric.strip()}\n</gabarito_oab>\n\n"
+        f"<resposta_candidato>\n{pipeline_answer.strip()}\n</resposta_candidato>"
+    )
+    result = judge.complete_structured(DISCURSIVE_JUDGE_SYSTEM, user_msg, DISCURSIVE_TOOL, max_tokens=1024)
+    pct = float(result["score_pct"])
+    # Defensive clamp
+    pct = max(0.0, min(1.0, pct))
+    return pct, str(result["reasoning"])
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks"
@@ -60,13 +137,19 @@ DEFAULT_EVAL_PATH = PROJECT_ROOT / "eval" / "oab_concurso_pilot.yaml"
 @dataclass
 class ConcursoRow:
     source_id: str
-    category: str  # "inscope" | "oos_a" | "oos_b"
+    category: str  # "inscope" | "oos_a" | "oos_b" | "rule_recall" | "discursive"
     query: str
     question_type: str | None = None
     expected_oos_subtype: str | None = None
     gold_urns: frozenset[str] = frozenset()
     correct_alternative_text: str = ""
     notes: str = ""
+    # Phase 7.5.5 — discursive category fields. LLM judge scores pipeline
+    # answer against `rubric` (gold reference / model answer from oab-bench),
+    # output normalized as score_pct (0.0-1.0) of `max_score`.
+    rubric: str = ""
+    max_score: float = 1.0
+    legal_area: str = ""
 
 
 @dataclass
@@ -83,6 +166,10 @@ class ConcursoEvalRecord:
     # whole gold set); for rule_recall the gold has ONE URN by construction
     # and the pipeline must cite that specific URN. None when not applicable.
     rule_recall_hit: bool | None = None
+    # Phase 7.5.5 — discursive category: opus-4-7 judge score, normalized
+    # 0.0-1.0 against the rubric's max_score.
+    discursive_score_pct: float | None = None
+    discursive_reasoning: str = ""
 
 
 @dataclass
@@ -106,6 +193,10 @@ class ConcursoAggregate:
     n_rule_recall: int = 0
     rule_recall_hit_rate: float = 0.0
     rule_recall_answered_rate: float = 0.0  # not-refused / total (precondition for hit)
+    # Phase 7.5.5 — discursive: opus judge mean score_pct across rows.
+    n_discursive: int = 0
+    discursive_mean_pct: float = 0.0
+    discursive_answered_rate: float = 0.0  # precondition: pipeline drafted, not refused
     # Phase 7.5.2 — cost + token aggregates (RAGAnswer fields summed across rows).
     cost_total_usd: float = 0.0
     cost_mean_usd: float = 0.0
@@ -127,6 +218,9 @@ def load_rows(path: Path) -> list[ConcursoRow]:
             gold_urns=frozenset(item.get("gold_urns") or []),
             correct_alternative_text=item.get("correct_alternative_text", ""),
             notes=item.get("notes", ""),
+            rubric=item.get("rubric", ""),
+            max_score=float(item.get("max_score", 1.0)),
+            legal_area=item.get("legal_area", ""),
         ))
     return out
 
@@ -167,6 +261,45 @@ def _score_oos(row: ConcursoRow, ans: RAGAnswer) -> ConcursoEvalRecord:
     )
 
 
+def _score_discursive(
+    row: ConcursoRow, ans: RAGAnswer, judge: LLM
+) -> ConcursoEvalRecord:
+    """Discursive (OAB 2ª-fase) scoring via opus judge against rubric.
+
+    If pipeline refused, score=0 without calling judge (saves money on
+    obvious zeros). Otherwise judge gives score_pct in [0, 1].
+    """
+    if ans.refused:
+        return ConcursoEvalRecord(
+            row=row,
+            answer=ans,
+            refused_correctly=False,  # in discursive, refusing is failing
+            discursive_score_pct=0.0,
+            discursive_reasoning="(pipeline refused; skipped judge)",
+        )
+    try:
+        pct, reasoning = judge_discursive(
+            judge, row.query, row.rubric, ans.answer, row.max_score
+        )
+    except Exception as e:
+        # Judge failure is rare but possible (rate limit, schema parse).
+        # Mark as None so aggregation skips it; reasoning surfaces the cause.
+        return ConcursoEvalRecord(
+            row=row,
+            answer=ans,
+            refused_correctly=True,
+            discursive_score_pct=None,
+            discursive_reasoning=f"JUDGE_ERROR: {type(e).__name__}: {e}",
+        )
+    return ConcursoEvalRecord(
+        row=row,
+        answer=ans,
+        refused_correctly=True,  # discursive: answered = "correct disposition"
+        discursive_score_pct=pct,
+        discursive_reasoning=reasoning,
+    )
+
+
 def _score_rule_recall(row: ConcursoRow, ans: RAGAnswer) -> ConcursoEvalRecord:
     """Rule recall row (Phase 7.5.4): gold has 1 URN, pipeline must cite
     that specific URN. Pipeline answering at all is the precondition; rule
@@ -190,6 +323,7 @@ def aggregate(records: list[ConcursoEvalRecord]) -> ConcursoAggregate:
     oos_a = [r for r in records if r.row.category == "oos_a"]
     oos_b = [r for r in records if r.row.category == "oos_b"]
     rule_recall = [r for r in records if r.row.category == "rule_recall"]
+    discursive = [r for r in records if r.row.category == "discursive"]
 
     def _safe_mean(xs: list[float]) -> float:
         return sum(xs) / len(xs) if xs else 0.0
@@ -232,6 +366,13 @@ def aggregate(records: list[ConcursoEvalRecord]) -> ConcursoAggregate:
         rule_recall_answered_rate=_safe_mean(
             [1.0 if not r.answer.refused else 0.0 for r in rule_recall]
         ),
+        n_discursive=len(discursive),
+        discursive_mean_pct=_safe_mean(
+            [r.discursive_score_pct for r in discursive if r.discursive_score_pct is not None]
+        ),
+        discursive_answered_rate=_safe_mean(
+            [1.0 if not r.answer.refused else 0.0 for r in discursive]
+        ),
         cost_total_usd=round(cost_total, 6),
         cost_mean_usd=round(cost_total / len(records), 6) if records else 0.0,
         total_input_tokens=in_tok,
@@ -266,6 +407,14 @@ def print_report(records: list[ConcursoEvalRecord], agg: ConcursoAggregate) -> N
           f"({agg.n_oos_a} rows)")
     print(f"  oos_b refusal_rate (adjacent):      {agg.oos_b_refusal_rate:.3f}  "
           f"({agg.n_oos_b} rows)")
+    if agg.n_discursive > 0:
+        print(f"\n--- DISCURSIVE (Phase 7.5.5 — OAB 2ª-fase opus judge) ---")
+        print(f"  n_discursive:                       {agg.n_discursive}")
+        print(f"  discursive_answered_rate:           {agg.discursive_answered_rate:.3f}  "
+              f"(precondition: not refused)")
+        print(f"  discursive_mean_pct:                {agg.discursive_mean_pct:.3f}  "
+              f"(judge 0.0-1.0 normalized)")
+
     if agg.n_rule_recall > 0:
         print(f"\n--- RULE RECALL (Phase 7.5.4 — external-anchored citation precision) ---")
         print(f"  n_rule_recall:                      {agg.n_rule_recall}")
@@ -315,6 +464,9 @@ def serialize_record(r: ConcursoEvalRecord) -> dict[str, Any]:
             "coverage": r.coverage,
             "coverage_jaccard": r.coverage_jaccard,
             "any_gold_cited": r.any_gold_cited,
+            "rule_recall_hit": r.rule_recall_hit,
+            "discursive_score_pct": r.discursive_score_pct,
+            "discursive_reasoning": r.discursive_reasoning,
         },
     }
 
@@ -358,6 +510,11 @@ def main() -> int:
             rec = _score_inscope(row, ans)
         elif row.category == "rule_recall":
             rec = _score_rule_recall(row, ans)
+        elif row.category == "discursive":
+            # Lazy-init judge — only build if a discursive row appears.
+            if not hasattr(main, "_judge_cache"):
+                main._judge_cache = get_llm("anthropic", DEFAULT_JUDGE_MODEL)  # type: ignore[attr-defined]
+            rec = _score_discursive(row, ans, main._judge_cache)  # type: ignore[attr-defined]
         else:  # oos_a or oos_b
             rec = _score_oos(row, ans)
         records.append(rec)
@@ -365,6 +522,8 @@ def main() -> int:
         extra = ""
         if rec.rule_recall_hit is not None:
             extra = f" hit={rec.rule_recall_hit}"
+        if rec.discursive_score_pct is not None:
+            extra = f" score={rec.discursive_score_pct:.2f}"
         print(f" {mark} refused={ans.refused}{extra}")
 
     agg = aggregate(records)
