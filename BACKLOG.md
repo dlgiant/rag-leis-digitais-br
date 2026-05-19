@@ -30,9 +30,9 @@ Itens identificados mas não-aplicados — pra retomar quando for prioridade.
 - **Cost per query:** $0.075 discursive / ~$0.002 short-answer (judge cost now correctly attributed)
 
 **Gold-standard metrics audit** (full at `study/rag-eval-metrics-audit.md`, post-Phase 7.5):
-- **20** ✅ Covered (was 17; +4 from 7.5.7 SRE: latency, cost, tokens, error rate; +1 from rule recall external)
-- **10** 🟡 Partial
-- **11** ❌ Missing (RAGAS Answer Relevance, claim-level Context Recall, provider availability/fallback, throughput QPS, jailbreak resistance, cache hit rate first-class, etc.)
+- **21** ✅ Covered (was 17; +4 from 7.5.7 SRE: latency, cost, tokens, error rate; +1 from rule recall external; +1 from 7.5.1 false_refusal_rate row-20 reconciliation)
+- **8** 🟡 Partial
+- **10** ❌ Missing (RAGAS Answer Relevance, claim-level Context Recall, provider availability/fallback, throughput QPS, jailbreak resistance, cache hit rate first-class, etc.)
 - Top remaining ROI gaps: (1) RAGAS Answer Relevance ~1d; (2) refusal-discipline SYSTEM_PROMPT iteration (NEW priority from 7.5 findings); (3) LegalBench US adaptation (future external anchor).
 
 ---

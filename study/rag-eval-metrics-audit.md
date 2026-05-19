@@ -81,7 +81,6 @@ configuration + aggregate + per-row results.
 - ❌ Latency / cost / token tracking (only in docstrings)
 - ❌ RAGAS "Answer Relevance" as separate dimension (collapsed into Faithfulness)
 - ❌ RAGAS "Context Precision/Recall" as RAGAS-defined (proxied by nDCG/Recall)
-- ❌ False refusal rate as first-class metric (computable; not surfaced)
 - ❌ External benchmark anchor (no LegalBench / CUAD / COLIEE comparison)
 
 ---
@@ -279,7 +278,7 @@ but not surfaced as first-class | ❌ Missing — not instrumented.
 | 17 | C. Attribution | Attribution rate | Production practice | 🟡 | Implicit: project rejects answers without citations; not surfaced |
 | 18 | C. Attribution | Prose-citation consistency | Project-specific | ✅ | `prose_check.py` + `rag.py:440-464` (with retry) |
 | 19 | D. Refusal | OOS refusal accuracy | Production practice | ✅ | `run_answer_eval.py:289` |
-| 20 | D. Refusal | False refusal rate (in-scope) | Production practice | 🟡 | Buried inside `refusal_accuracy` mean; not separated |
+| 20 | D. Refusal | False refusal rate (in-scope) | Production practice | ✅ | `Aggregate.false_refusal_rate` + `oos_refusal_recall` surfaced separately (`run_answer_eval.py:308-310`, Phase 7.5.1) |
 | 21 | D. Refusal | OOS subtype taxonomy | Project + general RAG | ✅ | `run_answer_eval.py:335-338` (subtypes a-e) |
 | 22 | D. Safety | Prompt injection defense | Greshake 2023 | 🟡 | Parser strips `<script>` + amendment blockquotes; not tested against adversarial corpus |
 | 23 | D. Safety | Jailbreak resistance | Anthropic RSP | ❌ | No adversarial eval set |
@@ -354,21 +353,19 @@ prose-check retry on a per-query basis (it doubles LLM cost when it fires),
 - `Aggregate.cost_mean_usd: float` + `cost_total_usd` in
   `run_answer_eval.py`.
 
-### Gap #3 — False refusal rate as first-class metric (~30 min)
+### Gap #3 — False refusal rate as first-class metric — ✅ SHIPPED (Phase 7.5.1)
 
-**Why third:** `refusal_accuracy` today is macro avg over both in-scope and
-OOS. A false refusal (in-scope query incorrectly refused) is a user-facing
-quality bug; an OOS-correctly-refused is a safety success. Treating them as
-the same metric hides the signal. The data is already there — just needs
-extraction.
-
-**Concrete additions:**
+Originally planned at ~30 min. Shipped 2026-05-17:
 
 - `Aggregate.false_refusal_rate: float` — `|in-scope ∩ refused| / |in-scope|`
-- `Aggregate.oos_refusal_recall: float` — `|oos ∩ refused| / |oos|` (already
-  computable; surface explicitly)
-- Per-type breakdown of false-refusal rate (paráfrase queries are often
-  borderline OOS in a hostile interpretation; per-type surface helps)
+- `Aggregate.oos_refusal_recall: float` — `|oos ∩ refused| / |oos|`
+
+Both at `run_answer_eval.py:308-310`. Replaced the collapsed
+`refusal_accuracy` macro number that hid the signal. The concurso
+pilot finding (2026-05-17) that motivated this — internal
+`refusal_accuracy=62.5%` hid the fact that the OOS side was at 44%
+while in-scope side was at 100% — is now first-class measurable on
+every run.
 
 ### Gap #4 — RAGAS Answer Relevance (~1 day, ~$0.10/run added cost)
 
@@ -717,25 +714,28 @@ external benchmark validation.
 | **PII redaction (LGPD-aware)** | ✅ BR-specific | ❌ | ❌ | 🟡 generic | ❌ |
 | **OOS subtype taxonomy** | ✅ a-e | ❌ | ❌ | ❌ | ❌ |
 | **OOS refusal accuracy** | ✅ | ❌ | 🟡 | 🟡 | 🟡 |
-| **False refusal rate** | 🟡 | ❌ | 🟡 | 🟡 | 🟡 |
-| **Latency p50/p95/p99** | ❌ | ❌ | ✅ | ✅ | 🟡 |
-| **Cost per query** | ❌ (docstring only) | ❌ | ✅ | ✅ | 🟡 |
-| **Token usage tracking** | ❌ | ❌ | ✅ | ✅ | 🟡 |
-| **Error rate / exception rate** | ❌ | ❌ | ✅ | ✅ | 🟡 |
+| **False refusal rate** | ✅ (Phase 7.5.1) | ❌ | 🟡 | 🟡 | 🟡 |
+| **Latency p50/p95/p99** | ✅ (Phase 7.5.7) | ❌ | ✅ | ✅ | 🟡 |
+| **Cost per query** | ✅ (Phase 7.5.2 + judge fold 7.5.7) | ❌ | ✅ | ✅ | 🟡 |
+| **Token usage tracking** | ✅ (Phase 7.5.2) | ❌ | ✅ | ✅ | 🟡 |
+| **Error rate / exception rate** | ✅ (Phase 7.5.7) | ❌ | ✅ | ✅ | 🟡 |
 | **Cache hit rate** | 🟡 (cache exists, hit rate not surfaced) | ❌ | 🟡 | 🟡 | ❌ |
 | **External benchmark anchor** | ❌ | partial (uses GPT-4 as oracle) | ❌ | ❌ | ❌ |
 | **Adversarial / prompt-injection** | 🟡 input sanitation | ❌ | ❌ | 🟡 | ❌ |
 | **Audit log (compliance)** | 🟡 PII-only | ❌ | 🟡 | ✅ | ❌ |
 
-**Reading:** the project covers **12 dimensions** that none of the named
-frameworks cover (domain-specific + BR-regulatory). The named frameworks
-cover **7 dimensions** the project lacks (mostly operational SRE +
-RAGAS-extended). Closing those 7 gaps brings the project to parity with
-production-RAG-tooling-2026 baseline while preserving its unique strengths.
+**Reading (post-Phase 7.5):** the project covers **12 dimensions** that
+none of the named frameworks cover (domain-specific + BR-regulatory).
+Post-Phase 7.5.7, project now matches the named frameworks on operational
+SRE basics (latency, cost, tokens, error rate). The named frameworks still
+cover ~3 dimensions the project lacks (RAGAS-extended: Answer Relevance,
+Context Precision/Recall as LLM-judged dimensions).
 
-The single biggest gap by user impact: **operational observability (rows
-14-18)** — without these, the project ships as a research codebase, not a
-production service.
+The single biggest remaining gap by user impact: **RAGAS Answer Relevance**
+(row #9, ❌). Faithfulness measures "does the answer match the source"; Answer
+Relevance measures "does the answer respond to the question" — orthogonal
+dimensions per Es et al. 2023. Catches the "faithful but evasive" failure
+mode the project doesn't currently observe.
 
 ---
 
