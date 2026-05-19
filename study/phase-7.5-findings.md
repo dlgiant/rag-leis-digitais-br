@@ -284,7 +284,7 @@ the lawyer-review checklist.
 - [`phase-7.5.4-rule-recall-findings.md`](phase-7.5.4-rule-recall-findings.md)
 - [`phase-7.5.5-oab-bench-discursive-findings.md`](phase-7.5.5-oab-bench-discursive-findings.md)
 - [`phase-7.5.7-sre-golden-signals-findings.md`](phase-7.5.7-sre-golden-signals-findings.md)
-- [`rag-eval-metrics-audit.md`](rag-eval-metrics-audit.md) — 41-row gap table (now 20 ✅ / 10 🟡 / 11 ❌; was 17/9/13 pre-Phase 7.5)
+- [`rag-eval-metrics-audit.md`](rag-eval-metrics-audit.md) — 41-row gap table (now 21 ✅ / 8 🟡 / 10 ❌ post-7.5.1 reconciliation; was 17/9/13 pre-Phase 7.5)
 - [`query-expansion-plan.md`](query-expansion-plan.md) — sub-phase A+B+C ✅; D ⏸
 - [`concurso-pilot-findings.md`](concurso-pilot-findings.md) — the pilot that motivated Phase 7.5
 - `eval/runs/phase-7.5.{3,4,5,7}-*.json` — preserved per-row reports
