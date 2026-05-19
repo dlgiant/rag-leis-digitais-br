@@ -67,6 +67,24 @@ Itens identificados mas não-aplicados — pra retomar quando for prioridade.
 
 ---
 
+## 🧪 Graph RAG concepts (from paper eval 2026-05-18 — GO items)
+
+**Source:** [`study/paper-evaluation-graph-rag-2025.md`](study/paper-evaluation-graph-rag-2025.md) evaluating Springer 2025 ["A Graph RAG Approach to Enhance Explainability in Dataset Discovery"](https://link.springer.com/article/10.1007/s41019-025-00313-x). Three 🟢 GO concepts emerged. **MAYBE/NO concepts parked in [`EXPERIMENTS.md`](EXPERIMENTS.md).**
+
+**Why these (and not the others):** all three either (a) close a known audit-doc ❌ or (b) offer a structurally different angle on the Phase 7.5 headline finding (12.2% OOS refusal) than the planned SYSTEM_PROMPT iteration. Complementary, not competing.
+
+**Recommended uptake order (each with a fail-fast gate):**
+
+- ⏸ **#3 — Explanation-quality eval dimension** (~1 day, ~$1-2 API) — independent of any KG work. Closes audit Gap #4 (RAGAS Answer Relevance, still ❌). New LLM-judge call in `run_answer_eval.py` (parallel to faithfulness): score answer on coherence / general quality / compactness. Reuses Phase 7.5.7 judge cost-fold infra. **Ship first** — no pipeline change, just eval expansion.
+- ⏸ **#2 — Per-document scope tags** (~1 day, ~$5 API) — smallest possible attack on the 12.2% refusal gap. Add `document_scope: list[str]` to `corpus.py` registry (5-10 concept tags per doc × ~30 docs). Query-side concept extractor (cheap LLM). Refuse pre-LLM if no indexed doc claims to cover any concept the query touches. **Fail-fast gate:** re-run `legalbench_br_oos.yaml` with scope check; if `oos_refusal_recall` moves <+0.10 (i.e., stays below 22%), stop — #1 won't help either. If ≥+0.10, proceed to #1.
+- ⏸ **#1 — Static legal concept KG** (~2-3 days, ~$5-10 API) — only after #2 cleared the gate. Upgrade flat tags to a proper KG with relationships (broader-than, related-to, contradicted-by). Adds explanation-generation capability flat tags can't. ~50 concept nodes hand-curated (operator-only OK for v0; D7 lawyer review eventually).
+
+Each step has independent value: shipping just #3 closes a known audit gap; #3+#2 closes the gap *and* moves refusal numbers (if the hypothesis holds); shipping all three becomes the "Graph RAG with concept-level scope checking" narrative.
+
+**Relationship to Phase 8 entry priority:** Phase 7.5 findings called for refusal-discipline SYSTEM_PROMPT iteration as the load-bearing Phase 8 entry item. These three concepts are a *parallel* attack on the same gap — structural mechanism vs prompt tuning. Could run alongside the prompt iteration or replace it if signal is strong. Decision belongs to the Phase 8 design step.
+
+---
+
 ## ⚠️ Pre-launch dependency: lawyer review
 
 Antes de Phase 9 (compliance) acontecer, há trabalho de validação
