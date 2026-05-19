@@ -95,6 +95,13 @@ class EvalRow:
     cit_f1: float | None = None                     # uses strict P
     faithfulness: int | None = None                 # 0-5
     faithfulness_reasoning: str | None = None
+    # Phase 7.6.1 — explanation-quality dimensions (orthogonal to faithfulness).
+    # None on OOS rows (no expected_paragraph, judge doesn't run); None on
+    # refused in-scope (same rationale as faithfulness=0 there).
+    coherence_score: int | None = None               # 0-5
+    quality_score: int | None = None                 # 0-5
+    compactness_score: int | None = None             # 0-5
+    explanation_reasoning: str | None = None
     # both (refusal sanity):
     refused_correctly: bool = False
 
@@ -166,6 +173,123 @@ def judge_faithfulness(
     # enforce min/max in tool input, depending on the model.
     score = max(0, min(5, score))
     return score, reasoning
+
+
+# ----------------------------------------------------------------------------
+# Judge: explanation quality (Phase 7.6.1)
+#
+# Faithfulness measures "does the answer match expected_paragraph." Explanation
+# quality is orthogonal: even a factually faithful answer can be incoherent,
+# bloated, or evasive. Three axes per Springer 2025 Graph-RAG paper:
+#
+#   coherence       — does the answer hang together as legal reasoning?
+#   general_quality — overall reader-perceived usefulness
+#   compactness     — as short as possible while staying complete
+#
+# Each 0-5. Closes audit doc Gap #4 (RAGAS Answer Relevance). Same judge
+# instance as faithfulness; called immediately after with the same
+# question + generated text. Cost folded into RAGAnswer immediately
+# because judge.last_call_usage is overwritten per call.
+# ----------------------------------------------------------------------------
+
+EXPLANATION_QUALITY_TOOL: dict[str, Any] = {
+    "name": "avaliar_qualidade_explicacao",
+    "description": (
+        "Pontue três dimensões ortogonais da qualidade da explicação jurídica: "
+        "coerência, qualidade geral, e compacidade. Cada uma 0-5."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "coherence": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 5,
+                "description": (
+                    "Lógica jurídica da resposta. "
+                    "5 = encadeia premissas → dispositivos → conclusão sem saltos. "
+                    "3 = lógica clara mas com 1-2 transições abruptas. "
+                    "1 = afirmações desconectadas; sem fio condutor. "
+                    "0 = contradições internas ou non-sequiturs."
+                ),
+            },
+            "general_quality": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 5,
+                "description": (
+                    "Utilidade prática para um leitor jurídico. "
+                    "5 = responde a pergunta + agrega contexto pertinente. "
+                    "3 = responde, mas sem contextualização. "
+                    "1 = resposta vaga ou tangencial à pergunta. "
+                    "0 = não responde à pergunta feita."
+                ),
+            },
+            "compactness": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 5,
+                "description": (
+                    "Densidade informacional sem repetição/preenchimento. "
+                    "5 = cada frase agrega; sem redundância. "
+                    "3 = uma ou duas frases poderiam sair sem perda. "
+                    "1 = ~30% do texto é preenchimento / repetição. "
+                    "0 = muro de texto cuja densidade real é baixa."
+                ),
+            },
+            "reasoning": {
+                "type": "string",
+                "description": "1-3 frases justificando as três notas.",
+            },
+        },
+        "required": ["coherence", "general_quality", "compactness", "reasoning"],
+    },
+}
+
+EXPLANATION_JUDGE_SYSTEM = """\
+Você avalia a qualidade da EXPLICAÇÃO produzida por um sistema RAG jurídico, \
+em três dimensões ortogonais à fidelidade factual.
+
+Foco:
+- **Coerência**: a resposta tem fio condutor de raciocínio jurídico? \
+Premissas → dispositivos citados → conclusão fluem?
+- **Qualidade geral**: a resposta efetivamente RESPONDE à pergunta feita? \
+Resposta tangencial ou "fala sobre o tema sem responder" pontua baixo \
+mesmo quando factualmente correta.
+- **Compacidade**: a resposta é tão curta quanto pode ser sem perder o \
+essencial? Preenchimento, repetição, e disclaimers genéricos puxam a nota \
+pra baixo.
+
+NÃO avalie precisão factual aqui — isso é função do juiz de faithfulness. \
+Uma resposta factualmente errada mas bem estruturada pode receber notas \
+altas nas três dimensões; uma resposta certa mas confusa pode receber \
+notas baixas em coerência.
+
+Use a ferramenta `avaliar_qualidade_explicacao` pra emitir as três notas \
++ reasoning conciso.
+"""
+
+
+def judge_explanation_quality(
+    judge: LLM, question: str, generated: str
+) -> tuple[int, int, int, str]:
+    """Score the explanation on coherence / general_quality / compactness.
+
+    Returns (coherence, general_quality, compactness, reasoning), each 0-5.
+    Defensive clamp on every axis.
+    """
+    user_msg = (
+        f"<pergunta>\n{question.strip()}\n</pergunta>\n\n"
+        f"<resposta_gerada>\n{generated.strip()}\n</resposta_gerada>"
+    )
+    result = judge.complete_structured(
+        EXPLANATION_JUDGE_SYSTEM, user_msg, EXPLANATION_QUALITY_TOOL
+    )
+    coherence = max(0, min(5, int(result["coherence"])))
+    quality = max(0, min(5, int(result["general_quality"])))
+    compactness = max(0, min(5, int(result["compactness"])))
+    reasoning = str(result["reasoning"])
+    return coherence, quality, compactness, reasoning
 
 
 # ----------------------------------------------------------------------------
@@ -246,26 +370,40 @@ def score_in_scope(
         # Model refused on an answerable query → judge can't score the
         # (empty) generated answer fairly; assign 0 and mark.
         faithfulness, reasoning = 0, "Refusal on in-scope query."
+        coherence = quality = compactness = None
+        explanation_reasoning = "Refusal on in-scope query — explanation-quality not scored."
     else:
+        from rag_leis.cost import estimate as _cost_estimate
+
+        def _fold_judge_usage_in_place(ans: RAGAnswer, j: LLM) -> None:
+            """Read j.last_call_usage and fold into ans cost/tokens/llm_calls.
+            Must be called IMMEDIATELY after each judge call — last_call_usage
+            is overwritten on the next call (Phase 7.5.7 bug fix infra)."""
+            usage = getattr(j, "last_call_usage", None)
+            if not usage:
+                return
+            in_t = int(usage.get("input_tokens", 0))
+            out_t = int(usage.get("output_tokens", 0))
+            judge_cost = _cost_estimate(j.provider, j.name, in_t, out_t)
+            ans.cost_estimate_usd = round(ans.cost_estimate_usd + judge_cost, 6)
+            if not ans.tokens_used:
+                ans.tokens_used = {"input_tokens": 0, "output_tokens": 0}
+            ans.tokens_used["input_tokens"] = ans.tokens_used.get("input_tokens", 0) + in_t
+            ans.tokens_used["output_tokens"] = ans.tokens_used.get("output_tokens", 0) + out_t
+            ans.llm_calls = (ans.llm_calls or 0) + 1
+
+        # Faithfulness judge call (existing — Phase 4).
         faithfulness, reasoning = judge_faithfulness(
             judge, q.expected_paragraph, answer.answer
         )
-        # Phase 7.5.7 — fold judge cost into RAGAnswer (bug fix; prior to
-        # 7.5.7 the judge spend was tracked nowhere, causing eval logs to
-        # under-report total cost by the judge's share — often dominant
-        # when judge=opus and generator=Sabiá).
-        from rag_leis.cost import estimate as _cost_estimate
-        usage = getattr(judge, "last_call_usage", None)
-        if usage:
-            in_t = int(usage.get("input_tokens", 0))
-            out_t = int(usage.get("output_tokens", 0))
-            judge_cost = _cost_estimate(judge.provider, judge.name, in_t, out_t)
-            answer.cost_estimate_usd = round(answer.cost_estimate_usd + judge_cost, 6)
-            if not answer.tokens_used:
-                answer.tokens_used = {"input_tokens": 0, "output_tokens": 0}
-            answer.tokens_used["input_tokens"] = answer.tokens_used.get("input_tokens", 0) + in_t
-            answer.tokens_used["output_tokens"] = answer.tokens_used.get("output_tokens", 0) + out_t
-            answer.llm_calls = (answer.llm_calls or 0) + 1
+        _fold_judge_usage_in_place(answer, judge)
+
+        # Phase 7.6.1 — explanation-quality judge (NEW). Fold immediately
+        # because `judge.last_call_usage` is overwritten on the next call.
+        coherence, quality, compactness, explanation_reasoning = judge_explanation_quality(
+            judge, q.query, answer.answer
+        )
+        _fold_judge_usage_in_place(answer, judge)
     return EvalRow(
         query=q,
         answer=answer,
@@ -275,6 +413,10 @@ def score_in_scope(
         cit_f1=f1,
         faithfulness=faithfulness,
         faithfulness_reasoning=reasoning,
+        coherence_score=coherence,
+        quality_score=quality,
+        compactness_score=compactness,
+        explanation_reasoning=explanation_reasoning,
         refused_correctly=(not answer.refused),  # in-scope: should NOT refuse
     )
 
@@ -302,6 +444,12 @@ class Aggregate:
     cit_recall_mean: float
     cit_f1_mean: float
     faithfulness_mean: float
+    # Phase 7.6.1 — explanation-quality means (orthogonal to faithfulness).
+    # In-scope only; rows where the judge didn't score (refusals) skipped via
+    # the `or 0` pattern (consistent with faithfulness_mean).
+    coherence_mean: float
+    quality_mean: float
+    compactness_mean: float
     refusal_accuracy: float
     # Phase 7.5.1 — refusal split into the two confusion-matrix dimensions.
     # `refusal_accuracy` above (the macro avg of both) collapsed two distinct
@@ -381,6 +529,10 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
             "cit_recall": _mean([r.cit_recall or 0.0 for r in inscope_g]),
             "cit_f1": _mean([r.cit_f1 or 0.0 for r in inscope_g]),
             "faithfulness": _mean([float(r.faithfulness or 0) for r in inscope_g]),
+            # Phase 7.6.1 — explanation-quality per-type breakdown
+            "coherence": _mean([float(r.coherence_score or 0) for r in inscope_g]),
+            "quality": _mean([float(r.quality_score or 0) for r in inscope_g]),
+            "compactness": _mean([float(r.compactness_score or 0) for r in inscope_g]),
             "refusal_accuracy": _mean([1.0 if r.refused_correctly else 0.0 for r in group]),
         }
 
@@ -440,6 +592,10 @@ def aggregate(rows: list[EvalRow]) -> Aggregate:
         cit_recall_mean=_mean([r.cit_recall or 0.0 for r in inscope]),
         cit_f1_mean=_mean([r.cit_f1 or 0.0 for r in inscope]),
         faithfulness_mean=_mean([float(r.faithfulness or 0) for r in inscope]),
+        # Phase 7.6.1 — explanation-quality means (in-scope; refused→None→0 via `or`)
+        coherence_mean=_mean([float(r.coherence_score or 0) for r in inscope]),
+        quality_mean=_mean([float(r.quality_score or 0) for r in inscope]),
+        compactness_mean=_mean([float(r.compactness_score or 0) for r in inscope]),
         refusal_accuracy=_mean([1.0 if r.refused_correctly else 0.0 for r in rows]),
         false_refusal_rate=_safe_div(inscope_refused, len(inscope)),
         oos_refusal_recall=_safe_div(oos_refused, len(oos)),
@@ -500,6 +656,10 @@ def print_report(rows: list[EvalRow], agg: Aggregate, verbose: bool) -> None:
     print(f"  Citation recall            (mean, in-scope)  : {agg.cit_recall_mean:.3f}")
     print(f"  Citation F1 (strict)       (mean, in-scope)  : {agg.cit_f1_mean:.3f}")
     print(f"  Faithfulness               (mean, in-scope)  : {agg.faithfulness_mean:.2f} / 5")
+    # Phase 7.6.1 — three orthogonal axes scored by a separate judge call.
+    print(f"  Coherence                  (mean, in-scope)  : {agg.coherence_mean:.2f} / 5")
+    print(f"  General quality            (mean, in-scope)  : {agg.quality_mean:.2f} / 5")
+    print(f"  Compactness                (mean, in-scope)  : {agg.compactness_mean:.2f} / 5")
     print(f"  Refusal accuracy           (all rows, macro)  : {agg.refusal_accuracy:.3f}")
     # Phase 7.5.1 — split refusal into the two confusion-matrix dimensions.
     # In-scope side: should approach 0 (refusing real questions is a bug).
@@ -542,7 +702,7 @@ def print_report(rows: list[EvalRow], agg: Aggregate, verbose: bool) -> None:
     print("By type (in-scope metrics; refusal_accuracy includes OOS):")
     print(
         f"  {'type':<16}  {'n':>2}  {'P_s':<5}  {'P_l':<5}  {'R':<5}  "
-        f"{'F1':<5}  {'faith':<6}  {'ref_acc':<6}"
+        f"{'F1':<5}  {'faith':<5}  {'coh':<4}  {'qual':<4}  {'comp':<4}  {'ref_acc':<6}"
     )
     for t in sorted(agg.by_type):
         b = agg.by_type[t]
@@ -550,7 +710,11 @@ def print_report(rows: list[EvalRow], agg: Aggregate, verbose: bool) -> None:
             f"  {t:<16}  {int(b['n']):>2}  "
             f"{b['cit_precision']:<5.2f}  {b['cit_precision_lenient']:<5.2f}  "
             f"{b['cit_recall']:<5.2f}  {b['cit_f1']:<5.2f}  "
-            f"{b['faithfulness']:<6.2f}  {b['refusal_accuracy']:<6.3f}"
+            f"{b['faithfulness']:<5.2f}  "
+            f"{b.get('coherence', 0.0):<4.2f}  "
+            f"{b.get('quality', 0.0):<4.2f}  "
+            f"{b.get('compactness', 0.0):<4.2f}  "
+            f"{b['refusal_accuracy']:<6.3f}"
         )
 
     if verbose:
@@ -584,6 +748,12 @@ def print_report(rows: list[EvalRow], agg: Aggregate, verbose: bool) -> None:
                         print(f"     [{reason}] {urn}")
                 if r.faithfulness is not None:
                     print(f"   faithfulness: {r.faithfulness}/5 — {r.faithfulness_reasoning}")
+                if r.coherence_score is not None:
+                    print(
+                        f"   explanation: coh={r.coherence_score}/5 "
+                        f"qual={r.quality_score}/5 comp={r.compactness_score}/5 — "
+                        f"{r.explanation_reasoning}"
+                    )
                 if r.answer.unverified_claims:
                     print(f"   unverified_claims ({len(r.answer.unverified_claims)}):")
                     for c in r.answer.unverified_claims[:2]:
@@ -649,6 +819,11 @@ def serialize_row(r: EvalRow) -> dict[str, Any]:
         "cit_f1": r.cit_f1,
         "faithfulness": r.faithfulness,
         "faithfulness_reasoning": r.faithfulness_reasoning,
+        # Phase 7.6.1 — explanation-quality scores (None on OOS / refused)
+        "coherence_score": r.coherence_score,
+        "quality_score": r.quality_score,
+        "compactness_score": r.compactness_score,
+        "explanation_reasoning": r.explanation_reasoning,
         "refused_correctly": r.refused_correctly,
     }
 
