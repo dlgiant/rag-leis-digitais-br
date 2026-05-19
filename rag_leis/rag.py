@@ -369,6 +369,12 @@ class RAGPipeline:
     # Adds 1 LLM call per mismatch event; production tradeoff for
     # closing the unmonitored hallucination surface.
     prose_check_retry: bool = True
+    # Phase 7.6.2 — concept-scope gate. When True, after cosine fast-path
+    # passes, an LLM-extractor maps the query onto CONCEPT_VOCABULARY; if
+    # query touches concepts AND retrieval covers none of them, refuse
+    # pre-main-LLM. Default True in production framing; tests + A/B
+    # comparisons can disable.
+    scope_check_enabled: bool = True
     corpus_urns: frozenset[str] = field(init=False)
 
     def __post_init__(self) -> None:
@@ -437,6 +443,81 @@ class RAGPipeline:
                 latency_ms=(_time.monotonic() - _t0) * 1000.0,
             )
 
+        # Phase 7.6.2 — concept-scope gate. After cosine fast-path passes
+        # (so we have plausibly-relevant retrieval), check whether the
+        # query's concepts overlap with the retrieved documents' scopes.
+        # If query touches concepts AND retrieval covers NONE of them →
+        # refuse before main LLM call. Defensive: empty query-concepts
+        # never triggers refusal (defer to downstream gates).
+        if self.scope_check_enabled:
+            from rag_leis.concept_scope import (
+                check_scope_overlap,
+                extract_concept_tags,
+            )
+            from rag_leis.cost import estimate as _cost_estimate
+
+            query_concepts = extract_concept_tags(query_for_pipeline, self.llm)
+            # Fold extractor cost immediately; it's the only LLM call so
+            # far if the gate ends up refusing here.
+            extractor_in_t = 0
+            extractor_out_t = 0
+            extractor_cost = 0.0
+            usage = getattr(self.llm, "last_call_usage", None)
+            if usage:
+                extractor_in_t = int(usage.get("input_tokens", 0))
+                extractor_out_t = int(usage.get("output_tokens", 0))
+                extractor_cost = _cost_estimate(
+                    self.llm.provider, self.llm.name,
+                    extractor_in_t, extractor_out_t,
+                )
+
+            retrieved_doc_urns = [
+                urn.split("~", 1)[0] for urn, _ in retrieved
+            ]
+            should_refuse, retrieval_concepts = check_scope_overlap(
+                query_concepts, retrieved_doc_urns
+            )
+            if should_refuse:
+                # Cap reported concepts for log readability — full set
+                # available via per-row JSON output if needed.
+                top_retrieval = sorted(retrieval_concepts)[:5]
+                reason = (
+                    f"concept-scope-mismatch: "
+                    f"query=[{','.join(query_concepts)}] "
+                    f"vs retrieval=[{','.join(top_retrieval)}]"
+                )
+                return RAGAnswer(
+                    answer="Fora do escopo da base (verificação semântica).",
+                    citations=[],
+                    unverified_claims=[],
+                    rejected_citations=[],
+                    refused=True,
+                    refusal_reason=reason,
+                    raw_retrieval=retrieved,
+                    classified_type=classified,
+                    classified_top_k=effective_top_k,
+                    pii_types_redacted=pii_types,
+                    prose_citation_mismatches=[],
+                    prose_check_retried=False,
+                    cost_estimate_usd=round(extractor_cost, 6),
+                    tokens_used={
+                        "input_tokens": extractor_in_t,
+                        "output_tokens": extractor_out_t,
+                    },
+                    llm_calls=1,
+                    latency_ms=round((_time.monotonic() - _t0) * 1000.0, 3),
+                )
+            # Gate cleared — extractor cost gets folded into the main
+            # accumulator below (cost_total / tokens_total / llm_call_count
+            # start at extractor's contribution).
+            _scope_check_extra = {
+                "in_tokens": extractor_in_t,
+                "out_tokens": extractor_out_t,
+                "cost": extractor_cost,
+            }
+        else:
+            _scope_check_extra = None
+
         context = self._build_context(retrieved)
         # Per-type prompt snippet (Phase 4.1) — appended to the base
         # SYSTEM_PROMPT so the model gets shape-specific guidance without
@@ -450,10 +531,17 @@ class RAGPipeline:
 
         # Phase 7.5.2 — accumulate token usage + cost across LLM calls.
         # First call (initial answer). Retry adds to the same counters below.
+        # Phase 7.6.2 — seed with the concept-extractor's contribution if
+        # the scope-check ran and cleared.
         from rag_leis.cost import estimate as _cost_estimate
         tokens_total = {"input_tokens": 0, "output_tokens": 0}
         cost_total = 0.0
         llm_call_count = 0
+        if _scope_check_extra:
+            tokens_total["input_tokens"] += _scope_check_extra["in_tokens"]
+            tokens_total["output_tokens"] += _scope_check_extra["out_tokens"]
+            cost_total += _scope_check_extra["cost"]
+            llm_call_count += 1
         usage = getattr(self.llm, "last_call_usage", None)
         if usage:
             tokens_total["input_tokens"] += usage["input_tokens"]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -8,6 +8,13 @@ class Document:
     urn: str
     title: str
     planalto_url: str
+    # Phase 7.6.2 — per-document scope tags. Each Document declares 5-10
+    # concept tags drawn from CONCEPT_VOCABULARY (rag_leis/concept_scope.py).
+    # Used by the pre-LLM scope-check gate: query → concept tags → if no
+    # indexed doc claims any concept the query touches → refuse before
+    # paying for retrieval+LLM. Tuple (not list) because frozen dataclass
+    # stays hashable + matches IndexChunk.amended_by pattern.
+    document_scope: tuple[str, ...] = ()
 
 
 TIER_1: tuple[Document, ...] = (
@@ -15,61 +22,111 @@ TIER_1: tuple[Document, ...] = (
         urn="urn:lex:br:federal:constituicao:1988-10-05;1988",
         title="Constituição da República Federativa do Brasil de 1988",
         planalto_url="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm",
+        document_scope=(
+            "direitos-fundamentais", "habeas-data", "intimidade",
+            "direito-imagem", "competencia-uniao", "devido-processo",
+            "liberdade-expressao",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:lei:2018-08-14;13709",
         title="LGPD — Lei Geral de Proteção de Dados Pessoais (Lei 13.709/2018)",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
+        document_scope=(
+            "dados-pessoais", "consentimento", "DPO", "direitos-titulares",
+            "tratamento-dados", "ANPD", "incidente", "vazamento-dados",
+            "privacidade",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:lei:2014-04-23;12965",
         title="Marco Civil da Internet (Lei 12.965/2014)",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm",
+        document_scope=(
+            "internet", "marco-civil", "neutralidade-rede",
+            "guarda-registros", "responsabilidade-provedor", "art-19-mci",
+            "liberdade-expressao",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:decreto:2016-05-11;8771",
         title="Decreto 8.771/2016 — regulamenta o Marco Civil da Internet",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2016/decreto/d8771.htm",
+        document_scope=(
+            "internet", "marco-civil", "neutralidade-rede",
+            "guarda-registros", "responsabilidade-provedor",
+            "padroes-tecnicos",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:lei:1998-02-19;9609",
         title="Lei do Software (Lei 9.609/1998)",
         planalto_url="https://www.planalto.gov.br/ccivil_03/leis/l9609.htm",
+        document_scope=(
+            "software", "programa-computador", "direitos-autorais",
+            "propriedade-intelectual",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:lei:1998-02-19;9610",
         title="Lei de Direitos Autorais (Lei 9.610/1998)",
         planalto_url="https://www.planalto.gov.br/ccivil_03/leis/l9610.htm",
+        document_scope=(
+            "direitos-autorais", "obra-intelectual", "autoria",
+            "propriedade-intelectual",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:lei:2012-11-30;12737",
         title="Lei Carolina Dieckmann (Lei 12.737/2012)",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12737.htm",
+        document_scope=(
+            "crimes-ciberneticos", "invasao-dispositivo", "crimes",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:lei:2021-05-27;14155",
         title="Lei 14.155/2021 — Crimes Cibernéticos",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14155.htm",
+        document_scope=(
+            "crimes-ciberneticos", "fraude-eletronica",
+            "estelionato-digital", "crimes",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:decreto.lei:1940-12-07;2848",
         title="Código Penal (Decreto-Lei 2.848/1940) — texto compilado",
         planalto_url="https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848compilado.htm",
+        document_scope=(
+            "crimes", "tipicidade", "pena", "dolo-culpa",
+            "estelionato-digital",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:lei:2011-11-18;12527",
         title="Lei de Acesso à Informação (Lei 12.527/2011)",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12527.htm",
+        document_scope=(
+            "acesso-informacao", "transparencia", "governo-aberto",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:lei:2019-07-08;13853",
         title="Lei 13.853/2019 — criação da ANPD",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2019/lei/l13853.htm",
+        document_scope=(
+            "ANPD", "autoridade-fiscalizacao", "sancao-lgpd",
+            "dados-pessoais",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:lei:1990-09-11;8078",
         title="Código de Defesa do Consumidor (Lei 8.078/1990)",
         planalto_url="https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm",
+        document_scope=(
+            "consumidor", "relacao-consumo", "fornecedor",
+            "defesa-consumidor",
+        ),
     ),
     # Habeas data procedimento — fecha o gold de habeas data que estava
     # incompleto desde Phase 2.5 (CF art.5;LXXII define o remédio; sem
@@ -78,6 +135,10 @@ TIER_1: tuple[Document, ...] = (
         urn="urn:lex:br:federal:lei:1997-11-12;9507",
         title="Lei 9.507/1997 — disciplina o direito de acesso a informações e o procedimento do habeas data",
         planalto_url="https://www.planalto.gov.br/ccivil_03/leis/l9507.htm",
+        document_scope=(
+            "habeas-data", "acesso-dados", "retificacao-dados",
+            "direitos-titulares",
+        ),
     ),
 )
 
@@ -90,16 +151,28 @@ TIER_2: tuple[Document, ...] = (
         urn="urn:lex:br:federal:lei:2020-09-23;14063",
         title="Lei 14.063/2020 — assinaturas eletrônicas em interações com entes públicos",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2020/lei/l14063.htm",
+        document_scope=(
+            "assinatura-eletronica", "certificacao-digital",
+            "servico-publico-digital",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:lei:2021-03-29;14129",
         title="Lei 14.129/2021 — Lei do Governo Digital",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14129.htm",
+        document_scope=(
+            "governo-digital", "servico-publico-digital",
+            "transparencia",
+        ),
     ),
     Document(
         urn="urn:lex:br:federal:lei:2006-12-19;11419",
         title="Lei 11.419/2006 — informatização do processo judicial",
         planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11419.htm",
+        document_scope=(
+            "processo-eletronico", "judicial-eletronico",
+            "assinatura-eletronica",
+        ),
     ),
     # Código Civil — escopo CIRÚRGICO. Indexamos apenas os arts. 11-21
     # (Capítulo II — Dos Direitos da Personalidade) por serem o pilar do
@@ -116,6 +189,10 @@ TIER_2: tuple[Document, ...] = (
         urn="urn:lex:br:federal:lei:2002-01-10;10406",
         title="Código Civil (Lei 10.406/2002) — escopo: arts. 11-21 (Direitos da Personalidade)",
         planalto_url="https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm",
+        document_scope=(
+            "direitos-personalidade", "intimidade", "direito-imagem",
+            "privacidade",
+        ),
     ),
 )
 
@@ -138,6 +215,10 @@ TIER_3: tuple[Document, ...] = (
         urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15",
         title="Resolução CD/ANPD nº 15/2024 — Regulamento de Comunicação de Incidente de Segurança",
         planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
+        document_scope=(
+            "ANPD", "incidente", "vazamento-dados",
+            "comunicacao-incidente", "dados-pessoais",
+        ),
     ),
     # Res. 4/2023 — Phase 4.3.b real pdfplumber parser. Source PDF is the
     # SEI bundle (917pgs); regulamento extracted from pp.98-108 per
@@ -147,6 +228,10 @@ TIER_3: tuple[Document, ...] = (
         urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4",
         title="Resolução CD/ANPD nº 4/2023 — Regulamento de Dosimetria e Aplicação de Sanções Administrativas",
         planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
+        document_scope=(
+            "ANPD", "dosimetria", "sancao-lgpd",
+            "autoridade-fiscalizacao",
+        ),
     ),
     # ----------------------------------------------------------------------
     # The 2 below STILL gated. Res. 1/2021 is in a 807-page bundle (could
@@ -185,16 +270,27 @@ TIER_4: tuple[Document, ...] = (
         urn="urn:lex:br:superior.tribunal.justica:sumula:1999-09-08;227",
         title="STJ Súmula 227 — Pessoa jurídica e dano moral",
         planalto_url="https://scon.stj.jus.br/SCON/sumanot/toc.jsp?livre=(sumula%20adj1%20%27227%27).sub.",
+        document_scope=(
+            "dano-moral", "pessoa-juridica", "responsabilidade-civil",
+        ),
     ),
     Document(
         urn="urn:lex:br:superior.tribunal.justica:sumula:2009-10-28;403",
         title="STJ Súmula 403 — Publicação não autorizada de imagem com fins econômicos",
         planalto_url="https://scon.stj.jus.br/SCON/sumanot/toc.jsp?livre=(sumula%20adj1%20%27403%27).sub.",
+        document_scope=(
+            "direito-imagem", "publicacao-nao-autorizada", "dano-moral",
+            "direitos-personalidade",
+        ),
     ),
     Document(
         urn="urn:lex:br:superior.tribunal.justica:sumula:2012-06-27;479",
         title="STJ Súmula 479 — Responsabilidade objetiva das instituições financeiras por fraude de terceiros",
         planalto_url="https://scon.stj.jus.br/SCON/sumanot/toc.jsp?livre=(sumula%20adj1%20%27479%27).sub.",
+        document_scope=(
+            "instituicao-financeira", "responsabilidade-objetiva",
+            "fraude-terceiros",
+        ),
     ),
     # STF Temas de Repercussão Geral. Rank 3 quando tese fixada.
     # Tema 786 — tese fixada 11/02/2021 (ARE 833.248, Caso Aída Curi).
@@ -202,6 +298,9 @@ TIER_4: tuple[Document, ...] = (
         urn="urn:lex:br:supremo.tribunal.federal:tema:786",
         title="STF Tema 786 — Direito ao esquecimento (incompatibilidade com a Constituição)",
         planalto_url="https://portal.stf.jus.br/jurisprudenciaRepercussao/verAndamentoProcesso.asp?incidente=4623869&numeroProcesso=833248",
+        document_scope=(
+            "direito-esquecimento", "intimidade", "liberdade-expressao",
+        ),
     ),
     # Tema 987 — RE 1.037.396 + RE 1.057.258. Julgamento concluído em jun/2024
     # (declaração de inconstitucionalidade parcial do art. 19 MCI). Stub aqui:
@@ -210,6 +309,9 @@ TIER_4: tuple[Document, ...] = (
         urn="urn:lex:br:supremo.tribunal.federal:tema:987",
         title="STF Tema 987 — Constitucionalidade do art. 19 do Marco Civil da Internet",
         planalto_url="https://portal.stf.jus.br/jurisprudenciaRepercussao/verAndamentoProcesso.asp?incidente=5160549&numeroProcesso=1037396",
+        document_scope=(
+            "art-19-mci", "responsabilidade-provedor", "marco-civil",
+        ),
     ),
     # Tema 533 — RE 601.314. Sigilo bancário e Receita Federal sem ordem judicial.
     # Stub: tese verbatim depende de revisão D7.
@@ -217,6 +319,9 @@ TIER_4: tuple[Document, ...] = (
         urn="urn:lex:br:supremo.tribunal.federal:tema:533",
         title="STF Tema 533 — Compartilhamento de dados bancários com a Receita Federal",
         planalto_url="https://portal.stf.jus.br/jurisprudenciaRepercussao/verAndamentoProcesso.asp?incidente=2641697&numeroProcesso=601314",
+        document_scope=(
+            "sigilo-bancario", "receita-federal", "compartilhamento-dados",
+        ),
     ),
     # Tema 815 — RE 1.058.244. Bloqueio judicial de aplicações por
     # descumprimento. Stub: tese verbatim depende de revisão D7.
@@ -224,5 +329,17 @@ TIER_4: tuple[Document, ...] = (
         urn="urn:lex:br:supremo.tribunal.federal:tema:815",
         title="STF Tema 815 — Bloqueio judicial de aplicações de internet por descumprimento de ordem",
         planalto_url="https://portal.stf.jus.br/jurisprudenciaRepercussao/verTemasComRepercussaoGeral.asp",
+        document_scope=(
+            "bloqueio-aplicacao", "ordem-judicial", "marco-civil",
+        ),
     ),
 )
+
+
+# Phase 7.6.2 — registry lookup by document URN. Builds the union of all
+# four tiers into a single dict for O(1) doc-URN → Document resolution.
+# Used by rag.py's concept-scope gate to look up document_scope from a
+# retrieved chunk's URN (via chunk_urn.split("~", 1)[0]).
+CORPUS_BY_URN: dict[str, Document] = {
+    d.urn: d for d in (*TIER_1, *TIER_2, *TIER_3, *TIER_4)
+}
