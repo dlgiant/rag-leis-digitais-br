@@ -227,8 +227,17 @@ def test_empty_inscope_subset_does_not_crash():
 # ----------------------------------------------------------------------------
 
 
-def _row_with_cost(*, cost: float, in_tok: int, out_tok: int, calls: int) -> EvalRow:
-    """In-scope answered row with explicit cost fields set."""
+def _row_with_cost(
+    *,
+    cost: float,
+    in_tok: int,
+    out_tok: int,
+    calls: int,
+    coherence: int | None = 4,
+    quality: int | None = 4,
+    compactness: int | None = 4,
+) -> EvalRow:
+    """In-scope answered row with explicit cost + explanation-quality fields."""
     aq = AnswerQuery(
         query="q", type="definicao", oos=False,
         gold_urns=frozenset({"u"}), alternative_acceptable_urns=frozenset(),
@@ -244,7 +253,12 @@ def _row_with_cost(*, cost: float, in_tok: int, out_tok: int, calls: int) -> Eva
     return EvalRow(
         query=aq, answer=ans,
         cit_precision=1.0, cit_precision_lenient=1.0, cit_recall=1.0, cit_f1=1.0,
-        faithfulness=5, refused_correctly=True,
+        faithfulness=5,
+        coherence_score=coherence,
+        quality_score=quality,
+        compactness_score=compactness,
+        explanation_reasoning="test row",
+        refused_correctly=True,
     )
 
 
@@ -286,3 +300,64 @@ def test_aggregate_empty_rows_does_not_crash():
     assert agg.cost_total_usd == 0.0
     assert agg.cost_mean_usd == 0.0  # avoid div-by-zero
     assert agg.n_total == 0
+    # Phase 7.6.1 — explanation-quality means default 0 on empty input
+    assert agg.coherence_mean == 0.0
+    assert agg.quality_mean == 0.0
+    assert agg.compactness_mean == 0.0
+
+
+# ----------------------------------------------------------------------------
+# Phase 7.6.1 — explanation-quality aggregate behavior
+# ----------------------------------------------------------------------------
+
+
+def test_explanation_quality_means_across_rows():
+    """coherence/quality/compactness aggregate as simple means over in-scope rows."""
+    rows = [
+        _row_with_cost(cost=0, in_tok=0, out_tok=0, calls=1, coherence=5, quality=4, compactness=3),
+        _row_with_cost(cost=0, in_tok=0, out_tok=0, calls=1, coherence=3, quality=2, compactness=5),
+    ]
+    agg = aggregate(rows)
+    assert agg.coherence_mean == 4.0     # (5+3)/2
+    assert agg.quality_mean == 3.0       # (4+2)/2
+    assert agg.compactness_mean == 4.0   # (3+5)/2
+
+
+def test_explanation_quality_none_treated_as_zero():
+    """Rows where the judge didn't score (refused in-scope, OOS) should contribute
+    0 to the mean — mirrors the `or 0` pattern already used for faithfulness."""
+    rows = [
+        _row_with_cost(cost=0, in_tok=0, out_tok=0, calls=1, coherence=4, quality=4, compactness=4),
+        _row_with_cost(cost=0, in_tok=0, out_tok=0, calls=1, coherence=None, quality=None, compactness=None),
+    ]
+    agg = aggregate(rows)
+    # (4 + 0) / 2 = 2.0 — None row contributes 0
+    assert agg.coherence_mean == 2.0
+    assert agg.quality_mean == 2.0
+    assert agg.compactness_mean == 2.0
+
+
+def test_explanation_quality_in_by_type_breakdown():
+    """The by_type dict gets coherence/quality/compactness keys per type."""
+    rows = [
+        _row_with_cost(cost=0, in_tok=0, out_tok=0, calls=1, coherence=4, quality=3, compactness=5),
+    ]
+    agg = aggregate(rows)
+    assert "definicao" in agg.by_type
+    b = agg.by_type["definicao"]
+    assert b["coherence"] == 4.0
+    assert b["quality"] == 3.0
+    assert b["compactness"] == 5.0
+    # Original faithfulness key still present (regression check)
+    assert b["faithfulness"] == 5.0
+
+
+def test_explanation_quality_oos_rows_dont_count():
+    """OOS rows have no explanation scores; only in-scope rows feed the means."""
+    inscope_row = _row_with_cost(cost=0, in_tok=0, out_tok=0, calls=1, coherence=5, quality=5, compactness=5)
+    oos_row = _row(oos=True, refused=True)
+    agg = aggregate([inscope_row, oos_row])
+    # Only the inscope row contributes (denominator = 1, not 2)
+    assert agg.coherence_mean == 5.0
+    assert agg.quality_mean == 5.0
+    assert agg.compactness_mean == 5.0

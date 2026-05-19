@@ -267,7 +267,7 @@ but not surfaced as first-class | ❌ Missing — not instrumented.
 | 6 | A. IR | Hit Rate | BEIR convention | 🟡 | Implicit in Recall@20 when |gold|=1; not separated |
 | 7 | A. IR | Recall@100 (corpus ceiling) | BEIR | ❌ | Only top-20 evaluated |
 | 8 | B. RAGAS | Faithfulness (LLM judge) | Es et al. 2023 | ✅ | `run_answer_eval.py:155-168` |
-| 9 | B. RAGAS | Answer Relevance | Es et al. 2023 | ❌ | Distinct from Faithfulness; not separately judged |
+| 9 | B. RAGAS | Answer Relevance | Es et al. 2023 | ✅ | `judge_explanation_quality()` in `run_answer_eval.py:225-263` scores coherence + general_quality + compactness on a separate Opus judge call (Phase 7.6.1). Three-axis variant per Springer 2025 Graph-RAG paper. |
 | 10 | B. RAGAS | Context Precision (LLM-judged) | Es et al. 2023 | 🟡 | Proxied by nDCG@10 (pre-labeled gold) |
 | 11 | B. RAGAS | Context Recall (claim-level) | Es et al. 2023 | ❌ | Project measures URN-level recall, not claim-level |
 | 12 | B. RAGAS | Context Relevance | Es et al. 2023 ext. | ❌ | Not measured per-chunk |
