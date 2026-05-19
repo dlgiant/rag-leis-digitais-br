@@ -8,7 +8,17 @@ This file is intentionally separate from BACKLOG.md. **BACKLOG** = "would do if 
 
 ## 🧪 Graph RAG concepts — MAYBE / parked
 
-**Source:** [`study/paper-evaluation-graph-rag-2025.md`](study/paper-evaluation-graph-rag-2025.md) §3. Three 🟢 GO concepts went to [`BACKLOG.md`](BACKLOG.md); these are the four that didn't make the cut, with the evidence threshold for revisiting.
+**Source:** [`study/paper-evaluation-graph-rag-2025.md`](study/paper-evaluation-graph-rag-2025.md) §3. Phase 7.6 shipped concepts #2 and #3 (see [BACKLOG.md](BACKLOG.md) 🧪 section). Concept #1 was demoted here post-Phase-7.6 negative gate; concepts #4-#7 stayed parked from the original triage.
+
+### #1 — Static legal concept KG 🟡 (demoted from BACKLOG, 2026-05-19)
+
+**Cost if pursued:** 2-3 days operator + D7 lawyer review (Phase 9 dependency for production trustworthiness).
+
+**Status:** Phase 7.6.2 shipped the cheap version (flat per-document scope tags). Result: oos_a_refusal_rate moved 0.122 → 0.184 (+0.062pp). **Gate threshold was +0.10pp.** Mechanism produced real but underpowered signal. The bigger KG version with broader-than/related-to/contradicted-by relationships would face the same underpoweredness for the same root reason: the corpus's concept ontology needs lawyer-reviewed depth to be specific enough. That's a D7 project, not a Phase 7-X project.
+
+Detail: [`study/phase-7.6.2-scope-tags-findings.md`](study/phase-7.6.2-scope-tags-findings.md).
+
+**Bar to revisit:** EITHER (a) D7 lawyer engagement contracted AND lawyer agrees concept ontology curation is in scope, OR (b) the alternative refusal-discipline path (Phase 8 SYSTEM_PROMPT iteration) ships and underperforms — at which point #1 with D7 backing becomes the next attack on the same gap.
 
 ### #4 — Cross-references as queryable graph edges 🟡
 

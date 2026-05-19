@@ -30,9 +30,9 @@ Itens identificados mas não-aplicados — pra retomar quando for prioridade.
 - **Cost per query:** $0.075 discursive / ~$0.002 short-answer (judge cost now correctly attributed)
 
 **Gold-standard metrics audit** (full at `study/rag-eval-metrics-audit.md`, post-Phase 7.5):
-- **21** ✅ Covered (was 17; +4 from 7.5.7 SRE: latency, cost, tokens, error rate; +1 from rule recall external; +1 from 7.5.1 false_refusal_rate row-20 reconciliation)
+- **22** ✅ Covered (was 17; +4 from 7.5.7 SRE; +1 rule recall external; +1 from 7.5.1 false_refusal_rate row-20 reconciliation; +1 from 7.6.1 Answer Relevance via judge_explanation_quality)
 - **8** 🟡 Partial
-- **10** ❌ Missing (RAGAS Answer Relevance, claim-level Context Recall, provider availability/fallback, throughput QPS, jailbreak resistance, cache hit rate first-class, etc.)
+- **9** ❌ Missing (claim-level Context Recall, provider availability/fallback, throughput QPS, jailbreak resistance, cache hit rate first-class, citation entailment, MAP, Recall@100, LegalBench external anchor)
 - Top remaining ROI gaps: (1) RAGAS Answer Relevance ~1d; (2) refusal-discipline SYSTEM_PROMPT iteration (NEW priority from 7.5 findings); (3) LegalBench US adaptation (future external anchor).
 
 ---
@@ -67,21 +67,19 @@ Itens identificados mas não-aplicados — pra retomar quando for prioridade.
 
 ---
 
-## 🧪 Graph RAG concepts (from paper eval 2026-05-18 — GO items)
+## 🧪 Graph RAG concepts — Phase 7.6 closure (2026-05-19)
 
-**Source:** [`study/paper-evaluation-graph-rag-2025.md`](study/paper-evaluation-graph-rag-2025.md) evaluating Springer 2025 ["A Graph RAG Approach to Enhance Explainability in Dataset Discovery"](https://link.springer.com/article/10.1007/s41019-025-00313-x). Three 🟢 GO concepts emerged. **MAYBE/NO concepts parked in [`EXPERIMENTS.md`](EXPERIMENTS.md).**
+**Source:** [`study/paper-evaluation-graph-rag-2025.md`](study/paper-evaluation-graph-rag-2025.md) evaluating Springer 2025 ["A Graph RAG Approach to Enhance Explainability in Dataset Discovery"](https://link.springer.com/article/10.1007/s41019-025-00313-x). Three 🟢 GO concepts entered the BACKLOG; Phase 7.6 shipped two of them.
 
-**Why these (and not the others):** all three either (a) close a known audit-doc ❌ or (b) offer a structurally different angle on the Phase 7.5 headline finding (12.2% OOS refusal) than the planned SYSTEM_PROMPT iteration. Complementary, not competing.
+**Phase 7.6 outcomes:**
 
-**Recommended uptake order (each with a fail-fast gate):**
+- ✅ **#3 — Explanation-quality eval dimension** (Phase 7.6.1, [findings](study/phase-7.6.1-explanation-quality-findings.md)) — shipped 2026-05-19. Closes audit Gap #4 (RAGAS Answer Relevance, now ✅). Headline: on internal eval, coherence=4.93/5 and quality=5.00/5 are nearly saturated; **compactness=3.57/5 is the discriminating axis** — answers are faithful but bloated. New diagnostic the project didn't have.
+- ✅ **#2 — Per-document scope tags** (Phase 7.6.2, [findings](study/phase-7.6.2-scope-tags-findings.md)) — shipped 2026-05-19. Production-default-on (`RAGPipeline.scope_check_enabled=True`). **Negative gate result:** moved oos_a_refusal_rate from 0.122 → 0.184 (+0.062pp); gate threshold was +0.10pp. Real but underpowered signal. false_refusal_rate stayed at 0.000 — mechanism is conservative + correct. Kept in production because it adds +0.04 attributable refusal lift with no regression cost.
+- ❌ **#1 — Static legal concept KG** — **PARKED in [EXPERIMENTS.md](EXPERIMENTS.md)** per D3 decision (negative gate result). The cheap version (#2) is underpowered for the same reason the expensive version would be — vocabulary needs D7 lawyer-reviewed depth, which makes #1 a Phase 9 project, not Phase 7.6.
 
-- ⏸ **#3 — Explanation-quality eval dimension** (~1 day, ~$1-2 API) — independent of any KG work. Closes audit Gap #4 (RAGAS Answer Relevance, still ❌). New LLM-judge call in `run_answer_eval.py` (parallel to faithfulness): score answer on coherence / general quality / compactness. Reuses Phase 7.5.7 judge cost-fold infra. **Ship first** — no pipeline change, just eval expansion.
-- ⏸ **#2 — Per-document scope tags** (~1 day, ~$5 API) — smallest possible attack on the 12.2% refusal gap. Add `document_scope: list[str]` to `corpus.py` registry (5-10 concept tags per doc × ~30 docs). Query-side concept extractor (cheap LLM). Refuse pre-LLM if no indexed doc claims to cover any concept the query touches. **Fail-fast gate:** re-run `legalbench_br_oos.yaml` with scope check; if `oos_refusal_recall` moves <+0.10 (i.e., stays below 22%), stop — #1 won't help either. If ≥+0.10, proceed to #1.
-- ⏸ **#1 — Static legal concept KG** (~2-3 days, ~$5-10 API) — only after #2 cleared the gate. Upgrade flat tags to a proper KG with relationships (broader-than, related-to, contradicted-by). Adds explanation-generation capability flat tags can't. ~50 concept nodes hand-curated (operator-only OK for v0; D7 lawyer review eventually).
+**Net signal change from Phase 7.6:** audit Gap #4 closed; eval surface gained a new dimension (compactness); production pipeline gained a conservative scope-check that adds +2/49 OOS refusal cases.
 
-Each step has independent value: shipping just #3 closes a known audit gap; #3+#2 closes the gap *and* moves refusal numbers (if the hypothesis holds); shipping all three becomes the "Graph RAG with concept-level scope checking" narrative.
-
-**Relationship to Phase 8 entry priority:** Phase 7.5 findings called for refusal-discipline SYSTEM_PROMPT iteration as the load-bearing Phase 8 entry item. These three concepts are a *parallel* attack on the same gap — structural mechanism vs prompt tuning. Could run alongside the prompt iteration or replace it if signal is strong. Decision belongs to the Phase 8 design step.
+**Phase 8 entry priority unchanged:** refusal-discipline SYSTEM_PROMPT iteration vs `eval/legalbench_br_oos.yaml` remains the load-bearing path. The 7.6.2 scope-check is a complementary +0.04 contribution; SYSTEM_PROMPT iteration is the path to the remaining 0.66 of the gap.
 
 ---
 
