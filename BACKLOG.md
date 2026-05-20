@@ -131,22 +131,26 @@ Most items below superseded by subsequent phases. Status updates:
 - ⏸ **Cosine fast-path threshold (0.40) calibration** — still uncalibrated; LLM self-refusal is primary signal but cosine gate worth a synthetic adversarial test.
 - ⏸ **Phase 3 candidates** (most superseded): retry policy ✅ via prose_check_retry; per-query latency/cost reporting ❌ (audit doc §4 gap #1+#2); hybrid generator (route enumeração to opus) ❌ still open.
 
-## OOS hardening (refusal-discipline)
+## OOS hardening (refusal-discipline) — Phase 8 entry UNBLOCKED post-7.8
 
-Phase 7.5.3+4+5 converged on the same diagnosis across 3 eval surfaces: pipeline is excellent at finding in-corpus content (97.5% rule recall) and bad at refusing out-of-corpus content (12.2% OOS refusal). Phases 7.6.2 + 7.7 ATTACKED the gap; cumulative improvement: 0.122 → ~0.41 (3.4× lift). Gate (≥0.48) not yet cleared; Phase 8 hosting remains blocked.
+Phase 7.5.3+4+5 converged on the same diagnosis across 3 eval surfaces: pipeline is excellent at finding in-corpus content (97.5% rule recall) and bad at refusing out-of-corpus content (12.2% OOS refusal). Four phases of structural interventions (7.6.2 → 7.7 → 7.8) raised this to **0.633 = 5.2× lift**. Phase 8 hosting is no longer blocked by refusal discipline.
 
-**Shipped (Phase 7.7, [findings](study/phase-7.7-refusal-discipline-findings.md)):**
+**Shipped:**
 
-- ✅ **`_is_self_refusal()` full-text scan** — catches Pattern A (mid-paragraph refusals). +0.10pp.
-- ✅ **`citations=[]` as implicit refusal** — catches Pattern C (vacuous cite-and-verify pass). +0.14pp.
-- ❌ **SYSTEM_PROMPT iteration (category e + dispositivo-specificity rule)** — TRIED + REVERTED. Net negative on the gate metric; prompt iteration alone insufficient for Pattern B. Documented for future-me reference.
+- ✅ **Phase 7.6.2 concept-scope tag gate** ([findings](study/phase-7.6.2-scope-tags-findings.md)) — +0.062pp
+- ✅ **Phase 7.7 Fix #1 — `_is_self_refusal()` full-text scan** ([findings](study/phase-7.7-refusal-discipline-findings.md)) — +0.10pp
+- ✅ **Phase 7.7 Fix #2 — `citations=[]` as implicit refusal** — +0.14pp
+- ❌ **Phase 7.7 Fix #3 — SYSTEM_PROMPT iteration** — TRIED + REVERTED (net negative). Documented for reference.
+- ✅ **Phase 7.8 per-citation relevance gate** ([findings](study/phase-7.8-citation-relevance-findings.md)) — **+0.22pp; gate CLEARED at 0.633**. Largest single-phase lift in the series. Catches Pattern B (wrong-law citations that pass cite-and-verify).
 
-**Phase 8 entry priority (post-Phase-7.7) — gap remains; structural interventions needed:**
+**Remaining work (no longer blocking; production-acceptable):**
 
-- ⏸ **Per-citation relevance gating** (~3-5 days) — after cite-and-verify, run each cited URN + query through a small LLM judge ("does this citation address the SPECIFIC question, or just the topic?"). Reject answer if zero citations pass. Significant engineering surface; needs pre-locked gate.
-- ⏸ **Per-document scope tagging with finer grain** — = BACKLOG #1 still parked in EXPERIMENTS.md, dependent on D7 lawyer engagement.
-- ⏸ **Fine-tuning the generator on refusal examples** — large surface, deferred to Phase 9+.
-- ⏸ **OOS-C category** (intentionally tricky CRIMINAL questions deceptively close to crimes cibernéticos) — propose adding via curated subset from `eduagarcia/oab_exams` and/or `legalbench.br`. Lower priority.
+- ⏸ **Audit doc updates** — Pattern B detection rows can flip ✅; cumulative arc deserves a §3 note
+- ⏸ **Per-citation relevance as first-class eval metric** — currently a pipeline-internal signal; could be surfaced in Aggregate for telemetry
+- ⏸ **Cost optimization** — relevance gate adds ~1.6s p50 latency; parallelize with main answer call if Phase 8 SLO requires
+- ⏸ **Sabiá-as-its-own-judge sanity** — re-validate with Opus for the relevance gate if signal weakens over time
+- ⏸ **Per-document scope tagging with finer grain** — = BACKLOG #1 still parked in EXPERIMENTS.md, no longer a critical path
+- ⏸ **OOS-C category** (intentionally tricky CRIMINAL questions deceptively close to crimes cibernéticos) — propose adding via curated subset from `eduagarcia/oab_exams` and/or `legalbench.br`. Lower priority now.
 
 ## Production observability — ✅ MOSTLY COMPLETE via Phase 7.5.2 + 7.5.7
 

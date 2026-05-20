@@ -350,6 +350,15 @@ class RAGAnswer:
     # Fast-path OOS rows still get a latency reading (typically <50ms).
     # Aggregated into latency_p50/p95/p99_ms by eval runners.
     latency_ms: float = 0.0
+    # Phase 7.8 — URNs the per-citation relevance judge marked as NOT
+    # directly relevant to the query (semantic relevance, distinct from
+    # cite-and-verify URN-presence check). Populated when the relevance
+    # gate ran. When ALL verified URNs are in this list, the gate fires
+    # and refuses (refusal_reason="irrelevant-citations-implicit-refusal").
+    # When some are relevant, the answer stands and this surfaces the
+    # partial-irrelevance audit trail. Empty list = gate didn't run OR
+    # all citations passed.
+    rejected_irrelevant_citations: list[str] = field(default_factory=list)
 
 
 # ----------------------------------------------------------------------------
@@ -389,6 +398,14 @@ class RAGPipeline:
     # pre-main-LLM. Default True in production framing; tests + A/B
     # comparisons can disable.
     scope_check_enabled: bool = True
+    # Phase 7.8 — per-citation relevance gate. After cite-and-verify
+    # (URN ∈ corpus ∧ ∈ top-K), a one-shot LLM call judges whether each
+    # cited URN's chunk text DIRECTLY answers the query (vs. only being
+    # topically adjacent). If ALL verified URNs are judged irrelevant,
+    # treat as implicit refusal. Pre-locked Phase 7.8 gate: must lift
+    # oos_a_refusal_rate to ≥0.55 on legalbench OOS without regressing
+    # false_refusal_rate. Default True; tests/A-B can disable.
+    relevance_gate_enabled: bool = True
     corpus_urns: frozenset[str] = field(init=False)
 
     def __post_init__(self) -> None:
@@ -622,6 +639,41 @@ class RAGPipeline:
         # be useful for "I can't answer but here's what I found"-style UIs).
         self_refused = _is_self_refusal(answer_text)
 
+        # Phase 7.8 — per-citation relevance gate. Runs ONLY when the model
+        # produced citations AND didn't self-refuse. For each cited URN,
+        # judge whether its chunk text DIRECTLY answers the query (vs.
+        # being topically adjacent only — Pattern B from 7.5.3). If ALL
+        # verified citations are judged irrelevant, treat as implicit
+        # refusal. Bounded: 1 extra LLM call per row with citations.
+        rejected_irrelevant: list[str] = []
+        irrelevant_refused = False
+        if self.relevance_gate_enabled and not self_refused and verified:
+            from rag_leis.citation_relevance import judge_citation_relevance
+            decisions = judge_citation_relevance(
+                self.llm, query_for_pipeline, verified, self.chunks_by_urn
+            )
+            # Fold the relevance-judge call cost in immediately.
+            usage = getattr(self.llm, "last_call_usage", None)
+            if usage:
+                tokens_total["input_tokens"] += usage["input_tokens"]
+                tokens_total["output_tokens"] += usage["output_tokens"]
+                cost_total += _cost_estimate(
+                    self.llm.provider, self.llm.name,
+                    usage["input_tokens"], usage["output_tokens"],
+                )
+                llm_call_count += 1
+            if decisions:
+                rejected_irrelevant = [
+                    urn for urn, relevant in decisions.items() if not relevant
+                ]
+                # Gate fires only when EVERY verified citation is irrelevant.
+                # Partial irrelevance keeps the answer (the at-least-one-
+                # relevant citation supports the response); rejected URNs
+                # surface in `rejected_irrelevant_citations` for audit.
+                if rejected_irrelevant and len(rejected_irrelevant) == len(verified):
+                    irrelevant_refused = True
+                    self_refused = True
+
         # Phase 7.7 Fix #2 — implicit refusal via empty citations. Pattern C
         # from phase-7.5.3-legalbench-oos-findings.md: the model produces an
         # answer using "general legal knowledge" with no URN citations at
@@ -651,6 +703,7 @@ class RAGPipeline:
             refused=self_refused,
             refusal_reason=(
                 "empty-citations-implicit-refusal" if implicit_refused_empty_cites
+                else "irrelevant-citations-implicit-refusal" if irrelevant_refused
                 else "llm-self-refusal" if self_refused
                 else None
             ),
@@ -667,6 +720,7 @@ class RAGPipeline:
             tokens_used=tokens_total,
             llm_calls=llm_call_count,
             latency_ms=round((_time.monotonic() - _t0) * 1000.0, 3),
+            rejected_irrelevant_citations=rejected_irrelevant,
         )
 
     # ------------------------------------------------------------------
