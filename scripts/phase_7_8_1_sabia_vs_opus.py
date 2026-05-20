@@ -32,7 +32,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks"
 INDEX_DIR = PROJECT_ROOT / "data" / "index"
 EVAL_PATH = PROJECT_ROOT / "eval" / "legalbench_br_oos.yaml"
-OUT_PATH = PROJECT_ROOT / "eval" / "runs" / "phase-7.8.1-sabia-vs-opus.json"
+# Phase 7.8.2 — separate output path so the original 7.8.1 record stays
+# intact for historical reference. The 7.8.2 re-run captures
+# classified_type per row (the field 7.8.2 Option C needs).
+OUT_PATH = PROJECT_ROOT / "eval" / "runs" / "phase-7.8.2-legalbench-with-type.json"
+# Phase 7.9 — enable LLM cache by default for this script. Re-runs and
+# future cached-data sweeps benefit; first run pays the API bill once.
+CACHE_DIR = PROJECT_ROOT / "data" / "cache" / "llm"
 
 
 def _run_against_eval(pipe, queries, label: str) -> list[dict]:
@@ -95,10 +101,11 @@ def main() -> int:
     queries = yaml.safe_load(EVAL_PATH.read_text(encoding="utf-8"))
     print(f"  {len(queries)} rows")
 
-    print("\nBuilding pipeline (Sabiá generator)")
+    print("\nBuilding pipeline (Sabiá generator, LLM cache active)")
     pipe = load_pipeline(
         chunks_dir=CHUNKS_DIR, index_dir=INDEX_DIR,
         llm_provider="maritaca", top_k=DEFAULT_TOP_K,
+        llm_cache_dir=CACHE_DIR,
     )
 
     # --- Variant A: default (relevance_judge = None → uses self.llm = Sabiá) ---
@@ -109,7 +116,7 @@ def main() -> int:
 
     # --- Variant B: Opus as relevance judge ---
     print("\n=== Variant B: relevance gate uses Opus-4-7 ===")
-    opus = get_llm(provider="anthropic", model=DEFAULT_JUDGE_MODEL)
+    opus = get_llm(provider="anthropic", model=DEFAULT_JUDGE_MODEL, cache_dir=CACHE_DIR)
     pipe.relevance_judge = opus
     rows_opus = _run_against_eval(pipe, queries, label="opus ")
     sum_opus = _refusal_summary(rows_opus)

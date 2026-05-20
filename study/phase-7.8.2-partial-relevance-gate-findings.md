@@ -4,17 +4,18 @@
 **Eval:** `eval/answer_queries.yaml` (29 rows: 14 in-scope, 15 OOS) via the cached
 results in `eval/runs/phase-7.8.1-inscope-opus-relevance.json`.
 **Cost:** $0 — predicate sweep against cached per-row `rejected_irrelevant_citations`.
-**Verdict:** **Option C (adaptive-by-classified_type) Pareto-dominates Options A
-and B on internal eval. Legalbench validation is incomplete** — the existing
-legalbench JSON doesn't capture `classified_type`, so Option C cannot be
-projected on the harder surface from cache. Recommended variant: `C1` —
-strict ≥1.00 for `definicao`, `citacao-literal`, `enumeracao`; relaxed ≥0.80
-for `parafrase` and unclassified.
-**Status:** **Do NOT ship yet.** Internal Pareto-win is suggestive but
-legalbench projection (Option A as upper bound) shows ≥0.80 catches only 1
-of 16 leakers there (+0.021pp), below the ≥0.05pp pre-locked criterion.
-Recommend: re-run legalbench OOS once with `classified_type` captured,
-then re-validate Option C. Cost ~$2.16. See "Legalbench projection" below.
+**Verdict:** **DO NOT SHIP.** Option C Pareto-wins on internal eval (+0.20pp
+OOS recall, +0 in-scope FR) but does NOT meet criterion 3 on legalbench
+(+0.021pp, below +0.05pp threshold). The Pareto-win was surface-specific.
+Reason: 48 of 49 legalbench rows classify as `parafrase`, so Option C
+collapses to flat ≥0.80 there — the whole edge of "strict on high-confidence
+types" needs type diversity that legalbench doesn't have.
+**Status:** **Closed as not-shipped, 2026-05-19.** Recommended variant
+was C1; ship abandoned after legalbench re-run validated. See
+"Legalbench validation (post-re-run)" below for full numbers. The
+partial-relevance gate idea is parked; the same sweep harness
+(`scripts/phase_7_8_2_threshold_sweep.py`) will work against any
+future eval that captures `classified_type` + `rejected_irrelevant`.
 
 ## Headline result
 
@@ -240,21 +241,84 @@ adjacent-but-wrong chunks (where Opus grants relevance to more). The
 gate's effectiveness scales with how "off" the leaker's retrieved chunks
 are. **Internal eval may be over-representing the easy-leaker pattern.**
 
-## Sequencing recommendation
+## Legalbench validation (post-re-run, 2026-05-19)
 
-1. ✅ **Done:** Internal eval projection. Option C is a strict Pareto
-   win on this surface.
-2. ⚠️ **Partial:** Legalbench Option A projection. ≥0.80 misses criterion 3
-   by 0.029pp; ≥0.67 meets it but introduces in-scope risk.
-3. ⏸ **Required before shipping:** re-run legalbench OOS once with the
-   Phase 7.8.1 + 7.9 stack (Sabiá+Opus, cache active, `classified_type`
-   captured in serialized rows). Cost: same as the original Phase 7.8.1
-   A/B Opus variant (~$2.16). Then project C on legalbench from the
-   fresh cache; if C meets ≥0.05pp on legalbench too, ship.
-4. **Alternative if cost-sensitive:** ship the small infra change first
-   — pipeline change to write `classified_type` into the legalbench
-   eval JSON — then wait for the next legalbench run to populate it.
-   No new spend now; defer Phase 7.8.2 ship until that data exists.
+After this doc's first draft, the legalbench OOS A/B was re-run with
+`classified_type` captured per row (one-line infra change to
+`scripts/phase_7_8_1_sabia_vs_opus.py`; cache now active too). Output:
+`eval/runs/phase-7.8.2-legalbench-with-type.json`.
+
+**Option C projection on legalbench:**
+
+| Variant | Refusals | Δ vs baseline | Criterion 3 (≥+0.05pp)? |
+|---|---:|---:|:-:|
+| Baseline ≥1.00 | 30/49 (0.612) | — | — |
+| C1 (paraf=0.80, def/lit/enum=1.00) | 31/49 (0.633) | **+0.021pp** | ❌ NOT MET |
+| C2 (paraf=0.75, others=1.00) | 31/49 (0.633) | +0.021pp | ❌ |
+| C3 (enum+paraf=0.80, def/lit=1.00) | 31/49 (0.633) | +0.021pp | ❌ |
+| A T≥0.80 (flat, no per-type) | 31/49 (0.633) | +0.021pp | ❌ |
+
+**The structural issue:** `classified_type` distribution on legalbench:
+
+| Type | Count |
+|---|---:|
+| `parafrase` | **48** |
+| `enumeracao` | 1 |
+| `definicao` | 0 |
+| `citacao-literal` | 0 |
+
+48 of 49 rows classify as `parafrase`. So Option C — whose whole
+advantage is keeping STRICT thresholds on high-confidence types while
+relaxing parafrase — collapses to flat ≥0.80 here (since virtually
+everything is parafrase). The cliff observed on internal eval (3 of 5
+leakers at ≥80% irrelevant) doesn't replicate: only 1 of ~18 legalbench
+leakers crosses ≥80%.
+
+The single row C1 catches on legalbench (`celsowm/legalbench.br/388`,
+parafrase, 4/5 irrelevant) is genuine — but at +1 row on n=49, that's
++0.021pp, below the +0.05pp pre-locked criterion.
+
+**Why this matters more than the numbers suggest:** the internal Pareto
+result was driven by classified_type DIVERSITY across in-scope (4
+definicao, 2 enumeracao, 3 citacao-literal, 5 parafrase). That
+diversity lets the per-type strategy carry meaningful information.
+Legalbench's pure-parafrase distribution removes the lever entirely.
+
+The router's strong "parafrase" bias on legalbench is itself worth
+understanding — likely because legalbench questions are real exam-style
+phrasings that don't match the surface patterns of definicao/citacao-
+literal/enumeracao. But that's a Phase 7.6/7.7 follow-up, not a 7.8.2
+issue.
+
+## Decision
+
+**Phase 7.8.2 closed as NOT SHIPPED.** Reasons in order of weight:
+
+1. Criterion 3 (legalbench refusal +≥0.05pp) NOT MET under any C
+   variant. +0.021pp is well below the bar.
+2. Internal Pareto-win, while real, doesn't generalize to the
+   harder surface that matters more for Phase 8 production readiness.
+3. Sample size on internal eval (n=14 in-scope, n=15 OOS) was always
+   too small to be confidence-bounded for shipping; the legalbench
+   negative result confirms what the n was already warning us about.
+
+**Parked but not abandoned:** the harness
+(`scripts/phase_7_8_2_threshold_sweep.py`) is reusable. Any future
+eval that captures `classified_type` + `rejected_irrelevant_citations`
+can be projected through the same sweep at $0. If a larger eval set
+ever produces a classified_type distribution with structure (not
+overwhelming parafrase), Phase 7.8.2 reopens.
+
+## What changed in this revision (vs the first draft)
+
+- Verdict flipped: from "Pareto-win recommendation" to "not shipped"
+- Legalbench projection upgraded from "Option A only / can't compute C"
+  to "all C variants projected" (the missing data was just captured)
+- Sequencing recommendation removed (was assuming legalbench would
+  validate; it didn't)
+- The structural classified_type-distribution finding added — this is
+  the most generalizable observation in the doc and worth surfacing
+  for future per-type strategies
 
 ## Diagnostic / repro
 
