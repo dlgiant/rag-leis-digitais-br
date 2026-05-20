@@ -1,0 +1,56 @@
+name: Alerts
+
+# Phase 8.6 — Poll Fly's structured logs every 15 min, compute
+# rolling-window metrics, post to Slack on threshold breach.
+#
+# Stateless: every run reads logs fresh + decides PASS/ALERT.
+# Duplicates across consecutive 15-min windows are intentional —
+# they confirm an ongoing breach.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"  # every 15 minutes (best-effort; GHA jitter ~5 min)
+  workflow_dispatch:
+    inputs:
+      test_alert:
+        description: "Send a synthetic alert to verify Slack plumbing"
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: alerts
+  cancel-in-progress: true  # if a new check starts, drop the in-flight one
+
+jobs:
+  check:
+    name: Check thresholds
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install Python deps
+        # We don't need --extra voyage/server here; the alert script
+        # uses only stdlib + the test deps in the dev group.
+        run: uv sync
+
+      - name: Install flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Run alert check
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ "${{ github.event.inputs.test_alert }}" = "true" ]; then
+            uv run python -m scripts.phase_8_6_alert_check --test
+          else
+            uv run python -m scripts.phase_8_6_alert_check
+          fi

@@ -128,10 +128,19 @@ on:
 | E. GitHub Issue auto-create | `gh issue create` from the workflow. Has audit trail; integrates with project tracking. Slower (issue notification lag); not appropriate for true outages. |
 | F. SMS via Twilio | Costs money; needs phone-number SID + auth. Overkill for non-paging v1. |
 
-**Recommendation: Slack.** One secret in GHA (`SLACK_WEBHOOK_URL`),
-no library needed (`curl` or `urllib.request`), workspace-scoped
-integration via @workspace admin or self-service if the operator owns
-their workspace.
+**Recommendation: Slack — using the Slack-App-scoped Incoming
+Webhooks (NOT the deprecated custom-integrations form).**
+
+Slack has TWO distinct "Incoming Webhooks" surfaces:
+
+| Variant | Status | Identifier |
+|---|---|---|
+| **Custom Integrations Incoming Webhooks** | ❌ Deprecated since 2019 | Minted from `<workspace>.slack.com/apps/manage/custom-integrations`. Slack warns against new use; existing URLs continue to work. |
+| **Slack App Incoming Webhooks** | ✅ Current, supported | Created via `api.slack.com/apps`, scoped to a Slack App. Documented at `api.slack.com/messaging/webhooks`. Slack's official guidance for "low-volume, one-way" message posting. |
+
+Phase 8.6 uses the **App-scoped** form. The two share the
+`https://hooks.slack.com/services/...` URL shape, which is why
+they're easy to confuse.
 
 **Setup** (5 min, one-time):
 1. Visit `api.slack.com/apps` → "Create New App" → "From scratch"
@@ -142,6 +151,8 @@ their workspace.
 5. Copy the webhook URL (shape:
    `https://hooks.slack.com/services/T.../B.../xxx`)
 6. `gh secret set SLACK_WEBHOOK_URL --repo dlgiant/rag-leis-digitais-br`
+
+One secret in GHA; no library needed (stdlib `urllib.request`).
 
 **Phase 9 escalation path:** if alerting fatigue or multi-recipient
 becomes a concern, swap to PagerDuty / Opsgenie / Better Stack.
