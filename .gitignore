@@ -25,7 +25,24 @@ data/chunks/*
 # até Phase 6.3) — deve ser commitada.
 !data/chunks/tier-4/
 !data/chunks/tier-4/**
-data/index/
+# Phase 8.5.1 — tier-1/2/3 chunks committed to git so CI runners (which
+# don't have raw HTML or local builds) can deploy the production
+# container. Total ~4.2MB; tractable. Local devs may regenerate via
+# the corpus refresh pipeline at any time.
+!data/chunks/tier-1/
+!data/chunks/tier-1/**
+!data/chunks/tier-2/
+!data/chunks/tier-2/**
+!data/chunks/tier-3/
+!data/chunks/tier-3/**
+
+# data/index/ — was fully gitignored. Phase 8.5.1: allow ONLY the
+# production-config voyage index files (~30MB total) so CI deploy can
+# COPY them into the Docker image. Other index variants (bge-m3,
+# colbert, alternate text_modes) stay gitignored — they're eval-only.
+data/index/*
+!data/index/voyage-3-large__title+label+nav+caput+text.npz
+!data/index/voyage-3-large__title+label+nav+caput+text.meta.json
 # Phase 7.9 — LLM response cache. Per-machine, never committed (would
 # bloat history + every machine's calls differ). Cache regenerates on
 # demand; deleting the dir just means the next eval pays the LLM bill
