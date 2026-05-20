@@ -406,6 +406,13 @@ class RAGPipeline:
     # oos_a_refusal_rate to ≥0.55 on legalbench OOS without regressing
     # false_refusal_rate. Default True; tests/A-B can disable.
     relevance_gate_enabled: bool = True
+    # Phase 7.8.1 — optional separate LLM for the relevance gate. When
+    # None (default), the gate reuses self.llm (the generator). Settable
+    # to a different model for A/B comparison or to address the
+    # Sabiá-judging-Sabiá self-defense bias concern. The cost-fold logic
+    # in the gate handles either case (reads last_call_usage off
+    # whichever LLM made the call).
+    relevance_judge: LLM | None = None
     corpus_urns: frozenset[str] = field(init=False)
 
     def __post_init__(self) -> None:
@@ -649,16 +656,24 @@ class RAGPipeline:
         irrelevant_refused = False
         if self.relevance_gate_enabled and not self_refused and verified:
             from rag_leis.citation_relevance import judge_citation_relevance
+            # Phase 7.8.1 — use the dedicated judge if configured, else
+            # fall back to the generator. Both paths use the same call
+            # site; cost-fold reads from the active judge instance.
+            active_judge = self.relevance_judge or self.llm
             decisions = judge_citation_relevance(
-                self.llm, query_for_pipeline, verified, self.chunks_by_urn
+                active_judge, query_for_pipeline, verified, self.chunks_by_urn
             )
-            # Fold the relevance-judge call cost in immediately.
-            usage = getattr(self.llm, "last_call_usage", None)
+            # Fold the relevance-judge call cost in immediately. Important
+            # subtlety: read last_call_usage off the JUDGE LLM (not
+            # self.llm) because that's the model that just made the call.
+            # When relevance_judge is None, active_judge IS self.llm and
+            # the behavior is identical to pre-7.8.1.
+            usage = getattr(active_judge, "last_call_usage", None)
             if usage:
                 tokens_total["input_tokens"] += usage["input_tokens"]
                 tokens_total["output_tokens"] += usage["output_tokens"]
                 cost_total += _cost_estimate(
-                    self.llm.provider, self.llm.name,
+                    active_judge.provider, active_judge.name,
                     usage["input_tokens"], usage["output_tokens"],
                 )
                 llm_call_count += 1
@@ -872,6 +887,7 @@ def load_pipeline(
     llm_model: str | None = None,
     top_k: int = DEFAULT_TOP_K,
     oos_threshold: float = DEFAULT_OOS_THRESHOLD,
+    llm_cache_dir: Path | None = None,
 ) -> RAGPipeline:
     """Build a RAGPipeline from existing chunks + cached index.
 
@@ -883,6 +899,11 @@ def load_pipeline(
 
     `llm_provider` selects the LLM provider; `llm_model` overrides the
     provider's default. Provider-aware via rag_leis.llm.get_llm().
+
+    `llm_cache_dir` (Phase 7.9) activates filesystem caching for LLM
+    responses — when set, identical (system, user, tool_schema, max_tokens)
+    inputs return cached responses instead of re-billing the provider.
+    None (default) disables caching.
     """
     from rag_leis.cache import cache_is_fresh, texts_hash
 
@@ -905,7 +926,7 @@ def load_pipeline(
     doc_vecs = loaded["vecs"]
     chunks_by_urn = {c.urn: c for c in chunks}
 
-    llm = get_llm(provider=llm_provider, model=llm_model)
+    llm = get_llm(provider=llm_provider, model=llm_model, cache_dir=llm_cache_dir)
 
     return RAGPipeline(
         embedder=embedder,

@@ -867,11 +867,25 @@ def main() -> int:
         help="Optional path to dump per-row JSON for downstream analysis",
     )
     p.add_argument("--verbose", action="store_true", help="Print per-query detail")
+    p.add_argument(
+        "--llm-cache-dir",
+        default=None,
+        help=(
+            "Optional dir to cache LLM responses (both generator + judge). "
+            "Reuses identical (system, user, tool_schema, max_tokens) calls "
+            "from prior runs at $0. Typical: --llm-cache-dir data/cache/llm. "
+            "Default: no caching."
+        ),
+    )
     args = p.parse_args()
 
     load_dotenv(PROJECT_ROOT / ".env", override=False)
 
+    llm_cache_dir = Path(args.llm_cache_dir) if args.llm_cache_dir else None
+
     print(f"Loading pipeline (embedder={args.embedder}, text_mode={args.text_mode}, top_k={args.top_k})...")
+    if llm_cache_dir:
+        print(f"  LLM cache:   {llm_cache_dir}")
     pipeline = load_pipeline(
         chunks_dir=CHUNKS_DIR,
         index_dir=INDEX_DIR,
@@ -881,8 +895,12 @@ def main() -> int:
         llm_model=args.llm_model,
         top_k=args.top_k,
         oos_threshold=args.oos_threshold,
+        llm_cache_dir=llm_cache_dir,
     )
-    judge = get_llm(provider=args.judge_provider, model=args.judge_model)
+    judge = get_llm(
+        provider=args.judge_provider, model=args.judge_model,
+        cache_dir=llm_cache_dir,
+    )
     print(f"Generator: {pipeline.llm.provider}/{pipeline.llm.name}")
     print(f"Judge    : {judge.provider}/{judge.name}")
 
