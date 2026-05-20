@@ -25,6 +25,7 @@ Design notes:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -421,9 +422,24 @@ class RAGPipeline:
 
     # ------------------------------------------------------------------
 
-    def answer(self, query: str) -> RAGAnswer:
-        # Phase 7.5.7 — SRE Golden Signal #1 (latency). monotonic, not
-        # wall-clock, so NTP corrections / DST never produce negatives.
+    def answer(
+        self,
+        query: str,
+        on_event: Callable[[dict[str, Any]], None] | None = None,
+    ) -> RAGAnswer:
+        """Run the pipeline. Optionally emit stage events.
+
+        `on_event`, when provided, is called at each pipeline stage
+        boundary with a dict like `{"event": "stage", "name": "...",
+        "status": "started"|"finished", **stage_attrs}`. The Phase 10.0
+        SSE endpoint uses this to stream progress to the UI; non-
+        streaming callers omit it and behavior is unchanged.
+
+        Phase 7.5.7 — SRE Golden Signal #1 (latency). monotonic, not
+        wall-clock, so NTP corrections / DST never produce negatives.
+        """
+        # Local no-op so call sites don't need to check `if on_event:`
+        _emit = on_event if on_event is not None else (lambda _e: None)
         import time as _time
         _t0 = _time.monotonic()
 
@@ -448,6 +464,7 @@ class RAGPipeline:
             query_for_pipeline = query
 
         # Classifier runs on the redacted query (preserves semantic shape).
+        _emit({"event": "stage", "name": "classify", "status": "started"})
         with obs.span("pipeline.classify") as _s:
             if self.adaptive_top_k:
                 classified = classify_query(query_for_pipeline)
@@ -457,12 +474,21 @@ class RAGPipeline:
                 effective_top_k = self.top_k
             _s.set_attribute("classified_type", classified or "unclassified")
             _s.set_attribute("effective_top_k", effective_top_k)
+        _emit({
+            "event": "stage", "name": "classify", "status": "finished",
+            "classified_type": classified, "effective_top_k": effective_top_k,
+        })
 
+        _emit({"event": "stage", "name": "retrieve", "status": "started"})
         with obs.span("pipeline.retrieve", top_k=effective_top_k) as _s:
             retrieved = self._retrieve(query_for_pipeline, effective_top_k)
             top1_score = retrieved[0][1] if retrieved else 0.0
             _s.set_attribute("top_1_cosine", top1_score)
             _s.set_attribute("n_retrieved", len(retrieved))
+        _emit({
+            "event": "stage", "name": "retrieve", "status": "finished",
+            "top_1_cosine": top1_score, "n_retrieved": len(retrieved),
+        })
 
         pii_types = sorted(rq.pii_types_found) if rq else []
 
@@ -572,8 +598,11 @@ class RAGPipeline:
         )
         system_prompt = SYSTEM_PROMPT + ("\n\n" + snippet if snippet else "")
         user_msg = f"Pergunta: {query_for_pipeline}\n\nFontes:\n{context}"
+        _emit({"event": "stage", "name": "generate", "status": "started",
+               "provider": self.llm.provider, "model": self.llm.name})
         with obs.span("pipeline.llm.generate", provider=self.llm.provider, model=self.llm.name):
             result = self.llm.complete_structured(system_prompt, user_msg, ANSWER_TOOL)
+        _emit({"event": "stage", "name": "generate", "status": "finished"})
 
         # Phase 7.5.2 — accumulate token usage + cost across LLM calls.
         # First call (initial answer). Retry adds to the same counters below.
@@ -601,11 +630,14 @@ class RAGPipeline:
         answer_text = str(result.get("answer", ""))
         cited = [str(u) for u in result.get("citations", [])]
         retrieved_urns = frozenset(u for u, _ in retrieved)
+        _emit({"event": "stage", "name": "verify", "status": "started"})
         with obs.span("pipeline.verify") as _s:
             verified, rejected = verify_citations(cited, retrieved_urns, self.corpus_urns)
             _s.set_attribute("n_cited", len(cited))
             _s.set_attribute("n_verified", len(verified))
             _s.set_attribute("n_rejected", len(rejected))
+        _emit({"event": "stage", "name": "verify", "status": "finished",
+               "n_cited": len(cited), "n_verified": len(verified), "n_rejected": len(rejected)})
 
         # Phase 5.3: prose-vs-URN consistency check. If the answer prose
         # references articles/incisos/paragraphs that don't match any
@@ -672,6 +704,9 @@ class RAGPipeline:
             # fall back to the generator. Both paths use the same call
             # site; cost-fold reads from the active judge instance.
             active_judge = self.relevance_judge or self.llm
+            _emit({"event": "stage", "name": "relevance_judge", "status": "started",
+                   "provider": active_judge.provider, "model": active_judge.name,
+                   "n_citations": len(verified)})
             with obs.span(
                 "pipeline.relevance_judge",
                 provider=active_judge.provider, model=active_judge.name,
@@ -680,6 +715,8 @@ class RAGPipeline:
                 decisions = judge_citation_relevance(
                     active_judge, query_for_pipeline, verified, self.chunks_by_urn
                 )
+            _emit({"event": "stage", "name": "relevance_judge", "status": "finished",
+                   "n_decisions": len(decisions)})
             # Fold the relevance-judge call cost in immediately. Important
             # subtlety: read last_call_usage off the JUDGE LLM (not
             # self.llm) because that's the model that just made the call.

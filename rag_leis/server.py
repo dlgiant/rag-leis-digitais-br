@@ -29,6 +29,8 @@ Override defaults via env vars:
 """
 from __future__ import annotations
 
+import asyncio
+import json
 import os
 import secrets
 import time
@@ -36,11 +38,12 @@ import uuid
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
+from typing import Any
 
 import structlog
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel, Field
 from slowapi import Limiter
@@ -531,3 +534,127 @@ async def ask(
         pipeline_latency_ms=ans.latency_ms,
     )
     return _rag_answer_to_response(ans)
+
+
+# ============================================================================
+# Phase 10.0 — Streaming endpoint (SSE)
+# ============================================================================
+#
+# Same auth + rate-limit gates as /v1/ask. Emits Server-Sent Events for
+# each pipeline stage boundary so the UI can show progressive state
+# instead of staring at 13s of dead air. Final event ("complete")
+# contains the full AskResponse payload — UI doesn't need to track
+# intermediate state to render the final answer.
+#
+# Current limitation (Phase 10.0 v1): the generate stage emits
+# "started" then "finished" with ~9s of latency in between (a single
+# Maritaca call). Token-by-token streaming of the answer text is a
+# Phase 10.0.1 follow-up; the architecture supports it (just add finer
+# events between started/finished).
+
+
+def _sse_format(event_dict: dict[str, Any]) -> bytes:
+    """Format a dict as a single SSE 'message' frame.
+
+    SSE wire format: each message is `data: <json>\\n\\n`. We use a
+    single `data:` line per event; clients use `event_dict["event"]`
+    or `event_dict["name"]` to dispatch.
+    """
+    return f"data: {json.dumps(event_dict)}\n\n".encode()
+
+
+@app.post("/v1/ask/stream")
+@limiter.limit(_rate_limit_cap)
+async def ask_stream(
+    request: Request,
+    payload: AskRequest,
+    api_key: str = Depends(verify_api_key),
+    pipeline: RAGPipeline = Depends(get_pipeline),  # noqa: B008
+):
+    """Streaming variant of /v1/ask.
+
+    Returns text/event-stream. Sends `{"event": "stage", ...}` events
+    at each pipeline boundary, then `{"event": "complete", "answer":
+    AskResponse}` when done. Final event includes the same payload
+    `/v1/ask` would return — clients only need to parse "complete"
+    to render the answer.
+
+    Phase 10.0 stage events are NOT token-by-token within `generate`;
+    that's a planned Phase 10.0.1 follow-up. v1 ships the endpoint
+    shape correct so the UI work can start.
+    """
+    log = obs.get_logger()
+    loop = asyncio.get_event_loop()
+    queue: asyncio.Queue = asyncio.Queue()
+    SENTINEL = object()  # marks pipeline thread completion
+
+    def on_event(e: dict[str, Any]) -> None:
+        """Called synchronously from pipeline thread. Bridges to the
+        asyncio event loop's queue via call_soon_threadsafe."""
+        loop.call_soon_threadsafe(queue.put_nowait, e)
+
+    def run_pipeline() -> tuple[RAGAnswer | None, Exception | None]:
+        try:
+            ans = pipeline.answer(payload.query, on_event=on_event)
+            return ans, None
+        except Exception as exc:
+            return None, exc
+        finally:
+            loop.call_soon_threadsafe(queue.put_nowait, SENTINEL)
+
+    # Kick off the pipeline in an executor thread; we'll yield events
+    # from the queue as they arrive, then a final "complete" event
+    # with the full RAGAnswer.
+    pipeline_future = loop.run_in_executor(None, run_pipeline)
+
+    async def event_generator():
+        try:
+            while True:
+                item = await queue.get()
+                if item is SENTINEL:
+                    break
+                yield _sse_format(item)
+            # Pipeline thread is done — pull its result + emit final event
+            ans, exc = await pipeline_future
+            if exc is not None:
+                log.error(
+                    "pipeline.error", error_type=type(exc).__name__,
+                    query_length=len(payload.query),
+                )
+                yield _sse_format({"event": "error",
+                                   "detail": f"pipeline error: {type(exc).__name__}"})
+                return
+            assert ans is not None
+            # Log just like /v1/ask does (Phase 8.3 schema)
+            log.info(
+                "pipeline.answered",
+                query_length=len(payload.query),
+                classified_type=ans.classified_type,
+                top_1_cosine=ans.raw_retrieval[0][1] if ans.raw_retrieval else None,
+                n_citations=len(ans.citations),
+                n_rejected_irrelevant=len(ans.rejected_irrelevant_citations),
+                refused=ans.refused,
+                refusal_reason=ans.refusal_reason,
+                cost_estimate_usd=ans.cost_estimate_usd,
+                llm_calls=ans.llm_calls,
+                tokens_input=(ans.tokens_used or {}).get("input_tokens", 0),
+                tokens_output=(ans.tokens_used or {}).get("output_tokens", 0),
+                pipeline_latency_ms=ans.latency_ms,
+                streaming=True,
+            )
+            response = _rag_answer_to_response(ans)
+            yield _sse_format({"event": "complete",
+                               "answer": response.model_dump()})
+        except asyncio.CancelledError:
+            # Client disconnected; let the pipeline thread finish in
+            # the background (no good way to cancel it mid-LLM-call).
+            raise
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",  # disable nginx buffering if behind one
+        },
+    )
