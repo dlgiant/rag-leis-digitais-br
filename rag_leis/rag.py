@@ -125,12 +125,18 @@ DEFAULT_OOS_THRESHOLD = 0.40
 DEFAULT_TEXT_MODE = "title+label+nav+caput+text"
 DEFAULT_EMBEDDER = "voyage-3-large"
 
-# Prefix patterns that mean "the LLM examined the context and decided it
-# can't answer". Anchored to the start of `answer` because the system
-# prompt instructs the model to LEAD with this literal sentence on
-# refusals — anchoring avoids matching inline "não há informação" mentions
-# that appear within real answers.
-_SELF_REFUSAL_PREFIXES = (
+# Phrase patterns that mean "the LLM examined the context and decided it
+# can't answer". The system prompt instructs the model to LEAD with one
+# of these phrases on refusals, but Phase 7.5.3 (legalbench OOS) found
+# the model often produces the refusal CONCLUSION mid-paragraph after a
+# preamble explaining what it tried — Pattern A in the findings doc.
+#
+# These specific phrasings include qualifiers like "suficiente" /
+# "fornecidas" / "possível encontrar" that make false positives in real
+# answers very unlikely. The guard test
+# `test_real_answer_mentioning_no_info_inline_is_NOT_refusal` covers
+# the "não há informação" plain-substring failure mode.
+_SELF_REFUSAL_PHRASES = (
     "não há informação suficiente",
     "não há informações suficientes",
     "não foi possível encontrar",
@@ -140,10 +146,18 @@ _SELF_REFUSAL_PREFIXES = (
 
 
 def _is_self_refusal(answer_text: str) -> bool:
+    """True when the LLM is signaling it couldn't answer from the given
+    sources, regardless of WHERE in the answer the signal appears.
+
+    Phase 7.7 (2026-05-19) widened this from a 120-char prefix scan to a
+    full-text substring search — Pattern A in `phase-7.5.3-legalbench-oos-findings.md`
+    showed the model often refuses mid-paragraph after a preamble, and
+    the old prefix-only check missed those rows entirely.
+    """
     if not answer_text:
         return False
-    head = answer_text.strip().lower()[:120]
-    return any(head.startswith(p) for p in _SELF_REFUSAL_PREFIXES)
+    text = answer_text.lower()
+    return any(phrase in text for phrase in _SELF_REFUSAL_PHRASES)
 
 
 # ----------------------------------------------------------------------------
@@ -608,6 +622,19 @@ class RAGPipeline:
         # be useful for "I can't answer but here's what I found"-style UIs).
         self_refused = _is_self_refusal(answer_text)
 
+        # Phase 7.7 Fix #2 — implicit refusal via empty citations. Pattern C
+        # from phase-7.5.3-legalbench-oos-findings.md: the model produces an
+        # answer using "general legal knowledge" with no URN citations at
+        # all. cite-and-verify passes vacuously (nothing to verify), so the
+        # row counted as a non-refusal answer despite being unverifiable.
+        # Treat empty `verified` on a non-self-refusal answer as an implicit
+        # refusal — if the model couldn't ground anything in the corpus, the
+        # answer can't be trusted regardless of how confident the prose is.
+        implicit_refused_empty_cites = False
+        if not self_refused and not verified:
+            implicit_refused_empty_cites = True
+            self_refused = True
+
         flagged = self._collect_flagged_vigencia(verified)
         hier_warn = self._compute_hierarchy_warning(verified, retrieved)
         sources_dates = self._collect_sources_consulted_at(verified)
@@ -622,7 +649,11 @@ class RAGPipeline:
             unverified_claims=[str(c) for c in result.get("unverified_claims", [])],
             rejected_citations=rejected,
             refused=self_refused,
-            refusal_reason="llm-self-refusal" if self_refused else None,
+            refusal_reason=(
+                "empty-citations-implicit-refusal" if implicit_refused_empty_cites
+                else "llm-self-refusal" if self_refused
+                else None
+            ),
             raw_retrieval=retrieved,
             flagged_vigencia=flagged,
             classified_type=classified,

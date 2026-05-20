@@ -131,16 +131,22 @@ Most items below superseded by subsequent phases. Status updates:
 - ⏸ **Cosine fast-path threshold (0.40) calibration** — still uncalibrated; LLM self-refusal is primary signal but cosine gate worth a synthetic adversarial test.
 - ⏸ **Phase 3 candidates** (most superseded): retry policy ✅ via prose_check_retry; per-query latency/cost reporting ❌ (audit doc §4 gap #1+#2); hybrid generator (route enumeração to opus) ❌ still open.
 
-## OOS hardening (refusal-discipline — NEW PRIORITY post-Phase 7.5)
+## OOS hardening (refusal-discipline)
 
-Phase 7.5.3+4+5 converged on the same diagnosis across 3 eval surfaces: pipeline is excellent at finding in-corpus content (97.5% rule recall) and bad at refusing out-of-corpus content (12.2% OOS refusal). The internal eval set overstated refusal accuracy by 6.7× — see [`study/phase-7.5-findings.md`](study/phase-7.5-findings.md) Finding 2.
+Phase 7.5.3+4+5 converged on the same diagnosis across 3 eval surfaces: pipeline is excellent at finding in-corpus content (97.5% rule recall) and bad at refusing out-of-corpus content (12.2% OOS refusal). Phases 7.6.2 + 7.7 ATTACKED the gap; cumulative improvement: 0.122 → ~0.41 (3.4× lift). Gate (≥0.48) not yet cleared; Phase 8 hosting remains blocked.
 
-**Phase 8 entry priority (refusal-discipline must improve BEFORE hosting):**
+**Shipped (Phase 7.7, [findings](study/phase-7.7-refusal-discipline-findings.md)):**
 
-- 🚨 **SYSTEM_PROMPT iteration against 49 legalbench OOS rows** (~1-2d) — close at least half the 88pp refusal gap before any hosting work. Eval surface already exists (`eval/legalbench_br_oos.yaml`); the validation regimen is defined. Specific 3 fixes documented in `phase-7.5.3-legalbench-oos-findings.md` §3.
-- 🚨 **`_is_self_refusal()` improvement** (~30 min) — scan full answer text, not just first 120 chars. Catches Pattern A from 7.5.3 (verbal refusal without flag).
-- 🚨 **Require `len(citations) > 0` for non-refusal valid answer** (~30 min) — Catches Pattern C (empty citations vacuously passing cite-and-verify).
-- ⏸ **OOS-C category** (intentionally tricky CRIMINAL questions deceptively close to crimes cibernéticos) — propose adding via curated subset of CRIMINAL questions from `eduagarcia/oab_exams` and/or `legalbench.br`. Lower priority than the 3 above.
+- ✅ **`_is_self_refusal()` full-text scan** — catches Pattern A (mid-paragraph refusals). +0.10pp.
+- ✅ **`citations=[]` as implicit refusal** — catches Pattern C (vacuous cite-and-verify pass). +0.14pp.
+- ❌ **SYSTEM_PROMPT iteration (category e + dispositivo-specificity rule)** — TRIED + REVERTED. Net negative on the gate metric; prompt iteration alone insufficient for Pattern B. Documented for future-me reference.
+
+**Phase 8 entry priority (post-Phase-7.7) — gap remains; structural interventions needed:**
+
+- ⏸ **Per-citation relevance gating** (~3-5 days) — after cite-and-verify, run each cited URN + query through a small LLM judge ("does this citation address the SPECIFIC question, or just the topic?"). Reject answer if zero citations pass. Significant engineering surface; needs pre-locked gate.
+- ⏸ **Per-document scope tagging with finer grain** — = BACKLOG #1 still parked in EXPERIMENTS.md, dependent on D7 lawyer engagement.
+- ⏸ **Fine-tuning the generator on refusal examples** — large surface, deferred to Phase 9+.
+- ⏸ **OOS-C category** (intentionally tricky CRIMINAL questions deceptively close to crimes cibernéticos) — propose adding via curated subset from `eduagarcia/oab_exams` and/or `legalbench.br`. Lower priority.
 
 ## Production observability — ✅ MOSTLY COMPLETE via Phase 7.5.2 + 7.5.7
 

@@ -67,3 +67,59 @@ def test_real_answer_does_not_match():
 def test_leading_whitespace_tolerated():
     """The model sometimes leads with a newline or a space."""
     assert _is_self_refusal("  \n  Não há informação suficiente nas fontes.")
+
+
+# ----------------------------------------------------------------------------
+# Phase 7.7 — Pattern A from phase-7.5.3-legalbench-oos-findings.md §3:
+# the model refuses mid-paragraph after a preamble. The old 120-char prefix
+# scan missed these entirely. The full-text scan must catch them.
+# ----------------------------------------------------------------------------
+
+
+def test_pattern_a_refusal_after_preamble_caught():
+    """Real failure case from 7.5.3 legalbench/182 — model explains what
+    it tried, then concludes with the canonical refusal phrase. The whole
+    body needs to be scanned, not just the first 120 chars."""
+    text = (
+        "O momento adequado para arguir a incompetência territorial "
+        "está previsto no Código de Processo Civil, norma que não está "
+        "presente nas fontes fornecidas. As fontes constitucionais "
+        "(CF/88) não disciplinam o momento processual específico para "
+        "essa arguição. Portanto, não há informação suficiente nas "
+        "fontes fornecidas para responder à pergunta com precisão."
+    )
+    assert _is_self_refusal(text)
+
+
+def test_pattern_a_refusal_with_alternative_phrasing_caught():
+    """Same shape but with 'as fontes fornecidas não' appearing
+    mid-paragraph after a preamble."""
+    text = (
+        "Considerando o conteúdo do art. 5 CF, observamos que a "
+        "matéria orçamentária requer fundamentação específica. "
+        "Conforme análise das normas indexadas, as fontes fornecidas "
+        "não contêm o dispositivo aplicável ao caso."
+    )
+    assert _is_self_refusal(text)
+
+
+def test_substantive_answer_with_inline_no_info_still_not_refusal():
+    """Stronger version of the existing guard: a long real answer that
+    contains 'não há informação' (without 'suficiente') must NOT be
+    flagged — the qualifier 'suficiente' is what disambiguates."""
+    text = (
+        "A LGPD (Lei 13.709/2018) trata de dados pessoais em seu art. 5, "
+        "I, definindo o conceito. Não há informação específica no caput "
+        "sobre prazo de retenção; o art. 16 trata dessa hipótese. "
+        "Adicionalmente, o art. 7 enumera as bases legais. Portanto, "
+        "a resposta requer leitura combinada dos arts. 5, 7 e 16."
+    )
+    assert not _is_self_refusal(text)
+
+
+def test_refusal_with_long_preamble_caught():
+    """Edge case: a very long preamble (>500 chars) before the refusal
+    phrase. Old prefix-scan would miss; new full-text scan must catch."""
+    preamble = "A questão envolve análise complexa de múltiplos dispositivos. " * 8
+    text = preamble + " Portanto, não há informação suficiente nas fontes."
+    assert _is_self_refusal(text)
