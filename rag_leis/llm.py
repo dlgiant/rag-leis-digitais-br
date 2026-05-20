@@ -22,11 +22,14 @@ but overridable per-instance.
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 from anthropic import Anthropic
 from anthropic.types import TextBlock, ToolUseBlock
 from dotenv import load_dotenv
+
+from rag_leis import llm_cache
 
 load_dotenv()
 
@@ -73,7 +76,12 @@ class LLM(Protocol):
 class AnthropicLLM:
     provider: str = "anthropic"
 
-    def __init__(self, model: str = DEFAULT_GENERATOR_MODEL, api_key: str | None = None):
+    def __init__(
+        self,
+        model: str = DEFAULT_GENERATOR_MODEL,
+        api_key: str | None = None,
+        cache_dir: Path | None = None,
+    ):
         key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not key:
             raise RuntimeError(
@@ -87,6 +95,10 @@ class AnthropicLLM:
         # call to attribute cost. Reset to None before each call to detect
         # "did the LLM actually report usage?"
         self.last_call_usage: dict[str, int] | None = None
+        # Phase 7.9 — opt-in filesystem cache. None = no caching (existing
+        # behavior preserved). A Path activates the cache for both complete()
+        # and complete_structured(). See rag_leis.llm_cache module docstring.
+        self.cache_dir = cache_dir
 
     def complete(
         self,
@@ -95,6 +107,17 @@ class AnthropicLLM:
         max_tokens: int = 1024,
         temperature: float | None = None,
     ) -> str:
+        if self.cache_dir is not None:
+            key = llm_cache.cache_key(
+                provider=self.provider, model=self.model,
+                system=system, user=user, tool_schema=None,
+                max_tokens=max_tokens, kind="complete",
+            )
+            hit = llm_cache.lookup(self.cache_dir, key)
+            if hit is not None:
+                response, usage = hit
+                self.last_call_usage = usage
+                return str(response)
         kwargs: dict[str, Any] = {
             "model": self.model,
             "max_tokens": max_tokens,
@@ -113,7 +136,15 @@ class AnthropicLLM:
         # Pull all text blocks (typically one) and join — tool blocks shouldn't
         # appear here since we didn't pass `tools=`.
         parts = [b.text for b in resp.content if isinstance(b, TextBlock)]
-        return "".join(parts)
+        text = "".join(parts)
+        if self.cache_dir is not None:
+            llm_cache.store(
+                cache_dir=self.cache_dir, key=key, kind="complete",
+                provider=self.provider, model=self.model,
+                response=text, usage=self.last_call_usage,
+                key_inputs={"system": system, "user": user, "max_tokens": max_tokens},
+            )
+        return text
 
     def complete_structured(
         self,
@@ -129,6 +160,17 @@ class AnthropicLLM:
         the supplied `input_schema`. Raises `RuntimeError` if no tool block
         comes back (shouldn't happen with `tool_choice`, but we guard).
         """
+        if self.cache_dir is not None:
+            key = llm_cache.cache_key(
+                provider=self.provider, model=self.model,
+                system=system, user=user, tool_schema=tool_schema,
+                max_tokens=max_tokens, kind="structured",
+            )
+            hit = llm_cache.lookup(self.cache_dir, key)
+            if hit is not None:
+                response, usage = hit
+                self.last_call_usage = usage
+                return dict(response) if isinstance(response, dict) else {}
         kwargs: dict[str, Any] = {
             "model": self.model,
             "max_tokens": max_tokens,
@@ -147,25 +189,46 @@ class AnthropicLLM:
         for block in resp.content:
             if isinstance(block, ToolUseBlock) and block.name == tool_schema["name"]:
                 # block.input is already a parsed dict (Anthropic SDK validates).
-                return dict(block.input) if isinstance(block.input, dict) else {}
+                response = dict(block.input) if isinstance(block.input, dict) else {}
+                if self.cache_dir is not None:
+                    llm_cache.store(
+                        cache_dir=self.cache_dir, key=key, kind="structured",
+                        provider=self.provider, model=self.model,
+                        response=response, usage=self.last_call_usage,
+                        key_inputs={
+                            "system": system, "user": user,
+                            "tool_name": tool_schema["name"],
+                            "max_tokens": max_tokens,
+                        },
+                    )
+                return response
         raise RuntimeError(
             f"LLM did not return a tool_use block for {tool_schema['name']!r}; "
             f"stop_reason={resp.stop_reason!r}"
         )
 
 
-def get_llm(provider: str = "anthropic", model: str | None = None) -> LLM:
+def get_llm(
+    provider: str = "anthropic",
+    model: str | None = None,
+    cache_dir: Path | None = None,
+) -> LLM:
     """Factory: construct an LLM by provider name.
 
     `model=None` uses each provider's default generator model. Use
     DEFAULT_JUDGE_MODEL etc. directly when you need a non-default.
+
+    `cache_dir=None` (default) disables LLM-response caching. Pass a
+    Path to activate filesystem caching (see rag_leis.llm_cache). Eval
+    runners typically pass `data/cache/llm` to amortize the cost of
+    re-runs with unchanged inputs.
     """
     if provider == "anthropic":
-        return AnthropicLLM(model=model or DEFAULT_GENERATOR_MODEL)
+        return AnthropicLLM(model=model or DEFAULT_GENERATOR_MODEL, cache_dir=cache_dir)
     if provider == "maritaca":
         # Imported lazily so callers without openai installed can still
         # use the Anthropic path.
         from rag_leis.maritaca import MaritacaLLM
 
-        return MaritacaLLM(model=model)
+        return MaritacaLLM(model=model, cache_dir=cache_dir)
     raise ValueError(f"Unknown LLM provider: {provider!r}. Known: anthropic, maritaca.")
