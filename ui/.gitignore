@@ -3,6 +3,9 @@ dist/
 .astro/
 node_modules/
 
+# Vercel adapter build output + local Vercel project link
+.vercel/
+
 # Local env overrides
 .env
 .env.local

@@ -15,24 +15,34 @@ const EXAMPLES = [
 
 <Layout title="rag-leis demo — perguntas sobre leis digitais brasileiras">
   <main>
-    <header>
+    <header class="page-header">
       <h1>rag-leis<span class="muted">-digitais-br</span></h1>
       <p class="tagline">
-        Demo de RAG sobre leis digitais brasileiras (LGPD, Marco Civil,
-        Lei do Software e correlatas).
+        RAG sobre leis digitais brasileiras: LGPD, Marco Civil, Lei
+        do Software e correlatas.
       </p>
     </header>
 
-    <section class="notice" aria-label="Aviso de privacidade">
-      <strong>⚠️ Demo:</strong> esta é uma versão de demonstração. As
-      consultas são processadas mas não são associadas a contas de
-      usuário. <strong>Não envie dados pessoais reais</strong> (CPF,
-      CNPJ, nomes de terceiros). Respostas são geradas por IA com
-      citações a artigos de lei; <strong>verifique cada citação</strong>
-      antes de confiar.
-    </section>
+    <details class="notice" open>
+      <summary>
+        <span class="notice-icon" aria-hidden="true">ℹ</span>
+        <span class="notice-summary-text">Aviso sobre o demo</span>
+        <span class="notice-toggle" aria-hidden="true"></span>
+      </summary>
+      <div class="notice-body">
+        <p>
+          Esta é uma versão de demonstração. As consultas são
+          processadas mas não são associadas a contas de usuário.
+        </p>
+        <ul>
+          <li><strong>Não envie dados pessoais reais</strong> (CPF, CNPJ, nomes de terceiros).</li>
+          <li>Respostas geradas por IA — <strong>verifique cada citação</strong> antes de confiar.</li>
+          <li>O serviço é hospedado no Brasil (Fly.io · São Paulo) por questões de conformidade LGPD.</li>
+        </ul>
+      </div>
+    </details>
 
-    <section class="chat">
+    <section class="chat-input">
       <form id="askForm">
         <label for="queryInput" class="visually-hidden">Sua pergunta</label>
         <textarea
@@ -49,62 +59,75 @@ const EXAMPLES = [
           <button type="submit" id="askBtn">Perguntar</button>
         </div>
       </form>
+    </section>
 
-      <details class="examples">
-        <summary>Experimente uma destas perguntas</summary>
-        <ul>
-          {EXAMPLES.map((q) => <li><button type="button" class="example-btn" data-query={q}>{q}</button></li>)}
-        </ul>
-      </details>
+    <!-- Single result component: holds the in-progress stepper, the
+         eventual answer, and the refusal-state UI. One card, three
+         possible states (running / answered / refused). -->
+    <article id="result" class="result hidden" aria-live="polite">
+      <header class="result-progress">
+        <ol class="steps" id="steps">
+          <li class="step" data-stage="classify"><span class="step-dot"></span>Classificar</li>
+          <li class="step" data-stage="retrieve"><span class="step-dot"></span>Buscar</li>
+          <li class="step" data-stage="generate"><span class="step-dot"></span>Gerar resposta</li>
+          <li class="step" data-stage="verify"><span class="step-dot"></span>Verificar</li>
+          <li class="step" data-stage="relevance_judge"><span class="step-dot"></span>Avaliar</li>
+        </ol>
+        <span id="elapsed" class="elapsed muted small"></span>
+      </header>
 
-      <div id="status" class="status hidden" aria-live="polite"></div>
-
-      <article id="answer" class="answer hidden">
-        <header class="answer-header">
-          <h2>Resposta</h2>
-          <span id="elapsed" class="muted small"></span>
-        </header>
+      <section id="answerBody" class="result-body hidden">
         <div id="answerText" class="answer-text"></div>
         <section id="citationsSection" class="citations hidden">
           <h3>Citações</h3>
           <ul id="citationsList"></ul>
         </section>
-        <section id="refusalSection" class="refusal hidden">
-          <p id="refusalText"></p>
-        </section>
-      </article>
-    </section>
+      </section>
 
-    <footer>
+      <section id="refusalSection" class="result-refusal hidden">
+        <p id="refusalText"></p>
+      </section>
+
+      <section id="errorSection" class="result-error hidden">
+        <p id="errorText"></p>
+      </section>
+    </article>
+
+    <details class="examples" id="examplesEl">
+      <summary>Experimente uma destas perguntas</summary>
+      <ul>
+        {EXAMPLES.map((q) => <li><button type="button" class="example-btn" data-query={q}>{q}</button></li>)}
+      </ul>
+    </details>
+
+    <footer class="page-footer">
       <p>
         Código:
         <a href="https://github.com/dlgiant/rag-leis-digitais-br" target="_blank" rel="noopener">
           github.com/dlgiant/rag-leis-digitais-br
         </a>
       </p>
-      <p class="muted small">
-        Hospedado no Brasil (Fly.io · São Paulo) por questões de
-        conformidade LGPD. Esta interface não armazena suas perguntas
-        além do log estruturado do servidor (sem identificação
-        pessoal).
-      </p>
     </footer>
   </main>
 
   <style>
     main {
-      max-width: 760px;
+      max-width: 780px;
       margin: 0 auto;
-      padding: 2rem 1rem 4rem;
+      padding: 3rem 1.25rem 4rem;
+      font-size: 17px;
     }
-    header {
-      margin-bottom: 1.5rem;
+
+    /* ---------- Header ---------- */
+    .page-header {
+      margin-bottom: 2rem;
     }
     h1 {
       margin: 0;
-      font-size: 1.75rem;
+      font-size: 2rem;
       font-weight: 700;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
     }
     h1 .muted {
       color: var(--muted);
@@ -113,41 +136,118 @@ const EXAMPLES = [
     .tagline {
       margin: 0.5rem 0 0;
       color: var(--muted);
-      font-size: 0.95rem;
-    }
-    .notice {
-      background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
-      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-      border-radius: 8px;
-      padding: 0.875rem 1rem;
-      margin-bottom: 1.5rem;
-      font-size: 0.9rem;
+      font-size: 1rem;
       line-height: 1.5;
     }
-    .chat {
-      margin-bottom: 2rem;
+
+    /* ---------- Collapsible notice ---------- */
+    .notice {
+      background: color-mix(in srgb, var(--accent) 6%, var(--bg-card));
+      border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+      transition: background 0.15s ease;
+    }
+    .notice summary {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      list-style: none;
+      user-select: none;
+    }
+    .notice summary::-webkit-details-marker {
+      display: none;
+    }
+    .notice-icon {
+      flex-shrink: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-style: italic;
+      font-weight: 700;
+      font-size: 0.875rem;
+    }
+    .notice-summary-text {
+      flex-grow: 1;
+    }
+    .notice-toggle {
+      flex-shrink: 0;
+      width: 1rem;
+      height: 1rem;
+      position: relative;
+      transition: transform 0.15s ease;
+    }
+    .notice-toggle::before,
+    .notice-toggle::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0.75rem;
+      height: 1.5px;
+      background: var(--muted);
+      transform: translate(-50%, -50%);
+    }
+    .notice-toggle::after {
+      transform: translate(-50%, -50%) rotate(90deg);
+      transition: transform 0.15s ease;
+    }
+    .notice[open] .notice-toggle::after {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    .notice-body {
+      padding: 0 1rem 1rem 3.25rem;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+    .notice-body p {
+      margin: 0 0 0.5rem;
+    }
+    .notice-body ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+    .notice-body li {
+      margin-bottom: 0.25rem;
+    }
+
+    /* ---------- Chat input ---------- */
+    .chat-input {
+      margin-bottom: 1.5rem;
     }
     #askForm {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.75rem;
     }
     textarea {
       width: 100%;
-      padding: 0.75rem;
+      padding: 1rem 1.125rem;
       font-family: inherit;
       font-size: 1rem;
+      line-height: 1.5;
       background: var(--bg-card);
       color: var(--fg);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 12px;
       resize: vertical;
-      min-height: 80px;
+      min-height: 88px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     textarea:focus {
-      outline: 2px solid var(--accent);
-      outline-offset: 1px;
+      outline: none;
       border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
     }
     .form-row {
       display: flex;
@@ -156,31 +256,189 @@ const EXAMPLES = [
       gap: 1rem;
     }
     button {
-      padding: 0.6rem 1.25rem;
-      font-size: 1rem;
+      padding: 0.7rem 1.5rem;
+      font-size: 0.95rem;
       font-family: inherit;
       cursor: pointer;
-      border-radius: 6px;
+      border-radius: 8px;
       border: 1px solid var(--accent);
       background: var(--accent);
       color: white;
       font-weight: 500;
+      transition: filter 0.15s ease, transform 0.05s ease;
     }
     button:hover:not(:disabled) {
-      filter: brightness(1.1);
+      filter: brightness(1.08);
+    }
+    button:active:not(:disabled) {
+      transform: translateY(1px);
     }
     button:disabled {
-      opacity: 0.5;
+      opacity: 0.55;
       cursor: not-allowed;
     }
+
+    /* ---------- Result card (single component for loading + answer) ---------- */
+    .result {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .result.hidden {
+      display: none;
+    }
+    .result-progress {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    .result-progress.done-final {
+      /* When the result is complete, soften the stepper so attention
+         shifts to the answer below. */
+      opacity: 0.7;
+    }
+    .steps {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem 0.75rem;
+      flex-grow: 1;
+      font-size: 0.825rem;
+    }
+    .step {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--muted);
+      transition: color 0.2s ease;
+    }
+    .step-dot {
+      display: inline-block;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .step.running {
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .step.running .step-dot {
+      background: var(--accent);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .step.done {
+      color: var(--success);
+    }
+    .step.done .step-dot {
+      background: var(--success);
+    }
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent);
+      }
+      50% {
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 0%, transparent);
+      }
+    }
+    .elapsed {
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .result-body.hidden,
+    .result-refusal.hidden,
+    .result-error.hidden,
+    .citations.hidden {
+      display: none;
+    }
+    .answer-text {
+      white-space: pre-wrap;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .citations {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .citations h3 {
+      margin: 0 0 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    .citations ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .citations li {
+      padding: 0.3rem 0;
+      font-size: 0.875rem;
+    }
+    .result-refusal {
+      padding: 0.875rem 1rem;
+      background: color-mix(in srgb, var(--muted) 8%, transparent);
+      border-left: 3px solid var(--muted);
+      border-radius: 0 6px 6px 0;
+    }
+    .result-refusal p,
+    .result-error p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    .result-error {
+      padding: 0.875rem 1rem;
+      background: color-mix(in srgb, var(--accent) 6%, transparent);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0;
+    }
+    .result-error p {
+      color: var(--accent);
+    }
+
+    /* ---------- Examples (now AFTER the result card) ---------- */
     .examples {
-      margin-top: 1.5rem;
+      margin-top: 0.5rem;
+      margin-bottom: 2rem;
       font-size: 0.9rem;
     }
     .examples summary {
       cursor: pointer;
       color: var(--muted);
-      padding: 0.25rem 0;
+      padding: 0.5rem 0;
+      user-select: none;
+      list-style: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .examples summary::-webkit-details-marker {
+      display: none;
+    }
+    .examples summary::before {
+      content: "+";
+      display: inline-block;
+      width: 1em;
+      font-weight: 600;
+      transition: transform 0.15s ease;
+    }
+    .examples[open] summary::before {
+      content: "−";
     }
     .examples ul {
       list-style: none;
@@ -188,118 +446,38 @@ const EXAMPLES = [
       margin: 0.5rem 0 0;
     }
     .examples li {
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.4rem;
     }
     .example-btn {
-      background: transparent;
+      background: var(--bg-card);
       color: var(--fg);
       border: 1px solid var(--border);
-      padding: 0.4rem 0.75rem;
+      padding: 0.55rem 0.875rem;
       font-size: 0.875rem;
       font-weight: 400;
       text-align: left;
       width: 100%;
+      border-radius: 8px;
     }
     .example-btn:hover:not(:disabled) {
       background: var(--code);
       border-color: var(--accent);
-    }
-    .status {
-      margin-top: 1rem;
-      padding: 0.75rem 1rem;
-      background: var(--code);
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-    .status.hidden,
-    .answer.hidden,
-    .citations.hidden,
-    .refusal.hidden {
-      display: none;
-    }
-    .status-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .status-list li {
-      padding: 0.25rem 0;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .status-list .stage-pending {
-      color: var(--muted);
-    }
-    .status-list .stage-running {
       color: var(--fg);
-      font-weight: 500;
     }
-    .status-list .stage-done {
-      color: var(--success);
-    }
-    .status-list .stage-icon {
-      width: 1.25em;
-      text-align: center;
-    }
-    .answer {
-      margin-top: 1.5rem;
-      padding: 1.25rem 1.5rem;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-    .answer-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 0.75rem;
-    }
-    .answer h2,
-    .answer h3 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 600;
-    }
-    .answer-text {
-      white-space: pre-wrap;
-      font-size: 0.95rem;
-    }
-    .citations {
-      margin-top: 1.25rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-    }
-    .citations ul {
-      list-style: none;
-      padding: 0;
-      margin: 0.5rem 0 0;
-    }
-    .citations li {
-      padding: 0.2rem 0;
-      font-size: 0.875rem;
-    }
-    .refusal {
-      margin-top: 1.25rem;
-      padding: 0.875rem 1rem;
-      background: color-mix(in srgb, var(--muted) 8%, transparent);
-      border-left: 3px solid var(--muted);
-      border-radius: 0 6px 6px 0;
-    }
-    .refusal p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-    footer {
-      margin-top: 4rem;
+
+    /* ---------- Footer ---------- */
+    .page-footer {
+      margin-top: 3rem;
       padding-top: 1.5rem;
       border-top: 1px solid var(--border);
       font-size: 0.875rem;
+      color: var(--muted);
     }
-    footer p {
-      margin: 0.25rem 0;
+    .page-footer p {
+      margin: 0;
     }
+
+    /* ---------- Utility ---------- */
     .muted {
       color: var(--muted);
     }
@@ -313,19 +491,29 @@ const EXAMPLES = [
       overflow: hidden;
       clip: rect(0 0 0 0);
     }
+
+    @media (max-width: 540px) {
+      main {
+        padding: 2rem 1rem 3rem;
+        font-size: 16px;
+      }
+      h1 {
+        font-size: 1.625rem;
+      }
+      .result {
+        padding: 1rem 1.125rem;
+      }
+      .steps {
+        font-size: 0.75rem;
+      }
+    }
   </style>
 
   <script is:inline>
     // Phase 10b — vanilla JS chat client. Hits /api/ask/stream
-    // (same-origin) and renders the SSE event stream.
-
-    const STAGE_LABELS = {
-      classify: "Classificando pergunta",
-      retrieve: "Buscando no corpus",
-      generate: "Gerando resposta",
-      verify: "Verificando citações",
-      relevance_judge: "Avaliando relevância das citações",
-    };
+    // (same-origin) and renders the SSE event stream into a single
+    // result component that shows the stepper while running and the
+    // answer/refusal when complete.
 
     const STAGE_ORDER = ["classify", "retrieve", "generate", "verify", "relevance_judge"];
 
@@ -333,71 +521,56 @@ const EXAMPLES = [
     const queryInput = document.getElementById("queryInput");
     const askBtn = document.getElementById("askBtn");
     const charCount = document.getElementById("charCount");
-    const statusEl = document.getElementById("status");
-    const answerEl = document.getElementById("answer");
-    const answerTextEl = document.getElementById("answerText");
+    const examplesEl = document.getElementById("examplesEl");
+    const result = document.getElementById("result");
+    const stepsEl = document.getElementById("steps");
     const elapsedEl = document.getElementById("elapsed");
+    const answerBody = document.getElementById("answerBody");
+    const answerTextEl = document.getElementById("answerText");
     const citationsSectionEl = document.getElementById("citationsSection");
     const citationsListEl = document.getElementById("citationsList");
     const refusalSectionEl = document.getElementById("refusalSection");
     const refusalTextEl = document.getElementById("refusalText");
+    const errorSectionEl = document.getElementById("errorSection");
+    const errorTextEl = document.getElementById("errorText");
+    const progressHeaderEl = result.querySelector(".result-progress");
 
-    // Char-counter
     queryInput.addEventListener("input", () => {
       charCount.textContent = `${queryInput.value.length} / 2000`;
     });
 
-    // Example-query buttons
     document.querySelectorAll(".example-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         queryInput.value = btn.dataset.query;
         charCount.textContent = `${queryInput.value.length} / 2000`;
         queryInput.focus();
+        // Auto-collapse the examples after picking one
+        examplesEl.removeAttribute("open");
       });
     });
 
-    function renderStageList(stages) {
-      const items = STAGE_ORDER.map((name) => {
-        const s = stages[name] || { state: "pending" };
-        let icon = "○";
-        let cls = "stage-pending";
-        if (s.state === "running") {
-          icon = "◐";
-          cls = "stage-running";
-        } else if (s.state === "done") {
-          icon = "●";
-          cls = "stage-done";
-        } else if (s.state === "skipped") {
-          icon = "·";
-          cls = "stage-pending";
-        }
-        return `<li class="${cls}"><span class="stage-icon">${icon}</span>${STAGE_LABELS[name] || name}</li>`;
-      }).join("");
-      statusEl.innerHTML = `<ul class="status-list">${items}</ul>`;
+    function setStageState(stageName, state) {
+      const li = stepsEl.querySelector(`[data-stage="${stageName}"]`);
+      if (!li) return;
+      li.classList.remove("running", "done");
+      if (state === "running") li.classList.add("running");
+      else if (state === "done") li.classList.add("done");
+    }
+
+    function resetSteps() {
+      STAGE_ORDER.forEach((s) => setStageState(s, "pending"));
     }
 
     function renderCitation(urn) {
       const safe = String(urn).replace(/</g, "&lt;");
-      // LexML's URN resolver currently accepts document-level URNs
-      // only — article / inciso / parágrafo fragments aren't part of
-      // their vocabulary (verified empirically: `!art5`, `!art5_inc1`,
-      // `~art5;inc1`, `_art5_inc1` all return the "URN inválida"
-      // page or an empty body). Strip the fragment (everything after
-      // the first `~` or `!`) so the link lands on the document; the
-      // full URN stays visible as the link text so the citation
-      // reference is preserved.
-      //
-      // Also: only link if the URN is in the LexML namespace
-      // (`urn:lex:`). Other citation URN forms (e.g., tier-4
-      // jurisprudência, ANPD resolutions) get rendered as plain
-      // <code> without a link in v1.
+      // LexML's URN resolver only honors document-level URNs — article
+      // fragments (`!art5`, `~art5;inc1`, etc.) all fail. Strip the
+      // fragment, link to the document; keep the full URN as text.
       const isLexml = String(urn).startsWith("urn:lex:");
       if (!isLexml) {
         return `<li><code>${safe}</code></li>`;
       }
       const docUrn = String(urn).split("~")[0].split("!")[0];
-      // encodeURI (not encodeURIComponent) — LexML wants `:` and `;`
-      // raw in the path, not percent-encoded.
       const href = `https://www.lexml.gov.br/urn/${encodeURI(docUrn)}`;
       return `<li><a href="${href}" target="_blank" rel="noopener"><code>${safe}</code></a> <span class="muted small">(documento)</span></li>`;
     }
@@ -415,22 +588,36 @@ const EXAMPLES = [
       return reason || "Não posso responder essa pergunta com confiança.";
     }
 
+    function clearResult() {
+      result.classList.add("hidden");
+      progressHeaderEl.classList.remove("done-final");
+      answerBody.classList.add("hidden");
+      refusalSectionEl.classList.add("hidden");
+      errorSectionEl.classList.add("hidden");
+      citationsSectionEl.classList.add("hidden");
+      answerTextEl.textContent = "";
+      citationsListEl.innerHTML = "";
+      refusalTextEl.textContent = "";
+      errorTextEl.textContent = "";
+      elapsedEl.textContent = "";
+      resetSteps();
+    }
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const query = queryInput.value.trim();
       if (!query) return;
 
       askBtn.disabled = true;
-      askBtn.textContent = "Processando...";
-      answerEl.classList.add("hidden");
-      answerTextEl.textContent = "";
-      citationsSectionEl.classList.add("hidden");
-      refusalSectionEl.classList.add("hidden");
+      askBtn.textContent = "Processando…";
+      clearResult();
+      result.classList.remove("hidden");
       const t0 = performance.now();
-      const stages = {};
-      STAGE_ORDER.forEach((s) => (stages[s] = { state: "pending" }));
-      statusEl.classList.remove("hidden");
-      renderStageList(stages);
+      const updateElapsed = () => {
+        const s = ((performance.now() - t0) / 1000).toFixed(1);
+        elapsedEl.textContent = `${s}s`;
+      };
+      const elapsedTimer = setInterval(updateElapsed, 100);
 
       try {
         const response = await fetch("/api/ask/stream", {
@@ -452,56 +639,59 @@ const EXAMPLES = [
           if (done) break;
           buffer += decoder.decode(value, { stream: true });
 
-          // SSE frames are separated by \n\n
           const frames = buffer.split("\n\n");
           buffer = frames.pop() || "";
 
           for (const frame of frames) {
             const line = frame.trim();
             if (!line.startsWith("data: ")) continue;
-            const dataStr = line.slice(6);
             let event;
             try {
-              event = JSON.parse(dataStr);
+              event = JSON.parse(line.slice(6));
             } catch {
               continue;
             }
 
             if (event.event === "stage") {
               const newState = event.status === "started" ? "running" : "done";
-              stages[event.name] = { state: newState };
-              renderStageList(stages);
+              setStageState(event.name, newState);
             } else if (event.event === "complete") {
               const ans = event.answer;
-              answerEl.classList.remove("hidden");
-              const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
-              elapsedEl.textContent = `${elapsed}s`;
+              clearInterval(elapsedTimer);
+              updateElapsed();
+              // Any pending stages (e.g., relevance_judge skipped on
+              // cosine fast-path) get marked done so the stepper is
+              // a clean record of what ran.
+              STAGE_ORDER.forEach((s) => {
+                const li = stepsEl.querySelector(`[data-stage="${s}"]`);
+                if (li && !li.classList.contains("done")) li.classList.add("done");
+                if (li) li.classList.remove("running");
+              });
+              progressHeaderEl.classList.add("done-final");
 
               if (ans.refused) {
                 refusalSectionEl.classList.remove("hidden");
                 refusalTextEl.textContent = formatRefusal(ans.refusal_reason);
-                answerTextEl.textContent = "";
               } else {
+                answerBody.classList.remove("hidden");
                 answerTextEl.textContent = ans.answer;
                 if (ans.citations && ans.citations.length > 0) {
                   citationsSectionEl.classList.remove("hidden");
                   citationsListEl.innerHTML = ans.citations.map(renderCitation).join("");
                 }
               }
-              // Mark any pending stages as skipped (e.g., relevance_judge
-              // doesn't fire on cosine fast-path refusals)
-              STAGE_ORDER.forEach((s) => {
-                if (stages[s].state === "pending") stages[s].state = "skipped";
-              });
-              renderStageList(stages);
             } else if (event.event === "error") {
               throw new Error(event.detail || "erro do servidor");
             }
           }
         }
       } catch (err) {
-        statusEl.innerHTML = `<p style="color: var(--accent); margin: 0;"><strong>Erro:</strong> ${err.message}</p>`;
+        clearInterval(elapsedTimer);
+        errorSectionEl.classList.remove("hidden");
+        errorTextEl.textContent = `Erro: ${err.message}`;
+        progressHeaderEl.classList.add("done-final");
       } finally {
+        clearInterval(elapsedTimer);
         askBtn.disabled = false;
         askBtn.textContent = "Perguntar";
       }

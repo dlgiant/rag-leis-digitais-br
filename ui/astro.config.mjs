@@ -1,16 +1,19 @@
 // @ts-check
 import { defineConfig } from "astro/config";
-import node from "@astrojs/node";
+import vercel from "@astrojs/vercel";
 
-// Phase 10b — Astro with Node SSR adapter. SSR is required for the
-// /api/ask/stream proxy endpoint that keeps the backend API key
-// server-side (never reaches the browser). Static-only Astro would
-// have to bake the key into the JS bundle, which is a leak.
+// Phase 10b — Astro on Vercel.
+// Was Fly+Node SSR; switched to Vercel because the operator already
+// has Vercel and prefers it. LGPD residency preserved by pinning the
+// serverless function region to `gru1` (São Paulo) via vercel.json.
+//
+// SSR is required for the /api/ask/stream proxy endpoint that keeps
+// the backend API key server-side (never reaches the browser).
 export default defineConfig({
   output: "server",
-  adapter: node({ mode: "standalone" }),
-  server: {
-    host: "0.0.0.0",
-    port: 4321,
-  },
+  adapter: vercel({
+    // Defaults are fine — SSR via Vercel Serverless Functions (Node
+    // runtime). Edge runtime would be faster but doesn't support
+    // long-lived ReadableStream proxying as cleanly.
+  }),
 });
