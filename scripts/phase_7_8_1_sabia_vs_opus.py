@@ -49,6 +49,11 @@ def _run_against_eval(pipe, queries, label: str) -> list[dict]:
                 "refusal_reason": ans.refusal_reason,
                 "citations": ans.citations,
                 "rejected_irrelevant": ans.rejected_irrelevant_citations,
+                # Phase 7.8.2 prep — classified_type is the query-router's
+                # output, needed to project the adaptive-by-type relevance
+                # gate (Option C in phase-7.8.2-partial-relevance-gate-
+                # findings.md) on this surface from cached data.
+                "classified_type": ans.classified_type,
                 "cost_usd": ans.cost_estimate_usd,
                 "latency_ms": ans.latency_ms,
                 "llm_calls": ans.llm_calls,
@@ -60,6 +65,7 @@ def _run_against_eval(pipe, queries, label: str) -> list[dict]:
                 "refusal_reason": f"ERROR: {type(e).__name__}: {e}",
                 "citations": [],
                 "rejected_irrelevant": [],
+                "classified_type": None,
                 "cost_usd": 0.0,
                 "latency_ms": 0.0,
                 "llm_calls": 0,
