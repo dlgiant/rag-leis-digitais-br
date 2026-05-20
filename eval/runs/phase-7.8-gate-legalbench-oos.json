@@ -1,0 +1,1965 @@
+{
+  "config": {
+    "embedder": "voyage-3-large",
+    "text_mode": "title+label+nav+caput+text",
+    "llm_provider": "maritaca",
+    "top_k": 10,
+    "oos_threshold": 0.4
+  },
+  "aggregate": {
+    "n_total": 49,
+    "n_inscope": 0,
+    "n_oos_a": 49,
+    "n_oos_b": 0,
+    "inscope_answer_rate": 0.0,
+    "inscope_any_gold_cited_rate": 0.0,
+    "inscope_coverage_mean": 0.0,
+    "inscope_coverage_jaccard_mean": 0.0,
+    "oos_a_refusal_rate": 0.6326530612244898,
+    "oos_b_refusal_rate": 0.0,
+    "overall_refusal_accuracy": 0.6326530612244898,
+    "n_rule_recall": 0,
+    "rule_recall_hit_rate": 0.0,
+    "rule_recall_answered_rate": 0.0,
+    "n_discursive": 0,
+    "discursive_mean_pct": 0.0,
+    "discursive_answered_rate": 0.0,
+    "cost_total_usd": 0.182933,
+    "cost_mean_usd": 0.003733,
+    "total_input_tokens": 222018,
+    "total_output_tokens": 35963,
+    "total_llm_calls": 143,
+    "latency_p50_ms": 5359.4,
+    "latency_p95_ms": 11887.0,
+    "latency_p99_ms": 13403.3,
+    "latency_mean_ms": 5744.2,
+    "error_count": 1,
+    "error_rate": 0.0204
+  },
+  "records": [
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/182",
+        "category": "oos_a",
+        "query": "Durante um processo, a parte ré levanta a questão de incompetência territorial do juízo. Qual é o momento adequado para arguir essa incompetência?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=a). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "O momento adequado para arguir a incompetência territorial do juízo é, em regra, na contestação, conforme estabelece o Código de Processo Civil. Embora as fontes fornecidas não contenham diretamente o dispositivo processual sobre o momento da alegação de incompetência territorial, elas definem competências territoriais específicas que podem orientar a análise do foro competente. Por exemplo, no caso de ações contra a União, a competência pode ser no domicílio do autor, no local do ato ou fato ou no Distrito Federal (Art. 109, § 2º, da Constituição Federal). Para ações coletivas de defesa de interesses individuais homogêneos, a competência é no foro do local do dano, conforme o âmbito (Art. 93, I e II, do Código de Defesa do Consumidor). Assim, a arguição deve ocorrer oportunamente para que o juízo possa avaliar a adequação territorial antes da instrução do processo.",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;par2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art93;inc1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art93;inc2"
+        ],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [
+          "O momento exato para arguir a incompetência territorial é previsto no Código de Processo Civil, que não está presente nas fontes fornecidas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002475,
+        "tokens_used": {
+          "input_tokens": 3337,
+          "output_tokens": 403
+        },
+        "llm_calls": 2,
+        "latency_ms": 4491.257
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/149",
+        "category": "oos_a",
+        "query": "Quais são os requisitos essenciais da petição inicial, segundo o CPC?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Os requisitos essenciais da petição inicial não estão integralmente listados nas fontes fornecidas, que tratam de aspectos pontuais relacionados à distribuição, instrução e requisitos específicos em certos tipos de ação, mas não do rol completo dos requisitos previstos nos artigos 319 a 320 do Código de Processo Civil (CPC). As fontes indicam que a petição inicial deve preencher os requisitos dos arts. 282 a 285 do CPC (urn:lex:br:federal:lei:1997-11-12;9507~art8), e que, salvo impossibilidade que comprometa o acesso à justiça, a parte deverá informar o número de inscrição no cadastro de pessoas físicas ou jurídicas perante a Receita Federal (urn:lex:br:federal:lei:2006-12-19;11419~art15). Adicionalmente, em ações específicas como o habeas data, a inicial será indeferida se lhe faltar algum dos requisitos previstos na respectiva lei (urn:lex:br:federal:lei:1997-11-12;9507~art10). No entanto, o texto exato dos requisitos essenciais da petição inicial conforme o CPC (como indicação do juízo, qualificação das partes, fatos e fundamentos jurídicos, pedido, valor da causa, provas, etc.) não está positivado nas fontes apresentadas.",
+        "citations": [
+          "urn:lex:br:federal:lei:1997-11-12;9507~art8",
+          "urn:lex:br:federal:lei:2006-12-19;11419~art15"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [
+          "Os requisitos da petição inicial estão previstos nos arts. 282 a 285 do CPC."
+        ],
+        "hierarchy_warning": "⚠️ Atenção (hierarquia normativa): a resposta cita apenas fontes de rank 3 (Lei Ordinária / Tema STF (tese fixada)); o contexto continha fontes de rank superior — Constituição/EC (urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc34;ali-a, urn:lex:br:federal:constituicao:1988-10-05;1988~art129;inc8, urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc55). Verifique se a hierarquia foi respeitada (CF > LC > LO > Decreto > Resolução).",
+        "cost_estimate_usd": 0.006369,
+        "tokens_used": {
+          "input_tokens": 9102,
+          "output_tokens": 909
+        },
+        "llm_calls": 4,
+        "latency_ms": 8357.567
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/143",
+        "category": "oos_a",
+        "query": "O recurso cabível contra decisões interlocutórias que causam prejuízo imediato à parte é:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "O recurso cabível contra decisões interlocutórias que causam prejuízo imediato à parte não é diretamente tratado nas fontes fornecidas. As normas apresentadas abordam recursos específicos em procedimentos como o habeas data e o mandado de segurança, bem como o cabimento de recursos para tribunais superiores em determinadas hipóteses, mas não definem o recurso geral para decisões interlocutórias em processos civis ou penais. A sistemática recursal para decisões interlocutórias no processo civil brasileiro, por exemplo, está prevista no Código de Processo Civil, que não está incluído no corpus de fontes disponíveis. Portanto, com base exclusivamente nas fontes apresentadas, não é possível identificar qual é o recurso específico cabível nessa situação.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "empty-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [
+          "No processo civil brasileiro, o recurso cabível contra decisões interlocutórias que causam prejuízo imediato é o agravo de instrumento, conforme o art. 1.015 do CPC. (Esta informação não está presente nas fontes fornecidas.)"
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002148,
+        "tokens_used": {
+          "input_tokens": 3051,
+          "output_tokens": 311
+        },
+        "llm_calls": 2,
+        "latency_ms": 3209.581
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/189",
+        "category": "oos_a",
+        "query": "Juliana é parte executada em um cumprimento de sentença e deseja alegar excesso de execução. Qual é o meio processual adequado para apresentar essa alegação?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "O meio processual adequado para que Juliana, parte executada, alegue excesso de execução em um cumprimento de sentença é a oposição de impugnação ao cumprimento de sentença, nos termos do Código de Processo Civil, embora tal dispositivo específico não esteja presente nas fontes fornecidas.\n\nContudo, com base nas fontes legais disponíveis, destaca-se que o Código de Defesa do Consumidor regula a execução de sentenças e liquidações, estabelecendo regras sobre competência e procedimento, mas não detalha o instrumento específico para alegar excesso de execução. Portanto, com base exclusivamente nas fontes apresentadas, não é possível identificar o instrumento processual exato para essa alegação.\n\nPara fins de esclarecimento processual, a legislação federal de regência geral (CPC) prevê a impugnação ao cumprimento de sentença como o instrumento cabível para essa finalidade, mas essa norma não consta no corpus fornecido.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "empty-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A impugnação ao cumprimento de sentença é o meio processual adequado para alegar excesso de execução."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002317,
+        "tokens_used": {
+          "input_tokens": 3326,
+          "output_tokens": 327
+        },
+        "llm_calls": 2,
+        "latency_ms": 3150.947
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/159",
+        "category": "oos_a",
+        "query": "Qual instituto processual permite ao réu discutir a incompetência do juízo no momento inicial do processo?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Não há informação suficiente nas fontes fornecidas sobre o instituto processual específico que permite ao réu discutir a incompetência do juízo no momento inicial do processo. As fontes consultadas tratam de competências constitucionais de tribunais e juízes, mas não abordam diretamente o procedimento ou o instrumento processual pelo qual o réu pode alegar incompetência no início do processo, como a exceção de incompetência prevista no Código de Processo Civil.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001935,
+        "tokens_used": {
+          "input_tokens": 3271,
+          "output_tokens": 150
+        },
+        "llm_calls": 2,
+        "latency_ms": 2127.353
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/157",
+        "category": "oos_a",
+        "query": "Qual é o prazo para cumprimento voluntário da sentença após intimação do executado?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Nenhuma das fontes fornecidas estabelece um prazo específico para o cumprimento voluntário de uma sentença após a intimação do executado no âmbito do processo civil ou executivo em geral. As normas citadas tratam de prazos relacionados à intimação eletrônica (10 dias corridos para consulta), ao pagamento de multa penal (10 dias após o trânsito em julgado da sentença), à fixação de prazo para cumprimento de obrigação por multa diária (prazo razoável a ser fixado pelo juiz), e à execução de multa criminal como dívida de valor, mas não definem o prazo para o cumprimento voluntário da sentença executada.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "empty-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003827,
+        "tokens_used": {
+          "input_tokens": 5946,
+          "output_tokens": 427
+        },
+        "llm_calls": 3,
+        "latency_ms": 4169.147
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/156",
+        "category": "oos_a",
+        "query": "Qual incidente processual é cabível para uniformizar decisões divergentes dentro do mesmo tribunal?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Civil (legalbench.br MCQ, answer_key=d). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Não há incidente processual específico previsto na Constituição ou nas leis federais de 1997 e 2006 citadas no contexto para uniformizar decisões divergentes dentro do mesmo tribunal. O regramento constitucional trata da criação de súmula vinculante pelo Supremo Tribunal Federal para reduzir controvérsias que acarretem grave insegurança jurídica (Art. 103-A, §1º, CF/88 — urn:lex:br:federal:constituicao:1988-10-05;1988~art103-a;par1), mas não institui um incidente interno para harmonizar jurisprudência de órgãos colegiados de um mesmo tribunal. Da mesma forma, a Constituição prevê recursos extraordinários para o STF (Art. 102, III) e especial para o STJ (Art. 105, III) quando houver divergência de interpretação entre tribunais diferentes ou contra lei federal (urn:lex:br:federal:constituicao:1988-10-05;1988~art105;inc3;ali-c), mas não um mecanismo para resolver divergências intratribunal. A reclamação por desrespeito à súmula vinculante (Art. 103-A, §3º) é remédio posterior, não incidente de uniformização (urn:lex:br:federal:constituicao:1988-10-05;1988~art103-a;par3).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art103-a;par1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art103-a;par3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art105;inc3;ali-c"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [
+          "O Incidente de Resolução de Demandas Repetitivas (IRDR) é o instrumento previsto no CPC para uniformização dentro do mesmo tribunal, mas o CPC não está incluído nas fontes fornecidas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.006163,
+        "tokens_used": {
+          "input_tokens": 6731,
+          "output_tokens": 1399
+        },
+        "llm_calls": 4,
+        "latency_ms": 9141.893
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/247",
+        "category": "oos_a",
+        "query": "O prazo máximo para conclusão do inquérito policial em caso de réu solto é de:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Não há informação suficiente nas fontes fornecidas para determinar o prazo máximo para conclusão do inquérito policial em caso de réu solto. As fontes disponíveis tratam do prazo de prescrição da pretensão punitiva (Art. 109 do Código Penal) e de procedimentos relacionados à conclusão de autos ao juiz após o prazo do art. 9º da Lei 9.507/1997 (Art. 12), mas não estabelecem o prazo legal específico para a conclusão do inquérito policial em relação ao estado da custódia do investigado (solto ou preso).",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [
+          "O prazo geral para conclusão do inquérito policial é de 10 dias para réu preso e 30 dias para réu solto, conforme o art. 10 do Código de Processo Penal, norma não presente nas fontes fornecidas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003494,
+        "tokens_used": {
+          "input_tokens": 5387,
+          "output_tokens": 400
+        },
+        "llm_calls": 3,
+        "latency_ms": 4148.515
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/266",
+        "category": "oos_a",
+        "query": "João, vítima de crime, deseja atuar diretamente como assistente da acusação. Em que momento processual poderá fazê-lo?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Fora do escopo da base (verificação semântica).",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "concept-scope-mismatch: query=[devido-processo,processo-eletronico,ordem-judicial] vs retrieval=[consumidor,crimes,defesa-consumidor,dolo-culpa,estelionato-digital]",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.000384,
+        "tokens_used": {
+          "input_tokens": 660,
+          "output_tokens": 27
+        },
+        "llm_calls": 1,
+        "latency_ms": 3370.025
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/246",
+        "category": "oos_a",
+        "query": "Em que situação cabe recurso em sentido estrito?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "O recurso em sentido estrito é cabível em diversas situações previstas no Código de Processo Penal (Lei nº 9.507/1997), notadamente quando a decisão judicial denegar habeas corpus, mandado de segurança, habeas data ou mandado de injunção, nos termos do art. 121, § 4º, inciso V, da Constituição Federal, que estabelece caber recurso ao Superior Tribunal de Justiça nessas hipóteses.<br><br>Adicionalmente, o recurso em sentido estrito é cabível contra despachos de indeferimento de medidas processuais, como previsto no art. 10, parágrafo único, da Lei nº 9.507/1997, para o qual se aplica o recurso previsto no art. 15 da mesma lei.<br><br>Quanto à competência recursal, se a decisão denegatória for proferida em única instância pelos Tribunais Regionais Federais, o recurso em sentido estrito será dirigido ao Superior Tribunal de Justiça (art. 20, II, alínea b, Lei nº 9.507/1997). Se a decisão for proferida por juiz federal, o recurso cabível será para o Tribunal Regional Federal da respectiva jurisdição, conforme dispõe o art. 109, § 4º, da Constituição Federal.<br><br>Em casos específicos de habeas data, se a sentença concedê-lo, o recurso terá efeito meramente devolutivo (art. 15, parágrafo único, Lei nº 9.507/1997). Caso o Presidente do Tribunal ordene a suspensão da execução da sentença de habeas data, desse ato caberá agravo para o Tribunal correspondente (art. 16, Lei nº 9.507/1997).\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026); Lei 9.507/1997 — disciplina o direito de acesso a informações e o procedimento do habeas data (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art121;par4;inc5",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art10;par1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art15;par1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art20;inc2;ali-b",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;par4",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art16"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.007152,
+        "tokens_used": {
+          "input_tokens": 6245,
+          "output_tokens": 2015
+        },
+        "llm_calls": 4,
+        "latency_ms": 11886.992
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/264",
+        "category": "oos_a",
+        "query": "Caio foi preso em flagrante. Qual é o prazo máximo para que o juiz decida sobre a legalidade dessa prisão?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=a). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "O prazo máximo para que o juiz decida sobre a legalidade da prisão em flagrante é de cinco dias após o recebimento dos autos com a manifestação do representante do Ministério Público, conforme dispõe o art. 12 da Lei nº 9.507, de 12 de novembro de 1997.\n\nConforme o referido dispositivo, findo o prazo para apresentação da representação (não especificado nas fontes fornecidas, mas pressuposto como já ocorrido), o Ministério Público deve se manifestar em até cinco dias. A partir dessa manifestação, os autos são conclusos ao juiz, que tem cinco dias para proferir decisão sobre a legalidade da prisão.",
+        "citations": [
+          "urn:lex:br:federal:lei:1997-11-12;9507~art12"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": "⚠️ Atenção (hierarquia normativa): a resposta cita apenas fontes de rank 3 (Lei Ordinária / Tema STF (tese fixada)); o contexto continha fontes de rank superior — Constituição/EC (urn:lex:br:federal:constituicao:1988-10-05;1988~art53;par2, urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc61, urn:lex:br:federal:constituicao:1988-10-05;1988~art136;par3;inc1). Verifique se a hierarquia foi respeitada (CF > LC > LO > Decreto > Resolução).",
+        "cost_estimate_usd": 0.004324,
+        "tokens_used": {
+          "input_tokens": 6396,
+          "output_tokens": 563
+        },
+        "llm_calls": 4,
+        "latency_ms": 5034.049
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/272",
+        "category": "oos_a",
+        "query": "Maria, testemunha essencial no processo, se recusa a comparecer para prestar depoimento. Qual medida pode ser adotada pelo juiz?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=a). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Fora do escopo da base (verificação semântica).",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "concept-scope-mismatch: query=[devido-processo,processo-eletronico,ordem-judicial] vs retrieval=[consumidor,crimes,defesa-consumidor,dolo-culpa,estelionato-digital]",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.000386,
+        "tokens_used": {
+          "input_tokens": 664,
+          "output_tokens": 27
+        },
+        "llm_calls": 1,
+        "latency_ms": 1015.068
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/260",
+        "category": "oos_a",
+        "query": "Em qual hipótese cabe ação penal privada subsidiária da pública?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=a). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "A ação penal privada subsidiária da pública é cabível nos crimes de ação pública quando o Ministério Público não oferece denúncia no prazo legal. Essa possibilidade está prevista no artigo 100, § 3º do Código Penal, que autoriza a propositura da ação por iniciativa privada na hipótese de inércia do órgão ministerial. A ação privada, nesse caso, é promovida mediante queixa do ofendido ou de seu representante legal, conforme dispõe o artigo 100, § 2º do mesmo diploma. No caso de morte do ofendido ou de sua declaração de ausência por decisão judicial, o direito de oferecer queixa ou prosseguir na ação passa ao cônjuge, ascendente, descendente ou irmão, nos termos do artigo 100, § 4º do Código Penal. A regra geral é que a ação penal é pública, salvo quando a lei expressamente a declara como privativa do ofendido (art. 100, caput). Importante destacar que, em certos crimes específicos, como aqueles previstos no art. 154-A do Código Penal (invasão de dispositivo informático), a ação penal é, em regra, privada mediante representação, exceto quando cometidos contra a administração pública ou concessionárias de serviços públicos, hipótese em que é pública (art. 154-B, com vigência ressalvada).\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par3",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par2",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par4",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-b"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.006726,
+        "tokens_used": {
+          "input_tokens": 6936,
+          "output_tokens": 1629
+        },
+        "llm_calls": 4,
+        "latency_ms": 10834.039
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/245",
+        "category": "oos_a",
+        "query": "Qual instrumento processual deve ser utilizado para garantir a liberdade de alguém preso ilegalmente?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Processual Penal (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "O instrumento processual adequado para garantir a liberdade de alguém preso ilegalmente é o habeas-corpus. Conforme o art. 5º, LXVIII da Constituição Federal, concede-se habeas-corpus sempre que alguém sofrer ou se achar ameaçado de sofrer violência ou coação em sua liberdade de locomoção por ilegalidade ou abuso de poder. Além disso, o art. 5º, LXV da mesma Carta Magna determina que a prisão ilegal será imediatamente relaxada pela autoridade judiciária. Caso o direito à liberdade não esteja diretamente amparado pelo habeas-corpus, mas seja um direito líquido e certo violado por autoridade pública ou agente do Poder Público, poderá ser utilizado o mandado de segurança, nos termos do art. 5º, LXIX da Constituição Federal.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc68",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc65",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc69"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003296,
+        "tokens_used": {
+          "input_tokens": 3992,
+          "output_tokens": 650
+        },
+        "llm_calls": 3,
+        "latency_ms": 5359.406
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/301",
+        "category": "oos_a",
+        "query": "Luana é dispensada sem justa causa após 10 anos de trabalho. Quantos dias de aviso prévio proporcional ela deve cumprir ou receber indenizados?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=d). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "A Constituição Federal, em seu artigo 7º, inciso XXI, assegura o direito ao aviso prévio proporcional ao tempo de serviço, sendo o mínimo de trinta dias, nos termos da lei. No entanto, o próprio dispositivo constitucional remete à regulamentação legal para definir a proporcionalidade. As fontes fornecidas não trazem a legislação específica que estabelece a escala de proporcionalidade do aviso prévio. Portanto, embora saibamos que Luana tem direito a pelo menos trinta dias, não é possível determinar o número exato de dias correspondente a dez anos de serviço com base exclusivamente nas normas citadas.\n\n⚠️ Atenção: O art. 7º, XXI da Constituição Federal determina o direito ao aviso prévio proporcional, mas aguarda regulamentação específica para definir a escala de proporcionalidade. Sem a lei infraconstitucional (Lei nº 12.506/2011), não há como fixar o número de dias para dez anos de serviço apenas com as fontes disponíveis.",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc21"
+        ],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003766,
+        "tokens_used": {
+          "input_tokens": 5637,
+          "output_tokens": 474
+        },
+        "llm_calls": 3,
+        "latency_ms": 4579.925
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/276",
+        "category": "oos_a",
+        "query": "Qual o prazo para ajuizar ação trabalhista após a extinção do contrato de trabalho?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "O prazo para ajuizar ação trabalhista após a extinção do contrato de trabalho é de até dois anos, conforme estabelecido no inciso XXIX do Art. 7º da Constituição Federal de 1988. Além disso, os créditos resultantes das relações de trabalho podem ser reclamados dentro do prazo prescricional de cinco anos, contados da data do término do contrato. Portanto, a ação deve ser proposta no prazo máximo de dois anos após a extinção do vínculo, sob pena de prescrição, ainda que o direito de ação possa abranger créditos dos últimos cinco anos anteriores à data do ajuizamento. ⚠️ Atenção: A aplicação deste dispositivo não está sujeita a ressalva de vigência explicitamente mencionada nas fontes fornecidas.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc29"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.00254,
+        "tokens_used": {
+          "input_tokens": 3557,
+          "output_tokens": 381
+        },
+        "llm_calls": 3,
+        "latency_ms": 3831.544
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/275",
+        "category": "oos_a",
+        "query": "A jornada de trabalho padrão, sem compensação ou acordo específico, conforme a CLT, é de:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=a). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Conforme o Art. 7, XIII da Constituição Federal de 1988, a duração do trabalho normal não deve ser superior a oito horas diárias e quarenta e quatro semanais, quando não há acordo, convenção coletiva ou compensação de horários estabelecida.",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc13"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002246,
+        "tokens_used": {
+          "input_tokens": 3607,
+          "output_tokens": 221
+        },
+        "llm_calls": 3,
+        "latency_ms": 3495.8
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/279",
+        "category": "oos_a",
+        "query": "O contrato de experiência poderá ter duração máxima de:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Não há informação suficiente nas fontes fornecidas para determinar a duração máxima do contrato de experiência, pois as fontes apresentadas não contêm o dispositivo legal específico que trata do prazo máximo permitido para esse tipo de contrato de trabalho.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001675,
+        "tokens_used": {
+          "input_tokens": 3031,
+          "output_tokens": 80
+        },
+        "llm_calls": 2,
+        "latency_ms": 2172.139
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/280",
+        "category": "oos_a",
+        "query": "Qual dessas situações caracteriza justa causa para rescisão contratual pelo empregador?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "As hipóteses de justa causa descritas nas fontes fornecidas referem-se especificamente à caracterização de justa causa para a rescisão de contratos de uso de redes sociais por parte das plataformas, e não para rescisão contratual de trabalho pelo empregador. Os dispositivos citados tratam de condutas vedadas a usuários de redes sociais, como utilização de tecnologia para invadir sistemas, disseminação de vírus, promoção de crimes, violação de direitos de propriedade intelectual, entre outros. Não há, nas fontes apresentadas, qualquer dispositivo que defina justa causa para rescisão contratual de trabalho por parte do empregador.\n\nPortanto, com base exclusivamente nas fontes fornecidas, não é possível indicar qual situação caracteriza justa causa para rescisão contratual pelo empregador.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "empty-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002121,
+        "tokens_used": {
+          "input_tokens": 3350,
+          "output_tokens": 223
+        },
+        "llm_calls": 2,
+        "latency_ms": 3003.767
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/281",
+        "category": "oos_a",
+        "query": "O repouso semanal remunerado deve ser de, no mínimo:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "O repouso semanal remunerado deve ser de, no mínimo, um dia, conforme estabelecido pelo art. 7º, XV, da Constituição Federal de 1988, que assegura esse direito ao trabalhador \"preferencialmente aos domingos\".",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc15"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002222,
+        "tokens_used": {
+          "input_tokens": 3524,
+          "output_tokens": 230
+        },
+        "llm_calls": 3,
+        "latency_ms": 3515.125
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/290",
+        "category": "oos_a",
+        "query": "A jornada de trabalho máxima semanal permitida para menores aprendizes é de:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Trabalhista (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "A jornada de trabalho máxima semanal permitida para menores aprendizes é limitada pela regra geral da duração do trabalho normal estabelecida na Constituição Federal, que não excede 44 horas semanais. No entanto, em razão do caráter formativo e educacional da aprendizagem, a legislação específica do estágio e da aprendizagem, que não está presente nas fontes fornecidas, estabelece jornada reduzida. Com base exclusivamente nas fontes apresentadas, não há dispositivo constitucional que estabeleça uma jornada semanal específica para o aprendiz, apenas a permissão para trabalho a partir dos 14 anos na condição de aprendiz e a proibição de trabalho noturno, perigoso ou insalubre para menores de 18 anos. Portanto, conforme as normas constitucionais disponíveis, aplica-se o limite geral de 44 horas semanais, mas ressalta-se que a prática e a legislação infraconstitucional determinam jornada menor para aprendizes, o que não pode ser confirmado apenas com as fontes citadas.",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc13",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc33",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art227;par3;inc1"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A jornada de trabalho do menor aprendiz é de, no máximo, 20 ou 25 horas semanais conforme a legislação específica do contrato de aprendizagem, o que não está presente nas fontes fornecidas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.0033,
+        "tokens_used": {
+          "input_tokens": 3848,
+          "output_tokens": 688
+        },
+        "llm_calls": 3,
+        "latency_ms": 5701.046
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/347",
+        "category": "oos_a",
+        "query": "André, comerciante, não pagou o ICMS devido e agora responde criminalmente. Que tipo de ilícito tributário foi cometido?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=a). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "O ilícito tributário cometido por André, comerciante que não pagou o ICMS devido e responde criminalmente, caracteriza-se como crime de sonegação fiscal, tipificado no artigo 334 do Código Penal. Especificamente, o dispositivo pune quem ilude, no todo ou em parte, o pagamento de direito ou imposto devido pela entrada, saída ou consumo de mercadoria. A conduta de deixar de recolher o ICMS devido se enquadra nesse tipo penal, pois representa uma forma de evitar o pagamento do imposto incidente sobre a circulação de mercadorias no exercício da atividade comercial, conforme expressamente equiparado ao descaminho ou a atividades comerciais irregulares pelo próprio artigo. Não se aplica o crime de apropriação indébita previdenciária (art. 168-A do Código Penal), pois este se refere exclusivamente à contribuição previdenciária recolhida dos empregados e não repassada à Previdência Social, matéria diversa do ICMS, que é imposto estadual.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art334",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art334;par2"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.005304,
+        "tokens_used": {
+          "input_tokens": 6596,
+          "output_tokens": 1003
+        },
+        "llm_calls": 4,
+        "latency_ms": 7478.47
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/310",
+        "category": "oos_a",
+        "query": "A alíquota do imposto sobre transmissão causa mortis (ITCMD) é definida por qual ente federativo?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "A alíquota do imposto sobre transmissão causa mortis e doação (ITCMD) é definida pelos Estados e pelo Distrito Federal, mediante deliberação própria, nos termos estabelecidos pela Constituição Federal.\n\nO Art. 155, § 4º, IV da Constituição Federal determina que as alíquotas do ITCMD serão definidas mediante deliberação dos Estados e do Distrito Federal, observando-se as normas constitucionais pertinentes. Embora o Senado Federal fixe alíquotas mínimas (Art. 155, § 6º, I) e máximas (Art. 155, § 1º, VI), é atribuição dos Estados e do Distrito Federal estabelecer as alíquotas efetivamente aplicáveis dentro desses limites.\n\n⚠️ Atenção: Não há indicação, nas fontes fornecidas, de suspensão, ressalva ou vigência diferenciada específica para o disposto no Art. 155, § 4º, IV, portanto, o dispositivo está em vigor conforme redação original.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par4;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par6;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par1;inc6"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003355,
+        "tokens_used": {
+          "input_tokens": 3899,
+          "output_tokens": 703
+        },
+        "llm_calls": 3,
+        "latency_ms": 5526.665
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/344",
+        "category": "oos_a",
+        "query": "Uma empresa vendeu produtos para outro Estado. Qual tributo estadual incidirá sobre essa operação?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Na operação de venda de produtos entre Estados, o tributo estadual que incide é o Imposto sobre Circulação de Mercadorias e Serviços (ICMS). Conforme o art. 155, § 2º, inciso VII, da Constituição Federal, nas operações que destinem bens a consumidor final localizado em outro Estado, aplica-se a alíquota interestadual e o imposto correspondente à diferença entre a alíquota interna do Estado destinatário e a alíquota interestadual será devido ao Estado de localização do destinatário. A destinação desse imposto adicional entre o Estado de origem e o Estado de destino ocorre conforme o Ato das Disposições Constitucionais Transitórias, art. 99, que estabeleceu, ao longo dos anos, percentuais específicos para a partilha desse valor.\n\nPara o ano de 2015, 20% cabiam ao Estado de destino e 80% ao de origem (urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc1). Em 2016, a partilha foi de 40% para o destino e 60% para a origem (urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc2). Em 2017, passou para 60% ao destino e 40% à origem (urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc3). Em 2018, a divisão foi de 80% ao destino e 20% à origem (urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc4). A partir de 2019, todo o imposto relativo à diferença entre as alíquotas pertence ao Estado de destino (urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc5).\n\nAdicionalmente, conforme o art. 155, § 2º, inciso VIII, alínea a, o imposto caberá ao destinatário quando este for contribuinte do ICMS; caso contrário, caberá ao remetente (urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc8;ali-b).\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc7",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc5",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc8;ali-a",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc8;ali-b"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.008705,
+        "tokens_used": {
+          "input_tokens": 7591,
+          "output_tokens": 2455
+        },
+        "llm_calls": 4,
+        "latency_ms": 13403.333
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/321",
+        "category": "oos_a",
+        "query": "O princípio tributário da capacidade contributiva objetiva garantir:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "O princípio tributário da capacidade contributiva, previsto no art. 145, § 1º da Constituição Federal, objetiva garantir que os impostos, sempre que possível, tenham caráter pessoal e sejam graduados segundo a capacidade econômica do contribuinte. Isso significa que a carga tributária deve ser distribuída de forma proporcional à condição econômica de cada indivíduo, assegurando justiça fiscal e promovendo a equidade na arrecadação. Para conferir efetividade a esse objetivo, a administração tributária pode identificar, respeitando os direitos individuais e nos termos da lei, o patrimônio, os rendimentos e as atividades econômicas do contribuinte.<cite ref=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art145;par1\"/> Além disso, esse princípio está vinculado à vedação de tratamento desigual entre contribuintes em situação equivalente (art. 150, II) e à proibição de tributo com efeito de confisco (art. 150, IV), reforçando sua finalidade de assegurar uma tributação justa e proporcional à capacidade econômica.</cite ref=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art150;inc2\"/><cite ref=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art150;inc4\"/>\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art145;par1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art150;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art150;inc4"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003711,
+        "tokens_used": {
+          "input_tokens": 4102,
+          "output_tokens": 830
+        },
+        "llm_calls": 3,
+        "latency_ms": 5766.277
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/354",
+        "category": "oos_a",
+        "query": "Patrícia alugou um imóvel comercial próprio para terceiros. Sobre essa receita obtida com aluguel, qual imposto incidirá?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "A receita obtida por Patrícia com o aluguel de um imóvel comercial incide o Imposto sobre a Propriedade Predial e Territorial Urbana (IPTU), de competência municipal, conforme determina o art. 156, I, da Constituição Federal. A competência para instituir e cobrar o IPTU é do Município onde se localiza o imóvel, conforme estabelecido no art. 156, § 2º, II, da Constituição Federal. O IPTU é um imposto sobre a propriedade imobiliária e não sobre a renda oriunda do aluguel; já a tributação sobre a renda decorrente do aluguel seria competência da União, por meio do Imposto sobre a Renda e Proventos de Qualquer Natureza (IR), previsto no art. 153, III, da Constituição Federal. Contudo, a pergunta refere-se diretamente ao tributo incidente sobre o bem imóvel, e não sobre a renda auferida, sendo o IPTU o imposto constitucionalmente competente para a situação descrita.",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc2"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.005463,
+        "tokens_used": {
+          "input_tokens": 6509,
+          "output_tokens": 1104
+        },
+        "llm_calls": 4,
+        "latency_ms": 7405.623
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/350",
+        "category": "oos_a",
+        "query": "Carlos vendeu uma propriedade rural. Qual tributo incide sobre a transmissão desse imóvel?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Incide o Imposto sobre Transmissão Inter Vivos de Bens Imóveis (ITBI), conforme estabelecido pelo Art. 156, inciso II, da Constituição Federal de 1988, que atribui aos Estados e ao Distrito Federal a competência para instituir imposto sobre a transmissão \"inter vivos\", a qualquer título, por ato oneroso, de bens imóveis, por natureza ou acessão física, e de direitos reais sobre imóveis, exceto os de garantia, bem como cessão de direitos a sua aquisição.\n\nA competência para arrecadar o ITBI é do Município onde está situado o imóvel, conforme disposto no Art. 156, § 2º, inciso II, da Constituição Federal.\n\n⚠️ Atenção: Embora o Art. 156, § 2º, inciso I, preveja hipóteses de não incidência do ITBI em operações societárias, tais como incorporação de bens ao patrimônio de pessoa jurídica em realização de capital ou em fusões e cisões, o caso narrado refere-se à venda direta de propriedade rural por pessoa física, não se enquadrando nessas exceções.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc2"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003227,
+        "tokens_used": {
+          "input_tokens": 3897,
+          "output_tokens": 639
+        },
+        "llm_calls": 3,
+        "latency_ms": 5264.894
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/343",
+        "category": "oos_a",
+        "query": "Carlos recebeu cobrança de IPTU com aumento significativo sem que tenha havido lei municipal autorizando esse reajuste. Essa cobrança viola qual princípio tributário?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Tributário (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "A cobrança de IPTU com aumento significativo sem que tenha havido lei municipal autorizando esse reajuste viola o princípio da legalidade tributária, previsto no Art. 150, I, da Constituição Federal, que veda exigir ou aumentar tributo sem lei que o estabeleça.<cite urn=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art150;inc1\"/>\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art150;inc1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.004979,
+        "tokens_used": {
+          "input_tokens": 7055,
+          "output_tokens": 726
+        },
+        "llm_calls": 4,
+        "latency_ms": 5862.089
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/372",
+        "category": "oos_a",
+        "query": "O comerciante individual responde pelas obrigações contraídas pela empresa:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "O comerciante individual responde pelas obrigações contraídas pela empresa nos termos do Código de Defesa do Consumidor, especialmente quanto à responsabilidade pelo fato do produto e do serviço. Conforme o Art. 13 da Lei nº 8.078/1990, o comerciante é igualmente responsável, nos termos do artigo anterior, quando o fabricante, construtor, produtor ou importador não puderem ser identificados (Art. 13, inciso I, urn:lex:br:federal:lei:1990-09-11;8078~art13;inc1) ou quando o produto for fornecido sem identificação clara do fabricante, produtor, construtor ou importador (Art. 13, inciso II, urn:lex:br:federal:lei:1990-09-11;8078~art13;inc2). Ademais, o comerciante pode ser responsabilizado solidariamente por atos de seus prepostos ou representantes autônomos, nos termos do Art. 34 (urn:lex:br:federal:lei:1990-09-11;8078~art34). Ressalta-se que, em situações de abuso de personalidade jurídica, o juiz poderá desconsiderá-la para garantir o ressarcimento ao consumidor, conforme previsto no Art. 28 (urn:lex:br:federal:lei:1990-09-11;8078~art28).",
+        "citations": [
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;inc1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;inc2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art34",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art28"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": "⚠️ Atenção (hierarquia normativa): a resposta cita apenas fontes de rank 3 (Lei Ordinária / Tema STF (tese fixada)); o contexto continha fontes de rank superior — Constituição/EC (urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art47;par1). Verifique se a hierarquia foi respeitada (CF > LC > LO > Decreto > Resolução).",
+        "cost_estimate_usd": 0.006708,
+        "tokens_used": {
+          "input_tokens": 6992,
+          "output_tokens": 1606
+        },
+        "llm_calls": 4,
+        "latency_ms": 9702.423
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/366",
+        "category": "oos_a",
+        "query": "Qual é o prazo máximo de proteção legal para patentes de invenção no Brasil?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Não há informação suficiente nas fontes fornecidas.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001686,
+        "tokens_used": {
+          "input_tokens": 3151,
+          "output_tokens": 55
+        },
+        "llm_calls": 2,
+        "latency_ms": 1946.303
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/373",
+        "category": "oos_a",
+        "query": "Qual das seguintes situações pode levar à exclusão de um sócio de uma sociedade limitada?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Não há informação suficiente nas fontes fornecidas para indicar as situações que podem levar à exclusão de um sócio de uma sociedade limitada. As fontes consultadas tratam da desconsideração da personalidade jurídica em relação ao Código de Defesa do Consumidor (Lei nº 8.078/1990), de crimes contra o patrimônio e efeitos da condenação penal (Código Penal), mas não abordam as hipóteses de exclusão de sócio previstas na legislação societária, especialmente no Código Civil ou na Lei das Sociedades por Ações, que são as normas aplicáveis ao tema. Portanto, não é possível responder à pergunta com base exclusivamente nas fontes fornecidas.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.00213,
+        "tokens_used": {
+          "input_tokens": 3464,
+          "output_tokens": 199
+        },
+        "llm_calls": 2,
+        "latency_ms": 2826.223
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/377",
+        "category": "oos_a",
+        "query": "João, sócio majoritário, desvia recursos da empresa para uso pessoal. Essa atitude configura qual infração empresarial?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "A conduta de João, sócio majoritário que desvia recursos da empresa para uso pessoal, configura o crime de desvio de bens ou haveres sociais, tipificado no Art. 177, § 1º, inciso III, do Código Penal. Segundo esse dispositivo, constitui infração penal o ato do diretor ou gerente que usa, em proveito próprio ou de terceiro, bens ou haveres sociais sem prévia autorização da assembleia geral. A conduta descrita enquadra-se precisamente nesse tipo penal, pois envolve o uso indevido de patrimônio da sociedade por quem detém poderes de administração.\n\n⚠️ Atenção: O Art. 152 do Código Penal, que trata de desvio de correspondência por sócio ou empregado, é inaplicável ao caso, pois refere-se especificamente a correspondência comercial ou industrial, não abrangendo a subtração ou desvio de recursos financeiros ou bens patrimoniais da empresa.\n\n—\nFontes consultadas em: Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art177;par1;inc3"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A interpretação de que o sócio majoritário pode ser enquadrado como 'diretor ou gerente' para fins penais depende de análise concreta da estrutura de gestão da empresa, não sendo diretamente afirmado nas fontes fornecidas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.005333,
+        "tokens_used": {
+          "input_tokens": 6459,
+          "output_tokens": 1052
+        },
+        "llm_calls": 4,
+        "latency_ms": 7439.625
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/367",
+        "category": "oos_a",
+        "query": "A sociedade simples é registrada obrigatoriamente em qual órgão?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Não há informação suficiente nas fontes fornecidas.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001523,
+        "tokens_used": {
+          "input_tokens": 2886,
+          "output_tokens": 40
+        },
+        "llm_calls": 2,
+        "latency_ms": 1944.69
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/359",
+        "category": "oos_a",
+        "query": "Qual das seguintes formas societárias possui responsabilidade ilimitada dos sócios pelas dívidas da empresa?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=a). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "As fontes fornecidas não contêm disposições específicas sobre as formas societárias e o regime de responsabilidade dos sócios (limitada ou ilimitada) em cada tipo societário. As normas citadas tratam de responsabilidade solidária ou subsidiária em contextos como relações de consumo, proteção de dados ou dirigentes de associações, mas não definem as características das formas jurídicas empresariais. Portanto, não é possível, com base exclusivamente nas fontes apresentadas, identificar qual forma societária possui responsabilidade ilimitada dos sócios.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.00404,
+        "tokens_used": {
+          "input_tokens": 6553,
+          "output_tokens": 382
+        },
+        "llm_calls": 3,
+        "latency_ms": 4294.074
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/364",
+        "category": "oos_a",
+        "query": "Qual das opções descreve uma característica essencial da sociedade em comandita simples?",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Empresarial (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Não há informação suficiente nas fontes fornecidas para descrever uma característica essencial da sociedade em comandita simples, pois as fontes consultadas tratam exclusivamente de disposições penais relacionadas a crimes contra o patrimônio em sociedades por ações e de regras sobre desconsideração da personalidade jurídica no Código de Defesa do Consumidor, não abordando o regime societário da sociedade em comandita simples.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.001911,
+        "tokens_used": {
+          "input_tokens": 3302,
+          "output_tokens": 130
+        },
+        "llm_calls": 2,
+        "latency_ms": 2424.195
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/397",
+        "category": "oos_a",
+        "query": "Uma mineradora pretende explorar área localizada em terras indígenas. Conforme a Constituição Federal, essa exploração é:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "ERROR: BadRequestError: Error code: 400 - {'error': {'message': 'Could not finish the message because max_tokens was reached. Please try again with higher max_tokens', 'type': 'Unknown_error', 'param': None, 'code': 'unknown_error'}}",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.0,
+        "tokens_used": {},
+        "llm_calls": 0,
+        "latency_ms": 0.0
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/389",
+        "category": "oos_a",
+        "query": "Eduardo promoveu queimada irregular em sua propriedade rural, causando danos à fauna e flora locais. Conforme a Lei nº 9.605/98, Eduardo praticou:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Conforme a Lei nº 9.605/98, Eduardo praticou o crime de causar incêndio em mata ou floresta, previsto no artigo 250, § 1º, II, alínea g, do Decreto-Lei nº 2.848/1940, uma vez que promoveu queimada irregular em sua propriedade rural, causando danos à fauna e flora, o que expôs a perigo a vida, a integridade física e o patrimônio de outrem. A pena para essa conduta dolosa é de reclusão, de dois a quatro anos, além de multa. Caso a conduta tenha ocorrido por culpa, aplicar-se-ia o § 2º do artigo 250, que prevê pena de detenção, de seis meses a dois anos. A hipótese de dano qualificado pelo emprego de substância inflamável (artigo 163, parágrafo único, II) não se aplica, pois o fato constitui crime mais grave previsto no artigo 250.",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par1;inc2;ali-g",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par2"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.005441,
+        "tokens_used": {
+          "input_tokens": 6534,
+          "output_tokens": 1087
+        },
+        "llm_calls": 4,
+        "latency_ms": 8179.923
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/388",
+        "category": "oos_a",
+        "query": "Uma empresa de transportes derramou produtos químicos em uma rodovia causando contaminação do solo. Sobre a responsabilidade ambiental da empresa é correto afirmar que ela:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "A empresa de transportes que derramou produtos químicos em uma rodovia e causou contaminação do solo está sujeita à responsabilidade ambiental em múltiplas dimensões. Primeiramente, nos termos do Art. 225, § 2º da Constituição Federal, quem explora recursos naturais ou realiza atividades que degradam o meio ambiente fica obrigado a recuperar o meio ambiente degradado, conforme solução técnica exigida pelo órgão público competente.\n\nAlém disso, conforme o Art. 225, § 3º da Constituição Federal, as condutas lesivas ao meio ambiente sujeitam os infratores, pessoas físicas ou jurídicas, a sanções penais e administrativas, independentemente da obrigação de reparar os danos causados. A responsabilidade civil pela reparação do dano ambiental é objetiva, ou seja, independe de culpa, em consonância com o princípio da reparação integral e do dever de restaurar o meio ambiente degradado.\n\nNo âmbito do Código de Defesa do Consumidor, caso o evento tenha gerado prejuízo a consumidores, aplica-se a responsabilidade solidária entre todos os que contribuíram para a causação do dano, nos termos do Art. 25, § 1º da Lei 8.078/1990, bem como o direito de regresso do responsável que indenizar, conforme Art. 13, Parágrafo único do mesmo diploma. Adicionalmente, se houve omissão na comunicação da periculosidade do produto após seu lançamento no mercado, a empresa pode ser responsabilizada nos termos do Art. 64 da Lei 8.078/1990.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026); Código de Defesa do Consumidor (Lei 8.078/1990) (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art64"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A aplicação do Art. 271 do Código Penal depende da tipificação concreta da conduta como crime culposo contra a saúde pública, o que não é diretamente confirmado pelas fontes apenas pelo fato do derramamento."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.006846,
+        "tokens_used": {
+          "input_tokens": 6720,
+          "output_tokens": 1743
+        },
+        "llm_calls": 4,
+        "latency_ms": 10347.721
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/386",
+        "category": "oos_a",
+        "query": "Maria decidiu transformar parte de sua propriedade rural em uma Reserva Particular do Patrimônio Natural (RPPN). Para isso, Maria deve:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Para que Maria transforme parte de sua propriedade rural em uma Reserva Particular do Patrimônio Natural (RPPN), ela deve observar, a partir da Constituição Federal, que a proteção ambiental é um dever do Estado e da coletividade, incluindo a definição de espaços territoriais especialmente protegidos, cuja alteração ou supressão depende de lei, vedada qualquer utilização que comprometa seus atributos protetivos (Art. 225, § 1º, III, Constituição Federal). Ademais, a Constituição impõe o dever de preservar os processos ecológicos essenciais e prover o manejo ecológico dos ecossistemas (Art. 225, § 1º, I, Constituição Federal), bem como proteger a fauna e a flora, vedando práticas que coloquem em risco sua função ecológica ou provoquem extinção de espécies (Art. 225, § 1º, VII, Constituição Federal).\n\nEmbora a Constituição estabeleça os fundamentos constitucionais para a proteção ambiental e a criação de espaços especialmente protegidos, ela não detalha o procedimento específico para a instituição de uma RPPN. Esse procedimento é regulamentado por legislação infraconstitucional, notadamente pelo Decreto nº 6.660/2008, que não está disponível nas fontes fornecidas. Assim, com base exclusivamente nas normas constitucionais apresentadas, sabe-se que Maria deve declarar a área como objeto de proteção permanente, comprometer-se à conservação da natureza e ao cumprimento de um plano de manejo, mas os trâmites administrativos formais (como registro, fiscalização e benefícios) não são explicitados nas fontes dadas.",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc7"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [
+          "O procedimento exato para registro de uma RPPN, incluindo competência administrativa e requisitos formais, é regulado pelo Decreto nº 6.660/2008, que não está presente nas fontes fornecidas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003831,
+        "tokens_used": {
+          "input_tokens": 4007,
+          "output_tokens": 914
+        },
+        "llm_calls": 3,
+        "latency_ms": 6858.388
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/387",
+        "category": "oos_a",
+        "query": "Carlos, empresário do ramo de mineração, pretende iniciar atividades de grande impacto ambiental. Nesse caso, será exigido:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Para iniciar atividades de grande impacto ambiental no ramo de mineração, Carlos deverá observar as seguintes exigências constitucionais:\n\n1. Exigência de estudo prévio de impacto ambiental: A Constituição Federal, no seu art. 225, § 1º, inciso IV, determina que para a instalação de obra ou atividade potencialmente causadora de significativa degradação do meio ambiente, é obrigatória a realização de estudo prévio de impacto ambiental (EIA), o qual deverá ser objeto de publicidade. Essa exigência aplica-se a atividades como a mineração que possam causar impactos ambientais relevantes. <fonte urn=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc4\"/>\n\n2. Obrigação de recuperação do meio ambiente degradado: O art. 225, § 2º, impõe que aquele que explorar recursos minerais fica obrigado a recuperar o meio ambiente degradado, de acordo com solução técnica exigida pelo órgão público competente, na forma da lei. Assim, além da obrigação de mitigar impactos antes da atividade, há dever pós-impacto de restauração. <fonte urn=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2\"/>\n\n3. Princípio da defesa ambiental na ordem econômica: O art. 170, inciso VI, estabelece que a defesa do meio ambiente é princípio da ordem econômica, inclusive mediante tratamento diferenciado conforme o impacto ambiental dos produtos e processos, reforçando a necessidade de adoção de práticas ambientalmente adequadas na atividade econômica. <fonte urn=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art170;inc6\"/>\n\n4. Sanções por condutas lesivas ao meio ambiente: Conforme o art. 225, § 3º, qualquer conduta lesiva ao meio ambiente sujeita o infrator a sanções penais e administrativas, independentemente da obrigação de reparar os danos causados, o que reforça o caráter vinculante e coercitivo das exigências ambientais. <fonte urn=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3\"/>\n\nNão há, nas fontes, exigência específica de licença ambiental adicional além do estudo prévio de impacto ambiental, tampouco dispensa geral para mineradoras, sendo o EIA a principal ferramenta exigida pela Constituição para atividades de alto potencial de degradação.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art170;inc6",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [
+          "O cumprimento do EIA/RIMA depende de regulamentação infraconstitucional específica (como a Lei 6.938/81), que não está detalhada nas fontes fornecidas.",
+          "A definição de 'grande impacto ambiental' é regulamentada por normas infraconstitucionais, não explicitada nas fontes."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.007713,
+        "tokens_used": {
+          "input_tokens": 6910,
+          "output_tokens": 2129
+        },
+        "llm_calls": 4,
+        "latency_ms": 12182.541
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/398",
+        "category": "oos_a",
+        "query": "Antônio, agricultor familiar, realizou queimadas controladas em sua propriedade sem autorização ambiental. Nesse caso, Antônio:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Antônio pode ser responsabilizado penalmente por crime de incêndio, nos termos do Art. 250 do Código Penal, que tipifica como crime causar incêndio expondo a perigo a vida, a integridade física ou o patrimônio de outrem. A conduta de realizar queimadas controladas sem autorização ambiental em lavoura configura o tipo descrito no Art. 250, § 1º, II, h, do Código Penal, que especifica a circunstância agravante quando o incêndio ocorre 'em lavoura, pastagem, mata ou floresta' <fonte urn=\"urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par1;inc2;ali-h\">. Caso o incêndio tenha sido causado com dolo, a pena é agravada conforme o § 1º do mesmo artigo; se culposo, a pena prevista é de detenção, de seis meses a dois anos, conforme o Art. 250, § 2º do Código Penal <fonte urn=\"urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par2\">. Ademais, conforme o Art. 225, § 3º da Constituição Federal, as condutas lesivas ao meio ambiente sujeitam o infrator a sanções penais e administrativas, independentemente da obrigação de reparar os danos causados <fonte urn=\"urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3\">.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026); Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par1;inc2;ali-h",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003752,
+        "tokens_used": {
+          "input_tokens": 3745,
+          "output_tokens": 940
+        },
+        "llm_calls": 3,
+        "latency_ms": 6449.956
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/385",
+        "category": "oos_a",
+        "query": "Uma indústria realizou lançamento irregular de resíduos no rio próximo à sua sede, gerando danos ambientais. Sobre a reparação do dano ambiental causado, assinale a alternativa correta:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Ambiental (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "A Constituição Federal estabelece que as condutas e atividades lesivas ao meio ambiente sujeitam os infratores, pessoas físicas ou jurídicas, a sanções penais e administrativas, independentemente da obrigação de reparar os danos causados, o que significa que a reparação ambiental é uma obrigação autônoma e não depende da aplicação de penalidades (art. 225, § 3º, CF/88). Adicionalmente, o responsável pela degradação ambiental deve obrigatoriamente recuperar o meio ambiente degradado, de acordo com solução técnica exigida pelo órgão público competente, na forma da lei (art. 225, § 2º, CF/88). A legislação consumerista também prevê o direito de regresso àquele que efetuar o pagamento da indenização ao prejudicado, podendo acionar os demais responsáveis segundo sua participação no evento danoso, regra que pode ser aplicada analogicamente em matéria ambiental quando houver responsáveis solidários (art. 13, parágrafo único, CDC). ⚠️ Atenção: O art. 225, § 2º da Constituição Federal dispõe sobre a obrigação de recuperação do meio ambiente para quem explora recursos minerais, sendo aplicável diretamente ao caso de lançamento irregular de resíduos se houver degradação de área afetada pela mineração ou similaridade técnica, mas sua aplicação genérica a outros poluidores depende de regulamentação específica prevista na própria Constituição.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026); Código de Defesa do Consumidor (Lei 8.078/1990) (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;par1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A aplicação do art. 225, § 2º da CF/88 a todo tipo de poluidor ambiental independe de regulamentação específica, pois a norma é de eficácia plena para qualquer degradação ambiental."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003687,
+        "tokens_used": {
+          "input_tokens": 3943,
+          "output_tokens": 858
+        },
+        "llm_calls": 3,
+        "latency_ms": 7681.51
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/402",
+        "category": "oos_a",
+        "query": "No Direito Internacional Público, a imunidade de jurisdição absoluta é tradicionalmente reconhecida para:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "No Direito Internacional Público, a imunidade de jurisdição absoluta é tradicionalmente reconhecida para os chefes de missão diplomática de caráter permanente. Essa prerrogativa está materializada na competência do Supremo Tribunal Federal (STF) para julgar, nas infrações penais comuns, os chefes de missão diplomática de caráter permanente, conforme disposto no art. 102, I, alínea c, da Constituição Federal. Adicionalmente, o Senado Federal tem a atribuição de aprovar previamente, por voto secreto, após arguição em sessão secreta, a escolha desses chefes de missão, conforme o art. 52, IV, da Constituição. A competência da Justiça Federal também abarca as causas entre um Estado estrangeiro ou organismo internacional e Municípios ou pessoas domiciliadas no Brasil, o que reforça a aplicação de prerrogativas de imunidade no âmbito cível (art. 109, II, e art. 105, II, c, da Constituição).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art102;inc1;ali-c",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art52;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art105;inc2;ali-c"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003687,
+        "tokens_used": {
+          "input_tokens": 4115,
+          "output_tokens": 815
+        },
+        "llm_calls": 3,
+        "latency_ms": 5939.248
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/412",
+        "category": "oos_a",
+        "query": "Antônio foi condenado criminalmente na Espanha e fugiu para o Brasil, seu país de origem. Sobre o pedido de extradição feito pela Espanha, é correto afirmar que:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "É incorreto afirmar que Antônio, sendo brasileiro nato, será automaticamente extraditado. A Constituição Federal de 1988 veda a extradição de brasileiros natos, mesmo que condenados no exterior por crime comum, conforme o disposto no Art. 5º, inciso LI. Apenas o brasileiro naturalizado pode ser extraditado, e somente em caso de crime comum praticado antes da naturalização ou de comprovado envolvimento em tráfico ilícito de entorpecentes e drogas afins, na forma da lei. Como Antônio é brasileiro nato, a extradição não é possível. \n\nCaso o pedido fosse dirigido a um estrangeiro, a extradição poderia ser analisada pelo Supremo Tribunal Federal, órgão competente para decidir sobre pedidos de extradição de Estado estrangeiro, conforme o Art. 102, I, alínea g da Constituição Federal. Além disso, a extradição de estrangeiro não será concedida por crime político ou de opinião, conforme Art. 5º, inciso LII da Constituição. \n\nAdemais, a sentença condenatória estrangeira pode ser homologada no Brasil para fins de execução de efeitos civis ou de medidas de segurança, mas não para fins de cumprimento de pena em regime de extradição. O Art. 9º do Código Penal estabelece que a sentença estrangeira pode ser homologada quando a lei brasileira produzir as mesmas consequências, como obrigar à reparação do dano ou aplicar medida de segurança, mas isso não se confunde com a extradição. \n\nPor fim, o Art. 7º do Código Penal determina que certos crimes cometidos no exterior são punidos segundo a lei brasileira, independentemente de absolvição ou condenação no país estrangeiro, mas essa regra não se aplica à extradição, que depende das restrições constitucionais.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026); Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc51",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art102;inc1;ali-g",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc52",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art9"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.004173,
+        "tokens_used": {
+          "input_tokens": 3778,
+          "output_tokens": 1142
+        },
+        "llm_calls": 3,
+        "latency_ms": 7761.552
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/403",
+        "category": "oos_a",
+        "query": "Conforme a Convenção de Viena sobre Relações Diplomáticas, um agente diplomático estrangeiro tem imunidade:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Conforme a Convenção de Viena sobre Relações Diplomáticas, um agente diplomático estrangeiro goza de imunidade de jurisdição penal, civil e administrativa no Estado acreditado, o que significa que não pode ser processado ou julgado pelas autoridades locais por atos praticados no exercício de suas funções. Essa prerrogativa, embora não seja diretamente regulada nas fontes fornecidas pelo ordenamento brasileiro, está alinhada com o princípio constitucional de manutenção de relações com Estados estrangeiros e a acreditação de seus representantes diplomáticos (Art. 84, VII, Constituição Federal de 1988). No Código Penal Brasileiro, a figura do 'funcionário público estrangeiro' é reconhecida para fins penais, incluindo agentes diplomáticos em exercício de função pública em representações diplomáticas (Art. 337-D, CP), mas a norma não detalha a extensão da imunidade, que é matéria própria da Convenção de Viena e do direito internacional costumeiro.",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art84;inc7",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art337-d"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A imunidade de jurisdição penal, civil e administrativa do agente diplomático é total e absoluta no território do Estado acreditado, conforme a Convenção de Viena sobre Relações Diplomáticas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003096,
+        "tokens_used": {
+          "input_tokens": 3775,
+          "output_tokens": 604
+        },
+        "llm_calls": 3,
+        "latency_ms": 4686.538
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/405",
+        "category": "oos_a",
+        "query": "A competência para declarar guerra, segundo a Constituição Federal brasileira, pertence ao(à):",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Segundo a Constituição Federal de 1988, a competência para declarar guerra é compartilhada entre o Presidente da República e o Congresso Nacional, conforme os seguintes dispositivos:\n\nO Art. 21, II, atribui à União a competência para declarar a guerra e celebrar a paz. No entanto, o Art. 84, XIX, estabelece que o Presidente da República pode declarar guerra, no caso de agressão estrangeira, apenas se autorizado pelo Congresso Nacional ou, em caso de intervalo das sessões legislativas, quando referendado por ele. Por sua vez, o Art. 49, II, determina que cabe ao Congresso Nacional autorizar o Presidente da República a declarar guerra, entre outras matérias relacionadas à defesa nacional. Assim, embora o Presidente tenha a faculdade de decretar a guerra em situações excepcionais, essa atuação depende de prévia autorização ou posterior referendo do Congresso Nacional.\n\nAdicionalmente, o Art. 91, § 1º, I, prevê que o Conselho de Defesa Nacional opinará nas hipóteses de declaração de guerra e de celebração da paz, nos termos da Constituição, o que evidencia o caráter consultivo e institucionalizado do processo decisório em matéria de defesa nacional.\n\n⚠️ Atenção: O Art. 84, XIX, menciona a possibilidade de o Presidente declarar guerra autorizado ou referendado pelo Congresso Nacional. A redação não prevê um regime de exclusividade, mas sim um sistema de controle parlamentar prévio ou posterior. A vigência e aplicação desses mecanismos dependem da observância dos procedimentos constitucionais estabelecidos, sem ressalva específica de vigência nos dispositivos citados.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art21;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art84;inc19",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art49;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art91;par1;inc1"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003814,
+        "tokens_used": {
+          "input_tokens": 3835,
+          "output_tokens": 948
+        },
+        "llm_calls": 3,
+        "latency_ms": 6395.28
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/413",
+        "category": "oos_a",
+        "query": "Uma embarcação brasileira em águas internacionais é atacada por piratas estrangeiros. A jurisdição para julgar os piratas, segundo o Direito Internacional Público, é:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=b). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Segundo o ordenamento jurídico brasileiro, a embarcação brasileira em águas internacionais é considerada extensão do território nacional, conforme o Art. 5, § 1º do Decreto-Lei nº 2.848/1940 (Código Penal). Por essa razão, os crimes praticados a bordo, como o ataque pirata, são passíveis de persecução penal pela justiça brasileira.\n\nA aplicação da lei penal brasileira a crimes cometidos em embarcação brasileira fora do território nacional, quando os autores não forem julgados no local, está prevista no Art. 7, II, c, do Código Penal. Esse dispositivo fundamenta a jurisdição penal brasileira sobre os piratas estrangeiros que atacarem uma embarcação mercante ou de propriedade privada brasileira em alto-mar, desde que o julgamento não ocorra no país onde o crime foi praticado.\n\nAlém disso, a competência para julgar crimes cometidos a bordo de navios no Brasil é da Justiça Federal, ressalvada a competência da Justiça Militar, conforme o Art. 109, IX da Constituição Federal. Assim, o juiz federal será competente para julgar os piratas, em regra.\n\n⚠️ Atenção: O Art. 7, II, c do Código Penal refere-se à aplicação da lei penal brasileira quando o crime, praticado em embarcação brasileira mercante ou de propriedade privada em território estrangeiro, não for julgado aí. No caso de alto-mar, não há território estrangeiro, mas a norma se aplica por equiparação do navio ao território nacional (Art. 5, § 1º). A jurisdição internacional sobre pirataria é também regida por tratados, como a Convenção das Nações Unidas sobre o Direito do Mar (UNCLOS), que prevê a repressão da pirataria por qualquer Estado, mas o Brasil exerce jurisdição própria com base no direito interno supracitado.\n\n—\nFontes consultadas em: Constituição da República Federativa do Brasil de 1988 (16/05/2026); Código Penal (Decreto-Lei 2.848/1940) — texto compilado (16/05/2026).",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art5;par1",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;inc2;ali-c",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;inc9"
+        ],
+        "refused": false,
+        "refusal_reason": null,
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A jurisdição internacional sobre pirataria é exclusiva do Estado onde o navio está registrado, o que não é sustentado pelas fontes fornecidas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003964,
+        "tokens_used": {
+          "input_tokens": 3936,
+          "output_tokens": 998
+        },
+        "llm_calls": 3,
+        "latency_ms": 6451.432
+      },
+      "scoring": {
+        "refused_correctly": false,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/414",
+        "category": "oos_a",
+        "query": "Uma empresa brasileira contrata empregados estrangeiros que trabalham remotamente em seus países. A legislação aplicável às relações trabalhistas será definida:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "A legislação aplicável às relações trabalhistas de empregados estrangeiros contratados por empresa brasileira para trabalharem remotamente em seus países de residência não está expressamente definida nas fontes fornecidas.\n\nAs normas consultadas tratam de temas como proteção a direitos autorais (Lei 9.610/1998), aplicação da Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018) para dados que não sejam transferidos ou compartilhados com agentes brasileiros, aplicação extraterritorial da Lei de Interceptações (Marco Civil da Internet, Lei 12.965/2014, conforme Decreto 8.771/2016), e aplicação da lei penal brasileira a crimes cometidos no exterior em certas hipóteses. Contudo, nenhuma dessas fontes estabelece critérios para a escolha da lei trabalhista aplicável em contratos de trabalho remoto de estrangeiros por empresas brasileiras.\n\nA Lei 9.610/1998 menciona que estrangeiros domiciliados no exterior gozarão da proteção assegurada em acordos, convenções e tratados em vigor no Brasil, mas esse dispositivo é específico para direitos autorais e não se aplica diretamente à relação de emprego. Não há nas fontes uma regra de conflito de leis do trabalho ou dispositivo que determine a aplicação da legislação brasileira ou estrangeira em tais casos.",
+        "citations": [],
+        "refused": true,
+        "refusal_reason": "empty-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [
+          "A escolha da lei aplicável em contratos de trabalho remoto internacionais é matéria regida por regras de direito internacional privado que não estão positivadas nas fontes fornecidas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.002412,
+        "tokens_used": {
+          "input_tokens": 3095,
+          "output_tokens": 432
+        },
+        "llm_calls": 2,
+        "latency_ms": 3273.823
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    },
+    {
+      "row": {
+        "source_id": "celsowm/legalbench.br/409",
+        "category": "oos_a",
+        "query": "Um diplomata estrangeiro comete um crime comum em território brasileiro. Nesse caso, o diplomata:",
+        "question_type": "parafrase",
+        "expected_oos_subtype": "a",
+        "gold_urns": [],
+        "notes": "OOS sample from Direito Internacional (legalbench.br MCQ, answer_key=c). Pipeline should refuse because corpus doesn't index this area."
+      },
+      "answer": {
+        "text": "Um diplomata estrangeiro que comete um crime comum em território brasileiro está sujeito à jurisdição penal brasileira, salvo se houver imunidade diplomática. O Código Penal Brasileiro, em seu art. 7º, § 1º, estabelece que, nos casos em que a lei brasileira se aplica a crimes cometidos por estrangeiros no Brasil — ainda que o agente tenha sido absolvido ou condenado no exterior —, a aplicação da norma penal brasileira ocorre, exceto se a imunidade for reconhecida com fundamento em tratados internacionais aos quais o Brasil seja parte, como a Convenção de Viena sobre Relações Diplomáticas. Nesse sentido, o art. 7º, inciso II, alínea a, do Código Penal prevê que a lei brasileira se aplica a crimes que o Brasil se obrigou a reprimir por tratado ou convenção. Contudo, a imunidade diplomática é matéria de direito internacional e não é regida diretamente pelo Código Penal, mas sim por tratados. Assim, embora a lei brasileira possa se aplicar em tese, na prática, o diplomata normalmente goza de imunidade de jurisdição penal, devendo ser processado em seu país de origem, salvo renúncia à imunidade pelo Estado acreditante. O Código Penal também define, em seu art. 337-D, que diplomatas estrangeiros são considerados funcionários públicos estrangeiros para fins penais, o que pode ser relevante para crimes contra a administração pública, mas não afasta a imunidade diplomática em crimes comuns.",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;par1",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;inc2;ali-a",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art337-d"
+        ],
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "rejected_citations": [],
+        "unverified_claims": [
+          "O texto do Código Penal não regula explicitamente a imunidade diplomática, que é matéria de direito internacional e tratados, como a Convenção de Viena sobre Relações Diplomáticas, norma não incluída nas fontes fornecidas."
+        ],
+        "hierarchy_warning": null,
+        "cost_estimate_usd": 0.003576,
+        "tokens_used": {
+          "input_tokens": 3571,
+          "output_tokens": 895
+        },
+        "llm_calls": 3,
+        "latency_ms": 5634.051
+      },
+      "scoring": {
+        "refused_correctly": true,
+        "coverage": null,
+        "coverage_jaccard": null,
+        "any_gold_cited": null,
+        "rule_recall_hit": null,
+        "discursive_score_pct": null,
+        "discursive_reasoning": ""
+      }
+    }
+  ]
+}
