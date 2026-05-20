@@ -24,7 +24,16 @@ concurso = ["datasets>=4.0"]
 # behind a `POST /v1/ask` endpoint. Installed via `uv sync --extra server`.
 # Kept optional so the eval-only CLI surface doesn't pull a web stack.
 # Phase 8.2 — adds `slowapi` for per-API-key token-bucket rate limiting.
-server = ["fastapi>=0.115", "uvicorn[standard]>=0.32", "slowapi>=0.1.9"]
+# Phase 8.3 — adds `structlog` for JSON logs + OpenTelemetry for tracing.
+server = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "slowapi>=0.1.9",
+    "structlog>=24.0",
+    "opentelemetry-api>=1.27",
+    "opentelemetry-sdk>=1.27",
+    "opentelemetry-instrumentation-fastapi>=0.49b0",
+]
 
 [dependency-groups]
 dev = [

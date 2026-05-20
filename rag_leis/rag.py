@@ -49,6 +49,7 @@ from rag_leis.query_type import (
     prompt_snippet_for_query,
 )
 from rag_leis.verify import verify_citations
+from rag_leis import obs  # Phase 8.3 — span() is a no-op unless server configures OTel
 from rag_leis.vigencia import Vigencia, vigencia_warning
 
 DEFAULT_TOP_K = 10
@@ -447,15 +448,21 @@ class RAGPipeline:
             query_for_pipeline = query
 
         # Classifier runs on the redacted query (preserves semantic shape).
-        if self.adaptive_top_k:
-            classified = classify_query(query_for_pipeline)
-            effective_top_k = TOP_K_PER_TYPE.get(classified, self.top_k)
-        else:
-            classified = None
-            effective_top_k = self.top_k
+        with obs.span("pipeline.classify") as _s:
+            if self.adaptive_top_k:
+                classified = classify_query(query_for_pipeline)
+                effective_top_k = TOP_K_PER_TYPE.get(classified, self.top_k)
+            else:
+                classified = None
+                effective_top_k = self.top_k
+            _s.set_attribute("classified_type", classified or "unclassified")
+            _s.set_attribute("effective_top_k", effective_top_k)
 
-        retrieved = self._retrieve(query_for_pipeline, effective_top_k)
-        top1_score = retrieved[0][1] if retrieved else 0.0
+        with obs.span("pipeline.retrieve", top_k=effective_top_k) as _s:
+            retrieved = self._retrieve(query_for_pipeline, effective_top_k)
+            top1_score = retrieved[0][1] if retrieved else 0.0
+            _s.set_attribute("top_1_cosine", top1_score)
+            _s.set_attribute("n_retrieved", len(retrieved))
 
         pii_types = sorted(rq.pii_types_found) if rq else []
 
@@ -565,7 +572,8 @@ class RAGPipeline:
         )
         system_prompt = SYSTEM_PROMPT + ("\n\n" + snippet if snippet else "")
         user_msg = f"Pergunta: {query_for_pipeline}\n\nFontes:\n{context}"
-        result = self.llm.complete_structured(system_prompt, user_msg, ANSWER_TOOL)
+        with obs.span("pipeline.llm.generate", provider=self.llm.provider, model=self.llm.name):
+            result = self.llm.complete_structured(system_prompt, user_msg, ANSWER_TOOL)
 
         # Phase 7.5.2 — accumulate token usage + cost across LLM calls.
         # First call (initial answer). Retry adds to the same counters below.
@@ -593,7 +601,11 @@ class RAGPipeline:
         answer_text = str(result.get("answer", ""))
         cited = [str(u) for u in result.get("citations", [])]
         retrieved_urns = frozenset(u for u, _ in retrieved)
-        verified, rejected = verify_citations(cited, retrieved_urns, self.corpus_urns)
+        with obs.span("pipeline.verify") as _s:
+            verified, rejected = verify_citations(cited, retrieved_urns, self.corpus_urns)
+            _s.set_attribute("n_cited", len(cited))
+            _s.set_attribute("n_verified", len(verified))
+            _s.set_attribute("n_rejected", len(rejected))
 
         # Phase 5.3: prose-vs-URN consistency check. If the answer prose
         # references articles/incisos/paragraphs that don't match any
@@ -660,9 +672,14 @@ class RAGPipeline:
             # fall back to the generator. Both paths use the same call
             # site; cost-fold reads from the active judge instance.
             active_judge = self.relevance_judge or self.llm
-            decisions = judge_citation_relevance(
-                active_judge, query_for_pipeline, verified, self.chunks_by_urn
-            )
+            with obs.span(
+                "pipeline.relevance_judge",
+                provider=active_judge.provider, model=active_judge.name,
+                n_citations=len(verified),
+            ):
+                decisions = judge_citation_relevance(
+                    active_judge, query_for_pipeline, verified, self.chunks_by_urn
+                )
             # Fold the relevance-judge call cost in immediately. Important
             # subtlety: read last_call_usage off the JUDGE LLM (not
             # self.llm) because that's the model that just made the call.
