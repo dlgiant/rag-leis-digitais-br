@@ -31,6 +31,11 @@ data/index/
 # demand; deleting the dir just means the next eval pays the LLM bill
 # once. See rag_leis/llm_cache.py.
 data/cache/
+
+# Stdout/stderr logs from eval runs. The structured JSON per-row data
+# (eval/runs/*.json) is the durable artifact; .log files duplicate
+# the print_report() output and bloat history with reproducible text.
+*.log
 # data/metadata/ — Phase 7 (production infra): metadata jsons (~1KB each,
 # ~17 docs = ~17KB total) carregam html.sha256 que é o estado durável
 # do diff cycle. Sem isso, GitHub Actions runner efêmero veria todos os
