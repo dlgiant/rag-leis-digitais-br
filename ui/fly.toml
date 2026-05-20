@@ -1,0 +1,41 @@
+# Phase 10b — UI Fly app config.
+#
+# Separate app from the backend (`rag-leis-digitais-br`). Lives in the
+# same gru region to honor LGPD residency for any incidental data
+# (logs, no PII retention v1). The UI's proxy endpoint forwards to
+# the backend's internal hostname over Fly's private network if
+# colocated, OR over the public URL.
+
+app = "rag-leis-ui"
+primary_region = "gru"
+
+[build]
+
+[env]
+  # Backend URL the proxy forwards to. Public URL for v1.
+  # Phase 11+ could swap to internal `.flycast` URL for zero-latency
+  # intra-region routing once both apps are confirmed colocated.
+  RAG_BACKEND_URL = "https://rag-leis-digitais-br.fly.dev"
+  NODE_ENV = "production"
+
+[http_service]
+  internal_port = 4321
+  force_https = true
+  # Phase 10.0 findings: cold-start adds ~19s to first-of-day traffic.
+  # For a PUBLIC demo, that's an unacceptable first-impression UX,
+  # so keep at least one machine warm. Costs ~$5/mo per warm machine.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"  # Astro SSR Node server fits easily in 512MB

@@ -1,0 +1,16 @@
+{
+  "name": "rag-leis-ui",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Phase 10b demo UI for rag-leis-digitais-br. Astro + Node SSR; server-side proxy to the backend SSE endpoint.",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0 --port 4321",
+    "build": "astro build",
+    "preview": "astro preview --host 0.0.0.0 --port 4321",
+    "start": "node ./dist/server/entry.mjs"
+  },
+  "dependencies": {
+    "@astrojs/node": "^9.0.0",
+    "astro": "^5.0.0"
+  }
+}

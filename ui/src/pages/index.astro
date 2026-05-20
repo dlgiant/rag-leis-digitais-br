@@ -1,0 +1,490 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+// Phase 10b — chat page. SSR-rendered HTML; the streaming logic
+// lives in an inline-script tag that hits the same-origin proxy at
+// /api/ask/stream. Brazilian Portuguese throughout.
+
+const EXAMPLES = [
+  "qual a definição de dado pessoal na LGPD?",
+  "o que é neutralidade de rede no Marco Civil?",
+  "quais são os princípios do tratamento de dados pessoais?",
+  "o que diz o art. 9º do Marco Civil da Internet?",
+];
+---
+
+<Layout title="rag-leis demo — perguntas sobre leis digitais brasileiras">
+  <main>
+    <header>
+      <h1>rag-leis<span class="muted">-digitais-br</span></h1>
+      <p class="tagline">
+        Demo de RAG sobre leis digitais brasileiras (LGPD, Marco Civil,
+        Lei do Software e correlatas).
+      </p>
+    </header>
+
+    <section class="notice" aria-label="Aviso de privacidade">
+      <strong>⚠️ Demo:</strong> esta é uma versão de demonstração. As
+      consultas são processadas mas não são associadas a contas de
+      usuário. <strong>Não envie dados pessoais reais</strong> (CPF,
+      CNPJ, nomes de terceiros). Respostas são geradas por IA com
+      citações a artigos de lei; <strong>verifique cada citação</strong>
+      antes de confiar.
+    </section>
+
+    <section class="chat">
+      <form id="askForm">
+        <label for="queryInput" class="visually-hidden">Sua pergunta</label>
+        <textarea
+          id="queryInput"
+          name="query"
+          placeholder="Faça uma pergunta sobre LGPD, Marco Civil, ou outra lei digital brasileira…"
+          rows="3"
+          maxlength="2000"
+          required
+          autocomplete="off"
+        ></textarea>
+        <div class="form-row">
+          <span id="charCount" class="muted small">0 / 2000</span>
+          <button type="submit" id="askBtn">Perguntar</button>
+        </div>
+      </form>
+
+      <details class="examples">
+        <summary>Experimente uma destas perguntas</summary>
+        <ul>
+          {EXAMPLES.map((q) => <li><button type="button" class="example-btn" data-query={q}>{q}</button></li>)}
+        </ul>
+      </details>
+
+      <div id="status" class="status hidden" aria-live="polite"></div>
+
+      <article id="answer" class="answer hidden">
+        <header class="answer-header">
+          <h2>Resposta</h2>
+          <span id="elapsed" class="muted small"></span>
+        </header>
+        <div id="answerText" class="answer-text"></div>
+        <section id="citationsSection" class="citations hidden">
+          <h3>Citações</h3>
+          <ul id="citationsList"></ul>
+        </section>
+        <section id="refusalSection" class="refusal hidden">
+          <p id="refusalText"></p>
+        </section>
+      </article>
+    </section>
+
+    <footer>
+      <p>
+        Código:
+        <a href="https://github.com/dlgiant/rag-leis-digitais-br" target="_blank" rel="noopener">
+          github.com/dlgiant/rag-leis-digitais-br
+        </a>
+      </p>
+      <p class="muted small">
+        Hospedado no Brasil (Fly.io · São Paulo) por questões de
+        conformidade LGPD. Esta interface não armazena suas perguntas
+        além do log estruturado do servidor (sem identificação
+        pessoal).
+      </p>
+    </footer>
+  </main>
+
+  <style>
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+    }
+    header {
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    h1 .muted {
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .tagline {
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .notice {
+      background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      border-radius: 8px;
+      padding: 0.875rem 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .chat {
+      margin-bottom: 2rem;
+    }
+    #askForm {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      font-family: inherit;
+      font-size: 1rem;
+      background: var(--bg-card);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      resize: vertical;
+      min-height: 80px;
+    }
+    textarea:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-color: var(--accent);
+    }
+    .form-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    button {
+      padding: 0.6rem 1.25rem;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 6px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: white;
+      font-weight: 500;
+    }
+    button:hover:not(:disabled) {
+      filter: brightness(1.1);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .examples {
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+    }
+    .examples summary {
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0.25rem 0;
+    }
+    .examples ul {
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0 0;
+    }
+    .examples li {
+      margin-bottom: 0.25rem;
+    }
+    .example-btn {
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 400;
+      text-align: left;
+      width: 100%;
+    }
+    .example-btn:hover:not(:disabled) {
+      background: var(--code);
+      border-color: var(--accent);
+    }
+    .status {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--code);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .status.hidden,
+    .answer.hidden,
+    .citations.hidden,
+    .refusal.hidden {
+      display: none;
+    }
+    .status-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .status-list li {
+      padding: 0.25rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .status-list .stage-pending {
+      color: var(--muted);
+    }
+    .status-list .stage-running {
+      color: var(--fg);
+      font-weight: 500;
+    }
+    .status-list .stage-done {
+      color: var(--success);
+    }
+    .status-list .stage-icon {
+      width: 1.25em;
+      text-align: center;
+    }
+    .answer {
+      margin-top: 1.5rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .answer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.75rem;
+    }
+    .answer h2,
+    .answer h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .answer-text {
+      white-space: pre-wrap;
+      font-size: 0.95rem;
+    }
+    .citations {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .citations ul {
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0 0;
+    }
+    .citations li {
+      padding: 0.2rem 0;
+      font-size: 0.875rem;
+    }
+    .refusal {
+      margin-top: 1.25rem;
+      padding: 0.875rem 1rem;
+      background: color-mix(in srgb, var(--muted) 8%, transparent);
+      border-left: 3px solid var(--muted);
+      border-radius: 0 6px 6px 0;
+    }
+    .refusal p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    footer {
+      margin-top: 4rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+    footer p {
+      margin: 0.25rem 0;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .small {
+      font-size: 0.85em;
+    }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+  </style>
+
+  <script is:inline>
+    // Phase 10b — vanilla JS chat client. Hits /api/ask/stream
+    // (same-origin) and renders the SSE event stream.
+
+    const STAGE_LABELS = {
+      classify: "Classificando pergunta",
+      retrieve: "Buscando no corpus",
+      generate: "Gerando resposta",
+      verify: "Verificando citações",
+      relevance_judge: "Avaliando relevância das citações",
+    };
+
+    const STAGE_ORDER = ["classify", "retrieve", "generate", "verify", "relevance_judge"];
+
+    const form = document.getElementById("askForm");
+    const queryInput = document.getElementById("queryInput");
+    const askBtn = document.getElementById("askBtn");
+    const charCount = document.getElementById("charCount");
+    const statusEl = document.getElementById("status");
+    const answerEl = document.getElementById("answer");
+    const answerTextEl = document.getElementById("answerText");
+    const elapsedEl = document.getElementById("elapsed");
+    const citationsSectionEl = document.getElementById("citationsSection");
+    const citationsListEl = document.getElementById("citationsList");
+    const refusalSectionEl = document.getElementById("refusalSection");
+    const refusalTextEl = document.getElementById("refusalText");
+
+    // Char-counter
+    queryInput.addEventListener("input", () => {
+      charCount.textContent = `${queryInput.value.length} / 2000`;
+    });
+
+    // Example-query buttons
+    document.querySelectorAll(".example-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        queryInput.value = btn.dataset.query;
+        charCount.textContent = `${queryInput.value.length} / 2000`;
+        queryInput.focus();
+      });
+    });
+
+    function renderStageList(stages) {
+      const items = STAGE_ORDER.map((name) => {
+        const s = stages[name] || { state: "pending" };
+        let icon = "○";
+        let cls = "stage-pending";
+        if (s.state === "running") {
+          icon = "◐";
+          cls = "stage-running";
+        } else if (s.state === "done") {
+          icon = "●";
+          cls = "stage-done";
+        } else if (s.state === "skipped") {
+          icon = "·";
+          cls = "stage-pending";
+        }
+        return `<li class="${cls}"><span class="stage-icon">${icon}</span>${STAGE_LABELS[name] || name}</li>`;
+      }).join("");
+      statusEl.innerHTML = `<ul class="status-list">${items}</ul>`;
+    }
+
+    function renderCitation(urn) {
+      const safe = String(urn).replace(/</g, "&lt;");
+      const href = `https://www.lexml.gov.br/urn/${encodeURIComponent(urn)}`;
+      return `<li><a href="${href}" target="_blank" rel="noopener"><code>${safe}</code></a></li>`;
+    }
+
+    function formatRefusal(reason) {
+      const msgs = {
+        "cosine fast-path": "A pergunta parece estar fora do escopo do corpus (leis digitais brasileiras). Tente reformular ou consulte fontes específicas para a área.",
+        "llm-self-refusal": "Não encontrei informações suficientes no corpus para responder essa pergunta.",
+        "empty-citations-implicit-refusal": "Não consegui ancorar a resposta em artigos do corpus, então preferi não responder.",
+        "irrelevant-citations-implicit-refusal": "As fontes encontradas não respondem diretamente à pergunta. Tente reformular.",
+      };
+      for (const [key, msg] of Object.entries(msgs)) {
+        if (reason && reason.startsWith(key)) return msg;
+      }
+      return reason || "Não posso responder essa pergunta com confiança.";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const query = queryInput.value.trim();
+      if (!query) return;
+
+      askBtn.disabled = true;
+      askBtn.textContent = "Processando...";
+      answerEl.classList.add("hidden");
+      answerTextEl.textContent = "";
+      citationsSectionEl.classList.add("hidden");
+      refusalSectionEl.classList.add("hidden");
+      const t0 = performance.now();
+      const stages = {};
+      STAGE_ORDER.forEach((s) => (stages[s] = { state: "pending" }));
+      statusEl.classList.remove("hidden");
+      renderStageList(stages);
+
+      try {
+        const response = await fetch("/api/ask/stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query }),
+        });
+        if (!response.ok || !response.body) {
+          const err = await response.text().catch(() => "");
+          throw new Error(`HTTP ${response.status}: ${err || "no body"}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          // SSE frames are separated by \n\n
+          const frames = buffer.split("\n\n");
+          buffer = frames.pop() || "";
+
+          for (const frame of frames) {
+            const line = frame.trim();
+            if (!line.startsWith("data: ")) continue;
+            const dataStr = line.slice(6);
+            let event;
+            try {
+              event = JSON.parse(dataStr);
+            } catch {
+              continue;
+            }
+
+            if (event.event === "stage") {
+              const newState = event.status === "started" ? "running" : "done";
+              stages[event.name] = { state: newState };
+              renderStageList(stages);
+            } else if (event.event === "complete") {
+              const ans = event.answer;
+              answerEl.classList.remove("hidden");
+              const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+              elapsedEl.textContent = `${elapsed}s`;
+
+              if (ans.refused) {
+                refusalSectionEl.classList.remove("hidden");
+                refusalTextEl.textContent = formatRefusal(ans.refusal_reason);
+                answerTextEl.textContent = "";
+              } else {
+                answerTextEl.textContent = ans.answer;
+                if (ans.citations && ans.citations.length > 0) {
+                  citationsSectionEl.classList.remove("hidden");
+                  citationsListEl.innerHTML = ans.citations.map(renderCitation).join("");
+                }
+              }
+              // Mark any pending stages as skipped (e.g., relevance_judge
+              // doesn't fire on cosine fast-path refusals)
+              STAGE_ORDER.forEach((s) => {
+                if (stages[s].state === "pending") stages[s].state = "skipped";
+              });
+              renderStageList(stages);
+            } else if (event.event === "error") {
+              throw new Error(event.detail || "erro do servidor");
+            }
+          }
+        }
+      } catch (err) {
+        statusEl.innerHTML = `<p style="color: var(--accent); margin: 0;"><strong>Erro:</strong> ${err.message}</p>`;
+      } finally {
+        askBtn.disabled = false;
+        askBtn.textContent = "Perguntar";
+      }
+    });
+  </script>
+</Layout>

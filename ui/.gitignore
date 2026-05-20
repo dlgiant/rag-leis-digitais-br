@@ -1,0 +1,9 @@
+# Astro / Node build artifacts
+dist/
+.astro/
+node_modules/
+
+# Local env overrides
+.env
+.env.local
+.env.*.local
