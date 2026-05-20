@@ -78,17 +78,17 @@ the main generation path.
 
 ## Honest limitations of this experiment
 
-1. **In-scope regression NOT measured for Opus.** Phase 7.8 confirmed
+1. **In-scope regression NOT measured for Opus.** ~~Phase 7.8 confirmed
    `false_refusal_rate = 0.000` on internal answer-eval with Sabiá as
    the relevance judge. Opus may be strict enough on the relevance
-   criterion to false-refuse legitimate in-scope citations where the
-   model's answer paraphrases the dispositivo. **Before promoting
-   Opus to production default**, an in-scope regression check is
-   required (`uv run python -m rag_leis.run_answer_eval` with Opus
-   wired in via `pipeline.relevance_judge = opus_llm`). Estimated
-   cost: ~$3 + ~15 min wall time. Skipped here because the pre-locked
-   criterion was OOS-only and the swap is being recommended for batch
-   eval first, not production.
+   criterion to false-refuse legitimate in-scope citations [...]~~
+   **CLOSED 2026-05-19** — in-scope regression check run with Opus
+   wired in via `pipeline.relevance_judge`. Result:
+   `false_refusal_rate = 0.000` (pre-locked criterion met). See
+   [`phase-7.8.1-inscope-opus-regression.md`](phase-7.8.1-inscope-opus-regression.md).
+   Cost: $3.14 (close to the $3 estimate). The regression check also
+   surfaced a silent CLI default-fallback bug (model defaulted to
+   Sonnet when Opus was intended) — fixed.
 2. **n=49 with stochastic LLM responses.** Sabiá at temperature=0
    showed run-to-run variance — Phase 7.8 measured 0.633 (31/49)
    yesterday; today's same-configuration rerun measured 0.571 (28/49).

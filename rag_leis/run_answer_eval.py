@@ -778,6 +778,9 @@ def serialize_row(r: EvalRow) -> dict[str, Any]:
         "rejected_citations": [
             {"reason": rsn, "urn": u} for rsn, u in r.answer.rejected_citations
         ],
+        "rejected_irrelevant_citations": list(
+            getattr(r.answer, "rejected_irrelevant_citations", [])
+        ),
         "unverified_claims": r.answer.unverified_claims,
         "refused": r.answer.refused,
         "refusal_reason": r.answer.refusal_reason,
@@ -854,6 +857,26 @@ def main() -> int:
         help="Judge LLM provider (default: anthropic — opus-4-7)",
     )
     p.add_argument("--judge-model", default=DEFAULT_JUDGE_MODEL)
+    # Phase 7.8.1 — optional separate judge for the per-citation relevance
+    # gate. Default None = gate reuses pipeline.llm (the generator). Set to
+    # "anthropic" (with DEFAULT_JUDGE_MODEL) to use Opus for the relevance
+    # judge while keeping Sabiá for generation — the configuration that
+    # produced +0.10pp on legalbench OOS in the 7.8.1 A/B.
+    p.add_argument(
+        "--relevance-judge-provider",
+        default=None,
+        choices=["anthropic", "maritaca"],
+        help=(
+            "Optional separate LLM provider for the per-citation relevance "
+            "gate. Default: gate reuses the generator (--llm-provider). "
+            "Set to 'anthropic' to use Opus for relevance judging."
+        ),
+    )
+    p.add_argument(
+        "--relevance-judge-model",
+        default=None,
+        help="Model name for the relevance judge. Default: provider's.",
+    )
     p.add_argument("--top-k", type=int, default=DEFAULT_TOP_K)
     p.add_argument(
         "--oos-threshold",
@@ -901,6 +924,25 @@ def main() -> int:
         provider=args.judge_provider, model=args.judge_model,
         cache_dir=llm_cache_dir,
     )
+    # Phase 7.8.1 — optional separate relevance judge. When set, the
+    # pipeline's per-citation relevance gate uses this LLM instead of
+    # self.llm. Used in the in-scope-with-Opus check that closes the
+    # remaining limitation from the 7.8.1 OOS-only A/B.
+    # When --relevance-judge-model is unset, default to DEFAULT_JUDGE_MODEL
+    # (Opus) for Anthropic — the intent of overriding the relevance judge
+    # is to use a stricter judge, not to redundantly fall back to the
+    # generator default (which for Anthropic is Sonnet and produced a
+    # misleading "Opus" run during Phase 7.8.1 development).
+    if args.relevance_judge_provider:
+        relevance_model = args.relevance_judge_model
+        if relevance_model is None and args.relevance_judge_provider == "anthropic":
+            relevance_model = DEFAULT_JUDGE_MODEL
+        pipeline.relevance_judge = get_llm(
+            provider=args.relevance_judge_provider,
+            model=relevance_model,
+            cache_dir=llm_cache_dir,
+        )
+        print(f"Relevance: {pipeline.relevance_judge.provider}/{pipeline.relevance_judge.name}  (overrides generator)")
     print(f"Generator: {pipeline.llm.provider}/{pipeline.llm.name}")
     print(f"Judge    : {judge.provider}/{judge.name}")
 

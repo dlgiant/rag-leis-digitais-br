@@ -148,7 +148,8 @@ Phase 7.5.3+4+5 converged on the same diagnosis across 3 eval surfaces: pipeline
 - ⏸ **Audit doc updates** — Pattern B detection rows can flip ✅; cumulative arc deserves a §3 note
 - ⏸ **Per-citation relevance as first-class eval metric** — currently a pipeline-internal signal; could be surfaced in Aggregate for telemetry
 - ⏸ **Cost optimization** — relevance gate adds ~1.6s p50 latency; parallelize with main answer call if Phase 8 SLO requires
-- ⏸ **Sabiá-as-its-own-judge sanity** — re-validate with Opus for the relevance gate if signal weakens over time
+- ✅ **Phase 7.8.1 Sabiá-as-its-own-judge sanity** ([OOS A/B findings](study/phase-7.8.1-sabia-vs-opus-judge-findings.md), [in-scope regression](study/phase-7.8.1-inscope-opus-regression.md)) — Opus catches +5 OOS rows on legalbench (Sabiá self-defense bias real at ~10%); in-scope `false_refusal_rate = 0.000` confirmed with Opus. Eval default = Opus, prod default = Sabiá (cost). Surfaced and fixed a CLI default-fallback bug en route.
+- ⏸ **Phase 7.8.2 partial-relevance gate threshold** — current gate fires only when ALL citations irrelevant. 7.8.1 in-scope run showed 3 of 5 internal-OOS leakers had ≥80% citations marked irrelevant by Opus. A "≥80% irrelevant" gate would catch them. Risk: false-positives where one mismarked citation among many legitimate ones triggers refusal. Worth a calibrated experiment if Phase 8 entry hits OOS-recall blocker.
 - ⏸ **Per-document scope tagging with finer grain** — = BACKLOG #1 still parked in EXPERIMENTS.md, no longer a critical path
 - ⏸ **OOS-C category** (intentionally tricky CRIMINAL questions deceptively close to crimes cibernéticos) — propose adding via curated subset from `eduagarcia/oab_exams` and/or `legalbench.br`. Lower priority now.
 
