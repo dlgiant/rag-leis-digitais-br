@@ -378,12 +378,28 @@ const EXAMPLES = [
 
     function renderCitation(urn) {
       const safe = String(urn).replace(/</g, "&lt;");
-      // IMPORTANT: use encodeURI, not encodeURIComponent — the URN
-      // contains `:` and `;` which are valid URL path syntax characters
-      // and LexML's resolver expects them raw. encodeURIComponent would
-      // percent-encode them and break the lookup.
-      const href = `https://www.lexml.gov.br/urn/${encodeURI(urn)}`;
-      return `<li><a href="${href}" target="_blank" rel="noopener"><code>${safe}</code></a></li>`;
+      // LexML's URN resolver currently accepts document-level URNs
+      // only — article / inciso / parágrafo fragments aren't part of
+      // their vocabulary (verified empirically: `!art5`, `!art5_inc1`,
+      // `~art5;inc1`, `_art5_inc1` all return the "URN inválida"
+      // page or an empty body). Strip the fragment (everything after
+      // the first `~` or `!`) so the link lands on the document; the
+      // full URN stays visible as the link text so the citation
+      // reference is preserved.
+      //
+      // Also: only link if the URN is in the LexML namespace
+      // (`urn:lex:`). Other citation URN forms (e.g., tier-4
+      // jurisprudência, ANPD resolutions) get rendered as plain
+      // <code> without a link in v1.
+      const isLexml = String(urn).startsWith("urn:lex:");
+      if (!isLexml) {
+        return `<li><code>${safe}</code></li>`;
+      }
+      const docUrn = String(urn).split("~")[0].split("!")[0];
+      // encodeURI (not encodeURIComponent) — LexML wants `:` and `;`
+      // raw in the path, not percent-encoded.
+      const href = `https://www.lexml.gov.br/urn/${encodeURI(docUrn)}`;
+      return `<li><a href="${href}" target="_blank" rel="noopener"><code>${safe}</code></a> <span class="muted small">(documento)</span></li>`;
     }
 
     function formatRefusal(reason) {
