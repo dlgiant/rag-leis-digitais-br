@@ -23,7 +23,8 @@ concurso = ["datasets>=4.0"]
 # Phase 8.1 — HTTP harness. FastAPI + uvicorn for serving the pipeline
 # behind a `POST /v1/ask` endpoint. Installed via `uv sync --extra server`.
 # Kept optional so the eval-only CLI surface doesn't pull a web stack.
-server = ["fastapi>=0.115", "uvicorn[standard]>=0.32"]
+# Phase 8.2 — adds `slowapi` for per-API-key token-bucket rate limiting.
+server = ["fastapi>=0.115", "uvicorn[standard]>=0.32", "slowapi>=0.1.9"]
 
 [dependency-groups]
 dev = [

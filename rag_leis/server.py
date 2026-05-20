@@ -30,13 +30,17 @@ Override defaults via env vars:
 from __future__ import annotations
 
 import os
+import secrets
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
 
 from rag_leis.rag import DEFAULT_TOP_K, RAGAnswer, RAGPipeline, load_pipeline
 
@@ -192,6 +196,87 @@ async def lifespan(app: FastAPI):
 
 
 # ============================================================================
+# Phase 8.2 — Auth + rate limiting
+# ============================================================================
+
+
+def _allowed_keys() -> set[str]:
+    """Read the allowed-API-keys set from RAG_API_KEYS (comma-separated).
+    Empty/unset = no keys allowed. The fail-closed default is intentional —
+    accidental empty-env-var must NOT silently open the endpoint."""
+    raw = os.environ.get("RAG_API_KEYS", "").strip()
+    if not raw:
+        return set()
+    return {k.strip() for k in raw.split(",") if k.strip()}
+
+
+def verify_api_key(x_api_key: str | None = Header(default=None)) -> str:
+    """FastAPI dependency: check `X-API-Key` header against the
+    RAG_API_KEYS env var set. Returns the validated key (used as the
+    rate-limit bucket identifier). Constant-time compare via
+    `secrets.compare_digest` to avoid timing oracles.
+
+    Failure modes:
+      - missing header → 401 with WWW-Authenticate: ApiKey
+      - key not in allowed set → 401 (same WWW-Authenticate)
+    """
+    if not x_api_key:
+        raise HTTPException(
+            status_code=401,
+            detail="missing API key",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+    allowed = _allowed_keys()
+    # Iterate to make every comparison constant-time. set lookups would be
+    # fast but timing-sensitive on the first-character mismatch.
+    for candidate in allowed:
+        if secrets.compare_digest(x_api_key, candidate):
+            return x_api_key
+    raise HTTPException(
+        status_code=401,
+        detail="invalid API key",
+        headers={"WWW-Authenticate": "ApiKey"},
+    )
+
+
+def _rate_limit_key(request: Request) -> str:
+    """slowapi key function: bucket by validated API key. The auth
+    dependency runs BEFORE this, so a missing/invalid key would have
+    already 401'd. Falls back to the literal "no-key" string for
+    defense in depth (any unauth'd request that reaches slowapi gets
+    a shared bucket and trips fast)."""
+    return request.headers.get("X-API-Key", "no-key")
+
+
+def _rate_limit_cap() -> str:
+    """Format the rate-limit string slowapi expects. Configurable via
+    RAG_RATE_LIMIT_PER_MINUTE (default: 60). Set to 0 to disable
+    (slowapi treats absence of the decorator as "no limit"; we
+    short-circuit by setting a very high value and documenting the
+    disable path)."""
+    cap = int(os.environ.get("RAG_RATE_LIMIT_PER_MINUTE", "60"))
+    if cap <= 0:
+        # Effectively unlimited — useful for load tests and dev.
+        # 1M/minute is well above any production traffic ceiling.
+        return "1000000/minute"
+    return f"{cap}/minute"
+
+
+limiter = Limiter(
+    key_func=_rate_limit_key,
+    default_limits=[],
+    # NOTE: slowapi's headers_enabled=True breaks with FastAPI's
+    # response_model pattern — the decorator's async wrapper tries to
+    # inject headers into a not-yet-built response and raises. We
+    # build the rate-limit headers manually in the 429 handler below
+    # (Retry-After + X-RateLimit-Limit/-Remaining/-Reset). 200
+    # responses don't carry these headers in Phase 8.2 — tracked as a
+    # Phase 8.3 follow-up when we add structured response middleware.
+    headers_enabled=False,
+)
+
+
+# ============================================================================
 # App + dependency injection
 # ============================================================================
 
@@ -205,6 +290,45 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)  # noqa: F841 — handler registered by decorator
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    """Convert slowapi's RateLimitExceeded into a 429 with structured
+    detail + Retry-After + X-RateLimit-* headers.
+
+    We build the headers manually instead of calling slowapi's
+    `_inject_headers` because that requires `headers_enabled=True` on
+    the Limiter, which in turn breaks the FastAPI response_model
+    pattern on 200 responses (slowapi tries to inject into a not-yet-
+    built Pydantic response). Manual construction sidesteps that
+    interaction.
+    """
+    headers: dict[str, str] = {}
+    view_limit = getattr(request.state, "view_rate_limit", None)
+    if view_limit is not None:
+        rate_item, scope = view_limit
+        try:
+            window_reset, remaining = request.app.state.limiter.limiter.get_window_stats(
+                rate_item, *scope
+            )
+            import time as _t
+            reset_in = max(0, int(window_reset - _t.time()))
+            headers["X-RateLimit-Limit"] = str(rate_item.amount)
+            headers["X-RateLimit-Remaining"] = str(remaining)
+            headers["X-RateLimit-Reset"] = str(int(window_reset))
+            headers["Retry-After"] = str(reset_in)
+        except Exception:
+            # Defensive: window_stats can raise on storage edge cases.
+            # Fall back to Retry-After only (per the RFC 6585 contract;
+            # 429 SHOULD include Retry-After but isn't strictly required).
+            headers["Retry-After"] = "60"
+    return JSONResponse(
+        status_code=429,
+        content={"detail": f"rate limit exceeded: {exc.detail}"},
+        headers=headers,
+    )
 
 
 def get_pipeline(request: Request) -> RAGPipeline:
@@ -236,13 +360,20 @@ async def health(request: Request) -> HealthResponse:
 
 
 @app.post("/v1/ask", response_model=AskResponse)
+@limiter.limit(_rate_limit_cap)
 async def ask(
+    request: Request,  # noqa: ARG001 — required by @limiter.limit to find the rate-limit key
     payload: AskRequest,
+    api_key: str = Depends(verify_api_key),  # noqa: ARG001 — Depends runs for side effect (401 if invalid)
     pipeline: RAGPipeline = Depends(get_pipeline),
 ) -> AskResponse:
     """Answer a single query against the pipeline. Byte-for-byte
     equivalent to `pipeline.answer(payload.query)` modulo JSON
-    serialization of tuples/dataclasses into the AskResponse shape."""
+    serialization of tuples/dataclasses into the AskResponse shape.
+
+    Phase 8.2: gated by X-API-Key auth + per-key rate limit (default
+    60 req/min/key; configurable via RAG_RATE_LIMIT_PER_MINUTE).
+    """
     try:
         ans = pipeline.answer(payload.query)
     except Exception as e:
