@@ -16,7 +16,10 @@ Itens identificados mas não-aplicados — pra retomar quando for prioridade.
 - ✅ **Phase 7.5 (eval expansion — closed 2026-05-17)** — see [`study/phase-7.5-findings.md`](study/phase-7.5-findings.md). 6 of 7 sub-steps shipped (7.5.6 LGPD manual deferred to D7 lawyer engagement). Eval surface grew 45 → 139 rows (+209%). Headline finding: **internal OOS refusal accuracy of 93.8% overstated external measurement (12.2%) by 6.7×** — selection bias quantified.
 
 **Phases pending (large blocks):**
-- ⏸ Phase 8 — hosting/API/observability ([entry plan](study/phase-8-entry-plan.md), drafted 2026-05-19). **Refusal-discipline prerequisite met** (Phase 7.8 gate cleared at 0.633 = 5.2× lift); SRE Golden Signals already instrumented (Phase 7.5.7). Plan decomposes into 7 sub-phases (8.0 prod cost baseline → 8.1 HTTP harness → 8.2 auth + rate limit → 8.3 structured observability → 8.4 load test → 8.5 CI deploy gate → 8.6 cost ceiling + alerting). Sub-phase 8.0 is $0 / ½ session and gives the SLO conversation real prod-mode numbers.
+- ⏸ Phase 8 — hosting/API/observability ([entry plan](study/phase-8-entry-plan.md), drafted 2026-05-19). **Refusal-discipline prerequisite met** (Phase 7.8 gate cleared at 0.633 = 5.2× lift); SRE Golden Signals already instrumented (Phase 7.5.7). Plan decomposes into 7 sub-phases (8.0 → 8.6).
+  - ✅ **8.0 prod cost baseline** ([findings](study/phase-8-0-prod-cost-baseline.md)) — measured: cost mean $0.0064/query answered, latency p95 ~2.87s fresh, error rate 0.0%. SLO candidates re-anchored from eval-mode estimates.
+  - ✅ **8.0.1 sabia-3.1 vs sabia-4 A/B** ([findings](study/phase-8-0-1-sabia-3.1-vs-4-findings.md)) — sabia-4 wins on all 3 pre-locked criteria. **Production default swapped to sabia-4** (rag_leis/maritaca.py:48, 2026-05-19). Key fix: row 12 / Decreto 8.771 false-refusal that sonnet-4-5 AND sabia-3.1 both missed; sabia-4 joins opus on the right side. +5 net OOS catches (6 wins, 1 leak — "Patrícia tax" row).
+  - ⏸ 8.1 HTTP harness → 8.2 auth + rate limit → 8.3 structured observability → 8.4 load test → 8.5 CI deploy gate → 8.6 cost ceiling + alerting
 - ⏸ Phase 9 — compliance / lawyer review (depends on D7 contracting); Phase 7.5.6 (LGPD manual curation) folded into D7 scope.
 
 **Corpus current:** ~7200 chunks across 4 tiers (13 Tier-1 + 4 Tier-2 + 2 Tier-3 + 7 Tier-4).
