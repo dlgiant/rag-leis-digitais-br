@@ -3,10 +3,12 @@ name: CI
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
   # Phase 8.5.1 — also callable from deploy.yml as a reusable workflow.
-  # Gates Fly deploy on the same checks that gate PR merges.
+  # Gates Fly deploy on the same checks that gate PR merges. On pushes
+  # to main, deploy.yml is the entry point — it chains this workflow
+  # via workflow_call. (We removed the `push: branches: [main]` trigger
+  # to avoid a concurrency-group conflict where the standalone push
+  # invocation cancelled the chained one and stranded deploy.yml.)
   workflow_call:
 
 # Cancel in-progress runs when a new commit is pushed to the same ref.
