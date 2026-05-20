@@ -22,6 +22,11 @@ import pytest
 
 from rag_leis.parser import PlanaltoHtmlParser
 
+# All tests in this file load raw HTML from data/raw/tier-1/ which is
+# gitignored. CI doesn't have these files; mark module-level so the
+# CI gate's `-m "not requires_local_data"` skips the whole file.
+pytestmark = pytest.mark.requires_local_data
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = PROJECT_ROOT / "data" / "raw" / "tier-1"
 

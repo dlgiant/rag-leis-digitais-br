@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from rag_leis.eval_harness import load_chunks
 from rag_leis.legal_rank import RANK_INFRALEGAL, RANK_LEI_ORDINARIA
 
@@ -86,6 +88,7 @@ def test_sumulas_stj_keep_rank_5():
         assert chunk.legal_rank == RANK_INFRALEGAL
 
 
+@pytest.mark.requires_local_data
 def test_legislacao_unaffected_by_status_logic():
     """Sanity: leis (LGPD, MCI) não têm nav.status — devem manter o rank
     URN-derivado, não cair em algum default mais baixo."""

@@ -83,6 +83,7 @@ def chunks():
     return load_chunks(PROJECT_ROOT / "data" / "chunks")
 
 
+@pytest.mark.requires_local_data
 def test_cf_art5_inc79_amended_by_ec_115(chunks):
     """The canonical case — EC 115/2022 inserted o direito fundamental
     à proteção de dados pessoais. Used by reviewer round 2 as the test
@@ -97,6 +98,7 @@ def test_cf_art5_inc79_amended_by_ec_115(chunks):
     assert "proteção" in inc79.text.lower() and "dados" in inc79.text.lower()
 
 
+@pytest.mark.requires_local_data
 def test_non_cf_chunks_have_empty_amended_by(chunks):
     """Non-CF documents (LGPD, MCI, CP) shouldn't have EC linkage —
     they're not constitutional."""
@@ -106,6 +108,7 @@ def test_non_cf_chunks_have_empty_amended_by(chunks):
     assert lgpd_art7.amended_by == ()
 
 
+@pytest.mark.requires_local_data
 def test_at_least_some_cf_chunks_amended_by_ec_45(chunks):
     """EC 45/2004 was a major reforma do Judiciário; many CF chunks
     bear its mark. Tests that the extraction works at scale."""
@@ -118,6 +121,7 @@ def test_at_least_some_cf_chunks_amended_by_ec_45(chunks):
     )
 
 
+@pytest.mark.requires_local_data
 def test_amended_by_chunks_count_at_scale(chunks):
     """Sanity: when load_chunks runs over the full CF, a substantial
     fraction of chunks (≥1000) should have EC linkage. The CF compilada

@@ -15,10 +15,12 @@ or eval/runs/ logs — not duplicated here to keep this file fast.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import numpy as np
+import pytest
 
 from rag_leis.eval_harness import IndexChunk, load_chunks
 from rag_leis.rag import FlaggedVigencia, RAGPipeline
@@ -104,6 +106,7 @@ def test_collect_flagged_vigencia_skips_unknown_urn():
     assert flagged == []
 
 
+@pytest.mark.requires_local_data
 def test_load_chunks_applies_real_overlays_to_mci_art19():
     """End-to-end: the canonical MCI art. 19 case from the reviewer's
     critique. With overlays.yaml in place, that IndexChunk MUST carry
@@ -121,6 +124,7 @@ def test_load_chunks_applies_real_overlays_to_mci_art19():
     assert "Tema 987" in art19.vigencia.fundamento
 
 
+@pytest.mark.requires_local_data
 def test_load_chunks_no_overlay_no_vigencia():
     """A chunk WITHOUT an overlay entry must have vigencia=None — not
     coerced to 'vigente' or any other sentinel. None is the truth signal
@@ -139,11 +143,6 @@ def test_load_chunks_no_overlay_no_vigencia():
 # warning surfaces in the answer text. Marked `network` (skipped by default
 # `pytest`); run explicitly with `pytest -m network`. Costs ~1 sonnet call.
 # ----------------------------------------------------------------------------
-
-
-import os  # noqa: E402
-
-import pytest  # noqa: E402
 
 
 @pytest.mark.network

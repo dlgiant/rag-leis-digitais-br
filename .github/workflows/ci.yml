@@ -41,7 +41,8 @@ jobs:
       - name: Run tests
         run: |
           # Phase 8.5.0 — exclude markers that require external state:
-          #   `network`           — live Anthropic / Maritaca API calls (need API keys)
-          #   `requires_anpd_pdf` — Tier-3 ANPD PDFs (not in git per data/raw gitignore)
-          # Local devs run all 468 tests; CI runs the deterministic 446 subset.
-          uv run pytest -m "not network and not requires_anpd_pdf" -q
+          #   `network`             — live Anthropic / Maritaca API calls (need API keys)
+          #   `requires_anpd_pdf`   — Tier-3 ANPD PDFs (not in git per data/raw gitignore)
+          #   `requires_local_data` — raw HTML or built chunks/tier-{1,2,3}/ (both gitignored)
+          # Local devs run all 468 tests; CI runs the deterministic subset.
+          uv run pytest -m "not network and not requires_anpd_pdf and not requires_local_data" -q
