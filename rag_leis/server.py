@@ -426,6 +426,16 @@ app.add_middleware(RateLimitHeadersMiddleware)
 app.add_middleware(RequestContextMiddleware)
 FastAPIInstrumentor.instrument_app(app)
 
+# Phase 11.0 — mount admin router. Gated by Clerk JWT verification +
+# email allowlist (see rag_leis/clerk_auth.py). Endpoints are
+# read-only in 11.0; write paths land in 11.2+.
+# Import here (not at top) so the FastAPIInstrumentor doesn't trace
+# the admin router's request lifecycle separately from the main app —
+# include_router wires the routes into the already-instrumented app.
+from rag_leis.admin import router as admin_router  # noqa: E402
+
+app.include_router(admin_router)
+
 
 @app.exception_handler(RateLimitExceeded)
 async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:

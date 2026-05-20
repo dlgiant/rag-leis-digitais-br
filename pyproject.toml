@@ -33,6 +33,12 @@ server = [
     "opentelemetry-api>=1.27",
     "opentelemetry-sdk>=1.27",
     "opentelemetry-instrumentation-fastapi>=0.49b0",
+    # Phase 11.0 — Clerk JWT verification for the admin endpoints
+    # (`/v1/admin/*`). `pyjwt[crypto]` pulls in the `cryptography`
+    # package for RSA signature verification. Networkless mode: we
+    # use Clerk's published PEM public key (CLERK_JWT_KEY env var)
+    # rather than fetching JWKS at runtime.
+    "pyjwt[crypto]>=2.10",
 ]
 
 [dependency-groups]
