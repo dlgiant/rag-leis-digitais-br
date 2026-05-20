@@ -29,10 +29,13 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 from openai import OpenAI
+
+from rag_leis import llm_cache
 
 load_dotenv()
 
@@ -56,6 +59,7 @@ class MaritacaLLM:
         self,
         model: str | None = None,
         api_key: str | None = None,
+        cache_dir: Path | None = None,
     ):
         key = api_key or os.environ.get("MARITACA_API_KEY")
         if not key:
@@ -71,6 +75,8 @@ class MaritacaLLM:
         # the same `input_tokens`/`output_tokens` shape as AnthropicLLM so
         # the caller sees a uniform schema across providers.
         self.last_call_usage: dict[str, int] | None = None
+        # Phase 7.9 — opt-in filesystem cache (same mechanism as AnthropicLLM).
+        self.cache_dir = cache_dir
 
     def complete(
         self,
@@ -79,6 +85,17 @@ class MaritacaLLM:
         max_tokens: int = 1024,
         temperature: float | None = None,
     ) -> str:
+        if self.cache_dir is not None:
+            key = llm_cache.cache_key(
+                provider=self.provider, model=self.model,
+                system=system, user=user, tool_schema=None,
+                max_tokens=max_tokens, kind="complete",
+            )
+            hit = llm_cache.lookup(self.cache_dir, key)
+            if hit is not None:
+                response, usage = hit
+                self.last_call_usage = usage
+                return str(response)
         kwargs: dict[str, Any] = {
             "model": self.model,
             "max_tokens": max_tokens,
@@ -91,7 +108,15 @@ class MaritacaLLM:
             kwargs["temperature"] = temperature
         resp = self.client.chat.completions.create(**kwargs)
         self.last_call_usage = _extract_usage(resp)
-        return resp.choices[0].message.content or ""
+        text = resp.choices[0].message.content or ""
+        if self.cache_dir is not None:
+            llm_cache.store(
+                cache_dir=self.cache_dir, key=key, kind="complete",
+                provider=self.provider, model=self.model,
+                response=text, usage=self.last_call_usage,
+                key_inputs={"system": system, "user": user, "max_tokens": max_tokens},
+            )
+        return text
 
     def complete_structured(
         self,
@@ -112,6 +137,17 @@ class MaritacaLLM:
         arguments fail to parse as JSON (no retry here — the benchmark
         needs to see the failure rate honestly).
         """
+        if self.cache_dir is not None:
+            key = llm_cache.cache_key(
+                provider=self.provider, model=self.model,
+                system=system, user=user, tool_schema=tool_schema,
+                max_tokens=max_tokens, kind="structured",
+            )
+            hit = llm_cache.lookup(self.cache_dir, key)
+            if hit is not None:
+                response, usage = hit
+                self.last_call_usage = usage
+                return dict(response) if isinstance(response, dict) else {}
         openai_tool = _to_openai_tool(tool_schema)
         kwargs: dict[str, Any] = {
             "model": self.model,
@@ -144,11 +180,23 @@ class MaritacaLLM:
                 f"expected {tool_schema['name']!r}"
             )
         try:
-            return dict(json.loads(tc.function.arguments))
+            response = dict(json.loads(tc.function.arguments))
         except (json.JSONDecodeError, TypeError) as e:
             raise RuntimeError(
                 f"Marítaca tool_call arguments not parseable as JSON: {tc.function.arguments!r}"
             ) from e
+        if self.cache_dir is not None:
+            llm_cache.store(
+                cache_dir=self.cache_dir, key=key, kind="structured",
+                provider=self.provider, model=self.model,
+                response=response, usage=self.last_call_usage,
+                key_inputs={
+                    "system": system, "user": user,
+                    "tool_name": tool_schema["name"],
+                    "max_tokens": max_tokens,
+                },
+            )
+        return response
 
 
 def _extract_usage(resp: Any) -> dict[str, int] | None:

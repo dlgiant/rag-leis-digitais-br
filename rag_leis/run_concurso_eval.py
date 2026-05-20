@@ -570,6 +570,15 @@ def main() -> int:
                    help="LLM provider for the generator (default: maritaca, "
                         "matching production).")
     p.add_argument("--top-k", type=int, default=DEFAULT_TOP_K)
+    p.add_argument(
+        "--llm-cache-dir",
+        default=None,
+        help=(
+            "Optional dir to cache LLM responses. Reuses identical calls "
+            "from prior runs at $0. Typical: --llm-cache-dir data/cache/llm. "
+            "Default: no caching."
+        ),
+    )
     args = p.parse_args()
 
     eval_path = Path(args.eval)
@@ -582,13 +591,18 @@ def main() -> int:
         shown = eval_path
     print(f"Loaded {len(rows)} rows from {shown}")
 
+    llm_cache_dir = Path(args.llm_cache_dir) if args.llm_cache_dir else None
+
     print(f"Building pipeline (Voyage + {args.llm_provider}, "
           f"text_mode={DEFAULT_TEXT_MODE}, top_k={args.top_k}) ...")
+    if llm_cache_dir:
+        print(f"  LLM cache:   {llm_cache_dir}")
     pipe = load_pipeline(
         chunks_dir=CHUNKS_DIR,
         index_dir=INDEX_DIR,
         llm_provider=args.llm_provider,
         top_k=args.top_k,
+        llm_cache_dir=llm_cache_dir,
     )
 
     records: list[ConcursoEvalRecord] = []
@@ -619,7 +633,12 @@ def main() -> int:
         elif row.category == "discursive":
             # Lazy-init judge — only build if a discursive row appears.
             if not hasattr(main, "_judge_cache"):
-                main._judge_cache = get_llm("anthropic", DEFAULT_JUDGE_MODEL)  # type: ignore[attr-defined]
+                # Phase 7.9 — pass llm_cache_dir through so discursive judge
+                # calls are also cached when the CLI flag is set.
+                main._judge_cache = get_llm(  # type: ignore[attr-defined]
+                    "anthropic", DEFAULT_JUDGE_MODEL,
+                    cache_dir=llm_cache_dir,
+                )
             rec = _score_discursive(row, ans, main._judge_cache)  # type: ignore[attr-defined]
         else:  # oos_a or oos_b
             rec = _score_oos(row, ans)
