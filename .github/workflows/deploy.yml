@@ -1,0 +1,42 @@
+name: Deploy to Fly
+
+# Phase 8.5.1 deploy workflow. Runs only when:
+#   1. The push lands on `main` (PR merges; manual main pushes)
+#   2. The `Tests + lint` job from ci.yml passes first
+#
+# The `needs: ` gate prevents red-tests-then-deploy regression paths.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # manual trigger via UI / `gh workflow run`
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false  # let in-flight deploys finish; queue new ones
+
+jobs:
+  test:
+    name: Tests + lint
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy to Fly
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy
+        run: flyctl deploy --remote-only --app rag-leis-digitais-br
+        env:
+          # Single secret in GHA: the deploy token. Runtime secrets
+          # (MARITACA_API_KEY, ANTHROPIC_API_KEY, VOYAGE_API_KEY,
+          # RAG_API_KEYS) live on Fly via `flyctl secrets set` —
+          # NOT in GitHub Actions. Smaller blast radius if a
+          # workflow accidentally leaks (debug-print, set -x).
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

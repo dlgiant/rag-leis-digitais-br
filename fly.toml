@@ -1,0 +1,43 @@
+# Phase 8.5.1 — Fly.io app configuration.
+#
+# Single shared-cpu-1x machine in `gru` (São Paulo) to honor the
+# LGPD Brazil-residency constraint (memory `project-lgpd-brazil-residency`).
+# Scale-to-zero with auto_stop_machines to keep idle cost near $0.
+#
+# NO persistent volume mount — production runs without the Phase 7.9
+# LLM cache (memory `feedback-use-llm-cache-for-eval`).
+
+app = "rag-leis-digitais-br"
+primary_region = "gru"
+
+[build]
+  # Default uses the Dockerfile at the repo root. No buildpacks.
+
+[env]
+  # Per-environment defaults. Runtime secrets come from
+  # `flyctl secrets set ...`, never committed.
+  RAG_LLM_PROVIDER = "maritaca"
+  RAG_RATE_LIMIT_PER_MINUTE = "60"
+  RAG_LOG_LEVEL = "INFO"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  # Scale-to-zero: machine stops after idle period, cold-starts on
+  # first request (~3s per Phase 8.4 observations). Cheap for v1
+  # personal-traffic; revisit if UX requires warm replicas.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "2gb"

@@ -5,6 +5,9 @@ on:
     branches: [main]
   push:
     branches: [main]
+  # Phase 8.5.1 — also callable from deploy.yml as a reusable workflow.
+  # Gates Fly deploy on the same checks that gate PR merges.
+  workflow_call:
 
 # Cancel in-progress runs when a new commit is pushed to the same ref.
 # Prevents wasted compute on rapid-iteration PRs.
