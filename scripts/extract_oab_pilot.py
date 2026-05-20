@@ -213,7 +213,7 @@ def main() -> None:
             oos_pool[row["question_type"]].append(row)
 
     print(f"In-scope candidates: {len(inscope)}")
-    print(f"Pattern hits breakdown:")
+    print("Pattern hits breakdown:")
     pc = Counter()
     for h in inscope:
         for p in h["matched_patterns"]:

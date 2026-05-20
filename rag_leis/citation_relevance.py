@@ -39,7 +39,6 @@ from typing import Any
 from rag_leis.eval_harness import IndexChunk
 from rag_leis.llm import LLM
 
-
 CITATION_RELEVANCE_TOOL: dict[str, Any] = {
     "name": "avaliar_relevancia_citacoes",
     "description": (

@@ -57,7 +57,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -151,7 +151,7 @@ def store(
         "model": model,
         "response": response,
         "usage": usage,
-        "cached_at": datetime.now(timezone.utc).isoformat(),
+        "cached_at": datetime.now(UTC).isoformat(),
         # Including the raw key inputs is verbose (~2-5KB per entry) but
         # invaluable when debugging "why did this hit?" months later.
         "key_inputs": key_inputs,

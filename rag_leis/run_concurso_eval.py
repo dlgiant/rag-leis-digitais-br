@@ -35,7 +35,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -51,7 +51,6 @@ from rag_leis.rag import (
     RAGAnswer,
     load_pipeline,
 )
-
 
 # Phase 7.5.5 — discursive judge (OAB 2ª-fase rubric scoring).
 DISCURSIVE_TOOL: dict[str, Any] = {
@@ -476,19 +475,19 @@ def print_report(records: list[ConcursoEvalRecord], agg: ConcursoAggregate) -> N
         print(f"{i:>2}  [{ok}] {cat:<6}  {r.row.source_id[-30:]:<30}  {ref:>7}  "
               f"{cov_str:>5}  {hit_str:>8}  {r.row.query[:60]}")
 
-    print(f"\n--- IN-SCOPE ---")
+    print("\n--- IN-SCOPE ---")
     print(f"  answer_rate (not-refused):          {agg.inscope_answer_rate:.3f}  "
           f"({agg.n_inscope} rows)")
     print(f"  any_gold_cited_rate:                {agg.inscope_any_gold_cited_rate:.3f}")
     print(f"  coverage_mean (|cited∩gold|/|gold|):{agg.inscope_coverage_mean:.3f}")
     print(f"  coverage_jaccard_mean:              {agg.inscope_coverage_jaccard_mean:.3f}")
-    print(f"\n--- OOS ---")
+    print("\n--- OOS ---")
     print(f"  oos_a refusal_rate (other domain):  {agg.oos_a_refusal_rate:.3f}  "
           f"({agg.n_oos_a} rows)")
     print(f"  oos_b refusal_rate (adjacent):      {agg.oos_b_refusal_rate:.3f}  "
           f"({agg.n_oos_b} rows)")
     if agg.n_discursive > 0:
-        print(f"\n--- DISCURSIVE (Phase 7.5.5 — OAB 2ª-fase opus judge) ---")
+        print("\n--- DISCURSIVE (Phase 7.5.5 — OAB 2ª-fase opus judge) ---")
         print(f"  n_discursive:                       {agg.n_discursive}")
         print(f"  discursive_answered_rate:           {agg.discursive_answered_rate:.3f}  "
               f"(precondition: not refused)")
@@ -496,24 +495,24 @@ def print_report(records: list[ConcursoEvalRecord], agg: ConcursoAggregate) -> N
               f"(judge 0.0-1.0 normalized)")
 
     if agg.n_rule_recall > 0:
-        print(f"\n--- RULE RECALL (Phase 7.5.4 — external-anchored citation precision) ---")
+        print("\n--- RULE RECALL (Phase 7.5.4 — external-anchored citation precision) ---")
         print(f"  n_rule_recall:                      {agg.n_rule_recall}")
         print(f"  rule_recall_answered_rate:          {agg.rule_recall_answered_rate:.3f}  "
               f"(precondition: not refused)")
         print(f"  rule_recall_hit_rate:               {agg.rule_recall_hit_rate:.3f}  "
               f"(gold URN in pipeline.citations)")
 
-    print(f"\n--- OVERALL ---")
+    print("\n--- OVERALL ---")
     print(f"  overall_refusal_accuracy:           {agg.overall_refusal_accuracy:.3f}")
     if agg.cost_total_usd > 0 or agg.total_llm_calls > 0:
-        print(f"\n--- COST (Phase 7.5.2 instrumentation; judge cost folded since 7.5.7) ---")
+        print("\n--- COST (Phase 7.5.2 instrumentation; judge cost folded since 7.5.7) ---")
         print(f"  cost_total_usd:                     ${agg.cost_total_usd:.4f}")
         print(f"  cost_mean_usd (per query):          ${agg.cost_mean_usd:.6f}")
         print(f"  total_llm_calls (incl. retries):    {agg.total_llm_calls}")
         print(f"  total_input/output tokens:          "
               f"{agg.total_input_tokens:,} / {agg.total_output_tokens:,}")
 
-    print(f"\n--- SRE GOLDEN SIGNALS (Phase 7.5.7) ---")
+    print("\n--- SRE GOLDEN SIGNALS (Phase 7.5.7) ---")
     print(f"  latency p50/p95/p99/mean ms:        "
           f"{agg.latency_p50_ms:.1f} / {agg.latency_p95_ms:.1f} / "
           f"{agg.latency_p99_ms:.1f} / {agg.latency_mean_ms:.1f}")

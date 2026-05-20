@@ -159,8 +159,8 @@ def main() -> int:
     print(f"  Neither refused: {len(neither):>2}")
     print()
     print("Decision criterion (pre-locked):")
-    print(f"  |delta| ≤ 0.10pp → keep Sabiá default")
-    print(f"  |delta| > 0.10pp AND Opus refuses more → swap to Opus default")
+    print("  |delta| ≤ 0.10pp → keep Sabiá default")
+    print("  |delta| > 0.10pp AND Opus refuses more → swap to Opus default")
     if abs(delta) <= 0.10:
         verdict = "KEEP SABIÁ — within stochastic noise"
     elif delta > 0.10:

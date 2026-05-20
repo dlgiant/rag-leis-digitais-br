@@ -97,7 +97,7 @@ def main() -> int:
 
     # Count per area in output
     from collections import Counter
-    print(f"\nBy area in output:")
+    print("\nBy area in output:")
     for a, c in sorted(Counter(r["legal_area"] for r in rows_out).items()):
         print(f"  {a:35} {c}")
 

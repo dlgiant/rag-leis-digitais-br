@@ -29,7 +29,7 @@ from __future__ import annotations
 import json
 import shutil
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Default tolerance: an absolute drop of 0.02 in nDCG@10 is the line.
@@ -174,7 +174,7 @@ def metrics_now(
     """Build a metrics record stamped with current UTC time. Factory so
     the timestamp isn't passed at every call site."""
     return EvalMetrics(
-        timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        timestamp=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         model=model,
         text_mode=text_mode,
         ndcg_at_10=round(ndcg, 4),

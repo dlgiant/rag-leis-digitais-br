@@ -6,7 +6,13 @@ running the full pipeline.
 
 from __future__ import annotations
 
-from rag_leis.run_answer_eval import score_citations
+from rag_leis.rag import RAGAnswer
+from rag_leis.run_answer_eval import (
+    AnswerQuery,
+    EvalRow,
+    aggregate,
+    score_citations,
+)
 
 
 def test_perfect_match_p_r_f1_all_one():
@@ -59,7 +65,7 @@ def test_duplicate_citations_dont_inflate_precision():
     """LLM citing the same URN twice shouldn't game precision."""
     gold = frozenset({"a"})
     cited = ["a", "a", "fake"]
-    p_strict, p_lenient, r, f1 = score_citations(cited, gold)
+    p_strict, p_lenient, r, _f1 = score_citations(cited, gold)
     # cited_set = {"a", "fake"} → hits=1, P=0.5, R=1.0
     assert p_strict == 0.5
     assert p_lenient == 0.5
@@ -108,11 +114,8 @@ def test_alt_alone_does_not_count_as_recall_hit():
 # these tests pin the explicit split.
 # ----------------------------------------------------------------------------
 
-from dataclasses import dataclass
-from typing import Optional
 
-from rag_leis.run_answer_eval import AnswerQuery, EvalRow, aggregate
-from rag_leis.rag import RAGAnswer
+# (moved to top of file)
 
 
 def _row(*, oos: bool, refused: bool, query_type: str = "definicao") -> EvalRow:

@@ -29,7 +29,6 @@ from __future__ import annotations
 import json
 import statistics
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 import yaml
@@ -88,7 +87,7 @@ def _percentiles(values: list[float]) -> dict[str, float]:
         return {"p50": 0.0, "p95": 0.0, "p99": 0.0, "mean": 0.0}
     s = sorted(values)
     def pct(p):
-        k = max(1, min(len(s), int(round(p / 100.0 * len(s)))))
+        k = max(1, min(len(s), round(p / 100.0 * len(s))))
         return s[k - 1]
     return {"p50": pct(50), "p95": pct(95), "p99": pct(99), "mean": statistics.mean(s)}
 
@@ -210,11 +209,11 @@ def main() -> int:
     print(f"  Neither refused: {agreement['neither_refused']}")
 
     if agreement["only_a_refused_queries"]:
-        print(f"\n  Rows ONLY sabia-3.1 refused (sabia-4 answered):")
+        print("\n  Rows ONLY sabia-3.1 refused (sabia-4 answered):")
         for q in agreement["only_a_refused_queries"]:
             print(f"    - {q}")
     if agreement["only_b_refused_queries"]:
-        print(f"\n  Rows ONLY sabia-4 refused (sabia-3.1 answered):")
+        print("\n  Rows ONLY sabia-4 refused (sabia-3.1 answered):")
         for q in agreement["only_b_refused_queries"]:
             print(f"    - {q}")
 

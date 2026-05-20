@@ -74,7 +74,7 @@ def main() -> int:
     chunks = load_chunks(CHUNKS_DIR)
     text_by_urn = dict(zip([c.urn for c in chunks], [c.text for c in chunks], strict=True))
     nav_by_urn = dict(zip([c.urn for c in chunks], [c.nav_text for c in chunks], strict=True))
-    formatted_by_urn = dict(
+    dict(
         zip([c.urn for c in chunks], format_texts(chunks, args.text_mode), strict=True)
     )
 
@@ -125,7 +125,6 @@ def main() -> int:
         if not q.core and not q.supporting:
             lines.append("- _(nenhum)_")
         for u in sorted(q.core):
-            label = "Art ?"
             txt = _truncate(text_by_urn.get(u, "(missing)"), 150)
             lines.append(f"- `core` → `{u}` — {txt}")
         for u in sorted(q.supporting):

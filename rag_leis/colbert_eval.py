@@ -68,8 +68,8 @@ def _build_flat_index(per_doc: list[np.ndarray]) -> tuple[np.ndarray, np.ndarray
 
 
 def _colbert_search(
-    q_vecs: "np.ndarray | object",  # np or torch.Tensor
-    flat_vecs: "np.ndarray | object",
+    q_vecs: np.ndarray | object,  # np or torch.Tensor
+    flat_vecs: np.ndarray | object,
     offsets: np.ndarray,
     k: int,
     *,
@@ -86,7 +86,6 @@ def _colbert_search(
     query tokens (axis=0) to get MaxSim.
     """
     if torch_module is not None:
-        torch = torch_module
         # Single matmul on GPU.
         sims_gpu = q_vecs @ flat_vecs.T  # (Tq, sum_T), still fp16
         sims = sims_gpu.float().cpu().numpy()

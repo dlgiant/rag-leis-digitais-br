@@ -22,20 +22,18 @@ batch eval (no queue, no QPS); Latency + Errors are.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import pytest
 
 from rag_leis.rag import RAGAnswer
-from rag_leis.run_answer_eval import Aggregate, EvalRow, aggregate
+from rag_leis.run_answer_eval import EvalRow, aggregate
 from rag_leis.run_concurso_eval import (
-    ConcursoAggregate,
     ConcursoEvalRecord,
     ConcursoRow,
     _fold_judge_cost_into_answer,
+)
+from rag_leis.run_concurso_eval import (
     aggregate as concurso_aggregate,
 )
-
 
 # ----------------------------------------------------------------------------
 # Stub LLM — mimics the .last_call_usage shape without making network calls

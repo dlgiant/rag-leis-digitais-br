@@ -60,7 +60,20 @@ select = [
 ]
 ignore = [
     "E501",  # line too long — formatter handles this
+    # RUF001/002/003 — "ambiguous Unicode characters". The codebase deals
+    # extensively with Portuguese legal text + math notation (e.g.,
+    # `TIER_1∪TIER_2`, `ª`, `º`, accented quotes). These are not
+    # confusables in our context. Ignored globally.
+    "RUF001",
+    "RUF002",
+    "RUF003",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# scripts/ often does `PYTHONPATH=.` style invocations + sets paths or
+# loads env BEFORE the imports, so E402 (module-level import not at top)
+# fires legitimately. Allow it here only.
+"scripts/*.py" = ["E402"]
 
 [tool.ruff.format]
 quote-style = "double"

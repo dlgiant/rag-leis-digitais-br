@@ -24,7 +24,7 @@ import hashlib
 import json
 import re
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -116,7 +116,7 @@ def make_diff_entry(
     """Build a DiffEntry from a freshly fetched HTML + the prior SHA."""
     new_sha = compute_html_sha256(new_html)
     new_bytes = len(new_html.encode("utf-8"))
-    ts = timestamp or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    ts = timestamp or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     if prior_sha is None:
         status: DiffStatus = "new"
     elif prior_sha == new_sha:

@@ -106,7 +106,6 @@ def write_outputs(
         diff = make_diff_entry(doc.urn, html_doc.html, prior_sha, prior_bytes)
 
     new_sha = diff.new_sha if diff is not None else None
-    new_bytes = diff.new_bytes if diff is not None else None
 
     # Phase 7 fix (2026-05-16): tracked metadata must be byte-identical
     # across local + CI for the diff system to work. Two sources of

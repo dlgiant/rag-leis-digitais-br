@@ -7,7 +7,7 @@ JSONL serialization, summary formatting.
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from dataclasses import FrozenInstanceError
 
 import pytest
 
@@ -19,7 +19,6 @@ from rag_leis.diff_audit import (
     make_diff_entry,
     read_prior_sha256,
 )
-
 
 # ---------------------------------------------------------------------------
 # compute_html_sha256 — deterministic, UTF-8 based
@@ -247,5 +246,5 @@ def test_diff_entry_is_frozen_dataclass():
         new_sha="abc",
         new_bytes=1,
     )
-    with pytest.raises(Exception):  # frozen dataclass raises FrozenInstanceError
+    with pytest.raises(FrozenInstanceError):
         e.urn = "mutated"  # type: ignore[misc]

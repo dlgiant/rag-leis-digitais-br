@@ -371,7 +371,6 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             structlog.contextvars.clear_contextvars()
         response.headers["X-Request-ID"] = request_id
         latency_ms = (time.monotonic() - t0) * 1000.0
-        completed_event = "request.received" if is_health else "request.completed"
         log_level = log.debug if is_health else log.info
         log_level(
             "request.completed",
@@ -425,7 +424,7 @@ app.add_middleware(RequestContextMiddleware)
 FastAPIInstrumentor.instrument_app(app)
 
 
-@app.exception_handler(RateLimitExceeded)  # noqa: F841 — handler registered by decorator
+@app.exception_handler(RateLimitExceeded)
 async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """Convert slowapi's RateLimitExceeded into a 429 with structured
     detail + Retry-After + X-RateLimit-* headers. Emits a
@@ -482,10 +481,10 @@ async def health(request: Request) -> HealthResponse:
 @app.post("/v1/ask", response_model=AskResponse)
 @limiter.limit(_rate_limit_cap)
 async def ask(
-    request: Request,  # noqa: ARG001 — required by @limiter.limit to find the rate-limit key
+    request: Request,
     payload: AskRequest,
-    api_key: str = Depends(verify_api_key),  # noqa: ARG001 — Depends runs for side effect (401 if invalid)
-    pipeline: RAGPipeline = Depends(get_pipeline),
+    api_key: str = Depends(verify_api_key),
+    pipeline: RAGPipeline = Depends(get_pipeline),  # noqa: B008 — FastAPI Depends() in defaults IS the framework pattern
 ) -> AskResponse:
     """Answer a single query against the pipeline. Byte-for-byte
     equivalent to `pipeline.answer(payload.query)` modulo JSON

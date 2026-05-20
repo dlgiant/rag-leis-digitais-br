@@ -73,7 +73,7 @@ def main() -> int:
     from rag_leis.rag import load_pipeline
 
     project = Path(__file__).resolve().parents[1]
-    print(f"[smoke] loading pipeline (Voyage + Sabiá production stack)...")
+    print("[smoke] loading pipeline (Voyage + Sabiá production stack)...")
     try:
         pipe = load_pipeline(
             chunks_dir=project / "data" / "chunks",

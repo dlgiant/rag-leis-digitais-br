@@ -133,7 +133,7 @@ async def run_level(
 def _percentile(sorted_values: list[float], p: float) -> float:
     if not sorted_values:
         return 0.0
-    k = max(1, min(len(sorted_values), int(round(p / 100.0 * len(sorted_values)))))
+    k = max(1, min(len(sorted_values), round(p / 100.0 * len(sorted_values))))
     return sorted_values[k - 1]
 
 
@@ -208,7 +208,7 @@ def main() -> int:
 
     sweep: list[dict[str, Any]] = []
     cumulative_cost = 0.0
-    for level, total in zip(levels, per_level):
+    for level, total in zip(levels, per_level, strict=False):
         if cumulative_cost > args.max_cost_usd:
             print(f"!! Cost cap reached (${cumulative_cost:.4f}); aborting before level={level}")
             break

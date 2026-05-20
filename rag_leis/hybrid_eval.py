@@ -283,7 +283,7 @@ def main() -> int:
     print("Per-query Δ for RRF vs dense (sorted by ΔnDCG asc)")
     print("=" * 72)
     rows: list[tuple[float, float, int]] = []
-    for i, q in enumerate(queries):
+    for i, _q in enumerate(queries):
         d_ndcg = metrics["dense"]["ndcg"][i]
         r_ndcg = metrics["rrf"]["ndcg"][i]
         d_mrr = metrics["dense"]["mrr"][i]

@@ -462,7 +462,7 @@ def test_ask_returns_429_over_rate_limit(client_with_stub, monkeypatch):
     body = r3.json()
     assert "rate limit exceeded" in body["detail"]
     # Rate-limit headers on 429
-    lower_headers = {k.lower() for k in r3.headers.keys()}
+    lower_headers = {k.lower() for k in r3.headers}
     assert "retry-after" in lower_headers
     assert "x-ratelimit-limit" in lower_headers
     assert "x-ratelimit-remaining" in lower_headers
@@ -534,7 +534,7 @@ def test_request_id_header_on_every_response(client_with_stub):
             r = client.post(path, json={"query": "test"}, headers=headers)
         else:
             r = client.get(path, headers=headers)
-        assert "x-request-id" in {k.lower() for k in r.headers.keys()}, f"{path} missing X-Request-ID"
+        assert "x-request-id" in {k.lower() for k in r.headers}, f"{path} missing X-Request-ID"
         rid = r.headers["X-Request-ID"]
         assert len(rid) == 8, f"X-Request-ID should be 8 hex chars; got {rid!r}"
 
@@ -667,7 +667,7 @@ def test_xratelimit_headers_on_200_response(client_with_stub, monkeypatch):
     client, _ = client_with_stub
     r = client.post("/v1/ask", json={"query": "test"}, headers=AUTH_HEADERS)
     assert r.status_code == 200
-    lower = {k.lower() for k in r.headers.keys()}
+    lower = {k.lower() for k in r.headers}
     assert "x-ratelimit-limit" in lower
     assert "x-ratelimit-remaining" in lower
     assert "x-ratelimit-reset" in lower

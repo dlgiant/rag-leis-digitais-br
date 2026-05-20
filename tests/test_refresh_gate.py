@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
 from rag_leis.refresh_gate import (
     DEFAULT_NDCG_THRESHOLD,
     EvalMetrics,
@@ -17,7 +15,6 @@ from rag_leis.refresh_gate import (
     restore_index_files,
     save_metrics,
 )
-
 
 # ---------------------------------------------------------------------------
 # Backup / restore — file lifecycle

@@ -24,8 +24,7 @@ from __future__ import annotations
 import json
 import statistics
 import sys
-import time
-from collections import Counter, defaultdict
+from collections import defaultdict
 from pathlib import Path
 
 import yaml
@@ -93,7 +92,7 @@ def _percentiles(values: list[float]) -> dict[str, float]:
         # nearest-rank percentile, 1-indexed to match Phase 7.5.7 convention
         if not s:
             return 0.0
-        k = max(1, min(len(s), int(round(p / 100.0 * len(s)))))
+        k = max(1, min(len(s), round(p / 100.0 * len(s))))
         return s[k - 1]
     return {
         "p50": pct(50),
@@ -154,9 +153,9 @@ def main() -> int:
     load_dotenv()
 
     print("Loading pipeline in PROD config")
-    print(f"  generator:        Sabiá-3.1 (maritaca)")
-    print(f"  relevance judge:  Sabiá (default — uses self.llm; no override)")
-    print(f"  answer-quality judge:  NOT CALLED (eval-only; this script skips it)")
+    print("  generator:        Sabiá-3.1 (maritaca)")
+    print("  relevance judge:  Sabiá (default — uses self.llm; no override)")
+    print("  answer-quality judge:  NOT CALLED (eval-only; this script skips it)")
     print(f"  cache:            {CACHE_DIR}")
     pipe = load_pipeline(
         chunks_dir=CHUNKS_DIR, index_dir=INDEX_DIR,

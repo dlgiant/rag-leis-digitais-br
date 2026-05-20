@@ -31,9 +31,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from rag_leis.corpus import TIER_1, TIER_2
 from rag_leis.diff_audit import DiffEntry, append_audit_log, format_diff_summary
 from rag_leis.fetch_tier import AUDIT_LOG, _fetch_one_tier
-from rag_leis.corpus import TIER_1, TIER_2
 from rag_leis.refresh_gate import (
     DEFAULT_NDCG_THRESHOLD,
     backup_index_files,
@@ -65,7 +65,7 @@ async def _fetch_all() -> list[DiffEntry]:
     """Run fetch_tier for tiers 1 and 2 (tier-3 ANPD PDFs use a separate
     pipeline; tier-4 jurisprudência is manual). Returns aggregated diffs."""
     diffs: list[DiffEntry] = []
-    for tier, docs, label in [("1", TIER_1, "tier-1"), ("2", TIER_2, "tier-2")]:
+    for _tier, docs, label in [("1", TIER_1, "tier-1"), ("2", TIER_2, "tier-2")]:
         _, tier_diffs = await _fetch_one_tier(docs, label)
         diffs.extend(tier_diffs)
     return diffs

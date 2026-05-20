@@ -14,11 +14,13 @@ just re-evaluating the predicate. No new API spend.
 The baseline (current Phase 7.8 gate) is T=1.00 in Option A.
 """
 from __future__ import annotations
+
 import json
 from pathlib import Path
 
 ROOT = Path("/home/ricardo/rag-leis-digitais-br")
-EVAL = json.load(open(ROOT / "eval/runs/phase-7.8.1-inscope-opus-relevance.json"))
+with open(ROOT / "eval/runs/phase-7.8.1-inscope-opus-relevance.json") as _f:
+    EVAL = json.load(_f)
 ROWS = EVAL["rows"]
 
 
@@ -110,7 +112,8 @@ print("OPTION B — threshold ≥0.80 + n_cits >= K guard")
 print("=" * 78)
 print(f"  {'K':4} {'in-scope FR':12} {'OOS recall':11} {'+FR':4} {'+catches':9}")
 for K in [1, 2, 3, 4, 5]:
-    pred = lambda row, K=K: len(row.get("citations", [])) >= K and pct_irrelevant(row) >= 0.80
+    def pred(row, K=K):
+        return len(row.get("citations", [])) >= K and pct_irrelevant(row) >= 0.80
     r = evaluate_variant(pred)
     print(f"  {K:3}   {r['inscope_false_refusal_rate']:.3f}        {r['oos_refusal_recall']:.3f}       {r['new_inscope_false_refusals']:4} {r['new_oos_catches']:9}")
 
@@ -157,11 +160,11 @@ for name, thresholds in [
     print(f"    in-scope false_refusal_rate: {r['inscope_false_refusal_rate']:.3f}  (+{r['new_inscope_false_refusals']} new)")
     print(f"    OOS refusal recall:          {r['oos_refusal_recall']:.3f}  (+{r['new_oos_catches']} catches)")
     if r["new_inscope_fr_rows"]:
-        print(f"    new in-scope refusals:")
+        print("    new in-scope refusals:")
         for idx, q in r["new_inscope_fr_rows"]:
             print(f"      row {idx}: {q}")
     if r["new_oos_catch_rows"]:
-        print(f"    new OOS catches:")
+        print("    new OOS catches:")
         for idx, q in r["new_oos_catch_rows"]:
             print(f"      row {idx}: {q}")
 

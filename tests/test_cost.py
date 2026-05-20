@@ -6,6 +6,8 @@ test (then operator updates intentionally).
 
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
+
 import pytest
 
 from rag_leis.cost import (
@@ -14,7 +16,6 @@ from rag_leis.cost import (
     breakdown,
     estimate,
 )
-
 
 # ----------------------------------------------------------------------------
 # estimate — arithmetic correctness
@@ -105,7 +106,7 @@ def test_breakdown_as_dict_serializable_and_rounded():
 def test_cost_breakdown_is_frozen():
     """Dataclass is frozen — accidental mutation should fail."""
     b = breakdown("anthropic", "claude-sonnet-4-5", 1000, 500)
-    with pytest.raises(Exception):  # FrozenInstanceError
+    with pytest.raises(FrozenInstanceError):
         b.cost_usd = 999.0  # type: ignore[misc]
 
 

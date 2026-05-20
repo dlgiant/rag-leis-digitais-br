@@ -105,17 +105,17 @@ def main() -> int:
             "answer_key": row["answer"],
         })
 
-    print(f"\nCandidates per area:")
+    print("\nCandidates per area:")
     for a, rows in sorted(by_area.items(), key=lambda x: -len(x[1])):
         print(f"  {a:35} {len(rows)}")
 
     # Stratified sample: PER_AREA_TARGET each, or all if fewer
     sampled: list[dict] = []
-    for area, rows in by_area.items():
+    for _area, rows in by_area.items():
         n = min(PER_AREA_TARGET, len(rows))
         sampled.extend(rng.sample(rows, n))
     print(f"\nSampled: {len(sampled)} OOS rows (target ~{PER_AREA_TARGET * len(OOS_AREAS)})")
-    print(f"Per-area in sample:")
+    print("Per-area in sample:")
     sample_counts = Counter(r["area"] for r in sampled)
     for a, c in sorted(sample_counts.items(), key=lambda x: -x[1]):
         print(f"  {a:35} {c}")

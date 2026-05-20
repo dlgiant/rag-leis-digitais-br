@@ -32,7 +32,7 @@ class Parser(Protocol):
 
     name: str
 
-    def parse(self, document_urn: str, source: str) -> list["Chunk"]: ...
+    def parse(self, document_urn: str, source: str) -> list[Chunk]: ...
 
 
 # Placeholder patterns for chunks with no operative text: revogados, vetados,

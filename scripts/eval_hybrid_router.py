@@ -162,8 +162,10 @@ def main() -> int:
     sub_title    = [(retrieved_title[i],    queries[i]) for i in range(len(queries)) if routes[i]]
 
     def _agg(pairs):
-        if not pairs: return (0.0, 0.0, 0.0)
-        rs = [x[0] for x in pairs]; qs = [x[1] for x in pairs]
+        if not pairs:
+            return (0.0, 0.0, 0.0)
+        rs = [x[0] for x in pairs]
+        qs = [x[1] for x in pairs]
         return _evaluate(rs, qs)
 
     # For each routed subset, also compute what the OTHER pipeline would have given.

@@ -31,6 +31,7 @@ from typing import Any
 
 import numpy as np
 
+from rag_leis import obs  # Phase 8.3 — span() is a no-op unless server configures OTel
 from rag_leis.corpus import TIER_1, TIER_2, TIER_3
 from rag_leis.embeddings import Embedder, Vec, get_embedder
 from rag_leis.eval_harness import IndexChunk, format_texts, load_chunks
@@ -49,7 +50,6 @@ from rag_leis.query_type import (
     prompt_snippet_for_query,
 )
 from rag_leis.verify import verify_citations
-from rag_leis import obs  # Phase 8.3 — span() is a no-op unless server configures OTel
 from rag_leis.vigencia import Vigencia, vigencia_warning
 
 DEFAULT_TOP_K = 10

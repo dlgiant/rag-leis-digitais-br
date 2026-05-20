@@ -8,8 +8,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
 from rag_leis.concept_scope import (
     CONCEPT_EXTRACTION_TOOL,
     CONCEPT_VOCABULARY,
@@ -18,7 +16,6 @@ from rag_leis.concept_scope import (
     extract_concept_tags,
 )
 from rag_leis.corpus import CORPUS_BY_URN
-
 
 # ----------------------------------------------------------------------------
 # Vocabulary integrity
@@ -180,7 +177,7 @@ def test_partial_overlap_does_not_refuse():
     """Mixed: query mentions 2 concepts, retrieval covers 1 of them.
     Any overlap is enough — gate does NOT refuse on partial mismatch."""
     lgpd_urn = "urn:lex:br:federal:lei:2018-08-14;13709"
-    refuse, retrieval = check_scope_overlap(
+    refuse, _retrieval = check_scope_overlap(
         ["dados-pessoais", "sigilo-bancario"], [lgpd_urn]
     )
     assert refuse is False  # dados-pessoais overlaps; that's enough
