@@ -42,10 +42,14 @@ load_dotenv()
 
 MARITACA_BASE_URL = "https://chat.maritaca.ai/api"
 
-# Default to sabia-3.1 — latest in the sabia-3 family, tool-call confirmed,
-# best simple-question quality in 2026-05-15 smoke test. sabia-4 is
-# available but defer to benchmark before committing to it.
-DEFAULT_MARITACA_MODEL = "sabia-3.1"
+# Default to sabia-4 — newer architecture, fixes the Sabiá-family
+# blindspot on row 12 (Decreto 8.771 art13 §2 incisos misclassified
+# as irrelevant by sabia-3.1 AND sonnet-4-5; sabia-4 joins opus on
+# the right side). 2026-05-19 A/B (study/phase-8-0-1-sabia-3.1-vs-4-findings.md):
+# in-scope false_refusal_rate 0.143 → 0.071, OOS recall 0.594 → 0.672,
+# cost ratio 1.20× (under the 2× cap), latency p95 +5× (614ms → 2865ms
+# on the answered subset; cosine-fast-path p50 unchanged at 306ms).
+DEFAULT_MARITACA_MODEL = "sabia-4"
 
 # All Marítaca models that expose chat completions + function calling.
 # Used by the comparison runner to iterate.

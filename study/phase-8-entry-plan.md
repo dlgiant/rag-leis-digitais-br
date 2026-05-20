@@ -24,39 +24,38 @@ Concretely, Phase 8 is the surface where the project's existing memory
 availability, throughput, true structured logging, tracing) become
 load-bearing for the first time.
 
-## Baseline numbers (what we're working from)
+## Baseline numbers (measured, anchored to sabia-4 production default)
 
-From the most recent internal eval (`phase-7.8.1-inscope-opus-relevance.json`,
-Sabiá gen + Opus answer-quality judge + Opus relevance judge, LLM cache
-active on re-run):
+From [Phase 8.0 prod-cost baseline](phase-8-0-prod-cost-baseline.md) +
+[Phase 8.0.1 A/B](phase-8-0-1-sabia-3.1-vs-4-findings.md). Pipeline:
+sabia-4 generator + sabia-4 self-judging relevance gate, no answer-
+quality judge (eval-only). 78 rows combined (internal + legalbench).
 
 | Metric | Value | Notes |
 |---|---|---|
-| latency p50 | **6.3s** | cache-hit-aided; cold p50 closer to ~12s |
-| latency p95 | **10.0s** | |
-| latency p99 | **15.9s** | |
-| cost mean | $0.108 / query | eval-mode (includes Opus answer-quality judge — NOT in prod path) |
-| cost total (29 rows) | $3.14 | |
-| error rate | 0.0% | |
+| Cost mean (all rows) | **$0.0046 / query** | includes refused rows (cheap; no LLM call on cosine fast-path) |
+| Cost mean (answered only) | **$0.0064 / query** | the SLO-relevant subset |
+| Cost p95 (answered) | **$0.0109 / query** | |
+| Latency p50 (all rows) | **0.31s** | cosine fast-path dominates; no LLM call |
+| Latency p95 (fresh API) | **~2.87s** | from A/B variant B fresh measurement |
+| Latency p99 (fresh API) | **~4.19s** | |
+| Error rate | **0.0%** | |
+| Refusal rate | 0.564 | OOS recall 0.672 + in-scope FR 0.071 |
 
-**Production-relevant cost is much lower.** The eval mode includes a
-~$0.05-0.08 Opus answer-quality judge call per row that the production
-path doesn't make. Prod-only cost estimate per query (Sabiá generator
-+ Sabiá relevance judge, no answer-quality judge): **~$0.005-0.01**.
-Calibrated estimate needs a dedicated measurement (sub-phase 8.0).
-
-## SLO targets (candidates, pre-locked at sub-phase start)
+## SLO targets (candidates, anchored to sabia-4 measurements)
 
 These are starting positions; pick the final numbers when you commit to
 a hosting platform, since some are platform-bounded.
 
 | SLO | Target | Why |
 |---|---|---|
-| Latency p95 (short) | < 10s | matches current eval p95; serves "what does art X say" UX |
-| Latency p95 (discursive) | < 20s | OAB-style longer answers; current ~p95 is ~26s in 7.5.5 discursive |
-| Cost per query (prod default) | < $0.02 | 4× headroom over the $0.005-0.01 estimate; alerts above |
+| Latency p95 (short) | **< 5s** | sabia-4 fresh p95 ≈ 2.9s; 5s gives ~70% headroom |
+| Latency p95 (discursive) | < 15s | OAB-style longer answers (Phase 7.5.5 measured ~p95 26s — needs separate discursive baseline before locking) |
+| Cost mean per query | **< $0.01** | sabia-4 measures $0.0064; $0.01 = 1.6× headroom; alert above |
+| Cost p99 per query | **< $0.02** | sabia-4 measures $0.011; 2× headroom for outliers |
+| In-scope false-refusal rate | **< 0.10** | sabia-4 measures 0.071 at n=14 (wide CI); alert if rolling 7d > 0.10 |
+| OOS refusal recall | ≥ 0.65 | sabia-4 measures 0.672 on combined surfaces; hold |
 | Error rate | < 1% | provider rate-limit + timeout headroom |
-| Refusal accuracy | ≥ 0.95 | hold the 7.8 gate; alert on drift |
 | Cache hit rate | tracked, no SLO | informational; flag when production query distribution shifts |
 
 ## Sub-phase decomposition
