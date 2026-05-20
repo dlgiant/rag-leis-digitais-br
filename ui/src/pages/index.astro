@@ -378,7 +378,11 @@ const EXAMPLES = [
 
     function renderCitation(urn) {
       const safe = String(urn).replace(/</g, "&lt;");
-      const href = `https://www.lexml.gov.br/urn/${encodeURIComponent(urn)}`;
+      // IMPORTANT: use encodeURI, not encodeURIComponent — the URN
+      // contains `:` and `;` which are valid URL path syntax characters
+      // and LexML's resolver expects them raw. encodeURIComponent would
+      // percent-encode them and break the lookup.
+      const href = `https://www.lexml.gov.br/urn/${encodeURI(urn)}`;
       return `<li><a href="${href}" target="_blank" rel="noopener"><code>${safe}</code></a></li>`;
     }
 
