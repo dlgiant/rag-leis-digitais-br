@@ -1,0 +1,1604 @@
+{
+  "summary": {
+    "sabia": {
+      "n_total": 49,
+      "n_refused": 28,
+      "refusal_rate": 0.5714285714285714,
+      "by_reason": {
+        "empty-citations-implicit-refusal": 3,
+        "llm-self-refusal": 11,
+        "concept-scope-mismatch: query=[incidente": 1,
+        "concept-scope-mismatch: query=[devido-pr": 2,
+        "irrelevant-citations-implicit-refusal": 11
+      },
+      "total_cost_usd": 0.167
+    },
+    "opus": {
+      "n_total": 49,
+      "n_refused": 30,
+      "refusal_rate": 0.6122448979591837,
+      "by_reason": {
+        "empty-citations-implicit-refusal": 3,
+        "llm-self-refusal": 10,
+        "concept-scope-mismatch: query=[incidente": 1,
+        "concept-scope-mismatch: query=[devido-pr": 2,
+        "irrelevant-citations-implicit-refusal": 14
+      },
+      "total_cost_usd": 2.0467
+    },
+    "delta_pp": 0.0408,
+    "verdict": "KEEP SABIÁ — within stochastic noise"
+  },
+  "agreement": {
+    "both_refused": [
+      "celsowm/legalbench.br/182",
+      "celsowm/legalbench.br/149",
+      "celsowm/legalbench.br/143",
+      "celsowm/legalbench.br/189",
+      "celsowm/legalbench.br/159",
+      "celsowm/legalbench.br/157",
+      "celsowm/legalbench.br/156",
+      "celsowm/legalbench.br/247",
+      "celsowm/legalbench.br/266",
+      "celsowm/legalbench.br/264",
+      "celsowm/legalbench.br/272",
+      "celsowm/legalbench.br/279",
+      "celsowm/legalbench.br/280",
+      "celsowm/legalbench.br/281",
+      "celsowm/legalbench.br/290",
+      "celsowm/legalbench.br/354",
+      "celsowm/legalbench.br/372",
+      "celsowm/legalbench.br/366",
+      "celsowm/legalbench.br/373",
+      "celsowm/legalbench.br/367",
+      "celsowm/legalbench.br/359",
+      "celsowm/legalbench.br/364",
+      "celsowm/legalbench.br/386",
+      "celsowm/legalbench.br/403",
+      "celsowm/legalbench.br/414",
+      "celsowm/legalbench.br/409"
+    ],
+    "only_sabia_refused": [
+      "celsowm/legalbench.br/301",
+      "celsowm/legalbench.br/275"
+    ],
+    "only_opus_refused": [
+      "celsowm/legalbench.br/246",
+      "celsowm/legalbench.br/347",
+      "celsowm/legalbench.br/389",
+      "celsowm/legalbench.br/402"
+    ],
+    "neither_refused": [
+      "celsowm/legalbench.br/260",
+      "celsowm/legalbench.br/245",
+      "celsowm/legalbench.br/276",
+      "celsowm/legalbench.br/310",
+      "celsowm/legalbench.br/344",
+      "celsowm/legalbench.br/321",
+      "celsowm/legalbench.br/350",
+      "celsowm/legalbench.br/343",
+      "celsowm/legalbench.br/377",
+      "celsowm/legalbench.br/397",
+      "celsowm/legalbench.br/388",
+      "celsowm/legalbench.br/387",
+      "celsowm/legalbench.br/398",
+      "celsowm/legalbench.br/385",
+      "celsowm/legalbench.br/412",
+      "celsowm/legalbench.br/405",
+      "celsowm/legalbench.br/413"
+    ]
+  },
+  "per_row": {
+    "sabia": [
+      {
+        "source_id": "celsowm/legalbench.br/182",
+        "refused": true,
+        "refusal_reason": "empty-citations-implicit-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002067,
+        "latency_ms": 3757.335,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/149",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "enumeracao",
+        "cost_usd": 0.002656,
+        "latency_ms": 5084.133,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/143",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.004769,
+        "latency_ms": 6101.021,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/189",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003627,
+        "latency_ms": 3208.584,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/159",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002024,
+        "latency_ms": 2742.905,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/157",
+        "refused": true,
+        "refusal_reason": "empty-citations-implicit-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.001995,
+        "latency_ms": 2692.429,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/156",
+        "refused": true,
+        "refusal_reason": "concept-scope-mismatch: query=[incidente] vs retrieval=[acesso-dados,assinatura-eletronica,competencia-uniao,devido-processo,direito-imagem]",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.000345,
+        "latency_ms": 1229.415,
+        "llm_calls": 1
+      },
+      {
+        "source_id": "celsowm/legalbench.br/247",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.001727,
+        "latency_ms": 2355.45,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/266",
+        "refused": true,
+        "refusal_reason": "concept-scope-mismatch: query=[devido-processo,processo-eletronico,ordem-judicial] vs retrieval=[consumidor,crimes,defesa-consumidor,dolo-culpa,estelionato-digital]",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.000384,
+        "latency_ms": 1074.872,
+        "llm_calls": 1
+      },
+      {
+        "source_id": "celsowm/legalbench.br/246",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art121;par4;inc5",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art15;par1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art10;par1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art16",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art105;inc2;ali-b",
+          "urn:lex:br:federal:lei:2011-11-18;12527~art17;par2"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:lei:1997-11-12;9507~art15;par1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art10;par1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art16",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art105;inc2;ali-b",
+          "urn:lex:br:federal:lei:2011-11-18;12527~art17;par2"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.007857,
+        "latency_ms": 14084.186,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/264",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:lei:1997-11-12;9507~art12"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:lei:1997-11-12;9507~art12"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.004414,
+        "latency_ms": 6549.476,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/272",
+        "refused": true,
+        "refusal_reason": "concept-scope-mismatch: query=[devido-processo,processo-eletronico,ordem-judicial,direitos-fundamentais] vs retrieval=[consumidor,crimes,defesa-consumidor,dolo-culpa,estelionato-digital]",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.000402,
+        "latency_ms": 1039.674,
+        "llm_calls": 1
+      },
+      {
+        "source_id": "celsowm/legalbench.br/260",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par3",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par2",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par4",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art80"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par2",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par4",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art80"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.006127,
+        "latency_ms": 10019.977,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/245",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc68",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc65",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc69"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc65",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc69"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.00355,
+        "latency_ms": 6860.241,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/301",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc21"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc21"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.004106,
+        "latency_ms": 6370.537,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/276",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc29"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002452,
+        "latency_ms": 4284.852,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/275",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc13"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc13"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002538,
+        "latency_ms": 4704.478,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/279",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.001618,
+        "latency_ms": 1946.23,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/280",
+        "refused": true,
+        "refusal_reason": "empty-citations-implicit-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003941,
+        "latency_ms": 4592.046,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/281",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc15"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc15"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002578,
+        "latency_ms": 4239.618,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/290",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc13",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc33"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc13",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc33"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002766,
+        "latency_ms": 4685.059,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/347",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art334",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art334;par1",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art168-a"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art334;par1",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art168-a"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003364,
+        "latency_ms": 6145.398,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/310",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par4;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par1;inc6",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par6;inc1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par1;inc6",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par6;inc1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.00337,
+        "latency_ms": 5528.276,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/344",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc7",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc5",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc8;ali-a",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc8;ali-b"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc5",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc8;ali-a",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc8;ali-b"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.008485,
+        "latency_ms": 14077.83,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/321",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art145;par1"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.00286,
+        "latency_ms": 5453.127,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/354",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.00327,
+        "latency_ms": 5276.59,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/350",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;inc1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;inc1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003317,
+        "latency_ms": 6015.386,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/343",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art150;inc1"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002687,
+        "latency_ms": 4301.054,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/372",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;inc1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;inc2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art28"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;inc1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;inc2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art28"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.004087,
+        "latency_ms": 7167.359,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/366",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc29"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003925,
+        "latency_ms": 4306.604,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/373",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002088,
+        "latency_ms": 2610.608,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/377",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art177;par1;inc3"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002515,
+        "latency_ms": 4961.548,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/367",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.001521,
+        "latency_ms": 1867.184,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/359",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002164,
+        "latency_ms": 2698.671,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/364",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.001763,
+        "latency_ms": 1988.059,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/397",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art49;inc16",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art231;par3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art176;par1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art231;par6"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art49;inc16",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art176;par1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art231;par6"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.004246,
+        "latency_ms": 7986.035,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/389",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par1;inc2;ali-h",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par2"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par1;inc2;ali-h"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.005548,
+        "latency_ms": 8704.926,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/388",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par2",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art271;par1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par2",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art271;par1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.00711,
+        "latency_ms": 11264.694,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/386",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art186;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc7"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art186;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc7"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.006074,
+        "latency_ms": 10447.874,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/387",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003058,
+        "latency_ms": 4547.881,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/398",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par1;inc2;ali-h",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003923,
+        "latency_ms": 7223.277,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/385",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;par1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;par1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003374,
+        "latency_ms": 6450.793,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/402",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art102;inc1;ali-e",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art105;inc2;ali-c",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art52;inc4"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art105;inc2;ali-c",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art52;inc4"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003973,
+        "latency_ms": 8090.532,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/412",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc51",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art102;inc1;ali-g",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art9",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art102;inc1;ali-g",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art9",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003643,
+        "latency_ms": 6860.704,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/403",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;inc1;ali-a",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art141;inc1",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art337-d"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;inc1;ali-a",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art141;inc1",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art337-d"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003761,
+        "latency_ms": 6864.748,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/405",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art21;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art84;inc19",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art49;inc2"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art21;inc2"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003268,
+        "latency_ms": 5493.447,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/413",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;inc2;ali-c",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art5;par1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;inc9"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art5;par1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;inc9"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.0035,
+        "latency_ms": 5459.329,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/414",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:lei:1998-02-19;9610~art2"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:lei:1998-02-19;9610~art2"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.005509,
+        "latency_ms": 8829.558,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/409",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;par1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;par1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.00262,
+        "latency_ms": 4686.676,
+        "llm_calls": 3
+      }
+    ],
+    "opus": [
+      {
+        "source_id": "celsowm/legalbench.br/182",
+        "refused": true,
+        "refusal_reason": "empty-citations-implicit-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002067,
+        "latency_ms": 270.498,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/149",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "enumeracao",
+        "cost_usd": 0.002656,
+        "latency_ms": 167.812,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/143",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.004769,
+        "latency_ms": 343.891,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/189",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003627,
+        "latency_ms": 155.204,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/159",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002024,
+        "latency_ms": 463.236,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/157",
+        "refused": true,
+        "refusal_reason": "empty-citations-implicit-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.001995,
+        "latency_ms": 302.784,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/156",
+        "refused": true,
+        "refusal_reason": "concept-scope-mismatch: query=[incidente] vs retrieval=[acesso-dados,assinatura-eletronica,competencia-uniao,devido-processo,direito-imagem]",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.000345,
+        "latency_ms": 190.514,
+        "llm_calls": 1
+      },
+      {
+        "source_id": "celsowm/legalbench.br/247",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.001727,
+        "latency_ms": 162.064,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/266",
+        "refused": true,
+        "refusal_reason": "concept-scope-mismatch: query=[devido-processo,processo-eletronico,ordem-judicial] vs retrieval=[consumidor,crimes,defesa-consumidor,dolo-culpa,estelionato-digital]",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.000384,
+        "latency_ms": 167.127,
+        "llm_calls": 1
+      },
+      {
+        "source_id": "celsowm/legalbench.br/246",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art121;par4;inc5",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art15;par1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art10;par1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art16",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art105;inc2;ali-b",
+          "urn:lex:br:federal:lei:2011-11-18;12527~art17;par2"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art121;par4;inc5",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art15;par1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art10;par1",
+          "urn:lex:br:federal:lei:1997-11-12;9507~art16",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art105;inc2;ali-b",
+          "urn:lex:br:federal:lei:2011-11-18;12527~art17;par2"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.08616,
+        "latency_ms": 8530.563,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/264",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:lei:1997-11-12;9507~art12"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:lei:1997-11-12;9507~art12"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.047204,
+        "latency_ms": 3747.084,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/272",
+        "refused": true,
+        "refusal_reason": "concept-scope-mismatch: query=[devido-processo,processo-eletronico,ordem-judicial,direitos-fundamentais] vs retrieval=[consumidor,crimes,defesa-consumidor,dolo-culpa,estelionato-digital]",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.000402,
+        "latency_ms": 309.998,
+        "llm_calls": 1
+      },
+      {
+        "source_id": "celsowm/legalbench.br/260",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par3",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par2",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par4",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art80"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par2",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art100;par4"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.072828,
+        "latency_ms": 6549.225,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/245",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc68",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc65",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc69"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc69"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.064071,
+        "latency_ms": 8572.787,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/301",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc21"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.045089,
+        "latency_ms": 3052.941,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/276",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc29"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.043936,
+        "latency_ms": 4041.923,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/275",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc13"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.046052,
+        "latency_ms": 6449.433,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/279",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.001618,
+        "latency_ms": 311.134,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/280",
+        "refused": true,
+        "refusal_reason": "empty-citations-implicit-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003941,
+        "latency_ms": 148.617,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/281",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc15"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc15"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.042874,
+        "latency_ms": 3434.741,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/290",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc13",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc33"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc13",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art7;inc33"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.053817,
+        "latency_ms": 4401.337,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/347",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art334",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art334;par2"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art334",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art334;par2"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.059092,
+        "latency_ms": 12060.461,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/310",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par4;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par1;inc6",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par6;inc1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par4;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par6;inc1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.062008,
+        "latency_ms": 6882.329,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/344",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc7",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc5",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc8;ali-a",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;par2;inc8;ali-b"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~adct;art99;inc4"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.10605,
+        "latency_ms": 9625.774,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/321",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art145;par1"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.044021,
+        "latency_ms": 3062.823,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/354",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.063441,
+        "latency_ms": 5632.881,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/350",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art156;par2;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;inc1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art155;inc1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.060489,
+        "latency_ms": 5334.241,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/343",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art150;inc1"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.043289,
+        "latency_ms": 3585.007,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/372",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;inc1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;inc2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art28"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;inc1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;inc2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art28"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.08147,
+        "latency_ms": 7935.054,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/366",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc29"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.003925,
+        "latency_ms": 259.889,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/373",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002088,
+        "latency_ms": 305.998,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/377",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art177;par1;inc3"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.044768,
+        "latency_ms": 5730.504,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/367",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:lei:2020-09-23;14063~art5;par1;inc2;ali-c"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:lei:2020-09-23;14063~art5;par1;inc2;ali-c"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.044357,
+        "latency_ms": 5427.229,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/359",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.002164,
+        "latency_ms": 315.911,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/364",
+        "refused": true,
+        "refusal_reason": "llm-self-refusal",
+        "citations": [],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.001763,
+        "latency_ms": 304.84,
+        "llm_calls": 2
+      },
+      {
+        "source_id": "celsowm/legalbench.br/397",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art49;inc16",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art231;par3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art176;par1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art231;par6"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art231;par6"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.075987,
+        "latency_ms": 6444.834,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/389",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par1;inc2;ali-h",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par2"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par1;inc2;ali-h",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par2"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.06686,
+        "latency_ms": 6238.117,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/388",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par2",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art271;par1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par1",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art25;par2",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art271;par1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.082053,
+        "latency_ms": 8918.64,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/386",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art186;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc7"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art186;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc7"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.073808,
+        "latency_ms": 7065.892,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/387",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par1;inc4",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.051661,
+        "latency_ms": 4089.429,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/398",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par1;inc2;ali-h",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art250;par2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.069391,
+        "latency_ms": 6866.972,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/385",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par3",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;par1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art225;par2",
+          "urn:lex:br:federal:lei:1990-09-11;8078~art13;par1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.061039,
+        "latency_ms": 5222.674,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/402",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art102;inc1;ali-e",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art105;inc2;ali-c",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art52;inc4"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art102;inc1;ali-e",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art105;inc2;ali-c",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art52;inc4"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.06911,
+        "latency_ms": 5744.973,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/412",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc51",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art102;inc1;ali-g",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art9",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art9",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.067765,
+        "latency_ms": 6649.799,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/403",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;inc1;ali-a",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art141;inc1",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art337-d"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;inc1;ali-a",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art141;inc1",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art337-d"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.061472,
+        "latency_ms": 6490.529,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/405",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art21;inc2",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art84;inc19",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art49;inc2"
+        ],
+        "rejected_irrelevant": [],
+        "classified_type": "parafrase",
+        "cost_usd": 0.061131,
+        "latency_ms": 5385.445,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/413",
+        "refused": false,
+        "refusal_reason": null,
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;inc2;ali-c",
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art5;par1",
+          "urn:lex:br:federal:constituicao:1988-10-05;1988~art109;inc9"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;inc2;ali-c"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.06447,
+        "latency_ms": 5738.002,
+        "llm_calls": 3
+      },
+      {
+        "source_id": "celsowm/legalbench.br/414",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:lei:1998-02-19;9610~art2"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:lei:1998-02-19;9610~art2"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.049002,
+        "latency_ms": 4706.83,
+        "llm_calls": 4
+      },
+      {
+        "source_id": "celsowm/legalbench.br/409",
+        "refused": true,
+        "refusal_reason": "irrelevant-citations-implicit-refusal",
+        "citations": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;par1"
+        ],
+        "rejected_irrelevant": [
+          "urn:lex:br:federal:decreto.lei:1940-12-07;2848~art7;par1"
+        ],
+        "classified_type": "parafrase",
+        "cost_usd": 0.046392,
+        "latency_ms": 4608.276,
+        "llm_calls": 3
+      }
+    ]
+  }
+}

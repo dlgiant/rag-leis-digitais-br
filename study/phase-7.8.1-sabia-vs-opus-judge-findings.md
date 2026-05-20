@@ -96,6 +96,33 @@ the main generation path.
    the noise floor for n=49. Confidence in the swap recommendation
    would be stronger at n=100+, but legalbench.br OOS doesn't have
    more pre-curated OOS rows in our coverage.
+
+   **CONFIRMED 2026-05-19** — a third independent run (as part of the
+   Phase 7.8.2 cached-data infra change) measured:
+
+   | Trial | Sabiá refuses | Opus refuses | Δ |
+   |---|---:|---:|---:|
+   | Original 7.8 baseline | 31/49 (0.633) | n/a | n/a |
+   | Original 7.8.1 A/B | 28/49 (0.571) | 33/49 (0.673) | **+0.102pp** |
+   | Re-run (this) | 28/49 (0.571) | 30/49 (0.612) | **+0.041pp** |
+
+   Direction consistent across all three measurements (Opus refuses
+   ≥ Sabiá), but magnitude is unstable. The +0.10pp pre-locked
+   criterion was met by exactly 0.002pp in the original A/B — a hair
+   over the threshold designed for the n=49 noise floor it sits at.
+   The re-run gets +0.041pp, well below criterion.
+
+   **The original Phase 7.8.1 swap decision was correctly applied
+   against the data and criterion available at the time.** But two
+   measurements at +0.102pp and +0.041pp suggest the underlying Opus
+   advantage is real but smaller than the first sample indicated.
+   The eval-default Opus assignment stays (direction consistent, cost
+   not load-bearing for eval surface), but the criterion was too
+   tight for the sample size. **Practical lesson for future per-LLM
+   A/Bs at n≤50: require ≥3 independent samples, not 1, before
+   committing pre-locked-criterion language. Confidence interval at
+   n=49 with σ≈3 rows is roughly ±0.12pp** — almost the entire
+   criterion threshold itself.
 3. **No cost-folded latency comparison.** Opus calls are slower
    per-call (~6-9s vs ~3-5s for Sabiá at the same prompt length).
    Latency overhead from Opus judge wasn't measured row-by-row.
