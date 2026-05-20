@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel in-progress runs when a new commit is pushed to the same ref.
+# Prevents wasted compute on rapid-iteration PRs.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests + lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10  # generous; local run is ~5s for the 446-test subset
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          # Hash uv.lock so the cache invalidates only when deps actually change
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install Python + project deps
+        run: |
+          # Match local dev install. `--extra voyage --extra server` pulls
+          # the embedder + the FastAPI HTTP harness; both are import-checked
+          # by the test suite.
+          uv sync --extra voyage --extra server
+
+      - name: Lint (ruff)
+        run: uv run ruff check rag_leis/ tests/ scripts/
+
+      - name: Run tests
+        run: |
+          # Phase 8.5.0 — exclude markers that require external state:
+          #   `network`           — live Anthropic / Maritaca API calls (need API keys)
+          #   `requires_anpd_pdf` — Tier-3 ANPD PDFs (not in git per data/raw gitignore)
+          # Local devs run all 468 tests; CI runs the deterministic 446 subset.
+          uv run pytest -m "not network and not requires_anpd_pdf" -q
