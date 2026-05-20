@@ -1,0 +1,122 @@
+{
+  "config": {
+    "base_url": "http://127.0.0.1:8801",
+    "levels": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "per_level": [
+      50,
+      50,
+      100,
+      100,
+      200,
+      200
+    ],
+    "timeout_s": 90.0,
+    "seed": 42,
+    "n_unique_queries": 78
+  },
+  "sweep": [
+    {
+      "concurrency": 1,
+      "n_total": 50,
+      "n_success": 50,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "latency_p50_ms": 198.9,
+      "latency_p95_ms": 252.6,
+      "latency_p99_ms": 274.5,
+      "latency_mean_ms": 190.7,
+      "throughput_qps": 5.24,
+      "wall_seconds": 9.54,
+      "cost_total_usd": 0.253736,
+      "cost_mean_usd": 0.005075,
+      "status_distribution": {
+        "200": 50
+      },
+      "cumulative_cost_usd": 0.253736
+    },
+    {
+      "concurrency": 2,
+      "n_total": 50,
+      "n_success": 50,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "latency_p50_ms": 405.9,
+      "latency_p95_ms": 13130.0,
+      "latency_p99_ms": 14596.0,
+      "latency_mean_ms": 1465.1,
+      "throughput_qps": 1.37,
+      "wall_seconds": 36.63,
+      "cost_total_usd": 0.205389,
+      "cost_mean_usd": 0.004108,
+      "status_distribution": {
+        "200": 50
+      },
+      "cumulative_cost_usd": 0.459125
+    },
+    {
+      "concurrency": 4,
+      "n_total": 100,
+      "n_success": 100,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "latency_p50_ms": 810.5,
+      "latency_p95_ms": 1024.3,
+      "latency_p99_ms": 1318.0,
+      "latency_mean_ms": 801.0,
+      "throughput_qps": 4.94,
+      "wall_seconds": 20.22,
+      "cost_total_usd": 0.442068,
+      "cost_mean_usd": 0.004421,
+      "status_distribution": {
+        "200": 100
+      },
+      "cumulative_cost_usd": 0.901193
+    },
+    {
+      "concurrency": 8,
+      "n_total": 100,
+      "n_success": 100,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "latency_p50_ms": 1653.4,
+      "latency_p95_ms": 45373.0,
+      "latency_p99_ms": 45375.0,
+      "latency_mean_ms": 5773.4,
+      "throughput_qps": 1.38,
+      "wall_seconds": 72.6,
+      "cost_total_usd": 0.498936,
+      "cost_mean_usd": 0.004989,
+      "status_distribution": {
+        "200": 100
+      },
+      "cumulative_cost_usd": 1.400129
+    },
+    {
+      "concurrency": 16,
+      "n_total": 200,
+      "n_success": 200,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "latency_p50_ms": 3470.0,
+      "latency_p95_ms": 20470.7,
+      "latency_p99_ms": 22316.4,
+      "latency_mean_ms": 5835.9,
+      "throughput_qps": 2.72,
+      "wall_seconds": 73.44,
+      "cost_total_usd": 0.946265,
+      "cost_mean_usd": 0.004731,
+      "status_distribution": {
+        "200": 200
+      },
+      "cumulative_cost_usd": 2.346394
+    }
+  ],
+  "cumulative_cost_usd": 2.346394
+}
