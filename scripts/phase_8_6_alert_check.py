@@ -39,13 +39,26 @@ from pathlib import Path
 from typing import Any
 
 # -------------------------------------------------------------------
-# Thresholds — recalibrated from Phase 8.5.1 production measurements.
-# Change these as production traffic grows; document the change in
-# the Phase 8.6 findings doc.
+# Thresholds — recalibrated from Phase 8.5.1, then again from
+# Phase 10.0 + 10b smoke tests against the deployed SSE endpoint.
+#
+# Original Phase 8.5.1 measurement (no relevance gate timing
+# included): warm p95 ~13s. Original thresholds (p50=15s, p95=20s)
+# were calibrated against that.
+#
+# Phase 10.0 smoke test added the relevance_judge stage to the
+# end-to-end measurement: ~8.6s for that stage alone, pushing
+# warm end-to-end p95 to ~20s. The original p95=20s threshold
+# was sitting exactly at the warm-state ceiling — guaranteed
+# false positives on routine traffic.
+#
+# New thresholds give ~50% headroom over measured warm p95 so
+# normal traffic doesn't trip the alert, while still catching
+# real degradation. Reviewed again after 30 days of real traffic.
 # -------------------------------------------------------------------
-P50_LATENCY_MS_5MIN = 15_000.0       # > 15s sustained 5 min  → alert
-P95_LATENCY_MS_5MIN = 20_000.0       # > 20s sustained 5 min  → alert
-P99_LATENCY_MS_5MIN = 30_000.0       # > 30s sustained 5 min  → alert
+P50_LATENCY_MS_5MIN = 20_000.0       # > 20s sustained 5 min  → alert (warm p50 ~10-13s)
+P95_LATENCY_MS_5MIN = 30_000.0       # > 30s sustained 5 min  → alert (warm p95 ~20s)
+P99_LATENCY_MS_5MIN = 40_000.0       # > 40s sustained 5 min  → alert (cold p99 ~20-34s; min_machines_running=1 reduces frequency)
 COST_MEAN_USD_1H    = 0.015          # > $0.015/query rolling 1h  → alert
 ERROR_RATE_5MIN     = 0.02           # > 2% error over 5 min  → alert
 AUTH_FAILURE_PER_HR = 10             # > 10 auth.failed/hr same IP  → alert
