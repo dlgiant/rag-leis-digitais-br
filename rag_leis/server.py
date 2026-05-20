@@ -31,17 +31,23 @@ from __future__ import annotations
 
 import os
 import secrets
+import time
+import uuid
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
 
+import structlog
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel, Field
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
+from starlette.middleware.base import BaseHTTPMiddleware
 
+from rag_leis import obs
 from rag_leis.rag import DEFAULT_TOP_K, RAGAnswer, RAGPipeline, load_pipeline
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -184,8 +190,13 @@ def _build_pipeline_from_env() -> RAGPipeline:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load the pipeline once at startup; reuse for every request."""
+    """Load the pipeline once at startup; reuse for every request.
+    Also initializes Phase 8.3 observability (structlog + OTel) — done
+    here (not module-import) so the eval CLI doesn't pay the setup
+    cost when importing rag_leis.server transitively."""
     load_dotenv(PROJECT_ROOT / ".env", override=False)
+    # Phase 8.3 — configure structured logging + OTel SDK.
+    obs.configure(level=os.environ.get("RAG_LOG_LEVEL", "INFO"))
     app.state.pipeline = _build_pipeline_from_env()
     try:
         yield
@@ -219,8 +230,10 @@ def verify_api_key(x_api_key: str | None = Header(default=None)) -> str:
     Failure modes:
       - missing header → 401 with WWW-Authenticate: ApiKey
       - key not in allowed set → 401 (same WWW-Authenticate)
+    Both emit `auth.failed` structured log events (Phase 8.3).
     """
     if not x_api_key:
+        obs.get_logger().warning("auth.failed", reason="missing-key", api_key_prefix="none")
         raise HTTPException(
             status_code=401,
             detail="missing API key",
@@ -232,6 +245,9 @@ def verify_api_key(x_api_key: str | None = Header(default=None)) -> str:
     for candidate in allowed:
         if secrets.compare_digest(x_api_key, candidate):
             return x_api_key
+    obs.get_logger().warning(
+        "auth.failed", reason="invalid-key", api_key_prefix=x_api_key[:8],
+    )
     raise HTTPException(
         status_code=401,
         detail="invalid API key",
@@ -268,12 +284,117 @@ limiter = Limiter(
     # NOTE: slowapi's headers_enabled=True breaks with FastAPI's
     # response_model pattern — the decorator's async wrapper tries to
     # inject headers into a not-yet-built response and raises. We
-    # build the rate-limit headers manually in the 429 handler below
-    # (Retry-After + X-RateLimit-Limit/-Remaining/-Reset). 200
-    # responses don't carry these headers in Phase 8.2 — tracked as a
-    # Phase 8.3 follow-up when we add structured response middleware.
+    # build the rate-limit headers manually in `_build_rate_limit_headers`
+    # below; the 429 exception handler + the Phase 8.3
+    # RateLimitHeadersMiddleware both call it so 200 + 429 carry
+    # consistent X-RateLimit-* headers.
     headers_enabled=False,
 )
+
+
+def _build_rate_limit_headers(request: Request) -> dict[str, str]:
+    """Construct X-RateLimit-* + Retry-After headers from the slowapi
+    state stashed on `request.state.view_rate_limit`. Called by both
+    the 429 handler and the Phase 8.3 success-path middleware so 200
+    + 429 responses carry identical headers.
+
+    Returns empty dict if slowapi hasn't set state (e.g., un-rate-
+    limited routes like /health)."""
+    headers: dict[str, str] = {}
+    view_limit = getattr(request.state, "view_rate_limit", None)
+    if view_limit is None:
+        return headers
+    rate_item, scope = view_limit
+    try:
+        window_reset, remaining = request.app.state.limiter.limiter.get_window_stats(
+            rate_item, *scope
+        )
+        reset_in = max(0, int(window_reset - time.time()))
+        headers["X-RateLimit-Limit"] = str(rate_item.amount)
+        headers["X-RateLimit-Remaining"] = str(remaining)
+        headers["X-RateLimit-Reset"] = str(int(window_reset))
+        headers["Retry-After"] = str(reset_in)
+    except Exception:
+        # Defensive: storage edge cases. Empty headers is acceptable.
+        pass
+    return headers
+
+
+# ============================================================================
+# Phase 8.3 — Observability middleware
+# ============================================================================
+
+
+class RequestContextMiddleware(BaseHTTPMiddleware):
+    """Generates a request_id, binds it to structlog contextvars, emits
+    `request.received` on entry + `request.completed` on exit, and
+    stamps `X-Request-ID` on the response.
+
+    Health probes are logged at DEBUG only (per Phase 8.3 plan) to
+    avoid flooding production logs with 30s/replica probe noise."""
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        request_id = uuid.uuid4().hex[:8]
+        request.state.request_id = request_id
+        log = obs.get_logger()
+        is_health = request.url.path == "/health"
+        # Bind context for the rest of the request — all structlog
+        # calls inside the handler chain (including from rag.py if it
+        # eventually logs) carry these fields automatically.
+        structlog.contextvars.clear_contextvars()
+        structlog.contextvars.bind_contextvars(
+            request_id=request_id,
+            service="rag-leis-digitais-br",
+        )
+        api_key = request.headers.get("X-API-Key", "") or ""
+        api_key_prefix = api_key[:8] if api_key else "none"
+        t0 = time.monotonic()
+        if not is_health:
+            log.info(
+                "request.received",
+                method=request.method,
+                path=request.url.path,
+                client_ip=request.client.host if request.client else None,
+                api_key_prefix=api_key_prefix,
+            )
+        try:
+            response: Response = await call_next(request)
+        except Exception as e:
+            log.error(
+                "request.error",
+                error_type=type(e).__name__,
+                error_message=str(e),
+                exc_info=True,
+            )
+            raise
+        finally:
+            structlog.contextvars.clear_contextvars()
+        response.headers["X-Request-ID"] = request_id
+        latency_ms = (time.monotonic() - t0) * 1000.0
+        completed_event = "request.received" if is_health else "request.completed"
+        log_level = log.debug if is_health else log.info
+        log_level(
+            "request.completed",
+            method=request.method,
+            path=request.url.path,
+            status_code=response.status_code,
+            latency_ms=round(latency_ms, 1),
+            request_id=request_id,
+        )
+        return response
+
+
+class RateLimitHeadersMiddleware(BaseHTTPMiddleware):
+    """Phase 8.2 follow-up — inject X-RateLimit-* headers on every
+    /v1/ask response (200 + 429). The 429 path also gets them via the
+    exception handler; this middleware covers 200."""
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        response = await call_next(request)
+        if request.url.path == "/v1/ask":
+            for k, v in _build_rate_limit_headers(request).items():
+                response.headers[k] = v
+        return response
 
 
 # ============================================================================
@@ -292,38 +413,37 @@ app = FastAPI(
 )
 app.state.limiter = limiter
 
+# Phase 8.3 — observability middleware ordering matters:
+#   1. RequestContextMiddleware (outermost): generates request_id,
+#      stamps X-Request-ID, emits request.received/completed logs
+#   2. RateLimitHeadersMiddleware: injects X-RateLimit-* on 200
+# Both middlewares only matter on the response path; ordering is
+# "outer wraps inner". The OTel FastAPI instrumentor adds an even
+# outer layer that captures the request boundary as an OTel span.
+app.add_middleware(RateLimitHeadersMiddleware)
+app.add_middleware(RequestContextMiddleware)
+FastAPIInstrumentor.instrument_app(app)
+
 
 @app.exception_handler(RateLimitExceeded)  # noqa: F841 — handler registered by decorator
 async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """Convert slowapi's RateLimitExceeded into a 429 with structured
-    detail + Retry-After + X-RateLimit-* headers.
+    detail + Retry-After + X-RateLimit-* headers. Emits a
+    `rate_limit.exceeded` structured log event (Phase 8.3).
 
     We build the headers manually instead of calling slowapi's
     `_inject_headers` because that requires `headers_enabled=True` on
-    the Limiter, which in turn breaks the FastAPI response_model
-    pattern on 200 responses (slowapi tries to inject into a not-yet-
-    built Pydantic response). Manual construction sidesteps that
-    interaction.
+    the Limiter, which breaks the FastAPI response_model pattern on
+    200 responses. Manual construction sidesteps that interaction.
     """
-    headers: dict[str, str] = {}
-    view_limit = getattr(request.state, "view_rate_limit", None)
-    if view_limit is not None:
-        rate_item, scope = view_limit
-        try:
-            window_reset, remaining = request.app.state.limiter.limiter.get_window_stats(
-                rate_item, *scope
-            )
-            import time as _t
-            reset_in = max(0, int(window_reset - _t.time()))
-            headers["X-RateLimit-Limit"] = str(rate_item.amount)
-            headers["X-RateLimit-Remaining"] = str(remaining)
-            headers["X-RateLimit-Reset"] = str(int(window_reset))
-            headers["Retry-After"] = str(reset_in)
-        except Exception:
-            # Defensive: window_stats can raise on storage edge cases.
-            # Fall back to Retry-After only (per the RFC 6585 contract;
-            # 429 SHOULD include Retry-After but isn't strictly required).
-            headers["Retry-After"] = "60"
+    headers = _build_rate_limit_headers(request)
+    api_key_prefix = (request.headers.get("X-API-Key") or "")[:8] or "none"
+    obs.get_logger().warning(
+        "rate_limit.exceeded",
+        api_key_prefix=api_key_prefix,
+        cap=str(exc.detail),
+        retry_after_seconds=int(headers.get("Retry-After", "60")),
+    )
     return JSONResponse(
         status_code=429,
         content={"detail": f"rate limit exceeded: {exc.detail}"},
@@ -373,15 +493,42 @@ async def ask(
 
     Phase 8.2: gated by X-API-Key auth + per-key rate limit (default
     60 req/min/key; configurable via RAG_RATE_LIMIT_PER_MINUTE).
+    Phase 8.3: every call emits a `pipeline.answered` structured log
+    line with classified_type, top_1_cosine, cost_estimate_usd, etc.
+    Raw query text + answer text are NEVER logged (PII surface).
     """
+    log = obs.get_logger()
     try:
         ans = pipeline.answer(payload.query)
     except Exception as e:
         # Pipeline-level failures (provider rate limit, embedder OOM, etc.)
-        # surface as 500 with a generic message — Phase 8.3 will add
-        # structured logging with the request_id for diagnosis.
+        # surface as 500 with a generic message. Detail is type-only
+        # to avoid leaking inner exception text (might embed query bits).
+        log.error(
+            "pipeline.error",
+            error_type=type(e).__name__,
+            query_length=len(payload.query),
+        )
         raise HTTPException(
             status_code=500,
             detail=f"pipeline error: {type(e).__name__}",
         ) from e
+    # Stamp the structured log with the interesting answer fields.
+    # No query text, no answer text — log lines may go to aggregators
+    # that don't have the same PII handling as the pii_audit_log path.
+    log.info(
+        "pipeline.answered",
+        query_length=len(payload.query),
+        classified_type=ans.classified_type,
+        top_1_cosine=ans.raw_retrieval[0][1] if ans.raw_retrieval else None,
+        n_citations=len(ans.citations),
+        n_rejected_irrelevant=len(ans.rejected_irrelevant_citations),
+        refused=ans.refused,
+        refusal_reason=ans.refusal_reason,
+        cost_estimate_usd=ans.cost_estimate_usd,
+        llm_calls=ans.llm_calls,
+        tokens_input=(ans.tokens_used or {}).get("input_tokens", 0),
+        tokens_output=(ans.tokens_used or {}).get("output_tokens", 0),
+        pipeline_latency_ms=ans.latency_ms,
+    )
     return _rag_answer_to_response(ans)
