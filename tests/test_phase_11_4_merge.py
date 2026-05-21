@@ -338,3 +338,107 @@ def test_apply_refinement_missing_retrieved_urns_raises(fixture_yaml: Path):
     )
     with pytest.raises(ValueError, match="new_core_urns"):
         apply_refinement_to_yaml(rows, p)
+
+
+# ---------------------------------------------------------------------------
+# Phase 12.3 — apply_vigencia_to_yaml (overlays.yaml writes)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def overlays_yaml(tmp_path: Path) -> Path:
+    """Minimal overlays.yaml fixture with one pre-existing entry."""
+    p = tmp_path / "overlays.yaml"
+    p.write_text(
+        textwrap.dedent(
+            """\
+            # Vigência overlays fixture for tests.
+
+            - urn: "urn:lex:br:federal:lei:2014-04-23;12965~art19"
+              status: sub_judice
+              fundamento: "STF RE 1.037.396 (Tema 987)"
+              desde: 2017-09-29
+              descricao_curta: |
+                Aplicação em discussão no STF.
+            """
+        )
+    )
+    return p
+
+
+def _make_vigencia_proposal(
+    *,
+    urn: str,
+    status: str = "sub_judice",
+    fundamento: str = "STF RE 9.999.999",
+    desde: str = "2026-05-21",
+    descricao: str = "Test descrição curta de vigência.",
+) -> Proposal:
+    return Proposal(
+        id="vig-test-1",
+        ts="2026-05-21T17:00:00+00:00",
+        reviewer_email="lawyer@example.test",
+        is_operator=False,
+        kind="vigencia",
+        vigencia_urn=urn,
+        vigencia_status=status,
+        vigencia_fundamento=fundamento,
+        vigencia_desde=desde,
+        vigencia_descricao_curta=descricao,
+    )
+
+
+def test_apply_vigencia_appends_new_overlay(overlays_yaml: Path):
+    from scripts.phase_11_4_merge_proposals import (
+        apply_vigencia_to_yaml,
+        load_overlays_yaml,
+    )
+    rows = load_overlays_yaml(overlays_yaml)
+    initial = len(rows)
+    p = _make_vigencia_proposal(
+        urn="urn:lex:br:federal:lei:2018-08-14;13709~art42",
+    )
+    msg = apply_vigencia_to_yaml(rows, p)
+    assert "appended" in msg
+    assert len(rows) == initial + 1
+    assert rows[-1]["urn"] == "urn:lex:br:federal:lei:2018-08-14;13709~art42"
+    assert rows[-1]["status"] == "sub_judice"
+
+
+def test_apply_vigencia_replaces_existing_overlay(overlays_yaml: Path):
+    from scripts.phase_11_4_merge_proposals import (
+        apply_vigencia_to_yaml,
+        load_overlays_yaml,
+    )
+    rows = load_overlays_yaml(overlays_yaml)
+    initial = len(rows)
+    # The fixture already has an entry for MCI art. 19; submit a new
+    # annotation that REPLACES its fields.
+    p = _make_vigencia_proposal(
+        urn="urn:lex:br:federal:lei:2014-04-23;12965~art19",
+        status="suspenso",
+        fundamento="Liminar ADPF nova",
+    )
+    msg = apply_vigencia_to_yaml(rows, p)
+    assert "replaced" in msg
+    # No new entry — same length
+    assert len(rows) == initial
+    # First row's status changed
+    assert rows[0]["status"] == "suspenso"
+    assert rows[0]["fundamento"] == "Liminar ADPF nova"
+
+
+def test_apply_vigencia_missing_field_raises(overlays_yaml: Path):
+    from scripts.phase_11_4_merge_proposals import apply_vigencia_to_yaml
+    rows: list[dict] = []
+    p = Proposal(
+        id="x", ts="2026-05-21T00:00:00+00:00",
+        reviewer_email="x", is_operator=False, kind="vigencia",
+        vigencia_urn="urn:lex:br:federal:lei:2018-08-14;13709~art1",
+        vigencia_status="sub_judice",
+        vigencia_fundamento=None,  # missing
+        vigencia_desde="2026-05-21",
+        vigencia_descricao_curta="x",
+    )
+    with pytest.raises(ValueError, match="fundamento"):
+        apply_vigencia_to_yaml(rows, p)

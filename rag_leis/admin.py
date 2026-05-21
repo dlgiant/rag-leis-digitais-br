@@ -27,6 +27,7 @@ endpoint. See scripts/phase_11_4_merge_proposals.py.
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -36,7 +37,9 @@ from rag_leis.clerk_auth import ClerkClaims, clerk_auth_dependency, require_oper
 from rag_leis.eval_loader import (
     chunk_to_json,
     get_chunk,
+    get_chunks_for_document,
     get_chunks_for_urns,
+    list_documents,
     load_eval_queries,
     row_to_json,
 )
@@ -48,6 +51,7 @@ from rag_leis.proposals import (
     to_jsonable,
     utc_now_iso,
 )
+from rag_leis.vigencia import load_overlays
 
 # urn:lex URNs contain `:` and `;` which collide with FastAPI path-param
 # parsing. We accept URNs via a `{urn:path}` catch-all so the entire
@@ -354,4 +358,186 @@ def list_proposals(claims: ClaimsDep) -> dict:
         "total": len(pending),
         "proposals": [to_jsonable(p) for p in pending],
         "viewer": {"email": claims.email, "is_operator": claims.is_operator},
+    }
+
+
+# ===========================================================================
+# Phase 12.0 — vigência review surface
+# ===========================================================================
+#
+# The lawyer uses these endpoints to walk through the corpus document-by-
+# document and chunk-by-chunk, then submit vigência annotations as
+# kind="vigencia" Proposals. The merge tool (Phase 12.3) writes accepted
+# annotations into `data/vigencia/overlays.yaml`.
+
+_OVERLAYS_PATH = (
+    Path(__file__).resolve().parents[1] / "data" / "vigencia" / "overlays.yaml"
+)
+
+
+@router.get("/corpus/documents")
+def list_corpus_documents(claims: ClaimsDep) -> dict:
+    """List distinct documents in the corpus with chunk counts + the
+    fraction of chunks that already have a vigência overlay applied.
+
+    The UI uses this to render the document-picker table: docs with
+    low coverage % are the lawyer's priority.
+    """
+    docs = list_documents()
+    # Per-document overlay coverage: how many of this doc's chunks
+    # have an entry in overlays.yaml.
+    overlays = load_overlays(_OVERLAYS_PATH) if _OVERLAYS_PATH.exists() else {}
+    overlay_by_doc: dict[str, int] = {}
+    for urn in overlays:
+        doc = urn.split("~")[0]
+        overlay_by_doc[doc] = overlay_by_doc.get(doc, 0) + 1
+    for d in docs:
+        n_overlays = overlay_by_doc.get(d["document_urn"], 0)
+        d["n_overlays"] = n_overlays
+        d["coverage_pct"] = (
+            round(100.0 * n_overlays / d["chunk_count"], 2)
+            if d["chunk_count"] > 0 else 0.0
+        )
+    return {
+        "total": len(docs),
+        "documents": docs,
+        "viewer": {"email": claims.email, "is_operator": claims.is_operator},
+    }
+
+
+@router.get("/corpus/documents/{document_urn:path}/chunks")
+def list_corpus_chunks(
+    document_urn: str,
+    claims: ClaimsDep,
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
+) -> dict:
+    """Paginated walk through one document's chunks.
+
+    Each chunk includes its current vigência overlay (status +
+    fundamento + desde + descricao_curta) when one exists, so the UI
+    can show "already annotated" vs "needs review" at a glance.
+    """
+    total, chunks = get_chunks_for_document(
+        document_urn, offset=offset, limit=limit,
+    )
+    if total == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"document not found in corpus: {document_urn}",
+        )
+
+    overlays = load_overlays(_OVERLAYS_PATH) if _OVERLAYS_PATH.exists() else {}
+
+    payload: list[dict] = []
+    for c in chunks:
+        chunk_dict = chunk_to_json(c)
+        vig = overlays.get(c.urn)
+        if vig is not None:
+            chunk_dict["vigencia"] = {
+                "status": vig.status,
+                "fundamento": vig.fundamento,
+                "desde": vig.desde,
+                "descricao_curta": vig.descricao_curta,
+            }
+        else:
+            chunk_dict["vigencia"] = None
+        payload.append(chunk_dict)
+
+    return {
+        "document_urn": document_urn,
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+        "chunks": payload,
+        "viewer": {"email": claims.email, "is_operator": claims.is_operator},
+    }
+
+
+@router.get("/vigencia/overlays")
+def list_vigencia_overlays(claims: ClaimsDep) -> dict:
+    """Return every entry currently in `data/vigencia/overlays.yaml`.
+
+    Useful for the UI to show the full picture (which chunks are
+    already annotated, by status) and for the operator to audit
+    coverage. Read-only — the merge tool is the only writer.
+    """
+    overlays = load_overlays(_OVERLAYS_PATH) if _OVERLAYS_PATH.exists() else {}
+    items = [
+        {
+            "urn": urn,
+            "status": v.status,
+            "fundamento": v.fundamento,
+            "desde": v.desde,
+            "descricao_curta": v.descricao_curta,
+        }
+        for urn, v in sorted(overlays.items())
+    ]
+    return {
+        "total": len(items),
+        "overlays": items,
+        "viewer": {"email": claims.email, "is_operator": claims.is_operator},
+    }
+
+
+class VigenciaAnnotation(BaseModel):
+    """Body for POST /v1/admin/vigencia/chunks/{chunk_urn}/annotate."""
+
+    status: Literal[
+        "vigente",
+        "sub_judice",
+        "suspenso",
+        "vacatio_legis",
+        "eficacia_limitada",
+        "revogado_tacito",
+        "alterado_por_ec",
+        "atualizado_recentemente",
+    ]
+    fundamento: str = Field(..., min_length=1, max_length=500)
+    # ISO-8601 date, e.g. "2017-09-29". Required so the overlays.yaml
+    # entry carries the legally-relevant temporal anchor.
+    desde: str = Field(..., min_length=10, max_length=10)
+    descricao_curta: str = Field(..., min_length=10, max_length=2000)
+    notes: str = Field(default="", max_length=4000)
+
+
+@router.post("/vigencia/chunks/{chunk_urn:path}/annotate")
+def submit_vigencia_annotation(
+    chunk_urn: str,
+    body: VigenciaAnnotation,
+    claims: ClaimsDep,
+) -> dict:
+    """Submit a vigência annotation for a chunk.
+
+    Validates that the chunk exists in the corpus, then appends a
+    `kind='vigencia'` Proposal. The Phase 12.3 merge tool writes
+    accepted annotations into `data/vigencia/overlays.yaml`.
+
+    Open to any allowlisted user; vigência annotations are part of
+    the lawyer's audit workflow.
+    """
+    chunk = get_chunk(chunk_urn)
+    if chunk is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"chunk not found in corpus: {chunk_urn}",
+        )
+
+    proposal = Proposal(
+        id=new_proposal_id(),
+        ts=utc_now_iso(),
+        reviewer_email=claims.email,
+        is_operator=claims.is_operator,
+        kind="vigencia",
+        notes=body.notes,
+        vigencia_urn=chunk_urn,
+        vigencia_status=body.status,
+        vigencia_fundamento=body.fundamento,
+        vigencia_desde=body.desde,
+        vigencia_descricao_curta=body.descricao_curta,
+    )
+    append_proposal(proposal)
+    return {
+        "ok": True,
+        "proposal": to_jsonable(proposal),
     }

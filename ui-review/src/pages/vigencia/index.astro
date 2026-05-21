@@ -1,0 +1,190 @@
+---
+// Phase 12.1 — vigência review document picker.
+//
+// Lists distinct documents in the corpus with chunk count + current
+// overlay coverage. The lawyer picks a document to walk chunk-by-chunk
+// in /vigencia/[doc].
+import Layout from "../../layouts/Layout.astro";
+import {
+  adminFetch,
+  formatError,
+  isVerbose,
+  type CorpusDocumentsResponse,
+} from "../../lib/admin-api";
+
+const verbose = isVerbose(Astro.url);
+const auth = Astro.locals.auth();
+const token = await auth.getToken();
+
+let data: CorpusDocumentsResponse | null = null;
+let fetchError: string | null = null;
+if (token) {
+  try {
+    data = await adminFetch<CorpusDocumentsResponse>("corpus/documents", { token });
+  } catch (e) {
+    fetchError = formatError(e, verbose);
+  }
+}
+
+// Sort by coverage % ascending — least-annotated docs surface first
+// (they're the lawyer's priority).
+const docs = data
+  ? [...data.documents].sort((a, b) => a.coverage_pct - b.coverage_pct)
+  : [];
+
+// Aggregate overlay coverage across the corpus
+const totalChunks = docs.reduce((s, d) => s + d.chunk_count, 0);
+const totalOverlays = docs.reduce((s, d) => s + d.n_overlays, 0);
+const corpusCoveragePct = totalChunks > 0
+  ? Math.round(1000 * totalOverlays / totalChunks) / 10
+  : 0;
+
+// Shorten a document URN to a human label.
+// "urn:lex:br:federal:lei:2018-08-14;13709" → "Lei 13.709 / 2018"
+function shortLabel(urn: string): string {
+  // Match the date + number suffix
+  const m = urn.match(/(\w+):(\d{4})-\d{2}-\d{2};(\d+)$/);
+  if (!m) return urn;
+  const [, kind, year, num] = m;
+  const kindLabel = kind === "lei" ? "Lei" : kind === "decreto" ? "Decreto" : kind === "constituicao" ? "CF" : kind === "decreto.lei" ? "Dec-Lei" : kind;
+  // Format number with thousands separator
+  const numFmt = num.length > 3 ? `${num.slice(0, -3)}.${num.slice(-3)}` : num;
+  return `${kindLabel} ${numFmt} / ${year}`;
+}
+---
+
+<Layout title="Vigência">
+  <div class="container">
+    <header class="page-header">
+      <div>
+        <span class="label-eyebrow">VIGÊNCIA / 03</span>
+        <h1>Curadoria de overlays</h1>
+        {data && (
+          <p class="counter muted small mono">
+            <span class="counter-num">{totalOverlays}</span>
+            <span> de </span>
+            <span class="counter-num">{totalChunks}</span>
+            <span> chunks · </span>
+            <span class="counter-num">{corpusCoveragePct}%</span>
+            <span> de cobertura</span>
+          </p>
+        )}
+      </div>
+    </header>
+
+    {fetchError && (
+      <div class="alert alert-danger">
+        <span class="alert-label">ERRO</span>
+        <div class="alert-body">
+          <strong>Falha ao carregar.</strong>
+          <code>{fetchError}</code>
+          {!verbose && (
+            <p class="alert-hint muted small">
+              Para detalhes técnicos, adicione <code>?debug=1</code> à URL.
+            </p>
+          )}
+        </div>
+      </div>
+    )}
+
+    {data && (
+      <>
+        <p class="muted small intro">
+          Cada linha é um documento do corpus. <strong>%</strong> = chunks
+          com overlay de vigência aplicado. Documentos com baixa cobertura
+          são prioridade — sem overlay, o RAG pode citar com confiança
+          uma norma sub judice ou revogada tácitamente.
+        </p>
+
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th class="col-num">#</th>
+              <th class="col-doc">DOCUMENTO</th>
+              <th class="col-chunks">CHUNKS</th>
+              <th class="col-overlays">OVERLAYS</th>
+              <th class="col-coverage">COBERTURA</th>
+            </tr>
+          </thead>
+          <tbody>
+            {docs.map((doc, i) => (
+              <tr>
+                <td class="col-num mono small muted">{String(i + 1).padStart(3, "0")}</td>
+                <td class="col-doc">
+                  <a href={`/vigencia/${encodeURIComponent(doc.document_urn)}`} class="doc-link">
+                    <span class="doc-label">{shortLabel(doc.document_urn)}</span>
+                    <code class="doc-urn mono small muted">{doc.document_urn}</code>
+                  </a>
+                </td>
+                <td class="col-chunks mono">{doc.chunk_count}</td>
+                <td class="col-overlays mono">{doc.n_overlays}</td>
+                <td class="col-coverage">
+                  <span class={`coverage-pill ${
+                    doc.coverage_pct === 0 ? "cov-none" :
+                    doc.coverage_pct < 5 ? "cov-low" :
+                    doc.coverage_pct < 20 ? "cov-mid" : "cov-high"
+                  }`}>
+                    {doc.coverage_pct.toFixed(1)}%
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .intro { margin: 0 0 1.5rem 0; max-width: 75ch; }
+
+  .docs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+  .docs-table th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 2px solid var(--border);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    background: var(--surface-2);
+  }
+  .docs-table td {
+    padding: 0.7rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .docs-table tbody tr:hover {
+    background: var(--surface-2);
+  }
+  .col-num { width: 3rem; }
+  .col-chunks, .col-overlays { width: 6rem; text-align: right; }
+  .col-coverage { width: 7rem; }
+  .doc-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .doc-link:hover .doc-label { color: var(--emphasis); text-decoration: underline; }
+  .doc-label { font-weight: 600; }
+  .doc-urn { word-break: break-all; }
+
+  .coverage-pill {
+    display: inline-block;
+    padding: 0.18rem 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: ui-monospace, monospace;
+    letter-spacing: 0.03em;
+  }
+  .cov-none { background: rgba(176, 74, 47, 0.18); color: #b04a2f; border: 1px solid rgba(176, 74, 47, 0.5); }
+  .cov-low  { background: rgba(217, 119, 6, 0.18); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.5); }
+  .cov-mid  { background: rgba(202, 138, 4, 0.15); color: #ca8a04; border: 1px solid rgba(202, 138, 4, 0.4); }
+  .cov-high { background: rgba(94, 139, 135, 0.18); color: #5e8b87; border: 1px solid rgba(94, 139, 135, 0.5); }
+</style>

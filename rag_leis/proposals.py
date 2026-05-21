@@ -30,8 +30,18 @@ from typing import Literal
 
 from rag_leis.db import get_conn
 
-ProposalKind = Literal["review", "new_row", "refinement"]
+ProposalKind = Literal["review", "new_row", "refinement", "vigencia"]
 Verdict = Literal["correct", "incorrect", "needs_followup"]
+VigenciaStatus = Literal[
+    "vigente",
+    "sub_judice",
+    "suspenso",
+    "vacatio_legis",
+    "eficacia_limitada",
+    "revogado_tacito",
+    "alterado_por_ec",
+    "atualizado_recentemente",
+]
 
 
 @dataclass(frozen=True)
@@ -68,6 +78,13 @@ class Proposal:
 
     # Refinement-specific (Phase 11.3)
     refined_query_text: str | None = None
+
+    # Vigência-specific (Phase 12.0) — populated only when kind='vigencia'
+    vigencia_urn: str | None = None
+    vigencia_status: VigenciaStatus | None = None
+    vigencia_fundamento: str | None = None
+    vigencia_desde: str | None = None  # ISO-8601 date, e.g. "2017-09-29"
+    vigencia_descricao_curta: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -106,6 +123,11 @@ def to_jsonable(p: Proposal) -> dict:
         "new_core_urns": list(p.new_core_urns),
         "new_supporting_urns": list(p.new_supporting_urns),
         "refined_query_text": p.refined_query_text,
+        "vigencia_urn": p.vigencia_urn,
+        "vigencia_status": p.vigencia_status,
+        "vigencia_fundamento": p.vigencia_fundamento,
+        "vigencia_desde": p.vigencia_desde,
+        "vigencia_descricao_curta": p.vigencia_descricao_curta,
     }
 
 
@@ -119,10 +141,14 @@ INSERT INTO proposals (
     id, ts, reviewer_email, is_operator, kind,
     query_id, verdict, notes, suggested_gold_urns, suggested_classified_type,
     new_query_text, new_qtype, new_core_urns, new_supporting_urns,
-    refined_query_text
+    refined_query_text,
+    vigencia_urn, vigencia_status, vigencia_fundamento, vigencia_desde,
+    vigencia_descricao_curta
 ) VALUES (
     %s, %s, %s, %s, %s,
     %s, %s, %s, %s, %s,
+    %s, %s, %s, %s,
+    %s,
     %s, %s, %s, %s,
     %s
 )
@@ -152,6 +178,11 @@ def append_proposal(p: Proposal) -> None:
                 list(p.new_core_urns),
                 list(p.new_supporting_urns),
                 p.refined_query_text,
+                p.vigencia_urn,
+                p.vigencia_status,
+                p.vigencia_fundamento,
+                p.vigencia_desde,
+                p.vigencia_descricao_curta,
             ),
         )
 
@@ -165,7 +196,9 @@ _SELECT_COLUMNS = """
     id, ts, reviewer_email, is_operator, kind,
     query_id, verdict, notes, suggested_gold_urns, suggested_classified_type,
     new_query_text, new_qtype, new_core_urns, new_supporting_urns,
-    refined_query_text
+    refined_query_text,
+    vigencia_urn, vigencia_status, vigencia_fundamento, vigencia_desde,
+    vigencia_descricao_curta
 """
 
 
@@ -176,6 +209,8 @@ def _row_to_proposal(row: tuple) -> Proposal:
         query_id, verdict, notes, suggested_gold_urns, suggested_classified_type,
         new_query_text, new_qtype, new_core_urns, new_supporting_urns,
         refined_query_text,
+        vigencia_urn, vigencia_status, vigencia_fundamento, vigencia_desde,
+        vigencia_descricao_curta,
     ) = row
     # ts is a datetime from psycopg; serialize to ISO for API consistency
     ts_str = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
@@ -195,6 +230,16 @@ def _row_to_proposal(row: tuple) -> Proposal:
         new_core_urns=tuple(new_core_urns or ()),
         new_supporting_urns=tuple(new_supporting_urns or ()),
         refined_query_text=refined_query_text,
+        vigencia_urn=vigencia_urn,
+        vigencia_status=vigencia_status,
+        vigencia_fundamento=vigencia_fundamento,
+        # Postgres DATE returns a `date` object; serialize to ISO string
+        # for API consistency (the dataclass expects str | None).
+        vigencia_desde=(
+            vigencia_desde.isoformat()
+            if hasattr(vigencia_desde, "isoformat") else vigencia_desde
+        ),
+        vigencia_descricao_curta=vigencia_descricao_curta,
     )
 
 

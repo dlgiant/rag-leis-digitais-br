@@ -691,3 +691,162 @@ def test_refine_annotates_gold_matches(client, keypair):
     assert retrieved[1]["matches_gold"] is False
     assert body["refined"]["n_matches_gold"] == 1
     assert body["refined"]["n_gold_total"] == len(set(gold))
+
+
+# =============================================================================
+# Phase 12.0 — corpus + vigência review endpoints
+# =============================================================================
+
+
+def test_corpus_documents_no_auth_returns_401(client):
+    r = client.get("/v1/admin/corpus/documents")
+    assert r.status_code == 401
+
+
+def test_corpus_documents_returns_doc_list(client, keypair):
+    """Allowlisted user gets list of distinct documents with chunk
+    counts + overlay coverage. Smoke test only — depends on local
+    chunks/ data which CI may not have."""
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.get("/v1/admin/corpus/documents", headers=auth_header(token))
+    # If chunks aren't loaded (CI without data), endpoint may 500;
+    # accept that gracefully here. Real assertion: when 200, the
+    # response shape is correct.
+    if r.status_code != 200:
+        pytest.skip(f"chunks unavailable in this environment ({r.status_code})")
+    body = r.json()
+    assert "documents" in body
+    assert isinstance(body["documents"], list)
+    if body["documents"]:
+        d = body["documents"][0]
+        assert "document_urn" in d
+        assert "chunk_count" in d
+        assert "n_overlays" in d
+        assert "coverage_pct" in d
+
+
+def test_corpus_chunks_unknown_doc_returns_404(client, keypair):
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.get(
+        "/v1/admin/corpus/documents/urn:lex:br:federal:lei:9999-12-31;0/chunks",
+        headers=auth_header(token),
+    )
+    assert r.status_code == 404
+
+
+def test_vigencia_overlays_no_auth_returns_401(client):
+    r = client.get("/v1/admin/vigencia/overlays")
+    assert r.status_code == 401
+
+
+def test_vigencia_overlays_returns_list(client, keypair):
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.get("/v1/admin/vigencia/overlays", headers=auth_header(token))
+    assert r.status_code == 200
+    body = r.json()
+    assert "overlays" in body
+    assert isinstance(body["overlays"], list)
+    # data/vigencia/overlays.yaml ships with 12 entries on main; if
+    # this drifts we may need to update.
+    assert body["total"] >= 12
+    item = body["overlays"][0]
+    assert {"urn", "status", "fundamento", "desde", "descricao_curta"} <= set(item.keys())
+
+
+def test_vigencia_annotate_no_auth_returns_401(client):
+    r = client.post(
+        "/v1/admin/vigencia/chunks/urn:lex:br:federal:lei:2018-08-14;13709~art5/annotate",
+        json={
+            "status": "sub_judice",
+            "fundamento": "test",
+            "desde": "2026-05-21",
+            "descricao_curta": "test descricao curta",
+        },
+    )
+    assert r.status_code == 401
+
+
+def test_vigencia_annotate_unknown_chunk_returns_404(client, keypair):
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        "/v1/admin/vigencia/chunks/urn:lex:br:federal:lei:9999-12-31;0~art1/annotate",
+        json={
+            "status": "sub_judice",
+            "fundamento": "test",
+            "desde": "2026-05-21",
+            "descricao_curta": "test descricao curta",
+        },
+        headers=auth_header(token),
+    )
+    # 404 if chunks loaded; could be other code path if data missing
+    assert r.status_code in {404, 500}
+
+
+def test_vigencia_annotate_invalid_status_returns_422(client, keypair):
+    """Status enum validation; chunk lookup happens AFTER body
+    validation so this fails at Pydantic regardless of corpus."""
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        "/v1/admin/vigencia/chunks/whatever/annotate",
+        json={
+            "status": "totally-made-up-status",
+            "fundamento": "test",
+            "desde": "2026-05-21",
+            "descricao_curta": "test descricao curta",
+        },
+        headers=auth_header(token),
+    )
+    assert r.status_code == 422
+
+
+def test_vigencia_annotate_too_short_descricao_returns_422(client, keypair):
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        "/v1/admin/vigencia/chunks/whatever/annotate",
+        json={
+            "status": "sub_judice",
+            "fundamento": "test",
+            "desde": "2026-05-21",
+            "descricao_curta": "x",  # under min_length=10
+        },
+        headers=auth_header(token),
+    )
+    assert r.status_code == 422
+
+
+@skip_if_no_db
+def test_vigencia_annotate_happy_path(client, keypair):
+    """Submit a real annotation; verify it lands in DB as
+    kind='vigencia' with all the vigencia_* columns populated."""
+    # Use a known chunk URN from the corpus (MCI art. 19 has been
+    # annotated in overlays.yaml; any LGPD chunk also works).
+    chunk_urn = "urn:lex:br:federal:lei:2018-08-14;13709~art1"
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        f"/v1/admin/vigencia/chunks/{chunk_urn}/annotate",
+        json={
+            "status": "sub_judice",
+            "fundamento": "STF RE test (Tema 999)",
+            "desde": "2026-05-21",
+            "descricao_curta": "Test annotation written by Phase 12.0 happy-path test.",
+            "notes": "from the test suite",
+        },
+        headers=auth_header(token),
+    )
+    if r.status_code == 404:
+        pytest.skip("chunk corpus not available in this environment")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["ok"] is True
+    p = body["proposal"]
+    assert p["kind"] == "vigencia"
+    assert p["vigencia_urn"] == chunk_urn
+    assert p["vigencia_status"] == "sub_judice"
+    assert p["vigencia_fundamento"] == "STF RE test (Tema 999)"
+    assert p["vigencia_desde"] == "2026-05-21"
+    # Verify in DB
+    from rag_leis import proposals
+    rows = proposals.load_all_proposals()
+    assert len(rows) == 1
+    assert rows[0].kind == "vigencia"
+    assert rows[0].vigencia_status == "sub_judice"

@@ -257,3 +257,61 @@ export interface RefineResponse {
   proposal: Proposal | null;
   viewer: { email: string; is_operator: boolean };
 }
+
+// Phase 12.0 — corpus + vigência
+
+export type VigenciaStatus =
+  | "vigente"
+  | "sub_judice"
+  | "suspenso"
+  | "vacatio_legis"
+  | "eficacia_limitada"
+  | "revogado_tacito"
+  | "alterado_por_ec"
+  | "atualizado_recentemente";
+
+export interface CorpusDocumentSummary {
+  document_urn: string;
+  chunk_count: number;
+  n_overlays: number;
+  coverage_pct: number;
+}
+
+export interface CorpusDocumentsResponse {
+  total: number;
+  documents: CorpusDocumentSummary[];
+  viewer: { email: string; is_operator: boolean };
+}
+
+export interface CorpusChunk {
+  urn: string;
+  document_urn: string;
+  label: string;
+  nav: string;
+  caput: string | null;
+  text: string;
+  kind: string;
+  vigencia: {
+    status: VigenciaStatus;
+    fundamento: string;
+    desde: string | null;
+    descricao_curta: string;
+  } | null;
+}
+
+export interface CorpusChunksResponse {
+  document_urn: string;
+  total: number;
+  offset: number;
+  limit: number;
+  chunks: CorpusChunk[];
+  viewer: { email: string; is_operator: boolean };
+}
+
+export interface VigenciaAnnotationBody {
+  status: VigenciaStatus;
+  fundamento: string;
+  desde: string;
+  descricao_curta: string;
+  notes?: string;
+}

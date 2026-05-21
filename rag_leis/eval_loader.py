@@ -143,6 +143,52 @@ def get_chunks_for_urns(urns: list[str], chunks_dir: Path | None = None) -> list
     return out
 
 
+# ---------------------------------------------------------------------------
+# Phase 12.0 — corpus enumeration for the vigência review UI
+# ---------------------------------------------------------------------------
+
+
+def list_documents(chunks_dir: Path | None = None) -> list[dict]:
+    """Return the distinct document URNs in the corpus, each with the
+    count of chunks it contains. Sorted by document URN.
+
+    Used by the /v1/admin/corpus/documents endpoint to populate the
+    document picker in the Phase 12 vigência review UI.
+    """
+    d = chunks_dir or DEFAULT_CHUNKS_DIR
+    index = _ensure_chunks_loaded(d)
+    counts: dict[str, int] = {}
+    for chunk in index.values():
+        doc = chunk.urn.split("~")[0]
+        counts[doc] = counts.get(doc, 0) + 1
+    return [
+        {"document_urn": doc, "chunk_count": n}
+        for doc, n in sorted(counts.items())
+    ]
+
+
+def get_chunks_for_document(
+    document_urn: str,
+    *,
+    offset: int = 0,
+    limit: int = 50,
+    chunks_dir: Path | None = None,
+) -> tuple[int, list[ChunkSummary]]:
+    """Paginated walk through chunks of a single document.
+
+    Returns (total_count, page). Order: stable URN sort so the UI's
+    "next chunk" button is deterministic.
+    """
+    d = chunks_dir or DEFAULT_CHUNKS_DIR
+    index = _ensure_chunks_loaded(d)
+    all_for_doc = [
+        c for c in index.values() if c.urn.split("~")[0] == document_urn
+    ]
+    all_for_doc.sort(key=lambda c: c.urn)
+    page = all_for_doc[offset : offset + limit]
+    return len(all_for_doc), [_to_summary(c) for c in page]
+
+
 def _kind_from_urn(urn: str) -> str:
     """Derive the partition kind (artigo/paragrafo/inciso/alinea) from URN suffix.
 

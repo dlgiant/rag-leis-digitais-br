@@ -1,0 +1,407 @@
+---
+// Phase 12.1 + 12.2 — vigência chunk walker + annotation form.
+//
+// /vigencia/[doc]?offset=N — walks through the document's chunks one
+// page at a time (50 per page). Each chunk shows its current overlay
+// (if any) + a form for the lawyer to submit a vigência annotation.
+import Layout from "../../layouts/Layout.astro";
+import {
+  adminFetch,
+  formatError,
+  isVerbose,
+  type CorpusChunksResponse,
+} from "../../lib/admin-api";
+
+const verbose = isVerbose(Astro.url);
+const auth = Astro.locals.auth();
+const token = await auth.getToken();
+
+const docUrn = decodeURIComponent(Astro.params.doc ?? "");
+const offset = parseInt(Astro.url.searchParams.get("offset") ?? "0", 10) || 0;
+const limit = 50;
+
+let data: CorpusChunksResponse | null = null;
+let fetchError: string | null = null;
+if (token && docUrn) {
+  try {
+    data = await adminFetch<CorpusChunksResponse>(
+      `corpus/documents/${encodeURIComponent(docUrn)}/chunks`,
+      { token, query: { offset, limit } },
+    );
+  } catch (e) {
+    fetchError = formatError(e, verbose);
+  }
+}
+
+function shortLabel(urn: string): string {
+  const m = urn.match(/(\w+):(\d{4})-\d{2}-\d{2};(\d+)$/);
+  if (!m) return urn;
+  const [, kind, year, num] = m;
+  const kindLabel = kind === "lei" ? "Lei" : kind === "decreto" ? "Decreto" : kind === "constituicao" ? "CF" : kind === "decreto.lei" ? "Dec-Lei" : kind;
+  const numFmt = num.length > 3 ? `${num.slice(0, -3)}.${num.slice(-3)}` : num;
+  return `${kindLabel} ${numFmt} / ${year}`;
+}
+
+const prevOffset = Math.max(0, offset - limit);
+const nextOffset = offset + limit;
+const docEncoded = encodeURIComponent(docUrn);
+const hasPrev = offset > 0;
+const hasNext = data ? nextOffset < data.total : false;
+---
+
+<Layout title={data ? shortLabel(docUrn) : "Documento"}>
+  <div class="container">
+    <nav class="breadcrumb muted small">
+      <a href="/vigencia">← VIGÊNCIA</a>
+    </nav>
+
+    <header class="page-header">
+      <div>
+        <span class="label-eyebrow">DOCUMENTO</span>
+        <h1>{shortLabel(docUrn)}</h1>
+        <code class="doc-urn-display mono small muted">{docUrn}</code>
+        {data && (
+          <p class="counter muted small mono">
+            chunks <span class="counter-num">{offset + 1}</span>
+            <span>–</span>
+            <span class="counter-num">{Math.min(offset + limit, data.total)}</span>
+            <span> de </span>
+            <span class="counter-num">{data.total}</span>
+          </p>
+        )}
+      </div>
+      <div class="paginator">
+        {hasPrev && (
+          <a href={`/vigencia/${docEncoded}?offset=${prevOffset}`} class="button">
+            ← ANTERIOR
+          </a>
+        )}
+        {hasNext && (
+          <a href={`/vigencia/${docEncoded}?offset=${nextOffset}`} class="button">
+            PRÓXIMA →
+          </a>
+        )}
+      </div>
+    </header>
+
+    {fetchError && (
+      <div class="alert alert-danger">
+        <span class="alert-label">ERRO</span>
+        <div class="alert-body">
+          <strong>Falha ao carregar chunks.</strong>
+          <code>{fetchError}</code>
+        </div>
+      </div>
+    )}
+
+    {data && (
+      <div class="chunk-walker">
+        {data.chunks.map((chunk) => (
+          <article class={`chunk-card ${chunk.vigencia ? "has-overlay" : ""}`} data-chunk-urn={chunk.urn}>
+            <header class="chunk-header">
+              <div class="chunk-label-row">
+                <span class="chunk-label">{chunk.label || chunk.kind}</span>
+                {chunk.vigencia && (
+                  <span class={`vigencia-pill status-${chunk.vigencia.status}`}>
+                    {chunk.vigencia.status.replace(/_/g, " ").toUpperCase()}
+                  </span>
+                )}
+              </div>
+              {chunk.nav && <div class="chunk-nav muted small mono">↳ {chunk.nav}</div>}
+            </header>
+
+            {chunk.caput && (
+              <div class="chunk-caput">
+                <span class="label-eyebrow">CAPUT</span>
+                <span class="chunk-caput-body">{chunk.caput}</span>
+              </div>
+            )}
+            <div class="chunk-text">{chunk.text}</div>
+
+            {chunk.vigencia && (
+              <div class="current-overlay">
+                <span class="label-eyebrow">OVERLAY ATUAL</span>
+                <p class="overlay-fundamento"><strong>Fundamento:</strong> {chunk.vigencia.fundamento}</p>
+                {chunk.vigencia.desde && <p class="overlay-desde mono small">desde {chunk.vigencia.desde}</p>}
+                <p class="overlay-desc">{chunk.vigencia.descricao_curta}</p>
+              </div>
+            )}
+
+            <details class="annotate-details">
+              <summary>{chunk.vigencia ? "Reanotar" : "Anotar vigência"}</summary>
+              <form class="annotate-form" data-chunk-urn={chunk.urn}>
+                <div class="field">
+                  <label class="label-eyebrow">STATUS</label>
+                  <select name="status" required>
+                    <option value="">— selecione —</option>
+                    <option value="sub_judice">sub_judice — controvérsia STF/STJ pendente</option>
+                    <option value="suspenso">suspenso — eficácia suspensa por liminar</option>
+                    <option value="vacatio_legis">vacatio_legis — promulgado mas ainda não em vigor</option>
+                    <option value="eficacia_limitada">eficacia_limitada — depende de regulamentação</option>
+                    <option value="revogado_tacito">revogado_tacito — incompatível com norma posterior</option>
+                    <option value="alterado_por_ec">alterado_por_ec — EC modificadora (informativo)</option>
+                    <option value="atualizado_recentemente">atualizado_recentemente — lei alteradora recente</option>
+                    <option value="vigente">vigente — sem ressalvas (reverte overlay anterior)</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label class="label-eyebrow">FUNDAMENTO</label>
+                  <input
+                    type="text"
+                    name="fundamento"
+                    required
+                    minlength="1"
+                    maxlength="500"
+                    placeholder="Ex: STF RE 1.037.396 (Tema 987), EC 132/2023, ADPF 130..."
+                  />
+                </div>
+
+                <div class="field field-inline">
+                  <label class="label-eyebrow">DESDE</label>
+                  <input
+                    type="date"
+                    name="desde"
+                    required
+                  />
+                </div>
+
+                <div class="field">
+                  <label class="label-eyebrow">DESCRIÇÃO CURTA</label>
+                  <textarea
+                    name="descricao_curta"
+                    rows="3"
+                    required
+                    minlength="10"
+                    maxlength="2000"
+                    placeholder="1-3 frases que aparecem como aviso na resposta do RAG."
+                  ></textarea>
+                </div>
+
+                <div class="field">
+                  <label class="label-eyebrow">NOTAS (OPCIONAL)</label>
+                  <textarea
+                    name="notes"
+                    rows="2"
+                    maxlength="4000"
+                    placeholder="Justificativa, links, contexto interno."
+                  ></textarea>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="button button-primary">
+                    ENVIAR PROPOSTA <span class="button-arrow">→</span>
+                  </button>
+                  <span class="annotate-status muted small" aria-live="polite"></span>
+                </div>
+              </form>
+            </details>
+          </article>
+        ))}
+      </div>
+    )}
+  </div>
+</Layout>
+
+<script>
+  // Phase 12.2 — annotation form submit. Event-delegated on document
+  // (Astro view-transition safety).
+  document.addEventListener("submit", async (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLFormElement)) return;
+    if (!target.classList.contains("annotate-form")) return;
+    e.preventDefault();
+
+    const chunkUrn = target.dataset.chunkUrn;
+    if (!chunkUrn) return;
+
+    const submitBtn = target.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    const statusEl = target.querySelector(".annotate-status");
+    if (!statusEl) return;
+
+    const formData = new FormData(target);
+    const body = {
+      status: (formData.get("status") ?? "").toString(),
+      fundamento: (formData.get("fundamento") ?? "").toString(),
+      desde: (formData.get("desde") ?? "").toString(),
+      descricao_curta: (formData.get("descricao_curta") ?? "").toString(),
+      notes: (formData.get("notes") ?? "").toString(),
+    };
+
+    if (!body.status || !body.fundamento || !body.desde || !body.descricao_curta) {
+      statusEl.textContent = "Preencha todos os campos obrigatórios.";
+      statusEl.setAttribute("data-state", "error");
+      return;
+    }
+
+    statusEl.textContent = "Enviando...";
+    statusEl.setAttribute("data-state", "sending");
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const resp = await fetch(
+        `/api/admin/vigencia/chunks/${encodeURIComponent(chunkUrn)}/annotate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "");
+        throw new Error(`HTTP ${resp.status}: ${text.slice(0, 200)}`);
+      }
+
+      const respBody = await resp.json();
+      const proposalId: string = respBody?.proposal?.id ?? "?";
+      statusEl.textContent = `Proposta ${proposalId.slice(0, 8)} enviada.`;
+      statusEl.setAttribute("data-state", "success");
+      target.reset();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      statusEl.textContent = `Falha: ${msg}`;
+      statusEl.setAttribute("data-state", "error");
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .breadcrumb { margin-bottom: 1.5rem; }
+  .breadcrumb a { color: var(--muted); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--text); }
+
+  .doc-urn-display {
+    display: block;
+    margin: 0.4rem 0 0.6rem 0;
+    word-break: break-all;
+  }
+
+  .paginator {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .chunk-walker {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .chunk-card {
+    border: 1px solid var(--border);
+    padding: 1rem 1.2rem;
+    background: var(--surface);
+  }
+  .chunk-card.has-overlay {
+    border-left: 3px solid var(--emphasis);
+  }
+  .chunk-header { margin-bottom: 0.6rem; }
+  .chunk-label-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .chunk-label {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .chunk-nav { margin-top: 0.2rem; }
+
+  .vigencia-pill {
+    padding: 0.18rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    font-family: ui-monospace, monospace;
+    background: rgba(176, 74, 47, 0.15);
+    color: #b04a2f;
+    border: 1px solid rgba(176, 74, 47, 0.4);
+  }
+  .vigencia-pill.status-sub_judice { background: rgba(176, 74, 47, 0.15); color: #b04a2f; }
+  .vigencia-pill.status-suspenso { background: rgba(176, 74, 47, 0.22); color: #8c2f15; }
+  .vigencia-pill.status-vacatio_legis { background: rgba(217, 119, 6, 0.2); color: #d97706; }
+  .vigencia-pill.status-eficacia_limitada { background: rgba(217, 119, 6, 0.18); color: #b8650a; }
+  .vigencia-pill.status-revogado_tacito { background: rgba(120, 113, 108, 0.2); color: #57534e; }
+  .vigencia-pill.status-alterado_por_ec { background: rgba(94, 139, 135, 0.18); color: #5e8b87; }
+  .vigencia-pill.status-atualizado_recentemente { background: rgba(94, 139, 135, 0.15); color: #5e8b87; }
+
+  .chunk-caput {
+    margin: 0.5rem 0;
+    padding: 0.4rem 0.6rem;
+    background: var(--surface-2);
+    border-left: 2px solid var(--border);
+  }
+  .chunk-caput-body { display: block; margin-top: 0.1rem; }
+  .chunk-text {
+    margin: 0.6rem 0;
+    line-height: 1.55;
+  }
+
+  .current-overlay {
+    background: var(--surface-2);
+    padding: 0.6rem 0.9rem;
+    margin: 0.8rem 0;
+    border-left: 3px solid var(--emphasis);
+  }
+  .current-overlay p { margin: 0.2rem 0; }
+  .overlay-desde { font-style: italic; }
+  .overlay-desc { margin-top: 0.3rem !important; }
+
+  .annotate-details {
+    margin-top: 0.8rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.6rem;
+  }
+  .annotate-details > summary {
+    cursor: pointer;
+    padding: 0.3rem 0;
+    font-weight: 600;
+    color: var(--emphasis);
+    list-style: none;
+    user-select: none;
+  }
+  .annotate-details > summary::-webkit-details-marker { display: none; }
+  .annotate-details > summary::before {
+    content: "▶ ";
+    font-size: 0.7em;
+  }
+  .annotate-details[open] > summary::before { content: "▼ "; }
+
+  .annotate-form {
+    margin-top: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .annotate-form .field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .annotate-form .field-inline { flex-direction: row; align-items: center; gap: 0.5rem; }
+  .annotate-form input,
+  .annotate-form select,
+  .annotate-form textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 0.65rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    border-radius: 0;
+    box-sizing: border-box;
+  }
+  .annotate-form input[type="date"] { max-width: 16rem; }
+  .annotate-form input:focus,
+  .annotate-form select:focus,
+  .annotate-form textarea:focus {
+    outline: 2px solid var(--emphasis);
+    outline-offset: -2px;
+  }
+
+  .form-actions { display: flex; gap: 0.8rem; align-items: center; }
+  .annotate-status[data-state="sending"] { color: var(--emphasis); }
+  .annotate-status[data-state="success"] { color: var(--success, #2e7d32); }
+  .annotate-status[data-state="error"] { color: var(--danger, #c62828); }
+</style>
