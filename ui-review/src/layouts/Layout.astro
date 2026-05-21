@@ -1,5 +1,4 @@
 ---
-import { SignedIn, SignedOut, UserButton } from "@clerk/astro/components";
 import { ClientRouter } from "astro:transitions";
 
 interface Props {
@@ -9,6 +8,40 @@ interface Props {
 
 const { title = "RAG-leis/revisa", hideHeader = false } = Astro.props;
 const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/revisa`;
+
+// Phase 11.1 — server-rendered auth state. No Clerk-rendered
+// components in the header markup; instead, read the verified
+// session claims from middleware-attached Astro.locals.auth()
+// and render a fully-custom avatar + menu styled by OUR CSS.
+//
+// This sidesteps the entire class of Clerk-CSS-injection bugs
+// that hit transition:persist + ClientRouter. The Clerk JS is
+// still loaded globally (window.Clerk.signOut() exists), but
+// nothing Clerk-managed is on the page to inject styles.
+const auth = (Astro.locals as any).auth?.();
+const userId: string | null = auth?.userId ?? null;
+const isAuthed = !!userId;
+const claims = (auth?.sessionClaims ?? null) as {
+  email?: string;
+  image_url?: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+} | null;
+
+const userEmail = claims?.email ?? "";
+const userImage = claims?.image_url ?? "";
+const userName =
+  (claims?.full_name || claims?.first_name || userEmail.split("@")[0]) ?? "";
+
+function deriveInitials(name: string, email: string): string {
+  const source = name || email;
+  if (!source) return "?";
+  const parts = source.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0]!.charAt(0).toUpperCase();
+  return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase();
+}
+const initials = deriveInitials(userName, userEmail);
 ---
 
 <!doctype html>
@@ -19,17 +52,8 @@ const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/r
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>{fullTitle}</title>
-    {/* Phase 11.1 — Astro 5 client-side routing. Intercepts in-app
-        navigation (anchor clicks + form submits), fetches the target,
-        swaps the body, and uses the View Transitions API where
-        supported. Eliminates the full-page-reload white flash. The
-        underlying SSR is unchanged (every route still server-renders);
-        only the transition between renders becomes seamless. */}
     <ClientRouter />
     <style>
-      /* View-transition tuning — soft, fast cross-fade. Default browser
-         transition is 250ms which feels sluggish for an instrument-like
-         UI; 140ms reads as deliberate without lag. */
       ::view-transition-old(root),
       ::view-transition-new(root) {
         animation-duration: 140ms;
@@ -38,8 +62,7 @@ const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/r
     <style is:global>
       /* Design system: visual lineage from the Brazilian space program
          (INPE / AEB / Alcântara documentation aesthetic). Engineering-
-         driven palette: navy primary, amber emphasis, warm paper bg.
-         Sharp corners, tabular data, modest accents. */
+         driven palette: navy primary, amber emphasis, warm paper bg. */
       :root {
         --bg:                 #f4f1ec;
         --bg-card:            #ffffff;
@@ -62,6 +85,7 @@ const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/r
         --danger-soft:        #ebd2d2;
         --code-bg:            #e8e4dc;
         --shadow-sm:          0 1px 0 rgba(10,26,46,0.06);
+        --shadow-menu:        0 8px 24px rgba(10,26,46,0.16), 0 0 0 1px var(--border-strong);
       }
       @media (prefers-color-scheme: dark) {
         :root {
@@ -86,6 +110,7 @@ const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/r
           --danger-soft:      #321a1a;
           --code-bg:          #1c2433;
           --shadow-sm:        0 1px 0 rgba(0,0,0,0.4);
+          --shadow-menu:      0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px var(--border-strong);
         }
       }
       *, *::before, *::after { box-sizing: border-box; }
@@ -124,7 +149,6 @@ const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/r
         letter-spacing: 0.12em;
         color: var(--muted);
       }
-      /* Form controls — sharp, technical, focus rings as outline */
       input, select, textarea, button {
         font-family: inherit;
         font-size: inherit;
@@ -134,30 +158,6 @@ const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/r
         outline-offset: 1px;
       }
       ::selection { background: var(--accent); color: #ffffff; }
-
-      /* Phase 11.1 — Pin Clerk <UserButton /> avatar dimensions +
-         circular shape. Without this, the View Transitions body swap
-         + Clerk's React hydration combination occasionally lets our
-         global styles win over Clerk's inline sizing on second render
-         — the avatar balloons and loses its border-radius. !important
-         is justified here because we're competing with Clerk's own
-         component-internal stylesheet, not our own.
-
-         The .cl-userButtonAvatarBox class is part of Clerk's stable
-         "elements" surface (documented in their appearance API for
-         several years; safe to target). */
-      .cl-userButtonAvatarBox,
-      .cl-userButtonAvatarBox > * {
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 50% !important;
-      }
-      .cl-userButtonAvatarImage {
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 50% !important;
-        object-fit: cover;
-      }
     </style>
   </head>
   <body>
@@ -167,14 +167,56 @@ const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/r
           <a href="/" class="brand">
             <span class="brand-mark">RAG-leis</span><span class="brand-slash">/revisa</span>
           </a>
-          <nav>
-            <SignedIn>
-              <a href="/queries" class="nav-link">QUERIES</a>
-              <UserButton afterSignOutUrl="/sign-in" />
-            </SignedIn>
-            <SignedOut>
+          <nav class="header-nav">
+            {isAuthed ? (
+              <>
+                <a href="/queries" class="nav-link">QUERIES</a>
+                <div class="avatar-shell">
+                  <button
+                    id="avatar-button"
+                    class="avatar-button"
+                    type="button"
+                    aria-haspopup="menu"
+                    aria-expanded="false"
+                    aria-controls="avatar-menu"
+                    aria-label={`Menu de ${userName}`}
+                  >
+                    {userImage ? (
+                      <img
+                        src={userImage}
+                        alt=""
+                        class="avatar-img"
+                        referrerpolicy="no-referrer"
+                      />
+                    ) : (
+                      <span class="avatar-initials">{initials}</span>
+                    )}
+                  </button>
+                  <div
+                    id="avatar-menu"
+                    class="avatar-menu"
+                    role="menu"
+                    hidden
+                  >
+                    <div class="avatar-menu-header">
+                      <span class="label-eyebrow">SESSÃO</span>
+                      <span class="avatar-menu-name">{userName || userEmail}</span>
+                      <span class="avatar-menu-email">{userEmail}</span>
+                    </div>
+                    <button
+                      id="sign-out-btn"
+                      type="button"
+                      class="avatar-menu-item avatar-menu-item-destructive"
+                      role="menuitem"
+                    >
+                      SAIR
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
               <a href="/sign-in" class="nav-link">ENTRAR</a>
-            </SignedOut>
+            )}
           </nav>
         </div>
       </header>
@@ -182,6 +224,7 @@ const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/r
     <main>
       <slot />
     </main>
+
     <style>
       .site-header {
         background: var(--bg-card);
@@ -210,11 +253,8 @@ const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/r
       }
       .brand:hover { color: var(--accent); text-decoration: none; }
       .brand:active { color: var(--emphasis); }
-      .brand-slash {
-        color: var(--muted);
-        font-weight: 400;
-      }
-      nav {
+      .brand-slash { color: var(--muted); font-weight: 400; }
+      .header-nav {
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -237,9 +277,190 @@ const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/r
       }
       .nav-link:active {
         background: var(--accent);
-        color: #ffffff;
+        color: var(--bg-card);
         border-color: var(--accent-hover);
       }
+
+      /* ===== Custom avatar + menu ===== */
+      .avatar-shell {
+        position: relative;
+      }
+      .avatar-button {
+        appearance: none;
+        background: var(--bg-sunken);
+        border: 1px solid var(--border-strong);
+        padding: 0;
+        margin: 0;
+        width: 34px;
+        height: 34px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        transition: border-color 0.12s ease, transform 0.08s ease;
+      }
+      .avatar-button:hover {
+        border-color: var(--accent);
+      }
+      .avatar-button:active {
+        transform: translateY(1px);
+        border-color: var(--emphasis);
+      }
+      .avatar-button[aria-expanded="true"] {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .avatar-button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .avatar-initials {
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--fg);
+      }
+
+      .avatar-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        min-width: 240px;
+        background: var(--bg-card);
+        box-shadow: var(--shadow-menu);
+        z-index: 100;
+        animation: avatarMenuOpen 0.12s ease;
+      }
+      .avatar-menu[hidden] {
+        display: none;
+      }
+      @keyframes avatarMenuOpen {
+        from { opacity: 0; transform: translateY(-4px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .avatar-menu-header {
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+      }
+      .avatar-menu-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--fg);
+        line-height: 1.3;
+      }
+      .avatar-menu-email {
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+        font-size: 0.75rem;
+        color: var(--muted);
+        word-break: break-all;
+      }
+      .avatar-menu-item {
+        appearance: none;
+        background: transparent;
+        border: none;
+        width: 100%;
+        padding: 0.7rem 1rem;
+        text-align: left;
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        color: var(--fg-dim);
+        cursor: pointer;
+        transition: all 0.1s ease;
+      }
+      .avatar-menu-item:hover {
+        background: var(--bg-sunken);
+        color: var(--fg);
+      }
+      .avatar-menu-item:active {
+        background: var(--accent);
+        color: var(--bg-card);
+      }
+      .avatar-menu-item-destructive:hover {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+      .avatar-menu-item-destructive:active {
+        background: var(--danger);
+        color: var(--bg-card);
+      }
     </style>
+
+    <script>
+      // Event-delegated handlers for the custom avatar menu. Bound
+      // to document so they survive Astro's view-transition body
+      // swaps (script runs once on initial load; document is the
+      // same element across navigations).
+      const closeMenu = () => {
+        const btn = document.getElementById("avatar-button");
+        const menu = document.getElementById("avatar-menu");
+        if (menu) menu.hidden = true;
+        if (btn) btn.setAttribute("aria-expanded", "false");
+      };
+
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+
+        // Toggle menu on avatar-button click
+        if (target.closest("#avatar-button")) {
+          const btn = document.getElementById("avatar-button");
+          const menu = document.getElementById("avatar-menu");
+          if (!btn || !menu) return;
+          const open = menu.hidden;
+          menu.hidden = !open;
+          btn.setAttribute("aria-expanded", String(open));
+          return;
+        }
+
+        // Sign out via Clerk's global JS API (no Clerk component on page)
+        if (target.closest("#sign-out-btn")) {
+          e.preventDefault();
+          const clerk = (window as any).Clerk;
+          if (clerk && typeof clerk.signOut === "function") {
+            clerk.signOut({ redirectUrl: "/sign-in" });
+          } else {
+            // Defensive fallback: hit a server-side sign-out route if
+            // Clerk JS hasn't loaded yet. (Currently unhandled — Clerk's
+            // script tag is in every page's head, so this path is
+            // extremely unlikely. Future-proofing.)
+            window.location.href = "/sign-in";
+          }
+          return;
+        }
+
+        // Outside-click close
+        const menu = document.getElementById("avatar-menu");
+        if (
+          menu &&
+          !menu.hidden &&
+          !target.closest("#avatar-menu") &&
+          !target.closest("#avatar-button")
+        ) {
+          closeMenu();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeMenu();
+      });
+
+      // Close the menu after a view transition lands on a new page
+      // (so a user who left the menu open before clicking a link
+      // doesn't see it lingering on the destination).
+      document.addEventListener("astro:after-swap", closeMenu);
+    </script>
   </body>
 </html>
