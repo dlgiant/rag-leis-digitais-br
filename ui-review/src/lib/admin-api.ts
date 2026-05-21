@@ -19,7 +19,14 @@ function resolveBackendUrl(): string {
   const raw = process.env.RAG_BACKEND_URL ?? "";
   // Strip every whitespace char (incl. embedded \n, \r, \t) AND
   // common zero-width chars that copy/paste tools add silently.
-  const cleaned = raw.replace(/[\s​‌‍﻿]+/g, "");
+  // ALSO normalize Unicode dashes — Notion/Google Docs/Slack/etc.
+  // auto-convert ASCII hyphens (U+002D) to U+2010/U+2013/U+2014
+  // during copy-paste. Visually identical, but Node's URL parser
+  // punycode-encodes them into "xn--..." hostnames that don't
+  // resolve in DNS → ENOTFOUND.
+  const cleaned = raw
+    .replace(/[\s​‌‍﻿]+/g, "")
+    .replace(/[‐‑‒–—―−﹣－]/g, "-");
   const candidate = cleaned || "https://rag-leis-digitais-br.fly.dev";
   return candidate.replace(/\/+$/, "");
 }
