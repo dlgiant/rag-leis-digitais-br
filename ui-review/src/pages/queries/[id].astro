@@ -146,15 +146,87 @@ const lexmlUrn = (urn: string) => {
           )}
         </section>
 
-        <section class="review-placeholder">
+        <section class="review-section">
           <header class="section-header">
             <h2>Revisão</h2>
-            <span class="label-eyebrow">FASE 11.2</span>
+            <span class="label-eyebrow">VERDICT + NOTAS</span>
           </header>
-          <p class="muted">
-            Formulário de revisão (verdict + notes + sugestão de URN) chega
-            na <strong>Fase 11.2</strong>. Por enquanto, esta tela é somente
-            leitura.
+
+          <form
+            id="review-form"
+            class="review-form"
+            data-query-id={data.id}
+          >
+            <fieldset class="verdict-fieldset">
+              <legend class="label-eyebrow">VERDICT</legend>
+              <div class="verdict-options">
+                <label class="verdict-option">
+                  <input type="radio" name="verdict" value="correct" required />
+                  <span class="verdict-pill verdict-correct">Correto</span>
+                  <span class="verdict-help muted small">Gold URNs apropriados; classified_type adequado.</span>
+                </label>
+                <label class="verdict-option">
+                  <input type="radio" name="verdict" value="incorrect" />
+                  <span class="verdict-pill verdict-incorrect">Incorreto</span>
+                  <span class="verdict-help muted small">Gold ou classificação errados. Sugira correções abaixo.</span>
+                </label>
+                <label class="verdict-option">
+                  <input type="radio" name="verdict" value="needs_followup" />
+                  <span class="verdict-pill verdict-followup">Precisa revisão</span>
+                  <span class="verdict-help muted small">Ambiguo; precisa de mais contexto ou pesquisa.</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="field">
+              <label for="notes" class="label-eyebrow">NOTAS</label>
+              <textarea
+                id="notes"
+                name="notes"
+                rows="4"
+                placeholder="Justifique o verdict. Cite jurisprudência ou doutrina se relevante."
+                maxlength="4000"
+              ></textarea>
+            </div>
+
+            <details class="optional-fields">
+              <summary>Campos opcionais (sugestões de correção)</summary>
+              <div class="field">
+                <label for="suggested-urns" class="label-eyebrow">URNs SUGERIDOS</label>
+                <textarea
+                  id="suggested-urns"
+                  name="suggested_gold_urns"
+                  rows="3"
+                  placeholder="Um URN por linha. Ex: urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2"
+                ></textarea>
+                <p class="muted small">Preencha se o verdict for "Incorreto" e você sugere URNs alternativos.</p>
+              </div>
+              <div class="field">
+                <label for="suggested-classified-type" class="label-eyebrow">TIPO SUGERIDO</label>
+                <input
+                  id="suggested-classified-type"
+                  name="suggested_classified_type"
+                  type="text"
+                  placeholder="Ex: definicao, parafrase, citacao-literal..."
+                />
+              </div>
+            </details>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="button button-primary"
+                id="submit-review-btn"
+              >
+                ENVIAR PROPOSTA <span class="button-arrow">→</span>
+              </button>
+              <span id="review-status" class="review-status muted small" aria-live="polite"></span>
+            </div>
+          </form>
+
+          <p class="review-footnote muted small">
+            Propostas <strong>não</strong> editam <code>eval/queries.yaml</code> diretamente.
+            O operador revisa a fila em <code>/proposals</code> e faz merge via tool CLI.
           </p>
         </section>
       </article>
@@ -413,16 +485,148 @@ const lexmlUrn = (urn: string) => {
   }
   .missing-list li { padding: 0.1rem 0; }
 
-  /* Review placeholder */
-  .review-placeholder {
+  /* Review form (Phase 11.2) */
+  .review-section {
     margin-top: 2.5rem;
-    padding: 1.25rem 1.5rem;
-    border: 1px dashed var(--border-strong);
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
   }
-  .review-placeholder p {
+  .review-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .verdict-fieldset {
     margin: 0;
+    padding: 0;
+    border: none;
+  }
+  .verdict-fieldset legend {
+    margin: 0 0 0.5rem;
+    padding: 0;
+  }
+  .verdict-options {
+    display: grid;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border-strong);
+  }
+  .verdict-option {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 1rem;
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: background 0.1s ease;
+  }
+  .verdict-option:hover { background: var(--bg-sunken); }
+  .verdict-option:has(input:checked) {
+    background: var(--accent-soft);
+  }
+  .verdict-option input[type="radio"] {
+    accent-color: var(--accent);
+    margin: 0;
+  }
+  .verdict-pill {
+    font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--border-strong);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .verdict-correct {
+    color: var(--success);
+    border-color: var(--success);
+    background: var(--success-soft);
+  }
+  .verdict-incorrect {
+    color: var(--danger);
+    border-color: var(--danger);
+    background: var(--danger-soft);
+  }
+  .verdict-followup {
+    color: var(--warning);
+    border-color: var(--warning);
+    background: var(--warning-soft);
+  }
+  .verdict-help { line-height: 1.4; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .field label {
+    /* The .label-eyebrow class is applied directly on the label */
+  }
+  .review-form textarea,
+  .review-form input[type="text"] {
+    width: 100%;
+    background: var(--bg-card);
+    color: var(--fg);
+    border: 1px solid var(--border-strong);
+    padding: 0.625rem 0.75rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    resize: vertical;
+  }
+  .review-form textarea:focus,
+  .review-form input[type="text"]:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+
+  .optional-fields {
+    border: 1px dashed var(--border);
+    padding: 0.625rem 1rem;
+  }
+  .optional-fields summary {
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: ui-monospace, Menlo, monospace;
+    user-select: none;
+  }
+  .optional-fields[open] summary { color: var(--fg); margin-bottom: 0.75rem; }
+  .optional-fields .field + .field { margin-top: 0.875rem; }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .review-status {
+    line-height: 1.4;
+  }
+  .review-status[data-state="sending"] {
+    color: var(--muted);
+    font-style: italic;
+  }
+  .review-status[data-state="success"] {
+    color: var(--success);
+    font-weight: 600;
+  }
+  .review-status[data-state="error"] {
+    color: var(--danger);
+    font-weight: 600;
+  }
+  .review-footnote {
+    margin: 1.25rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
     line-height: 1.55;
-    font-size: 0.9rem;
   }
 
   /* Not found */
@@ -468,3 +672,78 @@ const lexmlUrn = (urn: string) => {
   .button-arrow { transition: transform 0.12s ease; }
   .button:hover .button-arrow { transform: translateX(3px); }
 </style>
+
+<script>
+  // Phase 11.2 — review-form submit. Event-delegated on document so
+  // it survives Astro view transitions (the form element comes and
+  // goes with each route swap, but document is stable).
+  document.addEventListener("submit", async (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLFormElement)) return;
+    if (target.id !== "review-form") return;
+    e.preventDefault();
+
+    const queryId = target.dataset.queryId;
+    if (!queryId) return;
+
+    const submitBtn = document.getElementById("submit-review-btn") as HTMLButtonElement | null;
+    const statusEl = document.getElementById("review-status");
+    if (!statusEl) return;
+
+    const formData = new FormData(target);
+    const verdict = formData.get("verdict");
+    const notes = (formData.get("notes") ?? "").toString();
+    const rawUrns = (formData.get("suggested_gold_urns") ?? "").toString();
+    const suggestedClassifiedType = (formData.get("suggested_classified_type") ?? "").toString().trim() || null;
+
+    if (typeof verdict !== "string") {
+      statusEl.textContent = "Selecione um verdict.";
+      statusEl.setAttribute("data-state", "error");
+      return;
+    }
+
+    // Split URN textarea by lines, trim, drop blanks
+    const suggestedGoldUrns = rawUrns
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    statusEl.textContent = "Enviando...";
+    statusEl.setAttribute("data-state", "sending");
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const resp = await fetch(
+        `/api/admin/eval/queries/${encodeURIComponent(queryId)}/review`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            verdict,
+            notes,
+            suggested_gold_urns: suggestedGoldUrns,
+            suggested_classified_type: suggestedClassifiedType,
+          }),
+        },
+      );
+
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "");
+        throw new Error(`HTTP ${resp.status}: ${text.slice(0, 200)}`);
+      }
+
+      const body = await resp.json();
+      const proposalId: string = body?.proposal?.id ?? "?";
+      statusEl.textContent = `Proposta ${proposalId.slice(0, 8)} enviada.`;
+      statusEl.setAttribute("data-state", "success");
+      // Reset the form so the user knows it's been processed
+      target.reset();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      statusEl.textContent = `Falha: ${msg}`;
+      statusEl.setAttribute("data-state", "error");
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+</script>

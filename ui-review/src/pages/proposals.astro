@@ -1,0 +1,359 @@
+---
+import Layout from "../layouts/Layout.astro";
+import {
+  adminFetch,
+  formatError,
+  isVerbose,
+  type ProposalsListResponse,
+} from "../lib/admin-api";
+
+const verbose = isVerbose(Astro.url);
+const auth = Astro.locals.auth();
+const token = await auth.getToken();
+
+// Server-side check: if this user is not the operator, the backend
+// will return 403. Pre-check here so we can render a clean "no
+// access" message without burning a server round-trip.
+const claims = (auth.sessionClaims ?? null) as
+  | { email?: string }
+  | null;
+const viewerEmail = claims?.email ?? "";
+
+let data: ProposalsListResponse | null = null;
+let fetchError: string | null = null;
+let forbidden = false;
+
+if (token) {
+  try {
+    data = await adminFetch<ProposalsListResponse>("proposals", { token });
+  } catch (e) {
+    // 403 = not the operator — show a friendly forbidden state
+    if (
+      typeof e === "object" &&
+      e !== null &&
+      "status" in e &&
+      (e as { status: number }).status === 403
+    ) {
+      forbidden = true;
+    } else {
+      fetchError = formatError(e, verbose);
+    }
+  }
+}
+
+function formatVerdictLabel(verdict: string | null): string {
+  if (verdict === "correct") return "Correto";
+  if (verdict === "incorrect") return "Incorreto";
+  if (verdict === "needs_followup") return "Precisa revisão";
+  return verdict ?? "—";
+}
+
+function formatTs(ts: string): string {
+  try {
+    const d = new Date(ts);
+    return d.toLocaleString("pt-BR", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "America/Sao_Paulo",
+    });
+  } catch {
+    return ts;
+  }
+}
+---
+
+<Layout title="Proposals">
+  <div class="container">
+    <header class="page-header">
+      <div>
+        <span class="label-eyebrow">QUEUE / 03</span>
+        <h1>Propostas pendentes</h1>
+        {data && (
+          <p class="counter muted small mono">
+            <span class="counter-num">{data.total}</span>
+            <span> proposta(s) aguardando merge</span>
+          </p>
+        )}
+      </div>
+    </header>
+
+    {forbidden && (
+      <div class="alert alert-warning">
+        <span class="alert-label alert-label-warning">ACESSO</span>
+        <div class="alert-body">
+          <strong>Esta página é operator-only.</strong>
+          <p class="muted small">
+            Seu e-mail <code>{viewerEmail}</code> está na allowlist mas
+            não é o operador configurado (<code>RAG_OPERATOR_EMAIL</code>).
+          </p>
+        </div>
+      </div>
+    )}
+
+    {fetchError && (
+      <div class="alert alert-danger">
+        <span class="alert-label">ERRO</span>
+        <div class="alert-body">
+          <strong>Falha ao carregar fila.</strong>
+          <code>{fetchError}</code>
+          {!verbose && (
+            <p class="alert-hint muted small">
+              Para detalhes técnicos, adicione <code>?debug=1</code> à URL.
+            </p>
+          )}
+        </div>
+      </div>
+    )}
+
+    {data && data.total === 0 && (
+      <div class="empty-state">
+        <span class="label-eyebrow">FILA VAZIA</span>
+        <p class="muted">Nenhuma proposta pendente. Boas notícias.</p>
+      </div>
+    )}
+
+    {data && data.total > 0 && (
+      <div class="proposal-list">
+        {data.proposals.map((p) => (
+          <article class={`proposal-card kind-${p.kind} verdict-${p.verdict ?? "none"}`}>
+            <header class="proposal-header">
+              <div class="proposal-meta">
+                <span class={`kind-pill kind-pill-${p.kind}`}>{p.kind}</span>
+                {p.verdict && (
+                  <span class={`verdict-pill verdict-${p.verdict}`}>
+                    {formatVerdictLabel(p.verdict)}
+                  </span>
+                )}
+                <span class="muted small mono">{formatTs(p.ts)}</span>
+              </div>
+              <span class="proposal-reviewer muted small">
+                {p.reviewer_email}
+                {p.is_operator && <span class="op-tag mono"> · OP</span>}
+              </span>
+            </header>
+
+            {p.query_id && (
+              <div class="proposal-target">
+                <span class="label-eyebrow">QUERY</span>
+                <a href={`/queries/${p.query_id}`} class="proposal-target-link mono">
+                  {p.query_id}
+                </a>
+              </div>
+            )}
+
+            {p.notes && (
+              <div class="proposal-notes">{p.notes}</div>
+            )}
+
+            {p.suggested_gold_urns.length > 0 && (
+              <div class="proposal-suggestion">
+                <span class="label-eyebrow">URNs SUGERIDOS</span>
+                <ul class="urn-list mono small">
+                  {p.suggested_gold_urns.map((u) => <li>{u}</li>)}
+                </ul>
+              </div>
+            )}
+
+            {p.suggested_classified_type && (
+              <div class="proposal-suggestion">
+                <span class="label-eyebrow">TIPO SUGERIDO</span>
+                <code class="mono">{p.suggested_classified_type}</code>
+              </div>
+            )}
+
+            <footer class="proposal-footer muted small mono">
+              ID {p.id.slice(0, 12)}
+            </footer>
+          </article>
+        ))}
+      </div>
+    )}
+
+    {data && data.total > 0 && (
+      <p class="merge-footnote muted small">
+        Merge via CLI: <code>uv run python scripts/phase_11_merge_proposals.py</code>
+        (Fase 11.4 — ainda não shipped).
+      </p>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .page-header {
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-header h1 {
+    margin: 0.5rem 0 0.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .counter {
+    margin: 0;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+  .counter-num { color: var(--fg); font-weight: 700; }
+
+  .alert {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-strong);
+  }
+  .alert-label {
+    padding: 0.875rem 1rem;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--bg-card);
+    background: var(--danger);
+    display: flex;
+    align-items: center;
+  }
+  .alert-label-warning { background: var(--warning); }
+  .alert-body {
+    padding: 0.875rem 1.125rem;
+    background: var(--danger-soft);
+    font-size: 0.88rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .alert-warning .alert-body { background: var(--warning-soft); }
+  .alert-body p { margin: 0; }
+  .alert-body code { word-break: break-all; background: rgba(0,0,0,0.06); }
+  .alert-hint { margin-top: 0.2rem; }
+
+  .empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+    border: 1px dashed var(--border-strong);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .empty-state p { margin: 0; }
+
+  .proposal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .proposal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-left: 4px solid var(--border-strong);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .proposal-card.verdict-correct { border-left-color: var(--success); }
+  .proposal-card.verdict-incorrect { border-left-color: var(--danger); }
+  .proposal-card.verdict-needs_followup { border-left-color: var(--warning); }
+
+  .proposal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .proposal-meta {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .kind-pill {
+    font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 0.18rem 0.55rem;
+    text-transform: uppercase;
+    background: var(--bg-sunken);
+    border: 1px solid var(--border-strong);
+    color: var(--fg-dim);
+  }
+  .kind-pill-review { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+  .verdict-pill {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 0.18rem 0.55rem;
+    border: 1px solid var(--border-strong);
+    text-transform: uppercase;
+  }
+  .verdict-correct { color: var(--success); border-color: var(--success); background: var(--success-soft); }
+  .verdict-incorrect { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
+  .verdict-needs_followup { color: var(--warning); border-color: var(--warning); background: var(--warning-soft); }
+
+  .proposal-reviewer {
+    white-space: nowrap;
+  }
+  .op-tag { color: var(--emphasis); font-weight: 700; letter-spacing: 0.12em; }
+
+  .proposal-target {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .proposal-target-link {
+    color: var(--accent);
+    font-size: 0.85rem;
+    border-bottom: 1px dashed var(--accent);
+  }
+  .proposal-target-link:hover {
+    background: var(--accent-soft);
+    text-decoration: none;
+  }
+
+  .proposal-notes {
+    padding: 0.7rem 0.875rem;
+    background: var(--bg-sunken);
+    border-left: 2px solid var(--border-strong);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+
+  .proposal-suggestion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .urn-list {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .urn-list li {
+    padding: 0.1rem 0;
+    word-break: break-all;
+  }
+
+  .proposal-footer {
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--border);
+    letter-spacing: 0.06em;
+  }
+
+  .merge-footnote {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+    line-height: 1.55;
+  }
+</style>

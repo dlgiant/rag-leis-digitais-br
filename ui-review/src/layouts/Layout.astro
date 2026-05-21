@@ -34,6 +34,13 @@ const userImage = claims?.image_url ?? "";
 const userName =
   (claims?.full_name || claims?.first_name || userEmail.split("@")[0]) ?? "";
 
+// Phase 11.2 — operator gate for the /proposals nav link.
+// The backend uses RAG_OPERATOR_EMAIL; we mirror that env-var check
+// at render time so we don't show a 403'd link to non-operators.
+// Falls back to FALSE when the env var is absent.
+const operatorEmail = (process.env.RAG_OPERATOR_EMAIL ?? "").trim().toLowerCase();
+const isOperator = isAuthed && !!operatorEmail && userEmail.toLowerCase() === operatorEmail;
+
 function deriveInitials(name: string, email: string): string {
   const source = name || email;
   if (!source) return "?";
@@ -171,6 +178,7 @@ const initials = deriveInitials(userName, userEmail);
             {isAuthed ? (
               <>
                 <a href="/queries" class="nav-link">QUERIES</a>
+                {isOperator && <a href="/proposals" class="nav-link nav-link-operator">FILA</a>}
                 <div class="avatar-shell">
                   <button
                     id="avatar-button"
@@ -280,6 +288,19 @@ const initials = deriveInitials(userName, userEmail);
         background: var(--accent);
         color: var(--bg-card);
         border-color: var(--accent-hover);
+      }
+      .nav-link-operator {
+        color: var(--emphasis);
+      }
+      .nav-link-operator:hover {
+        color: var(--emphasis);
+        border-color: var(--emphasis);
+        background: var(--emphasis-soft);
+      }
+      .nav-link-operator:active {
+        background: var(--emphasis);
+        color: var(--bg-card);
+        border-color: var(--emphasis);
       }
 
       /* ===== Custom avatar + menu ===== */

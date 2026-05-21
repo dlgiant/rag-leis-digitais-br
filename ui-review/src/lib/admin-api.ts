@@ -179,3 +179,43 @@ export interface EvalQueryDetailResponse extends EvalQueryRow {
   missing_urns: string[];
   viewer: { email: string; is_operator: boolean };
 }
+
+// Phase 11.2 — review submission shapes
+
+export type Verdict = "correct" | "incorrect" | "needs_followup";
+
+export interface ReviewSubmissionBody {
+  verdict: Verdict;
+  notes: string;
+  suggested_gold_urns?: string[];
+  suggested_classified_type?: string | null;
+}
+
+export interface Proposal {
+  id: string;
+  ts: string;
+  reviewer_email: string;
+  is_operator: boolean;
+  kind: "review" | "new_row" | "refinement";
+  query_id: string | null;
+  verdict: Verdict | null;
+  notes: string;
+  suggested_gold_urns: string[];
+  suggested_classified_type: string | null;
+  new_query_text: string | null;
+  new_qtype: string | null;
+  new_core_urns: string[];
+  new_supporting_urns: string[];
+  refined_query_text: string | null;
+}
+
+export interface ReviewSubmissionResponse {
+  ok: boolean;
+  proposal: Proposal;
+}
+
+export interface ProposalsListResponse {
+  total: number;
+  proposals: Proposal[];
+  viewer: { email: string; is_operator: boolean };
+}

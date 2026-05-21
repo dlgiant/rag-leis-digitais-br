@@ -62,8 +62,10 @@ INTRUDER_EMAIL = "intruder@example.test"
 
 
 @pytest.fixture(autouse=True)
-def env_config(monkeypatch, keypair):
-    """Configure env vars for every test: pubkey, allowlist, operator."""
+def env_config(monkeypatch, keypair, tmp_path):
+    """Configure env vars for every test: pubkey, allowlist, operator.
+    Also point proposals.jsonl / merged.jsonl at tmp paths so tests
+    don't litter the real data/review/ directory."""
     monkeypatch.setenv("CLERK_JWT_KEY", keypair["public"])
     monkeypatch.setenv(
         "RAG_ADMIN_ALLOWLIST",
@@ -72,6 +74,9 @@ def env_config(monkeypatch, keypair):
     monkeypatch.setenv("RAG_OPERATOR_EMAIL", OPERATOR_EMAIL)
     # No CLERK_AUDIENCE set → audience check skipped (matches dev-mode).
     monkeypatch.delenv("CLERK_AUDIENCE", raising=False)
+    # Phase 11.2 — isolate the proposal write paths per test
+    monkeypatch.setenv("RAG_PROPOSALS_PATH", str(tmp_path / "proposals.jsonl"))
+    monkeypatch.setenv("RAG_MERGED_PATH", str(tmp_path / "merged.jsonl"))
     # Reset the chunks cache so each test gets a fresh load.
     eval_loader.reset_caches()
 
@@ -270,3 +275,200 @@ def test_is_operator_false_for_lawyer_email(client, keypair):
     r = client.get("/v1/admin/eval/queries?limit=1", headers=auth_header(token))
     assert r.status_code == 200
     assert r.json()["viewer"]["is_operator"] is False
+
+
+# ---------------------------------------------------------------------------
+# Phase 11.2 — review submission (write path)
+# ---------------------------------------------------------------------------
+
+
+def _first_query_id(client, keypair) -> str:
+    """Helper: get a real query_id to use in review tests."""
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.get("/v1/admin/eval/queries?limit=1", headers=auth_header(token))
+    return r.json()["rows"][0]["id"]
+
+
+def test_submit_review_happy_path(client, keypair):
+    """Lawyer submits a verdict; proposal appended to JSONL on disk."""
+    qid = _first_query_id(client, keypair)
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        f"/v1/admin/eval/queries/{qid}/review",
+        json={
+            "verdict": "correct",
+            "notes": "Confirmed against LGPD art. 5, I.",
+        },
+        headers=auth_header(token),
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["ok"] is True
+    p = body["proposal"]
+    assert p["kind"] == "review"
+    assert p["verdict"] == "correct"
+    assert p["query_id"] == qid
+    assert p["reviewer_email"] == LAWYER_EMAIL
+    assert p["is_operator"] is False
+    assert p["notes"] == "Confirmed against LGPD art. 5, I."
+    # Verify it landed on disk
+    import os
+    from pathlib import Path
+    proposals_path = Path(os.environ["RAG_PROPOSALS_PATH"])
+    assert proposals_path.exists()
+    lines = proposals_path.read_text(encoding="utf-8").strip().split("\n")
+    assert len(lines) == 1
+    import json
+    on_disk = json.loads(lines[0])
+    assert on_disk["id"] == p["id"]
+    assert on_disk["verdict"] == "correct"
+
+
+def test_submit_review_with_suggested_urns(client, keypair):
+    """Suggested URNs are persisted in the proposal."""
+    qid = _first_query_id(client, keypair)
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        f"/v1/admin/eval/queries/{qid}/review",
+        json={
+            "verdict": "incorrect",
+            "notes": "Gold URN is wrong; LGPD art 5;inc1 should be art 5;inc2.",
+            "suggested_gold_urns": [
+                "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2",
+            ],
+            "suggested_classified_type": "definicao",
+        },
+        headers=auth_header(token),
+    )
+    assert r.status_code == 200, r.text
+    p = r.json()["proposal"]
+    assert p["suggested_gold_urns"] == [
+        "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2",
+    ]
+    assert p["suggested_classified_type"] == "definicao"
+    assert p["verdict"] == "incorrect"
+
+
+def test_submit_review_unknown_query_id_returns_404(client, keypair):
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        "/v1/admin/eval/queries/deadbeef0000/review",
+        json={"verdict": "correct", "notes": "test"},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 404
+
+
+def test_submit_review_invalid_verdict_returns_422(client, keypair):
+    qid = _first_query_id(client, keypair)
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        f"/v1/admin/eval/queries/{qid}/review",
+        json={"verdict": "not_a_real_verdict", "notes": "test"},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 422  # Pydantic Literal validation
+
+
+def test_submit_review_requires_auth(client, keypair):
+    qid = _first_query_id(client, keypair)
+    r = client.post(
+        f"/v1/admin/eval/queries/{qid}/review",
+        json={"verdict": "correct", "notes": ""},
+    )
+    assert r.status_code == 401
+
+
+def test_submit_review_not_in_allowlist_returns_403(client, keypair):
+    qid = _first_query_id(client, keypair)
+    token = make_token(keypair=keypair, email=INTRUDER_EMAIL)
+    r = client.post(
+        f"/v1/admin/eval/queries/{qid}/review",
+        json={"verdict": "correct", "notes": ""},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 403
+
+
+def test_submit_review_marks_operator_correctly(client, keypair):
+    """Operator submits a review → is_operator: true in the proposal."""
+    qid = _first_query_id(client, keypair)
+    token = make_token(keypair=keypair, email=OPERATOR_EMAIL)
+    r = client.post(
+        f"/v1/admin/eval/queries/{qid}/review",
+        json={"verdict": "correct", "notes": "operator confirming"},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 200
+    assert r.json()["proposal"]["is_operator"] is True
+
+
+# ---------------------------------------------------------------------------
+# Phase 11.2 — proposals queue (operator-only)
+# ---------------------------------------------------------------------------
+
+
+def test_list_proposals_operator_only(client, keypair):
+    """Lawyer cannot list proposals (operator-only endpoint)."""
+    lawyer_token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.get("/v1/admin/proposals", headers=auth_header(lawyer_token))
+    assert r.status_code == 403
+
+
+def test_list_proposals_empty(client, keypair):
+    """Fresh test fixture → no proposals yet."""
+    operator_token = make_token(keypair=keypair, email=OPERATOR_EMAIL)
+    r = client.get("/v1/admin/proposals", headers=auth_header(operator_token))
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total"] == 0
+    assert body["proposals"] == []
+
+
+def test_list_proposals_after_submissions(client, keypair):
+    """Submit two reviews → both appear in /proposals listing."""
+    qid = _first_query_id(client, keypair)
+    lawyer_token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    operator_token = make_token(keypair=keypair, email=OPERATOR_EMAIL)
+    # Submit two reviews
+    for verdict, notes in [("correct", "first"), ("incorrect", "second")]:
+        r = client.post(
+            f"/v1/admin/eval/queries/{qid}/review",
+            json={"verdict": verdict, "notes": notes},
+            headers=auth_header(lawyer_token),
+        )
+        assert r.status_code == 200, r.text
+    # Operator lists
+    r = client.get("/v1/admin/proposals", headers=auth_header(operator_token))
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total"] == 2
+    assert {p["notes"] for p in body["proposals"]} == {"first", "second"}
+    assert all(p["query_id"] == qid for p in body["proposals"])
+    assert all(p["kind"] == "review" for p in body["proposals"])
+
+
+def test_list_proposals_filters_merged(client, keypair, tmp_path):
+    """Proposals whose IDs are in merged.jsonl don't show up as pending."""
+    qid = _first_query_id(client, keypair)
+    lawyer_token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    operator_token = make_token(keypair=keypair, email=OPERATOR_EMAIL)
+    # Submit a proposal
+    r = client.post(
+        f"/v1/admin/eval/queries/{qid}/review",
+        json={"verdict": "correct", "notes": "to be merged"},
+        headers=auth_header(lawyer_token),
+    )
+    proposal_id = r.json()["proposal"]["id"]
+    # Pre-merge listing shows it
+    r = client.get("/v1/admin/proposals", headers=auth_header(operator_token))
+    assert r.json()["total"] == 1
+    # Mark as merged by writing to merged.jsonl
+    import json
+    import os
+    merged_path = os.environ["RAG_MERGED_PATH"]
+    with open(merged_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps({"id": proposal_id}) + "\n")
+    # Post-merge listing skips it
+    r = client.get("/v1/admin/proposals", headers=auth_header(operator_token))
+    assert r.json()["total"] == 0

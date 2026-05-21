@@ -1,30 +1,46 @@
-"""Phase 11.0 — `/v1/admin/*` read-only endpoints for the review UI.
+"""Phase 11.0 + 11.2 — `/v1/admin/*` endpoints for the review UI.
 
 Gated by Clerk JWT verification (`rag_leis.clerk_auth`). All endpoints
 require the caller's email to be in `RAG_ADMIN_ALLOWLIST`. Operator-
-only endpoints (Phase 11.2+) additionally check `is_operator`.
+only endpoints additionally check `is_operator`.
 
-Read endpoints shipped in 11.0:
+Read endpoints (Phase 11.0):
   GET /v1/admin/eval/queries          — paginated list of eval rows
   GET /v1/admin/eval/queries/{id}     — single row with expanded chunks
   GET /v1/admin/chunks/{urn}          — single chunk by URN
 
-Write endpoints (Phase 11.2) and refinement (Phase 11.3) land in
+Write endpoints (Phase 11.2):
+  POST /v1/admin/eval/queries/{id}/review  — submit a verdict on an
+                                              existing row (any
+                                              allowlisted user)
+  GET  /v1/admin/proposals                 — list pending proposals
+                                              (operator-only)
+
+Refinement (Phase 11.3) and merge tool (Phase 11.4) land in
 subsequent commits.
 """
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
 
-from rag_leis.clerk_auth import ClerkClaims, clerk_auth_dependency
+from rag_leis.clerk_auth import ClerkClaims, clerk_auth_dependency, require_operator
 from rag_leis.eval_loader import (
     chunk_to_json,
     get_chunk,
     get_chunks_for_urns,
     load_eval_queries,
     row_to_json,
+)
+from rag_leis.proposals import (
+    Proposal,
+    append_proposal,
+    load_pending_proposals,
+    new_proposal_id,
+    to_jsonable,
+    utc_now_iso,
 )
 
 # urn:lex URNs contain `:` and `;` which collide with FastAPI path-param
@@ -108,5 +124,83 @@ def get_chunk_endpoint(urn: str, claims: ClaimsDep) -> dict:
         )
     return {
         **chunk_to_json(chunk),
+        "viewer": {"email": claims.email, "is_operator": claims.is_operator},
+    }
+
+
+# ---------------------------------------------------------------------------
+# Review submission (Phase 11.2) — write path
+# ---------------------------------------------------------------------------
+
+
+class ReviewSubmission(BaseModel):
+    """Body for POST /v1/admin/eval/queries/{id}/review."""
+
+    verdict: Literal["correct", "incorrect", "needs_followup"]
+    notes: str = Field(default="", max_length=4000)
+    suggested_gold_urns: list[str] = Field(default_factory=list, max_length=64)
+    suggested_classified_type: str | None = Field(default=None, max_length=64)
+
+
+@router.post("/eval/queries/{query_id}/review")
+def submit_review(
+    query_id: str,
+    body: ReviewSubmission,
+    claims: ClaimsDep,
+) -> dict:
+    """Submit a verdict on an existing eval row.
+
+    The verdict + notes + any URN suggestions are appended to
+    `data/review/proposals.jsonl` as a single Proposal record. This
+    endpoint NEVER edits `eval/queries.yaml` — the operator merges
+    proposals via Phase 11.4's CLI tool.
+
+    Open to any user on the admin allowlist (lawyer + operator).
+    """
+    # Validate the query_id exists. Reviews referencing a deleted
+    # row would clutter the queue.
+    rows = load_eval_queries()
+    if not any(r.id == query_id for r in rows):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"eval query not found: {query_id}",
+        )
+
+    proposal = Proposal(
+        id=new_proposal_id(),
+        ts=utc_now_iso(),
+        reviewer_email=claims.email,
+        is_operator=claims.is_operator,
+        kind="review",
+        query_id=query_id,
+        verdict=body.verdict,
+        notes=body.notes,
+        suggested_gold_urns=tuple(body.suggested_gold_urns),
+        suggested_classified_type=body.suggested_classified_type,
+    )
+    append_proposal(proposal)
+    return {
+        "ok": True,
+        "proposal": to_jsonable(proposal),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Proposals queue (operator-only) — Phase 11.2
+# ---------------------------------------------------------------------------
+
+
+@router.get("/proposals")
+def list_proposals(claims: ClaimsDep) -> dict:
+    """List pending proposals (not yet merged into eval/queries.yaml).
+
+    Operator-only. Used by the /proposals page in the UI + by the
+    Phase 11.4 merge-tool CLI for its interactive prompts.
+    """
+    require_operator(claims)
+    pending = load_pending_proposals()
+    return {
+        "total": len(pending),
+        "proposals": [to_jsonable(p) for p in pending],
         "viewer": {"email": claims.email, "is_operator": claims.is_operator},
     }
