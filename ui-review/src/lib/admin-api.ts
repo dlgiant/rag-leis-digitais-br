@@ -60,14 +60,29 @@ export async function adminFetch<T = unknown>(
       }
     }
   }
-  const resp = await fetch(url.href, {
-    method: opts.method ?? "GET",
-    headers: {
-      Authorization: `Bearer ${opts.token}`,
-      "Content-Type": "application/json",
-    },
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-  });
+  let resp: Response;
+  try {
+    resp = await fetch(url.href, {
+      method: opts.method ?? "GET",
+      headers: {
+        Authorization: `Bearer ${opts.token}`,
+        "Content-Type": "application/json",
+      },
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+    });
+  } catch (e) {
+    // Node 20's fetch throws "fetch failed" with the actual cause
+    // (ECONNREFUSED, ENOTFOUND, AbortError, TLS error, etc.) in
+    // err.cause. Surface it so deploy debugging doesn't require
+    // SSH into the runtime.
+    const err = e as Error & { cause?: { code?: string; message?: string; name?: string } };
+    const causeCode = err.cause?.code ?? err.cause?.name ?? "unknown";
+    const causeMsg = err.cause?.message ?? "";
+    throw new AdminApiError(
+      0,
+      `fetch failed → ${url.href} (cause: ${causeCode}${causeMsg ? `: ${causeMsg.slice(0, 200)}` : ""})`,
+    );
+  }
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");
     throw new AdminApiError(resp.status, text);
