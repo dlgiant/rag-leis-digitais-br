@@ -165,7 +165,8 @@ const hasNext = data ? nextOffset < data.total : false;
                     required
                     inputmode="numeric"
                     placeholder="dd/mm/aaaa"
-                    pattern="\d{2}/\d{2}/\d{4}"
+                    pattern="\d{1,2}/\d{1,2}/\d{4}"
+                    title="Digite a data no formato dd/mm/aaaa — ex: 21/05/2026 ou 1/5/2026"
                     maxlength="10"
                     autocomplete="off"
                   />
@@ -209,6 +210,48 @@ const hasNext = data ? nextOffset < data.total : false;
 </Layout>
 
 <script>
+  // Localize the browser's native HTML5 validation popups to Portuguese.
+  // Without this, Chrome/Safari show "Please fill out this field." etc.
+  // in the browser language regardless of <html lang="pt-BR">.
+  //
+  // Pattern: on `invalid`, inspect el.validity and set a PT message via
+  // setCustomValidity. On `input`, clear the custom message so the
+  // browser can re-evaluate validity natively next time.
+  document.addEventListener("invalid", (e) => {
+    const el = e.target;
+    if (!(el instanceof HTMLInputElement) &&
+        !(el instanceof HTMLTextAreaElement) &&
+        !(el instanceof HTMLSelectElement)) return;
+    if (!el.form || !el.form.classList.contains("annotate-form")) return;
+    const v = el.validity;
+    let msg = "";
+    if (v.valueMissing) {
+      msg = "Este campo é obrigatório.";
+    } else if (v.patternMismatch) {
+      msg = el.title || "Formato inválido.";
+    } else if (v.tooShort) {
+      msg = `Mínimo de ${(el as HTMLInputElement).minLength} caracteres.`;
+    } else if (v.tooLong) {
+      msg = `Máximo de ${(el as HTMLInputElement).maxLength} caracteres.`;
+    } else if (v.typeMismatch) {
+      msg = "Formato inválido para este campo.";
+    } else if (v.rangeOverflow) {
+      msg = "Valor acima do máximo permitido.";
+    } else if (v.rangeUnderflow) {
+      msg = "Valor abaixo do mínimo permitido.";
+    }
+    if (msg) el.setCustomValidity(msg);
+  }, { capture: true });
+
+  document.addEventListener("input", (e) => {
+    const el = e.target;
+    if (!(el instanceof HTMLInputElement) &&
+        !(el instanceof HTMLTextAreaElement) &&
+        !(el instanceof HTMLSelectElement)) return;
+    if (!el.form || !el.form.classList.contains("annotate-form")) return;
+    el.setCustomValidity("");
+  });
+
   // Phase 12.2 — annotation form submit. Event-delegated on document
   // (Astro view-transition safety).
   document.addEventListener("submit", async (e) => {
@@ -229,18 +272,19 @@ const hasNext = data ? nextOffset < data.total : false;
 
     const formData = new FormData(target);
     const desdeBr = (formData.get("desde") ?? "").toString().trim();
-    // Convert dd/mm/yyyy → yyyy-mm-dd for the API. Validates the
-    // format AND the calendar value (rejects 31/02/2026, 13/13/2026,
-    // etc.). The backend expects ISO; client converts here so the
-    // form UX stays Brazilian-native (the lawyer types BR format).
-    const brMatch = desdeBr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    // Convert dd/mm/yyyy → yyyy-mm-dd for the API. Accepts 1-2 digit
+    // day/month (so "1/5/2026" works as well as "21/05/2026"). Zero-
+    // pads single digits, then round-trip-validates the calendar
+    // value (rejects 31/02/2026, 13/13/2026, etc.).
+    const brMatch = desdeBr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     let desdeIso = "";
     if (brMatch) {
-      const [, dd, mm, yyyy] = brMatch;
+      const [, ddRaw, mmRaw, yyyy] = brMatch;
+      const dd = ddRaw.padStart(2, "0");
+      const mm = mmRaw.padStart(2, "0");
       const d = new Date(`${yyyy}-${mm}-${dd}T00:00:00Z`);
-      // Round-trip check: the constructed date must parse back to the
-      // same yyyy-mm-dd. Catches 31/02/2026 (auto-corrects to 03/03)
-      // or 32/01/2026 (becomes 01/02).
+      // Round-trip check: catches 31/02/2026 (Date auto-corrects to
+      // 03/03), 32/01/2026 (becomes 01/02), etc.
       const roundTrip = d.toISOString().slice(0, 10);
       if (roundTrip === `${yyyy}-${mm}-${dd}`) {
         desdeIso = roundTrip;
@@ -261,7 +305,9 @@ const hasNext = data ? nextOffset < data.total : false;
       return;
     }
     if (!body.desde) {
-      statusEl.textContent = "Data inválida. Use o formato dd/mm/aaaa (ex: 21/05/2026).";
+      statusEl.textContent =
+        "Data inválida. Use o formato dd/mm/aaaa (ex: 21/05/2026). " +
+        "Verifique também se o dia e o mês existem.";
       statusEl.setAttribute("data-state", "error");
       return;
     }
