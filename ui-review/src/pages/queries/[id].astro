@@ -909,7 +909,11 @@ const lexmlUrn = (urn: string) => {
     const target = e.target;
     if (!(target instanceof HTMLFormElement)) return;
     if (target.id !== "review-form") return;
+    // Capture phase + stopImmediatePropagation so Astro's <ClientRouter />
+    // doesn't intercept the submit and swap the page body. See
+    // hierarchy.astro for the full explanation.
     e.preventDefault();
+    e.stopImmediatePropagation();
 
     const queryId = target.dataset.queryId;
     if (!queryId) return;
@@ -973,7 +977,7 @@ const lexmlUrn = (urn: string) => {
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
-  });
+  }, { capture: true });
 
   // Phase 11.3 — refine-form submit. Same event-delegated pattern as
   // the review form (survives Astro view transitions). Posts to
@@ -984,6 +988,7 @@ const lexmlUrn = (urn: string) => {
     if (!(target instanceof HTMLFormElement)) return;
     if (target.id !== "refine-form") return;
     e.preventDefault();
+    e.stopImmediatePropagation();
 
     const queryId = target.dataset.queryId;
     if (!queryId) return;
@@ -1080,7 +1085,7 @@ const lexmlUrn = (urn: string) => {
     } finally {
       if (runBtn) runBtn.disabled = false;
     }
-  });
+  }, { capture: true });
 
   function escapeHtml(s: string): string {
     return s

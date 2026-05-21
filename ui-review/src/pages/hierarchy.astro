@@ -62,8 +62,6 @@ import Layout from "../layouts/Layout.astro";
       </div>
     </form>
 
-    <div id="probe-debug" class="probe-debug muted small mono"></div>
-
     <div id="probe-result" class="probe-result" hidden>
       <header class="probe-result-header">
         <span class="label-eyebrow">RESULTADO</span>
@@ -121,17 +119,6 @@ import Layout from "../layouts/Layout.astro";
     return String(s ?? "").replace(/"/g, "&quot;");
   }
 
-  function debugLog(msg: string) {
-    const dbg = document.getElementById("probe-debug");
-    if (dbg) {
-      const line = document.createElement("div");
-      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-      dbg.appendChild(line);
-    }
-    // also log to console for devtools users
-    console.log("[hierarchy-probe]", msg);
-  }
-
   // Capture-phase listener so we run BEFORE Astro's <ClientRouter /> sees
   // the submit event. Without `capture: true`, ClientRouter intercepts the
   // form submission as an SPA navigation, fetches /hierarchy with the form
@@ -144,7 +131,6 @@ import Layout from "../layouts/Layout.astro";
     if (target.id !== "hierarchy-form") return;
     e.preventDefault();
     e.stopImmediatePropagation();
-    debugLog("submit handler fired");
 
     const runBtn = document.getElementById("run-probe-btn") as HTMLButtonElement | null;
     const statusEl = document.getElementById("probe-status");
@@ -152,10 +138,7 @@ import Layout from "../layouts/Layout.astro";
     const retrievedList = document.getElementById("probe-retrieved");
     const summaryEl = document.getElementById("probe-summary");
     const flagSection = document.getElementById("flag-form-section");
-    if (!statusEl || !resultEl || !retrievedList || !summaryEl || !flagSection) {
-      debugLog(`MISSING elements: statusEl=${!!statusEl} resultEl=${!!resultEl} retrievedList=${!!retrievedList} summaryEl=${!!summaryEl} flagSection=${!!flagSection}`);
-      return;
-    }
+    if (!statusEl || !resultEl || !retrievedList || !summaryEl || !flagSection) return;
 
     const formData = new FormData(target);
     const query = (formData.get("query") ?? "").toString().trim();
@@ -174,24 +157,20 @@ import Layout from "../layouts/Layout.astro";
     flagSection.setAttribute("hidden", "");
 
     try {
-      debugLog(`POST /api/admin/hierarchy/probe { query: "${query.slice(0, 40)}…", top_k: ${topK} }`);
       const resp = await fetch("/api/admin/hierarchy/probe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query, top_k: topK, save_as_proposal: false }),
       });
-      debugLog(`response status: ${resp.status}`);
       if (!resp.ok) {
         const text = await resp.text().catch(() => "");
         throw new Error(`HTTP ${resp.status}: ${text.slice(0, 200)}`);
       }
       const body = await resp.json();
-      debugLog(`body keys: ${Object.keys(body).join(", ")}`);
       const retrieved = Array.isArray(body?.retrieved) ? body.retrieved : null;
       if (!retrieved) {
-        throw new Error(`response.retrieved is not an array: ${typeof body?.retrieved} ${JSON.stringify(body).slice(0, 200)}`);
+        throw new Error(`response.retrieved is not an array`);
       }
-      debugLog(`retrieved.length = ${retrieved.length}`);
 
       retrievedList.innerHTML = "";
       for (const item of retrieved) {
@@ -217,7 +196,6 @@ import Layout from "../layouts/Layout.astro";
         `;
         retrievedList.appendChild(li);
       }
-      debugLog(`appended ${retrieved.length} <li> to #probe-retrieved`);
 
       const bestRank = body.best_rank_in_top_k;
       const rankCounts: Record<number, number> = {};
@@ -234,12 +212,10 @@ import Layout from "../layouts/Layout.astro";
       window.__lastProbeQuery = query;
       resultEl.removeAttribute("hidden");
       flagSection.removeAttribute("hidden");
-      debugLog("removed [hidden] from #probe-result and #flag-form-section");
       statusEl.textContent = "Probe concluído.";
       statusEl.setAttribute("data-state", "success");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      debugLog(`CAUGHT: ${msg}`);
       statusEl.textContent = `Falha: ${msg}`;
       statusEl.setAttribute("data-state", "error");
     } finally {
@@ -308,18 +284,6 @@ import Layout from "../layouts/Layout.astro";
 
 <style>
   .intro { max-width: 75ch; }
-
-  .probe-debug {
-    margin: 0.75rem 0;
-    padding: 0.4rem 0.6rem;
-    border: 1px dashed var(--border);
-    background: var(--surface-2);
-    max-height: 8rem;
-    overflow-y: auto;
-    font-size: 0.78rem;
-  }
-  .probe-debug:empty { display: none; }
-  .probe-debug > div { padding: 0.05rem 0; }
 
   .probe-form {
     display: flex;

@@ -210,7 +210,10 @@ const hasNext = data ? nextOffset < data.total : false;
     const target = e.target;
     if (!(target instanceof HTMLFormElement)) return;
     if (!target.classList.contains("annotate-form")) return;
+    // Capture phase + stopImmediatePropagation so Astro's <ClientRouter />
+    // doesn't intercept and swap the body. See hierarchy.astro for context.
     e.preventDefault();
+    e.stopImmediatePropagation();
 
     const chunkUrn = target.dataset.chunkUrn;
     if (!chunkUrn) return;
@@ -265,7 +268,7 @@ const hasNext = data ? nextOffset < data.total : false;
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
-  });
+  }, { capture: true });
 </script>
 
 <style>
