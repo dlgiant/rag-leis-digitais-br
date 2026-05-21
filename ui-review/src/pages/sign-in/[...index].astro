@@ -1,6 +1,146 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { SignIn } from "@clerk/astro/components";
+
+// Match Clerk's <SignIn /> styling to the project's mission-control
+// aesthetic: navy/cream palette, sharp corners (border-radius: 0),
+// uppercase mono buttons.
+//
+// Clerk's `appearance` prop has two layers:
+//   - variables  → semantic color tokens (Clerk maps to CSS vars internally)
+//   - elements   → per-element class overrides using Clerk's stable
+//                  `cl-*` selector names. We pass arbitrary CSS via
+//                  the `style` shorthand (Clerk supports either a
+//                  class name or a style object).
+const clerkAppearance = {
+  variables: {
+    // Project palette (mirrors Layout.astro :root vars exactly so any
+    // future palette tweak only needs to update one place — but Clerk
+    // wants resolved hex values, not var() references, so this dups
+    // the values from Layout.astro's :root block).
+    colorPrimary: "#1e3a5f",       // --accent
+    colorText: "#0a1a2e",          // --fg
+    colorTextSecondary: "#6a7689", // --muted
+    colorBackground: "#ffffff",    // --bg-card
+    colorInputBackground: "#ffffff",
+    colorInputText: "#0a1a2e",
+    colorDanger: "#8b1f1f",
+    colorSuccess: "#2d5d3f",
+    colorWarning: "#a85410",
+    colorNeutral: "#0a1a2e",
+    borderRadius: "0",
+    fontFamily: "inherit",
+    fontFamilyButtons: "inherit",
+    fontSize: "0.95rem",
+    spacingUnit: "0.95rem",
+  },
+  elements: {
+    // The outer card. Replace default shadow with a sharp 1px border.
+    card: {
+      boxShadow: "none",
+      border: "1px solid #c5bfb5",
+      borderRadius: 0,
+      background: "#ffffff",
+    },
+    // We have our own header in the page; hide Clerk's.
+    header: { display: "none" },
+    headerTitle: { display: "none" },
+    headerSubtitle: { display: "none" },
+
+    // Primary submit button — navy bg, white text, uppercase mono.
+    formButtonPrimary: {
+      background: "#1e3a5f",
+      color: "#ffffff",
+      borderRadius: 0,
+      textTransform: "uppercase",
+      letterSpacing: "0.06em",
+      fontWeight: 600,
+      fontFamily:
+        "ui-monospace, 'JetBrains Mono', Menlo, monospace",
+      transition: "background 0.12s ease",
+      boxShadow: "none",
+      "&:hover": { background: "#14283f" },
+      "&:focus": { background: "#14283f", outline: "2px solid #c47318", outlineOffset: "1px" },
+      "&:active": { background: "#14283f", transform: "translateY(1px)" },
+    },
+
+    // Social-login buttons (Google, GitHub, etc.) — same sharp aesthetic
+    // as the primary button but inverted (cream bg, navy text).
+    socialButtonsBlockButton: {
+      background: "#ebe7df",
+      color: "#0a1a2e",
+      border: "1px solid #c5bfb5",
+      borderRadius: 0,
+      textTransform: "uppercase",
+      letterSpacing: "0.05em",
+      fontWeight: 600,
+      fontFamily:
+        "ui-monospace, 'JetBrains Mono', Menlo, monospace",
+      boxShadow: "none",
+      "&:hover": { background: "#dde3ec" },
+    },
+    socialButtonsBlockButtonText: {
+      fontWeight: 600,
+    },
+
+    // Divider between social + email/password
+    dividerLine: { background: "#c5bfb5" },
+    dividerText: {
+      color: "#6a7689",
+      textTransform: "uppercase",
+      letterSpacing: "0.06em",
+      fontSize: "0.78rem",
+      fontFamily: "ui-monospace, monospace",
+    },
+
+    // Field labels: ALL-CAPS mono eyebrow style
+    formFieldLabel: {
+      color: "#6a7689",
+      textTransform: "uppercase",
+      letterSpacing: "0.06em",
+      fontSize: "0.72rem",
+      fontWeight: 600,
+      fontFamily: "ui-monospace, monospace",
+    },
+    formFieldInput: {
+      borderRadius: 0,
+      border: "1px solid #c5bfb5",
+      background: "#ffffff",
+      color: "#0a1a2e",
+      boxShadow: "none",
+      "&:focus": {
+        outline: "2px solid #c47318",
+        outlineOffset: "-2px",
+        border: "1px solid #c5bfb5",
+      },
+    },
+
+    // Links (footer "Don't have an account?" → "Sign up", etc.)
+    footerActionLink: {
+      color: "#c47318",
+      fontWeight: 600,
+      textDecoration: "underline",
+      "&:hover": { color: "#a85410" },
+    },
+    footerActionText: { color: "#6a7689" },
+
+    // Form-field error message
+    formFieldErrorText: { color: "#8b1f1f", fontSize: "0.82rem" },
+
+    // Identity-preview "you're signing in as..." block
+    identityPreview: {
+      background: "#ebe7df",
+      border: "1px solid #c5bfb5",
+      borderRadius: 0,
+    },
+    identityPreviewText: { color: "#0a1a2e" },
+    identityPreviewEditButton: { color: "#c47318" },
+
+    // Clerk's "Secured by Clerk" footer chip — keep but make it
+    // muted so it blends with the page rather than dominating.
+    footer: { display: "none" },
+  },
+};
 ---
 
 <Layout title="Entrar" hideHeader={true}>
@@ -21,6 +161,7 @@ import { SignIn } from "@clerk/astro/components";
         path="/sign-in"
         signUpUrl="/sign-up"
         forceRedirectUrl="/"
+        appearance={clerkAppearance}
       />
     </div>
 
@@ -78,5 +219,33 @@ import { SignIn } from "@clerk/astro/components";
       color: var(--muted);
       line-height: 1.55;
     }
+  </style>
+
+  <!--
+    Belt-and-suspenders global overrides for Clerk classes that the
+    appearance prop doesn't reach cleanly (Clerk version drift can
+    rename internal class names; the appearance API targets stable
+    names, but we add a global safety net here for the most-visible
+    selectors). is:global because Clerk renders the widget outside
+    the .astro element's scope.
+  -->
+  <style is:global>
+    .cl-card { border-radius: 0 !important; box-shadow: none !important; }
+    .cl-formButtonPrimary,
+    .cl-socialButtonsBlockButton,
+    .cl-formFieldInput {
+      border-radius: 0 !important;
+    }
+    .cl-formButtonPrimary {
+      background: #1e3a5f !important;
+      color: #ffffff !important;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+    }
+    .cl-formButtonPrimary:hover {
+      background: #14283f !important;
+    }
+    .cl-internal-icon path { /* keep icons crisp */ }
   </style>
 </Layout>
