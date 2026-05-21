@@ -35,37 +35,44 @@ const clerkAppearance = {
     spacingUnit: "0.95rem",
   },
   elements: {
-    // The outer card. Replace default shadow with a sharp 1px border.
+    // The outer card. Deep navy background, horizontal-only borders
+    // (top + bottom in amber), modern soft drop shadow. Reads as a
+    // mission-control banner on the paper-cream page background.
     card: {
-      boxShadow: "none",
-      border: "1px solid #c5bfb5",
+      boxShadow: "0 25px 50px -12px rgba(10, 26, 46, 0.45), 0 0 0 1px rgba(196, 115, 24, 0.15)",
+      borderTop: "2px solid #c47318",
+      borderBottom: "2px solid #c47318",
+      borderLeft: "none",
+      borderRight: "none",
       borderRadius: 0,
-      background: "#ffffff",
+      background: "#0a1a2e",
+      padding: "2.25rem 1.75rem",
     },
     // We have our own header in the page; hide Clerk's.
     header: { display: "none" },
     headerTitle: { display: "none" },
     headerSubtitle: { display: "none" },
 
-    // Primary submit button — navy bg, white text, uppercase mono.
+    // Primary submit button — amber to stand out against the dark
+    // navy card (navy-on-navy would blend).
     formButtonPrimary: {
-      background: "#1e3a5f",
-      color: "#ffffff",
+      background: "#c47318",
+      color: "#0a1a2e",
       borderRadius: 0,
       textTransform: "uppercase",
       letterSpacing: "0.06em",
-      fontWeight: 600,
+      fontWeight: 700,
       fontFamily:
         "ui-monospace, 'JetBrains Mono', Menlo, monospace",
       transition: "background 0.12s ease",
       boxShadow: "none",
-      "&:hover": { background: "#14283f" },
-      "&:focus": { background: "#14283f", outline: "2px solid #c47318", outlineOffset: "1px" },
-      "&:active": { background: "#14283f", transform: "translateY(1px)" },
+      "&:hover": { background: "#a85410" },
+      "&:focus": { background: "#a85410", outline: "2px solid #f4e6d2", outlineOffset: "1px" },
+      "&:active": { background: "#a85410", transform: "translateY(1px)" },
     },
 
-    // Social-login buttons (Google, GitHub, etc.) — same sharp aesthetic
-    // as the primary button but inverted (cream bg, navy text).
+    // Social-login buttons (Google, GitHub) — light cream bg / navy
+    // text so they POP against the dark card.
     socialButtonsBlockButton: {
       background: "#ebe7df",
       color: "#0a1a2e",
@@ -83,19 +90,19 @@ const clerkAppearance = {
       fontWeight: 600,
     },
 
-    // Divider between social + email/password
-    dividerLine: { background: "#c5bfb5" },
+    // Divider between social + email/password — light against dark card
+    dividerLine: { background: "rgba(197, 191, 181, 0.25)" },
     dividerText: {
-      color: "#6a7689",
+      color: "#c5bfb5",
       textTransform: "uppercase",
       letterSpacing: "0.06em",
       fontSize: "0.78rem",
       fontFamily: "ui-monospace, monospace",
     },
 
-    // Field labels: ALL-CAPS mono eyebrow style
+    // Field labels: ALL-CAPS mono eyebrow style, light gray for dark bg
     formFieldLabel: {
-      color: "#6a7689",
+      color: "#c5bfb5",
       textTransform: "uppercase",
       letterSpacing: "0.06em",
       fontSize: "0.72rem",
@@ -104,30 +111,32 @@ const clerkAppearance = {
     },
     formFieldInput: {
       borderRadius: 0,
-      border: "1px solid #c5bfb5",
+      border: "1px solid #2c3a52",
       background: "#ffffff",
       color: "#0a1a2e",
       boxShadow: "none",
       "&:focus": {
         outline: "2px solid #c47318",
         outlineOffset: "-2px",
-        border: "1px solid #c5bfb5",
+        border: "1px solid #2c3a52",
       },
     },
 
-    // Links (footer "Don't have an account?" → "Sign up", etc.)
+    // Links (footer "Don't have an account?" → "Sign up", etc.) —
+    // amber on dark card.
     footerActionLink: {
       color: "#c47318",
       fontWeight: 600,
       textDecoration: "underline",
-      "&:hover": { color: "#a85410" },
+      "&:hover": { color: "#f4e6d2" },
     },
-    footerActionText: { color: "#6a7689" },
+    footerActionText: { color: "#c5bfb5" },
 
-    // Form-field error message
-    formFieldErrorText: { color: "#8b1f1f", fontSize: "0.82rem" },
+    // Form-field error message — light red for dark bg
+    formFieldErrorText: { color: "#f4ddc2", fontSize: "0.82rem" },
 
-    // Identity-preview "you're signing in as..." block
+    // Identity-preview "you're signing in as..." block — kept light
+    // so it stands out against the dark card frame.
     identityPreview: {
       background: "#ebe7df",
       border: "1px solid #c5bfb5",
@@ -230,22 +239,37 @@ const clerkAppearance = {
     the .astro element's scope.
   -->
   <style is:global>
-    .cl-card { border-radius: 0 !important; box-shadow: none !important; }
+    /* Sharp corners across every Clerk surface */
+    .cl-card,
     .cl-formButtonPrimary,
     .cl-socialButtonsBlockButton,
     .cl-formFieldInput {
       border-radius: 0 !important;
     }
+    /* Card: deep navy banner with horizontal-only amber borders +
+       modern soft shadow. Mirrors the `appearance.elements.card`
+       config; lives here too as a safety net against Clerk class
+       drift across versions. */
+    .cl-card {
+      background: #0a1a2e !important;
+      border-top: 2px solid #c47318 !important;
+      border-bottom: 2px solid #c47318 !important;
+      border-left: none !important;
+      border-right: none !important;
+      box-shadow: 0 25px 50px -12px rgba(10, 26, 46, 0.45),
+                  0 0 0 1px rgba(196, 115, 24, 0.15) !important;
+    }
+    /* Primary button: amber against the dark card */
     .cl-formButtonPrimary {
-      background: #1e3a5f !important;
-      color: #ffffff !important;
+      background: #c47318 !important;
+      color: #0a1a2e !important;
       text-transform: uppercase;
       letter-spacing: 0.06em;
+      font-weight: 700;
       font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
     }
     .cl-formButtonPrimary:hover {
-      background: #14283f !important;
+      background: #a85410 !important;
     }
-    .cl-internal-icon path { /* keep icons crisp */ }
   </style>
 </Layout>
