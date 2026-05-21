@@ -51,11 +51,15 @@ Supported proposal kinds in 11.4 MVP:
   - `new_row`  — adds a new eval row from new_query_text + new_qtype +
                   new_core_urns + new_supporting_urns
 
-NOT supported in 11.4 MVP (deferred to 11.4.1 or 11.3):
-  - `refinement` — would need to also support adding a new row from
-                    refined_query_text. Phase 11.3 builds the inline-
-                    refinement UI; once that ships, the merge tool
-                    handles refinement proposals same as new_row.
+Phase 11.3 update:
+  - `refinement` — proposals from the inline-refinement UI now treated
+                    same as `new_row` on accept: the refined_query_text
+                    becomes the new row's query; new_core_urns (which
+                    the refine endpoint pre-populated from the
+                    retriever's actual top-k hits) become the new row's
+                    `relevant`. The operator can still skip+merge
+                    refinements without promotion if they want to keep
+                    them as informational notes.
 """
 from __future__ import annotations
 
@@ -155,6 +159,47 @@ def apply_review_to_yaml(rows: list[dict], proposal: Proposal) -> str:
         return "no YAML change (verdict acknowledged; row left as-is)"
 
     return "; ".join(changes)
+
+
+def apply_refinement_to_yaml(rows: list[dict], proposal: Proposal) -> str:
+    """Apply a kind='refinement' proposal: promote to a new eval row.
+
+    Treats the refinement's `refined_query_text` as the new row's
+    query and its `new_core_urns` (captured at refine-time by the
+    retriever) as the new row's `relevant`. Reuses
+    `apply_new_row_to_yaml` by constructing an equivalent new_row-
+    shaped Proposal on the fly.
+
+    Raises ValueError if refined_query_text or new_core_urns are
+    missing.
+    """
+    if not proposal.refined_query_text:
+        raise ValueError("refinement proposal missing refined_query_text")
+    if not proposal.new_core_urns:
+        raise ValueError(
+            "refinement proposal missing new_core_urns "
+            "(should have been captured by the refine endpoint)"
+        )
+    # Synthesize a new_row-shaped proposal so we get identical YAML
+    # emission semantics (DoubleQuotedScalarString URNs, optional
+    # graded form, notes carry-over).
+    synthetic = Proposal(
+        id=proposal.id,
+        ts=proposal.ts,
+        reviewer_email=proposal.reviewer_email,
+        is_operator=proposal.is_operator,
+        kind="new_row",
+        new_query_text=proposal.refined_query_text,
+        # The original query's classified_type isn't on the refinement
+        # proposal; leave new_qtype empty so the operator can fill it
+        # in via a manual edit later, OR (better) extend the refine
+        # endpoint to copy the original row's type. For now: missing.
+        new_qtype=None,
+        new_core_urns=proposal.new_core_urns,
+        notes=proposal.notes or "promoted from refinement proposal",
+    )
+    inner_msg = apply_new_row_to_yaml(rows, synthetic)
+    return f"promoted refinement → {inner_msg}"
 
 
 def apply_new_row_to_yaml(rows: list[dict], proposal: Proposal) -> str:
@@ -309,12 +354,10 @@ def main() -> int:
 
         if p.kind == "refinement":
             print(
-                "  ⚠  refinement proposals not supported in 11.4 MVP "
-                "(deferred to Phase 11.3 / 11.4.1). Skipping.",
+                "  ℹ  Accept → promotes refined_query_text + captured retrieved URNs "
+                "into a new eval row. Reject → discard. Skip → leave pending.",
                 file=sys.stderr,
             )
-            skipped += 1
-            continue
 
         action = prompt_action()
         if action == "quit":
@@ -338,6 +381,8 @@ def main() -> int:
                 msg = apply_review_to_yaml(rows, p)
             elif p.kind == "new_row":
                 msg = apply_new_row_to_yaml(rows, p)
+            elif p.kind == "refinement":
+                msg = apply_refinement_to_yaml(rows, p)
             else:
                 msg = f"unsupported kind {p.kind!r}"
                 raise ValueError(msg)

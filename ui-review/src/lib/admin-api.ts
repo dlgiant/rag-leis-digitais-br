@@ -219,3 +219,41 @@ export interface ProposalsListResponse {
   proposals: Proposal[];
   viewer: { email: string; is_operator: boolean };
 }
+
+// Phase 11.3 — refinement (retrieval-only re-run)
+
+export interface RefineRequestBody {
+  refined_query: string;
+  top_k?: number;
+  save_as_proposal?: boolean;
+}
+
+export interface RefineRetrievedItem {
+  rank: number;
+  urn: string;
+  score: number;
+  matches_gold: boolean;
+  snippet: string | null;
+  citation: string | null;
+  nav_text: string | null;
+}
+
+export interface RefineResponse {
+  ok: boolean;
+  original: {
+    query_id: string;
+    query: string;
+    type: string | null;
+    core_urns: string[];
+    supporting_urns: string[];
+  };
+  refined: {
+    query: string;
+    top_k: number;
+    retrieved: RefineRetrievedItem[];
+    n_matches_gold: number;
+    n_gold_total: number;
+  };
+  proposal: Proposal | null;
+  viewer: { email: string; is_operator: boolean };
+}

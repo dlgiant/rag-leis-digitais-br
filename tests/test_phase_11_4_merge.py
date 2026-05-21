@@ -21,6 +21,7 @@ from rag_leis.eval_loader import query_id as derive_query_id
 from rag_leis.proposals import Proposal
 from scripts.phase_11_4_merge_proposals import (
     apply_new_row_to_yaml,
+    apply_refinement_to_yaml,
     apply_review_to_yaml,
     find_row_by_query_id,
     load_eval,
@@ -283,3 +284,57 @@ def test_apply_and_save_roundtrips(fixture_yaml: Path):
     # Comment from the top of the file should still be there
     written = fixture_yaml.read_text(encoding="utf-8")
     assert "# Eval fixture for Phase 11.4 tests." in written
+
+
+# ---------------------------------------------------------------------------
+# apply_refinement_to_yaml (Phase 11.3 → 11.4 promotion path)
+# ---------------------------------------------------------------------------
+
+
+def test_apply_refinement_promotes_to_new_row(fixture_yaml: Path):
+    rows = load_eval(fixture_yaml)
+    initial_count = len(rows)
+    p = Proposal(
+        id="refine-1",
+        ts="2026-05-21T17:00:00+00:00",
+        reviewer_email="lawyer@example.test",
+        is_operator=False,
+        kind="refinement",
+        query_id="abc123",
+        refined_query_text="alternate phrasing — what is the LGPD definition of personal data?",
+        new_core_urns=(
+            "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1",
+            "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2",
+        ),
+    )
+    msg = apply_refinement_to_yaml(rows, p)
+    assert "promoted refinement" in msg
+    assert len(rows) == initial_count + 1
+    new_row = rows[-1]
+    assert new_row["query"] == p.refined_query_text
+    # URNs captured at refine-time become the row's relevant
+    assert list(new_row["relevant"]) == list(p.new_core_urns)
+
+
+def test_apply_refinement_missing_refined_text_raises(fixture_yaml: Path):
+    rows = load_eval(fixture_yaml)
+    p = Proposal(
+        id="x", ts="2026-05-21T00:00:00+00:00",
+        reviewer_email="x", is_operator=False, kind="refinement",
+        refined_query_text=None,
+        new_core_urns=("urn:lex:x",),
+    )
+    with pytest.raises(ValueError, match="refined_query_text"):
+        apply_refinement_to_yaml(rows, p)
+
+
+def test_apply_refinement_missing_retrieved_urns_raises(fixture_yaml: Path):
+    rows = load_eval(fixture_yaml)
+    p = Proposal(
+        id="x", ts="2026-05-21T00:00:00+00:00",
+        reviewer_email="x", is_operator=False, kind="refinement",
+        refined_query_text="some phrasing",
+        new_core_urns=(),
+    )
+    with pytest.raises(ValueError, match="new_core_urns"):
+        apply_refinement_to_yaml(rows, p)

@@ -531,3 +531,163 @@ def test_list_proposals_filters_merged(client, keypair):
     # Post-merge listing skips it
     r = client.get("/v1/admin/proposals", headers=auth_header(operator_token))
     assert r.json()["total"] == 0
+
+
+# =============================================================================
+# Phase 11.3 — POST /v1/admin/eval/queries/{id}/refine
+# =============================================================================
+
+
+class _StubPipeline:
+    """Minimal pipeline stub for refine endpoint tests.
+
+    The endpoint only calls `_retrieve(query, top_k=k)`. This stub
+    returns a deterministic list of (urn, score) tuples so tests can
+    assert on the structure of the response without spinning up the
+    real Voyage/BGE embedder + FAISS index.
+    """
+
+    def __init__(self, fixed_results: list[tuple[str, float]]):
+        self._fixed = fixed_results
+
+    def _retrieve(self, query: str, top_k: int | None = None):
+        k = top_k if top_k is not None else len(self._fixed)
+        return self._fixed[:k]
+
+
+def _inject_pipeline(client, urn_results: list[tuple[str, float]]) -> None:
+    """Attach a StubPipeline to the TestClient's underlying app.state.
+    Call this BEFORE making the refine request."""
+    client.app.state.pipeline = _StubPipeline(urn_results)
+
+
+def test_refine_requires_auth(client):
+    """No bearer token → 401."""
+    r = client.post(
+        "/v1/admin/eval/queries/some-id/refine",
+        json={"refined_query": "x"},
+    )
+    assert r.status_code == 401
+
+
+def test_refine_not_in_allowlist_returns_403(client, keypair):
+    token = make_token(keypair=keypair, email="stranger@example.com")
+    r = client.post(
+        "/v1/admin/eval/queries/some-id/refine",
+        json={"refined_query": "x"},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 403
+
+
+def test_refine_unknown_query_id_returns_404(client, keypair):
+    """404 fires before the pipeline is touched — no stub needed."""
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        "/v1/admin/eval/queries/deadbeef0000/refine",
+        json={"refined_query": "alternative phrasing"},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 404
+
+
+def test_refine_empty_query_returns_422(client, keypair):
+    """Pydantic min_length=1 rejection."""
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        "/v1/admin/eval/queries/abc/refine",
+        json={"refined_query": ""},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 422
+
+
+@skip_if_no_db
+def test_refine_happy_path_no_proposal(client, keypair):
+    """save_as_proposal=False → no DB write; just returns comparison."""
+    qid = _first_query_id(client, keypair)
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    _inject_pipeline(client, [
+        ("urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1", 0.92),
+        ("urn:lex:br:federal:lei:2018-08-14;13709~art5;inc2", 0.81),
+    ])
+    r = client.post(
+        f"/v1/admin/eval/queries/{qid}/refine",
+        json={"refined_query": "alternate phrasing", "save_as_proposal": False, "top_k": 5},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["ok"] is True
+    assert body["original"]["query_id"] == qid
+    assert body["refined"]["query"] == "alternate phrasing"
+    assert body["refined"]["top_k"] == 5
+    # Stub returned 2 results regardless of top_k=5
+    assert len(body["refined"]["retrieved"]) == 2
+    assert body["refined"]["retrieved"][0]["rank"] == 1
+    # The proposal was NOT saved
+    assert body["proposal"] is None
+    # Verify nothing landed in DB
+    from rag_leis import proposals
+    assert proposals.load_all_proposals() == []
+
+
+@skip_if_no_db
+def test_refine_with_proposal_save_creates_db_row(client, keypair):
+    """Default save_as_proposal=True → Proposal in DB with kind=refinement."""
+    qid = _first_query_id(client, keypair)
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    _inject_pipeline(client, [
+        ("urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1", 0.95),
+    ])
+    r = client.post(
+        f"/v1/admin/eval/queries/{qid}/refine",
+        json={"refined_query": "yet another phrasing"},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["proposal"]["kind"] == "refinement"
+    assert body["proposal"]["refined_query_text"] == "yet another phrasing"
+    assert body["proposal"]["query_id"] == qid
+    # Verify in DB
+    from rag_leis import proposals
+    db_rows = proposals.load_all_proposals()
+    assert len(db_rows) == 1
+    assert db_rows[0].kind == "refinement"
+    assert db_rows[0].refined_query_text == "yet another phrasing"
+
+
+@skip_if_no_db
+def test_refine_annotates_gold_matches(client, keypair):
+    """retrieved URNs that overlap with the row's gold are flagged
+    `matches_gold=True`; others `False`."""
+    qid = _first_query_id(client, keypair)
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    # First, fetch the row to learn its gold URNs (so the stub can
+    # produce one that DOES match and one that doesn't).
+    r0 = client.get(
+        f"/v1/admin/eval/queries/{qid}",
+        headers=auth_header(token),
+    )
+    assert r0.status_code == 200
+    row = r0.json()["row"]
+    gold = list(row["core_urns"]) + list(row.get("supporting_urns", []))
+    assert gold, "fixture row should have at least one gold URN"
+    matching = gold[0]
+    not_matching = "urn:lex:br:federal:lei:9999-12-31;9999~art1"
+    _inject_pipeline(client, [
+        (matching, 0.95),
+        (not_matching, 0.50),
+    ])
+    r = client.post(
+        f"/v1/admin/eval/queries/{qid}/refine",
+        json={"refined_query": "phrasing", "save_as_proposal": False},
+        headers=auth_header(token),
+    )
+    body = r.json()
+    retrieved = body["refined"]["retrieved"]
+    assert retrieved[0]["matches_gold"] is True
+    assert retrieved[1]["matches_gold"] is False
+    assert body["refined"]["n_matches_gold"] == 1
+    assert body["refined"]["n_gold_total"] == len(set(gold))
