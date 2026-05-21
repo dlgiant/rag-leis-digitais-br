@@ -56,6 +56,13 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.15.12",
     "types-PyYAML>=6.0",
+    # Phase 11.4 — ruamel.yaml for round-tripping eval/queries.yaml in
+    # the operator's merge tool (`scripts/phase_11_4_merge_proposals.py`).
+    # Preserves comments, ordering, and quoting style across writes —
+    # PyYAML would destroy the schema comment at the top of the file.
+    # Lives in dev-deps because the merge tool is operator-only; never
+    # runs on Fly.
+    "ruamel.yaml>=0.18",
 ]
 
 [tool.ruff]
