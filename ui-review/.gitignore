@@ -1,0 +1,12 @@
+# Astro / Node build artifacts
+dist/
+.astro/
+node_modules/
+
+# Vercel adapter output + local link
+.vercel/
+
+# Local env overrides
+.env
+.env.local
+.env.*.local

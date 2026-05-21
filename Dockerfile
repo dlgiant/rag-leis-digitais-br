@@ -25,6 +25,11 @@ COPY data/chunks/ ./data/chunks/
 COPY data/index/ ./data/index/
 # Vigência overlay file: used by load_chunks at startup.
 COPY data/vigencia/ ./data/vigencia/
+# Phase 11.0 — eval/queries.yaml is read at request time by the
+# `/v1/admin/eval/queries` endpoint. Required for the lawyer-review
+# UI (Phase 11.1+). The file is small (~12KB) so copying it adds
+# negligible image weight.
+COPY eval/queries.yaml ./eval/queries.yaml
 
 # Production-mode env. Runtime secrets (MARITACA_API_KEY,
 # ANTHROPIC_API_KEY, VOYAGE_API_KEY, RAG_API_KEYS) come from

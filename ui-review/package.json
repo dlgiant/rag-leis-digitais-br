@@ -1,0 +1,17 @@
+{
+  "name": "rag-leis-review",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Phase 11.1 — Internal review UI for rag-leis-digitais-br. Astro 5 + @clerk/astro + @astrojs/vercel. Lawyer audits the eval set + operator promotes refinements.",
+  "scripts": {
+    "_comment": "dev sources ../.env so local dev picks up the Clerk + backend env vars without symlinking. In Vercel production, env vars come from the project settings instead.",
+    "dev": "bash -c 'set -a && source ../.env 2>/dev/null; set +a; astro dev --host 127.0.0.1 --port 4323'",
+    "build": "astro build",
+    "preview": "astro preview --host 0.0.0.0 --port 4323"
+  },
+  "dependencies": {
+    "@astrojs/vercel": "^8",
+    "@clerk/astro": "^2",
+    "astro": "^5.0.0"
+  }
+}

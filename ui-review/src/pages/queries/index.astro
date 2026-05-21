@@ -1,0 +1,202 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { adminFetch, AdminApiError, type EvalQueriesListResponse } from "../../lib/admin-api";
+
+const auth = Astro.locals.auth();
+const token = await auth.getToken();
+
+const qtypeFilter = Astro.url.searchParams.get("qtype") || undefined;
+
+let data: EvalQueriesListResponse | null = null;
+let fetchError: string | null = null;
+if (token) {
+  try {
+    data = await adminFetch<EvalQueriesListResponse>("eval/queries", {
+      token,
+      query: { limit: 500, offset: 0, qtype: qtypeFilter },
+    });
+  } catch (e) {
+    if (e instanceof AdminApiError) {
+      fetchError = `${e.status}: ${e.bodyText.slice(0, 200)}`;
+    } else {
+      fetchError = e instanceof Error ? e.message : String(e);
+    }
+  }
+}
+
+// Available qtypes for the filter dropdown (derived from data)
+const availableQtypes = data
+  ? Array.from(new Set(data.rows.map((r) => r.qtype).filter(Boolean))).sort() as string[]
+  : [];
+---
+
+<Layout title="Queries — rag-leis review">
+  <div class="container">
+    <header class="page-header">
+      <div>
+        <h1>Queries</h1>
+        {data && (
+          <p class="muted small">
+            Mostrando {data.rows.length} de {data.total}
+            {qtypeFilter && <> (filtrado por <code>{qtypeFilter}</code>)</>}
+          </p>
+        )}
+      </div>
+      <div class="filters">
+        <form method="get" action="/queries">
+          <label for="qtype-filter" class="visually-hidden">Filtrar por tipo</label>
+          <select id="qtype-filter" name="qtype" onchange="this.form.submit()">
+            <option value="">Todos os tipos</option>
+            {availableQtypes.map((t) => (
+              <option value={t} selected={t === qtypeFilter}>{t}</option>
+            ))}
+          </select>
+        </form>
+      </div>
+    </header>
+
+    {fetchError && (
+      <div class="error">
+        <strong>Erro:</strong> <code>{fetchError}</code>
+      </div>
+    )}
+
+    {data && data.rows.length === 0 && (
+      <p class="muted">Nenhuma query encontrada para o filtro atual.</p>
+    )}
+
+    {data && data.rows.length > 0 && (
+      <table class="queries-table">
+        <thead>
+          <tr>
+            <th>Query</th>
+            <th class="col-type">Tipo</th>
+            <th class="col-urns">URNs gold</th>
+            <th class="col-action"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.rows.map((row) => (
+            <tr>
+              <td>
+                <a href={`/queries/${row.id}`} class="query-link">{row.query}</a>
+                {row.notes && <div class="muted small">{row.notes}</div>}
+              </td>
+              <td class="col-type">
+                {row.qtype && <span class="type-pill">{row.qtype}</span>}
+              </td>
+              <td class="col-urns">
+                <span class="urn-count">{row.core_urns.length}</span>
+                {row.supporting_urns.length > 0 && (
+                  <span class="muted small"> +{row.supporting_urns.length}</span>
+                )}
+              </td>
+              <td class="col-action">
+                <a href={`/queries/${row.id}`} class="action-link">→</a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .page-header h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    letter-spacing: -0.02em;
+  }
+  .page-header p { margin: 0.25rem 0 0; }
+  .filters select {
+    background: var(--bg-card);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.45rem 0.625rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .filters select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .error {
+    background: color-mix(in srgb, var(--danger) 8%, var(--bg-card));
+    border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+    border-radius: 8px;
+    padding: 0.875rem 1rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .queries-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .queries-table th, .queries-table td {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .queries-table tr:last-child td { border-bottom: none; }
+  .queries-table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .col-type { width: 140px; }
+  .col-urns { width: 90px; font-variant-numeric: tabular-nums; }
+  .col-action { width: 40px; text-align: right; }
+  .query-link {
+    color: var(--fg);
+    font-weight: 500;
+    text-decoration: none;
+    display: block;
+  }
+  .query-link:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .type-pill {
+    background: var(--code);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, monospace;
+  }
+  .urn-count {
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  .action-link {
+    color: var(--muted);
+    font-size: 1.2rem;
+    text-decoration: none;
+  }
+  .action-link:hover { color: var(--accent); }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+</style>

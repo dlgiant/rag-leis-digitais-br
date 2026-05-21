@@ -1,0 +1,200 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { adminFetch, AdminApiError, type EvalQueriesListResponse } from "../lib/admin-api";
+
+const auth = Astro.locals.auth();
+const token = await auth.getToken();
+
+let data: EvalQueriesListResponse | null = null;
+let fetchError: string | null = null;
+if (token) {
+  try {
+    data = await adminFetch<EvalQueriesListResponse>("eval/queries", {
+      token,
+      query: { limit: 500, offset: 0 },
+    });
+  } catch (e) {
+    if (e instanceof AdminApiError) {
+      fetchError = `${e.status}: ${e.bodyText.slice(0, 200)}`;
+    } else {
+      fetchError = e instanceof Error ? e.message : String(e);
+    }
+  }
+}
+
+// Counts by qtype
+const countsByType: Record<string, number> = {};
+if (data) {
+  for (const row of data.rows) {
+    const t = row.qtype ?? "(sem tipo)";
+    countsByType[t] = (countsByType[t] ?? 0) + 1;
+  }
+}
+const sortedTypes = Object.entries(countsByType).sort((a, b) => b[1] - a[1]);
+---
+
+<Layout title="Dashboard — rag-leis review">
+  <div class="container">
+    <header class="page-header">
+      <h1>Revisão do eval set</h1>
+      {data && (
+        <p class="muted">
+          Bem-vindo, <code>{data.viewer.email}</code>
+          {data.viewer.is_operator && <span class="badge badge-operator">operador</span>}
+        </p>
+      )}
+    </header>
+
+    {fetchError && (
+      <div class="error">
+        <strong>Erro ao carregar eval queries:</strong>
+        <code>{fetchError}</code>
+      </div>
+    )}
+
+    {data && (
+      <>
+        <section class="metric-cards">
+          <div class="metric-card">
+            <div class="metric-value">{data.total}</div>
+            <div class="metric-label">queries no eval</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">0</div>
+            <div class="metric-label">revisadas <span class="muted small">(Fase 11.2)</span></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">{data.total}</div>
+            <div class="metric-label">aguardando revisão</div>
+          </div>
+        </section>
+
+        <section class="by-type">
+          <h2>Por tipo</h2>
+          <ul class="type-list">
+            {sortedTypes.map(([qtype, count]) => (
+              <li>
+                <a href={`/queries?qtype=${encodeURIComponent(qtype)}`}>
+                  <span class="type-name">{qtype}</span>
+                  <span class="type-count">{count}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section class="cta">
+          <a href="/queries" class="button">Ver todas as queries →</a>
+        </section>
+      </>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .page-header { margin-bottom: 2rem; }
+  .page-header h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.875rem;
+    letter-spacing: -0.02em;
+  }
+  .page-header p { margin: 0; font-size: 0.95rem; }
+  .badge {
+    display: inline-block;
+    padding: 0.15em 0.5em;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-left: 0.5em;
+  }
+  .badge-operator {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  .error {
+    background: color-mix(in srgb, var(--danger) 8%, var(--bg-card));
+    border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+  }
+  .error code { word-break: break-all; }
+
+  .metric-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+  }
+  .metric-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .metric-label {
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  .by-type h2 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin: 0 0 0.75rem;
+  }
+  .type-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.5rem;
+  }
+  .type-list a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 0.875rem;
+    color: var(--fg);
+  }
+  .type-list a:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    text-decoration: none;
+  }
+  .type-name { font-weight: 500; }
+  .type-count {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.95rem;
+  }
+
+  .cta { display: flex; }
+  .button {
+    background: var(--accent);
+    color: white;
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  .button:hover { filter: brightness(1.1); text-decoration: none; }
+</style>
