@@ -31,6 +31,13 @@ COPY data/vigencia/ ./data/vigencia/
 # negligible image weight.
 COPY eval/queries.yaml ./eval/queries.yaml
 
+# Phase 11.2.1 — Alembic config + migrations. The FastAPI lifespan
+# runs `alembic upgrade head` against DATABASE_URL on startup; both
+# files MUST be in the image or startup crashes with "Path doesn't
+# exist: /app/migrations" and the machine never binds port 8000.
+COPY alembic.ini ./alembic.ini
+COPY migrations/ ./migrations/
+
 # Production-mode env. Runtime secrets (MARITACA_API_KEY,
 # ANTHROPIC_API_KEY, VOYAGE_API_KEY, RAG_API_KEYS) come from
 # `flyctl secrets set`, NOT baked into the image.
