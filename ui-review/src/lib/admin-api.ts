@@ -5,8 +5,18 @@
 // server-only path. Browser-side code calls `/api/admin/...` instead
 // (same-origin proxy in src/pages/api/admin/[...path].ts).
 
-const BACKEND_URL =
-  process.env.RAG_BACKEND_URL || "https://rag-leis-digitais-br.fly.dev";
+// Resolve the backend URL with defensive normalization. Empty string,
+// missing protocol, or trailing whitespace all break `new URL()`
+// silently with "Invalid URL" — surface the actual offending value
+// in the error so deploy bugs are diagnosable from one log line.
+function resolveBackendUrl(): string {
+  const raw = (process.env.RAG_BACKEND_URL ?? "").trim();
+  const candidate = raw || "https://rag-leis-digitais-br.fly.dev";
+  // Strip any trailing slashes so we control path joining
+  return candidate.replace(/\/+$/, "");
+}
+
+const BACKEND_URL = resolveBackendUrl();
 
 export interface AdminFetchOptions {
   token: string;
@@ -25,7 +35,16 @@ export async function adminFetch<T = unknown>(
   path: string,
   opts: AdminFetchOptions,
 ): Promise<T> {
-  const url = new URL(`${BACKEND_URL}/v1/admin/${path.replace(/^\//, "")}`);
+  const urlString = `${BACKEND_URL}/v1/admin/${path.replace(/^\//, "")}`;
+  let url: URL;
+  try {
+    url = new URL(urlString);
+  } catch (e) {
+    throw new AdminApiError(
+      0,
+      `Invalid backend URL ${JSON.stringify(urlString)} (BACKEND_URL resolved to ${JSON.stringify(BACKEND_URL)}; raw env var was ${JSON.stringify(process.env.RAG_BACKEND_URL ?? null)}). Check Vercel project Environment Variables.`,
+    );
+  }
   if (opts.query) {
     for (const [k, v] of Object.entries(opts.query)) {
       if (v !== undefined && v !== null && v !== "") {
