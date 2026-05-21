@@ -62,6 +62,8 @@ import Layout from "../layouts/Layout.astro";
       </div>
     </form>
 
+    <div id="probe-debug" class="probe-debug muted small mono"></div>
+
     <div id="probe-result" class="probe-result" hidden>
       <header class="probe-result-header">
         <span class="label-eyebrow">RESULTADO</span>
@@ -102,13 +104,40 @@ import Layout from "../layouts/Layout.astro";
 
 <script>
   // Phase 13 — probe + flag handlers.
-  let lastProbeQuery: string | null = null;
+  // Stored on window so the click handler can read it after submit.
+  declare global {
+    interface Window { __lastProbeQuery?: string }
+  }
+
+  function escapeHtml(s: string): string {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+  function escapeAttr(s: string): string {
+    return String(s ?? "").replace(/"/g, "&quot;");
+  }
+
+  function debugLog(msg: string) {
+    const dbg = document.getElementById("probe-debug");
+    if (dbg) {
+      const line = document.createElement("div");
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      dbg.appendChild(line);
+    }
+    // also log to console for devtools users
+    console.log("[hierarchy-probe]", msg);
+  }
 
   document.addEventListener("submit", async (e) => {
     const target = e.target;
     if (!(target instanceof HTMLFormElement)) return;
     if (target.id !== "hierarchy-form") return;
     e.preventDefault();
+    debugLog("submit handler fired");
 
     const runBtn = document.getElementById("run-probe-btn") as HTMLButtonElement | null;
     const statusEl = document.getElementById("probe-status");
@@ -116,7 +145,10 @@ import Layout from "../layouts/Layout.astro";
     const retrievedList = document.getElementById("probe-retrieved");
     const summaryEl = document.getElementById("probe-summary");
     const flagSection = document.getElementById("flag-form-section");
-    if (!statusEl || !resultEl || !retrievedList || !summaryEl || !flagSection) return;
+    if (!statusEl || !resultEl || !retrievedList || !summaryEl || !flagSection) {
+      debugLog(`MISSING elements: statusEl=${!!statusEl} resultEl=${!!resultEl} retrievedList=${!!retrievedList} summaryEl=${!!summaryEl} flagSection=${!!flagSection}`);
+      return;
+    }
 
     const formData = new FormData(target);
     const query = (formData.get("query") ?? "").toString().trim();
@@ -135,53 +167,56 @@ import Layout from "../layouts/Layout.astro";
     flagSection.setAttribute("hidden", "");
 
     try {
+      debugLog(`POST /api/admin/hierarchy/probe { query: "${query.slice(0, 40)}…", top_k: ${topK} }`);
       const resp = await fetch("/api/admin/hierarchy/probe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query, top_k: topK, save_as_proposal: false }),
       });
+      debugLog(`response status: ${resp.status}`);
       if (!resp.ok) {
         const text = await resp.text().catch(() => "");
         throw new Error(`HTTP ${resp.status}: ${text.slice(0, 200)}`);
       }
       const body = await resp.json();
-      const retrieved = body.retrieved as Array<{
-        rank_position: number;
-        urn: string;
-        document_urn: string;
-        score: number;
-        legal_rank: number;
-        legal_rank_name: string;
-        snippet: string | null;
-        citation: string | null;
-        nav_text: string | null;
-      }>;
+      debugLog(`body keys: ${Object.keys(body).join(", ")}`);
+      const retrieved = Array.isArray(body?.retrieved) ? body.retrieved : null;
+      if (!retrieved) {
+        throw new Error(`response.retrieved is not an array: ${typeof body?.retrieved} ${JSON.stringify(body).slice(0, 200)}`);
+      }
+      debugLog(`retrieved.length = ${retrieved.length}`);
 
       retrievedList.innerHTML = "";
       for (const item of retrieved) {
         const li = document.createElement("li");
-        li.className = `probe-retrieved-item rank-${item.legal_rank}`;
-        const label = item.citation || item.urn;
+        const rank = Number(item.legal_rank ?? 5);
+        li.className = `probe-retrieved-item rank-${rank}`;
+        const label = item.citation || item.urn || "";
+        const score = typeof item.score === "number" ? item.score.toFixed(3) : "?";
+        const rankPosStr = String(item.rank_position ?? 0).padStart(2, "0");
         li.innerHTML = `
           <div class="probe-retrieved-header">
             <label class="flag-checkbox-label">
-              <input type="checkbox" class="flag-checkbox" data-urn="${escapeAttr(item.urn)}" />
-              <span class="probe-rank mono">${String(item.rank_position).padStart(2, "0")}</span>
+              <input type="checkbox" class="flag-checkbox" data-urn="${escapeAttr(item.urn ?? "")}" />
+              <span class="probe-rank mono">${rankPosStr}</span>
             </label>
             <span class="probe-citation">${escapeHtml(label)}</span>
-            <span class="rank-pill rank-pill-${item.legal_rank}">RANK ${item.legal_rank} · ${escapeHtml(item.legal_rank_name)}</span>
-            <span class="probe-score mono">${item.score.toFixed(3)}</span>
+            <span class="rank-pill rank-pill-${rank}">RANK ${rank} · ${escapeHtml(item.legal_rank_name ?? "")}</span>
+            <span class="probe-score mono">${score}</span>
           </div>
           ${item.nav_text ? `<div class="probe-nav muted small mono">↳ ${escapeHtml(item.nav_text)}</div>` : ""}
           ${item.snippet ? `<div class="probe-snippet">${escapeHtml(item.snippet)}</div>` : ""}
-          <code class="probe-urn mono small muted">${escapeHtml(item.urn)}</code>
+          <code class="probe-urn mono small muted">${escapeHtml(item.urn ?? "")}</code>
         `;
         retrievedList.appendChild(li);
       }
+      debugLog(`appended ${retrieved.length} <li> to #probe-retrieved`);
+
       const bestRank = body.best_rank_in_top_k;
       const rankCounts: Record<number, number> = {};
       for (const item of retrieved) {
-        rankCounts[item.legal_rank] = (rankCounts[item.legal_rank] || 0) + 1;
+        const r = Number(item.legal_rank ?? 5);
+        rankCounts[r] = (rankCounts[r] || 0) + 1;
       }
       const distrib = Object.entries(rankCounts)
         .sort(([a], [b]) => parseInt(a) - parseInt(b))
@@ -189,13 +224,15 @@ import Layout from "../layouts/Layout.astro";
         .join(" / ");
       summaryEl.textContent = `top-${retrieved.length} · melhor rank ${bestRank ?? "—"} · ${distrib}`;
 
-      lastProbeQuery = query;
+      window.__lastProbeQuery = query;
       resultEl.removeAttribute("hidden");
       flagSection.removeAttribute("hidden");
+      debugLog("removed [hidden] from #probe-result and #flag-form-section");
       statusEl.textContent = "Probe concluído.";
       statusEl.setAttribute("data-state", "success");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      debugLog(`CAUGHT: ${msg}`);
       statusEl.textContent = `Falha: ${msg}`;
       statusEl.setAttribute("data-state", "error");
     } finally {
@@ -208,14 +245,15 @@ import Layout from "../layouts/Layout.astro";
     if (!(target instanceof HTMLElement)) return;
     if (target.id !== "submit-flag-btn") return;
 
-    if (!lastProbeQuery) {
+    const lastQuery = window.__lastProbeQuery;
+    if (!lastQuery) {
       alert("Rode um probe antes de flagar.");
       return;
     }
 
-    const checkboxes = document.querySelectorAll<HTMLInputElement>(".flag-checkbox:checked");
+    const checkboxes = document.querySelectorAll(".flag-checkbox:checked");
     const flagged: string[] = Array.from(checkboxes)
-      .map((cb) => cb.dataset.urn ?? "")
+      .map((cb) => (cb as HTMLInputElement).dataset.urn ?? "")
       .filter((u) => u.length > 0);
     if (flagged.length === 0) {
       alert("Marque ao menos um URN antes de enviar.");
@@ -237,7 +275,7 @@ import Layout from "../layouts/Layout.astro";
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: lastProbeQuery,
+          query: lastQuery,
           save_as_proposal: true,
           flagged_urns: flagged,
           notes,
@@ -259,22 +297,22 @@ import Layout from "../layouts/Layout.astro";
       btn.disabled = false;
     }
   });
-
-  function escapeHtml(s: string): string {
-    return s
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-  function escapeAttr(s: string): string {
-    return s.replace(/"/g, "&quot;");
-  }
 </script>
 
 <style>
   .intro { max-width: 75ch; }
+
+  .probe-debug {
+    margin: 0.75rem 0;
+    padding: 0.4rem 0.6rem;
+    border: 1px dashed var(--border);
+    background: var(--surface-2);
+    max-height: 8rem;
+    overflow-y: auto;
+    font-size: 0.78rem;
+  }
+  .probe-debug:empty { display: none; }
+  .probe-debug > div { padding: 0.05rem 0; }
 
   .probe-form {
     display: flex;
