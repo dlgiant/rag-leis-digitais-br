@@ -662,3 +662,141 @@ def hierarchy_probe(
         "proposal": proposal_json,
         "viewer": {"email": claims.email, "is_operator": claims.is_operator},
     }
+
+
+# ===========================================================================
+# Phase 14.0 — PII redactor audit surface
+# ===========================================================================
+#
+# The lawyer browses past pii_audit_log entries (Phase 4.2) and flags
+# cases where the regex redactor missed categories — OAB numbers,
+# processo SEI codes, eleitoral IDs, etc. Closes 🟡 #6 from
+# study/lawyer-review-checklist.md.
+#
+# IMPORTANT — LGPD note: redacted_text in pii_audit_log MAY contain
+# PII that the redactor missed (false negatives are exactly the
+# category the lawyer is hunting). Surfacing this to the lawyer is
+# a legitimate compliance-audit purpose; access is gated by the
+# admin allowlist + logged via Clerk session.
+
+
+@router.get("/pii/audit")
+def list_pii_audit(
+    claims: ClaimsDep,
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
+) -> dict:
+    """Paginated list of pii_audit_log entries (newest first).
+
+    Each entry includes the redacted_text + which categories the
+    redactor DETECTED. The UI displays this for the lawyer to flag
+    cases where additional categories should have been detected.
+    """
+    from rag_leis import db
+    if not db.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="DB pool not initialized",
+        )
+    with db.get_conn() as conn, conn.cursor() as cur:
+        cur.execute("SELECT COUNT(*) FROM pii_audit_log")
+        (total,) = cur.fetchone()
+        cur.execute(
+            """
+            SELECT id, ts, schema_version, original_hash, redacted_text,
+                   pii_types_found, n_matches
+            FROM pii_audit_log
+            ORDER BY ts DESC, id DESC
+            LIMIT %s OFFSET %s
+            """,
+            (limit, offset),
+        )
+        rows = cur.fetchall()
+    entries: list[dict] = []
+    for aid, ts, schema_version, original_hash, redacted_text, types, n_matches in rows:
+        entries.append({
+            "id": aid,
+            "ts": ts.isoformat() if hasattr(ts, "isoformat") else str(ts),
+            "schema_version": schema_version,
+            "original_hash": original_hash,
+            "redacted_text": redacted_text,
+            "pii_types_found": list(types or []),
+            "n_matches": n_matches,
+        })
+    return {
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+        "entries": entries,
+        "viewer": {"email": claims.email, "is_operator": claims.is_operator},
+    }
+
+
+# Known PII categories the redactor currently covers + the ones the
+# lawyer-review-checklist explicitly named as gaps. The UI surfaces
+# this set as a checkbox group. Free-form "other" goes in notes.
+KNOWN_PII_TYPES = (
+    # Covered by current regex (rag_leis/pii.py)
+    "cpf", "cnpj", "email", "phone", "cep", "rg",
+    # Named gaps (Phase 14 review targets)
+    "oab", "crm", "processo_sei", "processo_cnj", "eleitoral",
+    "nis", "pis", "iban", "credit_card",
+    # Catch-all for free-form types the lawyer adds via the UI
+    "other",
+)
+
+
+class PiiMissReport(BaseModel):
+    """Body for POST /v1/admin/pii/audit/{audit_id}/flag."""
+
+    # At least one category, otherwise nothing to flag.
+    missed_types: list[str] = Field(..., min_length=1, max_length=32)
+    notes: str = Field(default="", max_length=4000)
+
+
+@router.post("/pii/audit/{audit_id}/flag")
+def flag_pii_miss(
+    audit_id: int,
+    body: PiiMissReport,
+    claims: ClaimsDep,
+) -> dict:
+    """Submit a kind='pii_miss' proposal flagging the given audit
+    entry as containing PII categories that the redactor missed.
+
+    The merge tool (Phase 14.3) writes accepted flags to
+    `data/pii/missed.yaml` for the operator to use when tuning
+    regex coverage in `rag_leis/pii.py`.
+    """
+    from rag_leis import db
+    if not db.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="DB pool not initialized",
+        )
+    # Validate the audit_id exists
+    with db.get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT id FROM pii_audit_log WHERE id = %s",
+            (audit_id,),
+        )
+        if cur.fetchone() is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"pii_audit_log entry not found: {audit_id}",
+            )
+
+    proposal = Proposal(
+        id=new_proposal_id(),
+        ts=utc_now_iso(),
+        reviewer_email=claims.email,
+        is_operator=claims.is_operator,
+        kind="pii_miss",
+        notes=body.notes,
+        pii_audit_log_id=audit_id,
+        pii_missed_types=tuple(body.missed_types),
+    )
+    append_proposal(proposal)
+    return {
+        "ok": True,
+        "proposal": to_jsonable(proposal),
+    }

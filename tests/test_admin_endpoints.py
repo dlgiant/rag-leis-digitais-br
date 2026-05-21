@@ -965,3 +965,96 @@ def test_hierarchy_probe_save_creates_db_row(client, keypair):
     assert rows[0].hierarchy_query == "qual é a definição de dado pessoal?"
     assert list(rows[0].hierarchy_flagged_urns) == flagged
     assert rows[0].hierarchy_top_rank == 3
+
+
+# =============================================================================
+# Phase 14.0 — PII audit endpoints
+# =============================================================================
+
+
+def test_pii_audit_list_requires_auth(client):
+    r = client.get("/v1/admin/pii/audit")
+    assert r.status_code == 401
+
+
+def test_pii_audit_list_not_in_allowlist_returns_403(client, keypair):
+    token = make_token(keypair=keypair, email="stranger@example.com")
+    r = client.get("/v1/admin/pii/audit", headers=auth_header(token))
+    assert r.status_code == 403
+
+
+@skip_if_no_db
+def test_pii_audit_list_empty_when_no_entries(client, keypair):
+    """Fresh table → total=0, entries=[]."""
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.get("/v1/admin/pii/audit", headers=auth_header(token))
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["total"] == 0
+    assert body["entries"] == []
+
+
+def test_pii_flag_requires_auth(client):
+    r = client.post(
+        "/v1/admin/pii/audit/1/flag",
+        json={"missed_types": ["oab"]},
+    )
+    assert r.status_code == 401
+
+
+def test_pii_flag_empty_missed_types_returns_422(client, keypair):
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        "/v1/admin/pii/audit/1/flag",
+        json={"missed_types": []},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 422
+
+
+@skip_if_no_db
+def test_pii_flag_unknown_audit_id_returns_404(client, keypair):
+    """Flagging a nonexistent audit row → 404."""
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        "/v1/admin/pii/audit/999999/flag",
+        json={"missed_types": ["oab"]},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 404
+
+
+@skip_if_no_db
+def test_pii_flag_happy_path(client, keypair):
+    """Seed an audit row, flag it, verify the kind='pii_miss' proposal."""
+    # Seed via direct DB write since there's no /audit/insert endpoint
+    from rag_leis import db, proposals
+    with db.get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO pii_audit_log (ts, original_hash, redacted_text, pii_types_found, n_matches)
+            VALUES (NOW(), 'fakehash', 'OAB nº 123.456 some text', ARRAY['email']::TEXT[], 1)
+            RETURNING id
+            """,
+        )
+        (audit_id,) = cur.fetchone()
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        f"/v1/admin/pii/audit/{audit_id}/flag",
+        json={
+            "missed_types": ["oab"],
+            "notes": "OAB number visible in redacted_text; regex didn't catch it.",
+        },
+        headers=auth_header(token),
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["proposal"]["kind"] == "pii_miss"
+    assert body["proposal"]["pii_audit_log_id"] == audit_id
+    assert body["proposal"]["pii_missed_types"] == ["oab"]
+    # Verify in DB
+    rows = proposals.load_all_proposals()
+    assert len(rows) == 1
+    assert rows[0].kind == "pii_miss"
+    assert rows[0].pii_audit_log_id == audit_id
+    assert list(rows[0].pii_missed_types) == ["oab"]

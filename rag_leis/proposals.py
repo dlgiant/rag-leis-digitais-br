@@ -30,7 +30,9 @@ from typing import Literal
 
 from rag_leis.db import get_conn
 
-ProposalKind = Literal["review", "new_row", "refinement", "vigencia", "hierarchy"]
+ProposalKind = Literal[
+    "review", "new_row", "refinement", "vigencia", "hierarchy", "pii_miss",
+]
 Verdict = Literal["correct", "incorrect", "needs_followup"]
 VigenciaStatus = Literal[
     "vigente",
@@ -91,6 +93,10 @@ class Proposal:
     hierarchy_flagged_urns: tuple[str, ...] = field(default_factory=tuple)
     hierarchy_top_rank: int | None = None  # 1-5 (CF..infralegal)
 
+    # PII-miss-specific (Phase 14.0) — populated only when kind='pii_miss'
+    pii_audit_log_id: int | None = None  # FK to pii_audit_log.id
+    pii_missed_types: tuple[str, ...] = field(default_factory=tuple)
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -136,6 +142,8 @@ def to_jsonable(p: Proposal) -> dict:
         "hierarchy_query": p.hierarchy_query,
         "hierarchy_flagged_urns": list(p.hierarchy_flagged_urns),
         "hierarchy_top_rank": p.hierarchy_top_rank,
+        "pii_audit_log_id": p.pii_audit_log_id,
+        "pii_missed_types": list(p.pii_missed_types),
     }
 
 
@@ -152,7 +160,8 @@ INSERT INTO proposals (
     refined_query_text,
     vigencia_urn, vigencia_status, vigencia_fundamento, vigencia_desde,
     vigencia_descricao_curta,
-    hierarchy_query, hierarchy_flagged_urns, hierarchy_top_rank
+    hierarchy_query, hierarchy_flagged_urns, hierarchy_top_rank,
+    pii_audit_log_id, pii_missed_types
 ) VALUES (
     %s, %s, %s, %s, %s,
     %s, %s, %s, %s, %s,
@@ -160,7 +169,8 @@ INSERT INTO proposals (
     %s,
     %s, %s, %s, %s,
     %s,
-    %s, %s, %s
+    %s, %s, %s,
+    %s, %s
 )
 ON CONFLICT (id) DO NOTHING
 """
@@ -196,6 +206,8 @@ def append_proposal(p: Proposal) -> None:
                 p.hierarchy_query,
                 list(p.hierarchy_flagged_urns),
                 p.hierarchy_top_rank,
+                p.pii_audit_log_id,
+                list(p.pii_missed_types),
             ),
         )
 
@@ -212,7 +224,8 @@ _SELECT_COLUMNS = """
     refined_query_text,
     vigencia_urn, vigencia_status, vigencia_fundamento, vigencia_desde,
     vigencia_descricao_curta,
-    hierarchy_query, hierarchy_flagged_urns, hierarchy_top_rank
+    hierarchy_query, hierarchy_flagged_urns, hierarchy_top_rank,
+    pii_audit_log_id, pii_missed_types
 """
 
 
@@ -226,6 +239,7 @@ def _row_to_proposal(row: tuple) -> Proposal:
         vigencia_urn, vigencia_status, vigencia_fundamento, vigencia_desde,
         vigencia_descricao_curta,
         hierarchy_query, hierarchy_flagged_urns, hierarchy_top_rank,
+        pii_audit_log_id, pii_missed_types,
     ) = row
     # ts is a datetime from psycopg; serialize to ISO for API consistency
     ts_str = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
@@ -258,6 +272,8 @@ def _row_to_proposal(row: tuple) -> Proposal:
         hierarchy_query=hierarchy_query,
         hierarchy_flagged_urns=tuple(hierarchy_flagged_urns or ()),
         hierarchy_top_rank=hierarchy_top_rank,
+        pii_audit_log_id=pii_audit_log_id,
+        pii_missed_types=tuple(pii_missed_types or ()),
     )
 
 

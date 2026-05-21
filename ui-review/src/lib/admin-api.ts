@@ -350,3 +350,28 @@ export interface HierarchyProbeResponse {
   proposal: Proposal | null;
   viewer: { email: string; is_operator: boolean };
 }
+
+// Phase 14.0 — PII audit
+
+export interface PiiAuditEntry {
+  id: number;
+  ts: string;
+  schema_version: number;
+  original_hash: string;
+  redacted_text: string;
+  pii_types_found: string[];
+  n_matches: number;
+}
+
+export interface PiiAuditListResponse {
+  total: number;
+  offset: number;
+  limit: number;
+  entries: PiiAuditEntry[];
+  viewer: { email: string; is_operator: boolean };
+}
+
+export interface PiiMissReportBody {
+  missed_types: string[];
+  notes?: string;
+}

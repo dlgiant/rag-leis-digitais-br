@@ -79,6 +79,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_EVAL_PATH = PROJECT_ROOT / "eval" / "queries.yaml"
 DEFAULT_OVERLAYS_PATH = PROJECT_ROOT / "data" / "vigencia" / "overlays.yaml"
 DEFAULT_HIERARCHY_PATH = PROJECT_ROOT / "data" / "hierarchy" / "flagged.yaml"
+DEFAULT_PII_MISSED_PATH = PROJECT_ROOT / "data" / "pii" / "missed.yaml"
 
 
 # ---------------------------------------------------------------------------
@@ -298,6 +299,57 @@ def apply_hierarchy_to_yaml(rows: list[dict], proposal: Proposal) -> str:
     )
 
 
+def load_pii_missed_yaml(path: Path | None = None) -> list[dict]:
+    """Load `data/pii/missed.yaml` as a round-trippable list. Missing
+    file → empty list."""
+    p = path or DEFAULT_PII_MISSED_PATH
+    if not p.exists():
+        return []
+    with p.open("r", encoding="utf-8") as f:
+        loaded = _yaml().load(f)
+    return loaded if loaded is not None else []
+
+
+def save_pii_missed_yaml(data: list[dict], path: Path | None = None) -> None:
+    """Write back. Creates parent dir if missing."""
+    p = path or DEFAULT_PII_MISSED_PATH
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("w", encoding="utf-8") as f:
+        _yaml().dump(data, f)
+
+
+def apply_pii_miss_to_yaml(rows: list[dict], proposal: Proposal) -> str:
+    """Append a PII-miss flag to the audit log.
+
+    The file is informational, not a behavior-overlay: nothing in
+    the RAG pipeline reads `data/pii/missed.yaml`. The operator
+    reviews accumulated entries to add regex patterns to
+    `rag_leis/pii.py` for the uncovered categories.
+
+    Returns a short description.
+    """
+    if proposal.pii_audit_log_id is None:
+        raise ValueError("pii_miss proposal missing pii_audit_log_id")
+    if not proposal.pii_missed_types:
+        raise ValueError(
+            "pii_miss proposal missing pii_missed_types (nothing to flag)"
+        )
+
+    new_entry = {
+        "ts": proposal.ts,
+        "reviewer_email": proposal.reviewer_email,
+        "audit_log_id": proposal.pii_audit_log_id,
+        "missed_types": [DQ(t) for t in proposal.pii_missed_types],
+    }
+    if proposal.notes:
+        new_entry["notes"] = proposal.notes
+    rows.append(new_entry)
+    return (
+        f"appended PII-miss flag: {len(proposal.pii_missed_types)} "
+        f"type(s) on audit_log_id={proposal.pii_audit_log_id}"
+    )
+
+
 def apply_refinement_to_yaml(rows: list[dict], proposal: Proposal) -> str:
     """Apply a kind='refinement' proposal: promote to a new eval row.
 
@@ -464,6 +516,10 @@ def main() -> int:
         help="Path to data/hierarchy/flagged.yaml (default: %(default)s)",
     )
     parser.add_argument(
+        "--pii-missed", type=Path, default=DEFAULT_PII_MISSED_PATH,
+        help="Path to data/pii/missed.yaml (default: %(default)s)",
+    )
+    parser.add_argument(
         "--dry-run", action="store_true",
         help="Show what WOULD be applied; don't write YAML or mark merged.",
     )
@@ -492,10 +548,12 @@ def main() -> int:
     rows = load_eval(args.eval)
     overlay_rows = load_overlays_yaml(args.overlays)
     hierarchy_rows = load_hierarchy_yaml(args.hierarchy)
+    pii_missed_rows = load_pii_missed_yaml(args.pii_missed)
     accepted = rejected = skipped = 0
     eval_dirty = False
     overlays_dirty = False
     hierarchy_dirty = False
+    pii_missed_dirty = False
 
     for i, p in enumerate(pending, start=1):
         print(f"\n[{i}/{len(pending)}]", end="")
@@ -519,6 +577,13 @@ def main() -> int:
                 "Informational only; nothing in the pipeline reads this file. "
                 "The operator reviews accumulated entries to retune legal_rank.py "
                 "or add new eval rows.",
+                file=sys.stderr,
+            )
+        if p.kind == "pii_miss":
+            print(
+                "  ℹ  Accept → appends flag to data/pii/missed.yaml. Informational "
+                "only; the operator reviews accumulated entries to add regex "
+                "patterns to rag_leis/pii.py for uncovered categories.",
                 file=sys.stderr,
             )
 
@@ -555,6 +620,9 @@ def main() -> int:
             elif p.kind == "hierarchy":
                 msg = apply_hierarchy_to_yaml(hierarchy_rows, p)
                 hierarchy_dirty = True
+            elif p.kind == "pii_miss":
+                msg = apply_pii_miss_to_yaml(pii_missed_rows, p)
+                pii_missed_dirty = True
             else:
                 msg = f"unsupported kind {p.kind!r}"
                 raise ValueError(msg)
@@ -578,6 +646,9 @@ def main() -> int:
     if hierarchy_dirty and not args.dry_run:
         save_hierarchy_yaml(hierarchy_rows, args.hierarchy)
         print(f"\n✓ Wrote {args.hierarchy}")
+    if pii_missed_dirty and not args.dry_run:
+        save_pii_missed_yaml(pii_missed_rows, args.pii_missed)
+        print(f"\n✓ Wrote {args.pii_missed}")
 
     _hr(sys.stdout)
     print(f"Summary: {accepted} accepted, {rejected} rejected, {skipped} skipped.")
@@ -589,6 +660,8 @@ def main() -> int:
             affected.append(args.overlays)
         if hierarchy_dirty:
             affected.append(args.hierarchy)
+        if pii_missed_dirty:
+            affected.append(args.pii_missed)
         diff_paths = " ".join(str(p) for p in affected)
         print(
             f"\nNext steps:\n"

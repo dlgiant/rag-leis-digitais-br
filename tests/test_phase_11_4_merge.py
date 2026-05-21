@@ -499,3 +499,56 @@ def test_apply_hierarchy_empty_flagged_raises():
     )
     with pytest.raises(ValueError, match="flagged_urns"):
         apply_hierarchy_to_yaml(rows, p)
+
+
+# ---------------------------------------------------------------------------
+# Phase 14.0 — apply_pii_miss_to_yaml (data/pii/missed.yaml writes)
+# ---------------------------------------------------------------------------
+
+
+def test_apply_pii_miss_appends_entry():
+    from scripts.phase_11_4_merge_proposals import apply_pii_miss_to_yaml
+    rows: list[dict] = []
+    p = Proposal(
+        id="pii-test-1",
+        ts="2026-05-21T19:00:00+00:00",
+        reviewer_email="lawyer@example.test",
+        is_operator=False,
+        kind="pii_miss",
+        notes="OAB number visible in redacted_text",
+        pii_audit_log_id=42,
+        pii_missed_types=("oab", "processo_sei"),
+    )
+    msg = apply_pii_miss_to_yaml(rows, p)
+    assert "appended" in msg
+    assert len(rows) == 1
+    entry = rows[0]
+    assert entry["audit_log_id"] == 42
+    assert list(entry["missed_types"]) == ["oab", "processo_sei"]
+    assert entry["notes"] == p.notes
+
+
+def test_apply_pii_miss_missing_audit_id_raises():
+    from scripts.phase_11_4_merge_proposals import apply_pii_miss_to_yaml
+    rows: list[dict] = []
+    p = Proposal(
+        id="x", ts="2026-05-21T00:00:00+00:00",
+        reviewer_email="x", is_operator=False, kind="pii_miss",
+        pii_audit_log_id=None,
+        pii_missed_types=("oab",),
+    )
+    with pytest.raises(ValueError, match="pii_audit_log_id"):
+        apply_pii_miss_to_yaml(rows, p)
+
+
+def test_apply_pii_miss_empty_types_raises():
+    from scripts.phase_11_4_merge_proposals import apply_pii_miss_to_yaml
+    rows: list[dict] = []
+    p = Proposal(
+        id="x", ts="2026-05-21T00:00:00+00:00",
+        reviewer_email="x", is_operator=False, kind="pii_miss",
+        pii_audit_log_id=1,
+        pii_missed_types=(),
+    )
+    with pytest.raises(ValueError, match="pii_missed_types"):
+        apply_pii_miss_to_yaml(rows, p)
