@@ -1,0 +1,399 @@
+---
+// Phase 13 — hierarchy masking review surface.
+//
+// The lawyer types a query, sees retrieval annotated with each chunk's
+// legal_rank (1=CF, 5=infralegal). Lower ranks = stronger normative
+// force. The page highlights cases where a higher-rank source (e.g.
+// LGPD/rank 3) is missing from the top-k OR a lower-rank source
+// (e.g. ANPD Resolução/rank 5) is dominating. Lawyer can flag a
+// set of URNs as a kind=hierarchy proposal for the operator.
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Hierarquia">
+  <div class="container">
+    <header class="page-header">
+      <div>
+        <span class="label-eyebrow">HIERARQUIA / 04</span>
+        <h1>Probe de hierarquia normativa</h1>
+        <p class="muted small intro">
+          Digite uma consulta. Veja os top-k chunks recuperados, cada um
+          com sua <strong>rank legal</strong> (1=Constituição … 5=infralegal).
+          Marque os chunks onde uma fonte de rank mais baixo está
+          indevidamente dominando a recuperação — ou onde uma fonte de
+          rank mais alto deveria ter aparecido mas não apareceu.
+        </p>
+      </div>
+    </header>
+
+    <form id="hierarchy-form" class="probe-form">
+      <div class="field">
+        <label for="query" class="label-eyebrow">QUERY</label>
+        <textarea
+          id="query"
+          name="query"
+          rows="3"
+          required
+          minlength="1"
+          maxlength="2000"
+          placeholder="Ex: qual a definição de dado pessoal segundo a LGPD?"
+        ></textarea>
+      </div>
+
+      <div class="probe-controls">
+        <div class="field field-inline">
+          <label for="top-k" class="label-eyebrow">TOP-K</label>
+          <input
+            id="top-k"
+            name="top_k"
+            type="number"
+            value="10"
+            min="1"
+            max="50"
+          />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="button button-primary" id="run-probe-btn">
+          RODAR PROBE <span class="button-arrow">→</span>
+        </button>
+        <span id="probe-status" class="probe-status muted small" aria-live="polite"></span>
+      </div>
+    </form>
+
+    <div id="probe-result" class="probe-result" hidden>
+      <header class="probe-result-header">
+        <span class="label-eyebrow">RESULTADO</span>
+        <span id="probe-summary" class="mono small muted"></span>
+      </header>
+
+      <ol id="probe-retrieved" class="probe-retrieved"></ol>
+
+      <div class="flag-form" id="flag-form-section" hidden>
+        <header class="flag-form-header">
+          <span class="label-eyebrow">FLAGAR COMO MASCARAMENTO</span>
+          <p class="muted small">
+            URNs marcados acima serão registrados como proposta
+            (<code>kind=hierarchy</code>). O operador revisa via merge tool;
+            casos acumulados informam tunagem de pesos em <code>legal_rank.py</code>
+            ou novas linhas de eval.
+          </p>
+        </header>
+        <div class="field">
+          <label for="flag-notes" class="label-eyebrow">NOTAS</label>
+          <textarea
+            id="flag-notes"
+            rows="3"
+            maxlength="4000"
+            placeholder="Justifique. Ex: 'Resolução ANPD não pode ser citada como autoridade primária quando a LGPD art. 5 já cobre a definição.'"
+          ></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="button button-primary" id="submit-flag-btn">
+            ENVIAR PROPOSTA <span class="button-arrow">→</span>
+          </button>
+          <span id="flag-status" class="flag-status muted small" aria-live="polite"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // Phase 13 — probe + flag handlers.
+  let lastProbeQuery: string | null = null;
+
+  document.addEventListener("submit", async (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLFormElement)) return;
+    if (target.id !== "hierarchy-form") return;
+    e.preventDefault();
+
+    const runBtn = document.getElementById("run-probe-btn") as HTMLButtonElement | null;
+    const statusEl = document.getElementById("probe-status");
+    const resultEl = document.getElementById("probe-result");
+    const retrievedList = document.getElementById("probe-retrieved");
+    const summaryEl = document.getElementById("probe-summary");
+    const flagSection = document.getElementById("flag-form-section");
+    if (!statusEl || !resultEl || !retrievedList || !summaryEl || !flagSection) return;
+
+    const formData = new FormData(target);
+    const query = (formData.get("query") ?? "").toString().trim();
+    const topK = parseInt((formData.get("top_k") ?? "10").toString(), 10) || 10;
+
+    if (!query) {
+      statusEl.textContent = "Digite uma query.";
+      statusEl.setAttribute("data-state", "error");
+      return;
+    }
+
+    statusEl.textContent = "Rodando probe...";
+    statusEl.setAttribute("data-state", "sending");
+    if (runBtn) runBtn.disabled = true;
+    resultEl.setAttribute("hidden", "");
+    flagSection.setAttribute("hidden", "");
+
+    try {
+      const resp = await fetch("/api/admin/hierarchy/probe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, top_k: topK, save_as_proposal: false }),
+      });
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "");
+        throw new Error(`HTTP ${resp.status}: ${text.slice(0, 200)}`);
+      }
+      const body = await resp.json();
+      const retrieved = body.retrieved as Array<{
+        rank_position: number;
+        urn: string;
+        document_urn: string;
+        score: number;
+        legal_rank: number;
+        legal_rank_name: string;
+        snippet: string | null;
+        citation: string | null;
+        nav_text: string | null;
+      }>;
+
+      retrievedList.innerHTML = "";
+      for (const item of retrieved) {
+        const li = document.createElement("li");
+        li.className = `probe-retrieved-item rank-${item.legal_rank}`;
+        const label = item.citation || item.urn;
+        li.innerHTML = `
+          <div class="probe-retrieved-header">
+            <label class="flag-checkbox-label">
+              <input type="checkbox" class="flag-checkbox" data-urn="${escapeAttr(item.urn)}" />
+              <span class="probe-rank mono">${String(item.rank_position).padStart(2, "0")}</span>
+            </label>
+            <span class="probe-citation">${escapeHtml(label)}</span>
+            <span class="rank-pill rank-pill-${item.legal_rank}">RANK ${item.legal_rank} · ${escapeHtml(item.legal_rank_name)}</span>
+            <span class="probe-score mono">${item.score.toFixed(3)}</span>
+          </div>
+          ${item.nav_text ? `<div class="probe-nav muted small mono">↳ ${escapeHtml(item.nav_text)}</div>` : ""}
+          ${item.snippet ? `<div class="probe-snippet">${escapeHtml(item.snippet)}</div>` : ""}
+          <code class="probe-urn mono small muted">${escapeHtml(item.urn)}</code>
+        `;
+        retrievedList.appendChild(li);
+      }
+      const bestRank = body.best_rank_in_top_k;
+      const rankCounts: Record<number, number> = {};
+      for (const item of retrieved) {
+        rankCounts[item.legal_rank] = (rankCounts[item.legal_rank] || 0) + 1;
+      }
+      const distrib = Object.entries(rankCounts)
+        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+        .map(([r, n]) => `r${r}×${n}`)
+        .join(" / ");
+      summaryEl.textContent = `top-${retrieved.length} · melhor rank ${bestRank ?? "—"} · ${distrib}`;
+
+      lastProbeQuery = query;
+      resultEl.removeAttribute("hidden");
+      flagSection.removeAttribute("hidden");
+      statusEl.textContent = "Probe concluído.";
+      statusEl.setAttribute("data-state", "success");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      statusEl.textContent = `Falha: ${msg}`;
+      statusEl.setAttribute("data-state", "error");
+    } finally {
+      if (runBtn) runBtn.disabled = false;
+    }
+  });
+
+  document.addEventListener("click", async (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.id !== "submit-flag-btn") return;
+
+    if (!lastProbeQuery) {
+      alert("Rode um probe antes de flagar.");
+      return;
+    }
+
+    const checkboxes = document.querySelectorAll<HTMLInputElement>(".flag-checkbox:checked");
+    const flagged: string[] = Array.from(checkboxes)
+      .map((cb) => cb.dataset.urn ?? "")
+      .filter((u) => u.length > 0);
+    if (flagged.length === 0) {
+      alert("Marque ao menos um URN antes de enviar.");
+      return;
+    }
+
+    const btn = target as HTMLButtonElement;
+    const statusEl = document.getElementById("flag-status");
+    const notesEl = document.getElementById("flag-notes") as HTMLTextAreaElement | null;
+    if (!statusEl) return;
+    const notes = notesEl?.value ?? "";
+
+    statusEl.textContent = "Enviando...";
+    statusEl.setAttribute("data-state", "sending");
+    btn.disabled = true;
+
+    try {
+      const resp = await fetch("/api/admin/hierarchy/probe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: lastProbeQuery,
+          save_as_proposal: true,
+          flagged_urns: flagged,
+          notes,
+        }),
+      });
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "");
+        throw new Error(`HTTP ${resp.status}: ${text.slice(0, 200)}`);
+      }
+      const body = await resp.json();
+      const proposalId = (body?.proposal?.id ?? "?").slice(0, 8);
+      statusEl.textContent = `Proposta ${proposalId} enviada (${flagged.length} URN(s) flagados).`;
+      statusEl.setAttribute("data-state", "success");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      statusEl.textContent = `Falha: ${msg}`;
+      statusEl.setAttribute("data-state", "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+  function escapeAttr(s: string): string {
+    return s.replace(/"/g, "&quot;");
+  }
+</script>
+
+<style>
+  .intro { max-width: 75ch; }
+
+  .probe-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+  }
+  .probe-form textarea,
+  .probe-form input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 0.65rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    border-radius: 0;
+    box-sizing: border-box;
+  }
+  .probe-form input[type="number"] { max-width: 5rem; }
+  .probe-form textarea:focus,
+  .probe-form input:focus {
+    outline: 2px solid var(--emphasis);
+    outline-offset: -2px;
+  }
+  .field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .field-inline { flex-direction: row; align-items: center; gap: 0.5rem; }
+  .probe-controls { display: flex; gap: 1rem; }
+
+  .probe-status[data-state="sending"] { color: var(--emphasis); }
+  .probe-status[data-state="success"] { color: var(--success, #2e7d32); }
+  .probe-status[data-state="error"] { color: var(--danger, #c62828); }
+
+  .probe-result {
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+  .probe-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.6rem;
+  }
+  .probe-retrieved {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .probe-retrieved-item {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.75rem;
+    background: var(--surface);
+  }
+  /* Color-code by rank: lower rank (more authoritative) = green-ish;
+     higher rank (infralegal) = amber/red */
+  .probe-retrieved-item.rank-1 { border-left: 3px solid #2e7d32; }
+  .probe-retrieved-item.rank-2 { border-left: 3px solid #5e8b87; }
+  .probe-retrieved-item.rank-3 { border-left: 3px solid #ca8a04; }
+  .probe-retrieved-item.rank-4 { border-left: 3px solid #d97706; }
+  .probe-retrieved-item.rank-5 { border-left: 3px solid #b04a2f; }
+
+  .probe-retrieved-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.3rem;
+  }
+  .flag-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+  }
+  .probe-rank { color: var(--muted); font-weight: 600; }
+  .probe-citation { font-weight: 600; flex: 1; }
+  .probe-score { color: var(--muted); font-size: 0.85rem; }
+
+  .rank-pill {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-family: ui-monospace, monospace;
+  }
+  .rank-pill-1 { background: rgba(46, 125, 50, 0.18); color: #2e7d32; border: 1px solid rgba(46, 125, 50, 0.5); }
+  .rank-pill-2 { background: rgba(94, 139, 135, 0.18); color: #5e8b87; border: 1px solid rgba(94, 139, 135, 0.5); }
+  .rank-pill-3 { background: rgba(202, 138, 4, 0.18); color: #ca8a04; border: 1px solid rgba(202, 138, 4, 0.5); }
+  .rank-pill-4 { background: rgba(217, 119, 6, 0.18); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.5); }
+  .rank-pill-5 { background: rgba(176, 74, 47, 0.18); color: #b04a2f; border: 1px solid rgba(176, 74, 47, 0.5); }
+
+  .probe-nav { margin: 0.2rem 0 0.3rem 0; }
+  .probe-snippet { font-size: 0.9rem; line-height: 1.5; margin: 0.35rem 0; color: var(--text); }
+  .probe-urn { display: block; word-break: break-all; margin-top: 0.3rem; }
+
+  .flag-form {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .flag-form-header { margin-bottom: 0.75rem; }
+  .flag-form-header p { margin: 0.3rem 0 0 0; }
+  .flag-form textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 0.65rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    border-radius: 0;
+    box-sizing: border-box;
+  }
+  .flag-status[data-state="sending"] { color: var(--emphasis); }
+  .flag-status[data-state="success"] { color: var(--success, #2e7d32); }
+  .flag-status[data-state="error"] { color: var(--danger, #c62828); }
+</style>

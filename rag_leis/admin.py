@@ -43,6 +43,7 @@ from rag_leis.eval_loader import (
     load_eval_queries,
     row_to_json,
 )
+from rag_leis.legal_rank import legal_rank_for_urn, rank_name
 from rag_leis.proposals import (
     Proposal,
     append_proposal,
@@ -283,8 +284,8 @@ def refine_query(
             # `chunk` may be None if the URN is in the index but the
             # chunk file is missing (data drift); defensive None-check.
             "snippet": _snippet(chunk),
-            "citation": chunk.citation if chunk else None,
-            "nav_text": chunk.nav_text if chunk else None,
+            "citation": chunk.label if chunk else None,
+            "nav_text": chunk.nav if chunk else None,
         })
 
     proposal_json: dict | None = None
@@ -540,4 +541,124 @@ def submit_vigencia_annotation(
     return {
         "ok": True,
         "proposal": to_jsonable(proposal),
+    }
+
+
+# ===========================================================================
+# Phase 13.0 — hierarchy-masking review surface
+# ===========================================================================
+#
+# The lawyer types a query, sees what the retriever returns (annotated with
+# each chunk's legal rank), and flags cases where the top-k includes
+# chunks from a LOWER-RANK source (e.g. ANPD Resolução) when a higher-rank
+# source (e.g. LGPD itself) should have been retrieved. Addresses 🔴
+# blocker #2 from study/lawyer-review-checklist.md.
+#
+# The endpoint shape mirrors Phase 11.3's /refine: probe with optional
+# save-as-proposal flag, same `_StubPipeline._retrieve(query, top_k)` call
+# path, same kind of side-by-side response.
+
+
+class HierarchyProbeRequest(BaseModel):
+    """Body for POST /v1/admin/hierarchy/probe."""
+
+    query: str = Field(..., min_length=1, max_length=2000)
+    top_k: int = Field(default=10, ge=1, le=50)
+    # When False (default): just probe; nothing written to DB.
+    # When True: persist as a kind='hierarchy' Proposal carrying the
+    # flagged_urns + notes for the operator's later review.
+    save_as_proposal: bool = False
+    # URNs the lawyer flagged as either (a) missing from the top-k
+    # despite being higher-rank, or (b) wrongly outranking a more
+    # relevant primary source. Free-form: the lawyer decides.
+    flagged_urns: list[str] = Field(default_factory=list, max_length=64)
+    notes: str = Field(default="", max_length=4000)
+
+
+@router.post("/hierarchy/probe")
+def hierarchy_probe(
+    body: HierarchyProbeRequest,
+    claims: ClaimsDep,
+    request: Request,
+) -> dict:
+    """Run a retrieval pass for the query, return top-k chunks each
+    annotated with their document URN + legal_rank + rank_name.
+
+    The UI uses the rank annotations to render visible "masking" cues
+    (e.g. a Resolução / rank 5 highlighted in red when sitting above
+    a LGPD / rank 3 in the same top-k). Pure retrieval-only — no LLM
+    call, no cost beyond the embedding (~$0.0001 per query).
+
+    Open to any allowlisted user; hierarchy review is part of the
+    lawyer audit workflow.
+    """
+    pipeline = getattr(request.app.state, "pipeline", None)
+    if pipeline is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="pipeline not loaded",
+        )
+
+    retrieved: list[tuple[str, float]] = pipeline._retrieve(
+        body.query, top_k=body.top_k,
+    )
+
+    # Annotate each retrieved chunk with its document URN + rank.
+    flagged_set = set(body.flagged_urns)
+    payload: list[dict] = []
+    for rank_idx, (urn, score) in enumerate(retrieved, start=1):
+        chunk = get_chunk(urn)
+        document_urn = urn.split("~", 1)[0]
+        legal_rank = legal_rank_for_urn(document_urn)
+        payload.append({
+            "rank_position": rank_idx,
+            "urn": urn,
+            "document_urn": document_urn,
+            "score": score,
+            "legal_rank": legal_rank,
+            "legal_rank_name": rank_name(legal_rank),
+            "flagged_by_caller": urn in flagged_set,
+            "snippet": _snippet(chunk),
+            "citation": chunk.label if chunk else None,
+            "nav_text": chunk.nav if chunk else None,
+        })
+
+    # Best (lowest numeric) rank in the top-k — useful for the operator's
+    # triage queue ("any hierarchy proposal where top_rank=5 deserves
+    # attention; the lawyer is saying the retriever returned ONLY
+    # infralegal sources for a query that probably needs a higher one").
+    best_rank = min((r["legal_rank"] for r in payload), default=None)
+
+    proposal_json: dict | None = None
+    if body.save_as_proposal:
+        if not body.flagged_urns:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "save_as_proposal=True requires at least one entry in "
+                    "flagged_urns; otherwise nothing is being flagged."
+                ),
+            )
+        proposal = Proposal(
+            id=new_proposal_id(),
+            ts=utc_now_iso(),
+            reviewer_email=claims.email,
+            is_operator=claims.is_operator,
+            kind="hierarchy",
+            notes=body.notes,
+            hierarchy_query=body.query,
+            hierarchy_flagged_urns=tuple(body.flagged_urns),
+            hierarchy_top_rank=best_rank,
+        )
+        append_proposal(proposal)
+        proposal_json = to_jsonable(proposal)
+
+    return {
+        "ok": True,
+        "query": body.query,
+        "top_k": body.top_k,
+        "retrieved": payload,
+        "best_rank_in_top_k": best_rank,
+        "proposal": proposal_json,
+        "viewer": {"email": claims.email, "is_operator": claims.is_operator},
     }

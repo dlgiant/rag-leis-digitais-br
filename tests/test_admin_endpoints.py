@@ -71,8 +71,16 @@ def env_config(monkeypatch, keypair):
         f"{OPERATOR_EMAIL},{LAWYER_EMAIL}",
     )
     monkeypatch.setenv("RAG_OPERATOR_EMAIL", OPERATOR_EMAIL)
-    # No CLERK_AUDIENCE set → audience check skipped (matches dev-mode).
-    monkeypatch.delenv("CLERK_AUDIENCE", raising=False)
+    # No CLERK_AUDIENCE check — empty string (NOT delenv). Reason:
+    # `rag_leis.llm` calls `load_dotenv()` at module-import time, which
+    # repopulates os.environ from .env on first lazy import. If the
+    # operator has CLERK_AUDIENCE set in their local .env (as production
+    # requires), `delenv` would clear it but a later transitive import
+    # could put it right back, mid-test, causing intermittent 401s.
+    # `setenv("", "")` keeps it set-but-empty; `load_dotenv(override=False)`
+    # skips already-set keys; clerk_auth's `if audience:` short-circuits
+    # on empty strings exactly like on missing keys.
+    monkeypatch.setenv("CLERK_AUDIENCE", "")
     # Reset the chunks cache so each test gets a fresh load.
     eval_loader.reset_caches()
 
@@ -850,3 +858,110 @@ def test_vigencia_annotate_happy_path(client, keypair):
     assert len(rows) == 1
     assert rows[0].kind == "vigencia"
     assert rows[0].vigencia_status == "sub_judice"
+
+
+# =============================================================================
+# Phase 13.0 — POST /v1/admin/hierarchy/probe
+# =============================================================================
+
+
+def test_hierarchy_probe_requires_auth(client):
+    r = client.post("/v1/admin/hierarchy/probe", json={"query": "x"})
+    assert r.status_code == 401
+
+
+def test_hierarchy_probe_not_in_allowlist_returns_403(client, keypair):
+    token = make_token(keypair=keypair, email="stranger@example.com")
+    r = client.post(
+        "/v1/admin/hierarchy/probe",
+        json={"query": "x"},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 403
+
+
+def test_hierarchy_probe_empty_query_returns_422(client, keypair):
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    r = client.post(
+        "/v1/admin/hierarchy/probe",
+        json={"query": ""},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 422
+
+
+def test_hierarchy_probe_save_without_flagged_returns_400(client, keypair):
+    """If save_as_proposal=True, flagged_urns must be non-empty —
+    nothing to flag = bad request."""
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    _inject_pipeline(client, [
+        ("urn:lex:br:federal:lei:2018-08-14;13709~art5", 0.9),
+    ])
+    r = client.post(
+        "/v1/admin/hierarchy/probe",
+        json={"query": "x", "save_as_proposal": True, "flagged_urns": []},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 400
+
+
+def test_hierarchy_probe_annotates_legal_ranks(client, keypair):
+    """retrieval response includes legal_rank per URN."""
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    _inject_pipeline(client, [
+        # LGPD (lei = rank 3 LO)
+        ("urn:lex:br:federal:lei:2018-08-14;13709~art5", 0.95),
+        # Decreto 8.771 (decreto = rank 4)
+        ("urn:lex:br:federal:decreto:2016-05-11;8771~art1", 0.85),
+        # ANPD Resolução (resolucao.cd = rank 5 infralegal)
+        ("urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15~art1", 0.80),
+    ])
+    r = client.post(
+        "/v1/admin/hierarchy/probe",
+        json={"query": "sobre dado pessoal", "top_k": 5},
+        headers=auth_header(token),
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    retrieved = body["retrieved"]
+    assert len(retrieved) == 3
+    assert retrieved[0]["legal_rank"] == 3  # LGPD
+    assert retrieved[1]["legal_rank"] == 4  # Decreto
+    assert retrieved[2]["legal_rank"] == 5  # Resolução
+    # best_rank_in_top_k is the lowest numeric
+    assert body["best_rank_in_top_k"] == 3
+    # No flagged_urns + save_as_proposal=False → no DB write
+    assert body["proposal"] is None
+
+
+@skip_if_no_db
+def test_hierarchy_probe_save_creates_db_row(client, keypair):
+    token = make_token(keypair=keypair, email=LAWYER_EMAIL)
+    _inject_pipeline(client, [
+        ("urn:lex:br:federal:lei:2018-08-14;13709~art5", 0.95),
+        ("urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15~art1", 0.92),
+    ])
+    flagged = ["urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15~art1"]
+    r = client.post(
+        "/v1/admin/hierarchy/probe",
+        json={
+            "query": "qual é a definição de dado pessoal?",
+            "save_as_proposal": True,
+            "flagged_urns": flagged,
+            "notes": "Resolução ANPD shouldn't outrank LGPD on this query.",
+        },
+        headers=auth_header(token),
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["proposal"]["kind"] == "hierarchy"
+    assert body["proposal"]["hierarchy_flagged_urns"] == flagged
+    assert body["proposal"]["hierarchy_top_rank"] == 3
+    # Verify in DB
+    from rag_leis import proposals
+    rows = proposals.load_all_proposals()
+    assert len(rows) == 1
+    assert rows[0].kind == "hierarchy"
+    assert rows[0].hierarchy_query == "qual é a definição de dado pessoal?"
+    assert list(rows[0].hierarchy_flagged_urns) == flagged
+    assert rows[0].hierarchy_top_rank == 3

@@ -78,6 +78,7 @@ from rag_leis.proposals import Proposal, load_pending_proposals, mark_merged
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_EVAL_PATH = PROJECT_ROOT / "eval" / "queries.yaml"
 DEFAULT_OVERLAYS_PATH = PROJECT_ROOT / "data" / "vigencia" / "overlays.yaml"
+DEFAULT_HIERARCHY_PATH = PROJECT_ROOT / "data" / "hierarchy" / "flagged.yaml"
 
 
 # ---------------------------------------------------------------------------
@@ -231,6 +232,69 @@ def apply_vigencia_to_yaml(rows: list[dict], proposal: Proposal) -> str:
     return (
         f"replaced existing overlay for {proposal.vigencia_urn} "
         f"(now status={proposal.vigencia_status})"
+    )
+
+
+def load_hierarchy_yaml(path: Path | None = None) -> list[dict]:
+    """Load `data/hierarchy/flagged.yaml` as a round-trippable list.
+
+    The file is an audit-log: each entry records ONE lawyer-flagged
+    case where the retriever returned a lower-rank source when a
+    higher-rank source should have surfaced. Append-only — the
+    operator reviews these periodically to decide whether to retune
+    `legal_rank.py` weights or add new eval rows.
+
+    Missing file → returns an empty list (the merge tool creates
+    the file on first write).
+    """
+    p = path or DEFAULT_HIERARCHY_PATH
+    if not p.exists():
+        return []
+    with p.open("r", encoding="utf-8") as f:
+        loaded = _yaml().load(f)
+    return loaded if loaded is not None else []
+
+
+def save_hierarchy_yaml(data: list[dict], path: Path | None = None) -> None:
+    """Write back. Creates parent directory if missing."""
+    p = path or DEFAULT_HIERARCHY_PATH
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("w", encoding="utf-8") as f:
+        _yaml().dump(data, f)
+
+
+def apply_hierarchy_to_yaml(rows: list[dict], proposal: Proposal) -> str:
+    """Append a hierarchy-masking flagged case to the audit log.
+
+    This file is informational, not a behavior-overlay: nothing in
+    the RAG pipeline reads `data/hierarchy/flagged.yaml`. The
+    operator reviews accumulated entries to decide on rank weight
+    tuning or eval-set additions.
+
+    Returns a short description.
+    """
+    if not proposal.hierarchy_query:
+        raise ValueError("hierarchy proposal missing hierarchy_query")
+    if not proposal.hierarchy_flagged_urns:
+        raise ValueError(
+            "hierarchy proposal missing hierarchy_flagged_urns "
+            "(nothing to flag)"
+        )
+
+    new_entry = {
+        "ts": proposal.ts,
+        "reviewer_email": proposal.reviewer_email,
+        "query": DQ(proposal.hierarchy_query),
+        "flagged_urns": [DQ(u) for u in proposal.hierarchy_flagged_urns],
+        "top_rank_observed": proposal.hierarchy_top_rank,
+    }
+    if proposal.notes:
+        new_entry["notes"] = proposal.notes
+    rows.append(new_entry)
+    return (
+        f"appended hierarchy-masking flag: "
+        f"{len(proposal.hierarchy_flagged_urns)} URN(s), "
+        f"query={proposal.hierarchy_query[:60]}…"
     )
 
 
@@ -396,6 +460,10 @@ def main() -> int:
         help="Path to data/vigencia/overlays.yaml (default: %(default)s)",
     )
     parser.add_argument(
+        "--hierarchy", type=Path, default=DEFAULT_HIERARCHY_PATH,
+        help="Path to data/hierarchy/flagged.yaml (default: %(default)s)",
+    )
+    parser.add_argument(
         "--dry-run", action="store_true",
         help="Show what WOULD be applied; don't write YAML or mark merged.",
     )
@@ -423,9 +491,11 @@ def main() -> int:
 
     rows = load_eval(args.eval)
     overlay_rows = load_overlays_yaml(args.overlays)
+    hierarchy_rows = load_hierarchy_yaml(args.hierarchy)
     accepted = rejected = skipped = 0
     eval_dirty = False
     overlays_dirty = False
+    hierarchy_dirty = False
 
     for i, p in enumerate(pending, start=1):
         print(f"\n[{i}/{len(pending)}]", end="")
@@ -441,6 +511,14 @@ def main() -> int:
             print(
                 "  ℹ  Accept → writes overlay entry to data/vigencia/overlays.yaml. "
                 "Reject → discard. Skip → leave pending.",
+                file=sys.stderr,
+            )
+        if p.kind == "hierarchy":
+            print(
+                "  ℹ  Accept → appends flagged case to data/hierarchy/flagged.yaml. "
+                "Informational only; nothing in the pipeline reads this file. "
+                "The operator reviews accumulated entries to retune legal_rank.py "
+                "or add new eval rows.",
                 file=sys.stderr,
             )
 
@@ -474,6 +552,9 @@ def main() -> int:
             elif p.kind == "vigencia":
                 msg = apply_vigencia_to_yaml(overlay_rows, p)
                 overlays_dirty = True
+            elif p.kind == "hierarchy":
+                msg = apply_hierarchy_to_yaml(hierarchy_rows, p)
+                hierarchy_dirty = True
             else:
                 msg = f"unsupported kind {p.kind!r}"
                 raise ValueError(msg)
@@ -494,6 +575,9 @@ def main() -> int:
     if overlays_dirty and not args.dry_run:
         save_overlays_yaml(overlay_rows, args.overlays)
         print(f"\n✓ Wrote {args.overlays}")
+    if hierarchy_dirty and not args.dry_run:
+        save_hierarchy_yaml(hierarchy_rows, args.hierarchy)
+        print(f"\n✓ Wrote {args.hierarchy}")
 
     _hr(sys.stdout)
     print(f"Summary: {accepted} accepted, {rejected} rejected, {skipped} skipped.")
@@ -503,6 +587,8 @@ def main() -> int:
             affected.append(args.eval)
         if overlays_dirty:
             affected.append(args.overlays)
+        if hierarchy_dirty:
+            affected.append(args.hierarchy)
         diff_paths = " ".join(str(p) for p in affected)
         print(
             f"\nNext steps:\n"

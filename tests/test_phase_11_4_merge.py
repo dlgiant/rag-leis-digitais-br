@@ -442,3 +442,60 @@ def test_apply_vigencia_missing_field_raises(overlays_yaml: Path):
     )
     with pytest.raises(ValueError, match="fundamento"):
         apply_vigencia_to_yaml(rows, p)
+
+
+# ---------------------------------------------------------------------------
+# Phase 13.0 — apply_hierarchy_to_yaml (flagged.yaml writes)
+# ---------------------------------------------------------------------------
+
+
+def test_apply_hierarchy_appends_flagged_case(tmp_path: Path):
+    from scripts.phase_11_4_merge_proposals import apply_hierarchy_to_yaml
+    rows: list[dict] = []
+    p = Proposal(
+        id="hier-test-1",
+        ts="2026-05-21T18:00:00+00:00",
+        reviewer_email="lawyer@example.test",
+        is_operator=False,
+        kind="hierarchy",
+        notes="ANPD resolution outranking LGPD on this query.",
+        hierarchy_query="qual a definição de dado pessoal segundo a LGPD?",
+        hierarchy_flagged_urns=(
+            "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15~art1",
+        ),
+        hierarchy_top_rank=3,
+    )
+    msg = apply_hierarchy_to_yaml(rows, p)
+    assert "appended" in msg
+    assert len(rows) == 1
+    entry = rows[0]
+    assert entry["query"] == p.hierarchy_query
+    assert list(entry["flagged_urns"]) == list(p.hierarchy_flagged_urns)
+    assert entry["top_rank_observed"] == 3
+    assert entry["notes"] == p.notes
+
+
+def test_apply_hierarchy_missing_query_raises():
+    from scripts.phase_11_4_merge_proposals import apply_hierarchy_to_yaml
+    rows: list[dict] = []
+    p = Proposal(
+        id="x", ts="2026-05-21T00:00:00+00:00",
+        reviewer_email="x", is_operator=False, kind="hierarchy",
+        hierarchy_query=None,
+        hierarchy_flagged_urns=("urn:lex:x",),
+    )
+    with pytest.raises(ValueError, match="hierarchy_query"):
+        apply_hierarchy_to_yaml(rows, p)
+
+
+def test_apply_hierarchy_empty_flagged_raises():
+    from scripts.phase_11_4_merge_proposals import apply_hierarchy_to_yaml
+    rows: list[dict] = []
+    p = Proposal(
+        id="x", ts="2026-05-21T00:00:00+00:00",
+        reviewer_email="x", is_operator=False, kind="hierarchy",
+        hierarchy_query="some query",
+        hierarchy_flagged_urns=(),
+    )
+    with pytest.raises(ValueError, match="flagged_urns"):
+        apply_hierarchy_to_yaml(rows, p)

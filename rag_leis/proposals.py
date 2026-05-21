@@ -30,7 +30,7 @@ from typing import Literal
 
 from rag_leis.db import get_conn
 
-ProposalKind = Literal["review", "new_row", "refinement", "vigencia"]
+ProposalKind = Literal["review", "new_row", "refinement", "vigencia", "hierarchy"]
 Verdict = Literal["correct", "incorrect", "needs_followup"]
 VigenciaStatus = Literal[
     "vigente",
@@ -86,6 +86,11 @@ class Proposal:
     vigencia_desde: str | None = None  # ISO-8601 date, e.g. "2017-09-29"
     vigencia_descricao_curta: str | None = None
 
+    # Hierarchy-specific (Phase 13.0) — populated only when kind='hierarchy'
+    hierarchy_query: str | None = None
+    hierarchy_flagged_urns: tuple[str, ...] = field(default_factory=tuple)
+    hierarchy_top_rank: int | None = None  # 1-5 (CF..infralegal)
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -128,6 +133,9 @@ def to_jsonable(p: Proposal) -> dict:
         "vigencia_fundamento": p.vigencia_fundamento,
         "vigencia_desde": p.vigencia_desde,
         "vigencia_descricao_curta": p.vigencia_descricao_curta,
+        "hierarchy_query": p.hierarchy_query,
+        "hierarchy_flagged_urns": list(p.hierarchy_flagged_urns),
+        "hierarchy_top_rank": p.hierarchy_top_rank,
     }
 
 
@@ -143,14 +151,16 @@ INSERT INTO proposals (
     new_query_text, new_qtype, new_core_urns, new_supporting_urns,
     refined_query_text,
     vigencia_urn, vigencia_status, vigencia_fundamento, vigencia_desde,
-    vigencia_descricao_curta
+    vigencia_descricao_curta,
+    hierarchy_query, hierarchy_flagged_urns, hierarchy_top_rank
 ) VALUES (
     %s, %s, %s, %s, %s,
     %s, %s, %s, %s, %s,
     %s, %s, %s, %s,
     %s,
     %s, %s, %s, %s,
-    %s
+    %s,
+    %s, %s, %s
 )
 ON CONFLICT (id) DO NOTHING
 """
@@ -183,6 +193,9 @@ def append_proposal(p: Proposal) -> None:
                 p.vigencia_fundamento,
                 p.vigencia_desde,
                 p.vigencia_descricao_curta,
+                p.hierarchy_query,
+                list(p.hierarchy_flagged_urns),
+                p.hierarchy_top_rank,
             ),
         )
 
@@ -198,7 +211,8 @@ _SELECT_COLUMNS = """
     new_query_text, new_qtype, new_core_urns, new_supporting_urns,
     refined_query_text,
     vigencia_urn, vigencia_status, vigencia_fundamento, vigencia_desde,
-    vigencia_descricao_curta
+    vigencia_descricao_curta,
+    hierarchy_query, hierarchy_flagged_urns, hierarchy_top_rank
 """
 
 
@@ -211,6 +225,7 @@ def _row_to_proposal(row: tuple) -> Proposal:
         refined_query_text,
         vigencia_urn, vigencia_status, vigencia_fundamento, vigencia_desde,
         vigencia_descricao_curta,
+        hierarchy_query, hierarchy_flagged_urns, hierarchy_top_rank,
     ) = row
     # ts is a datetime from psycopg; serialize to ISO for API consistency
     ts_str = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
@@ -240,6 +255,9 @@ def _row_to_proposal(row: tuple) -> Proposal:
             if hasattr(vigencia_desde, "isoformat") else vigencia_desde
         ),
         vigencia_descricao_curta=vigencia_descricao_curta,
+        hierarchy_query=hierarchy_query,
+        hierarchy_flagged_urns=tuple(hierarchy_flagged_urns or ()),
+        hierarchy_top_rank=hierarchy_top_rank,
     )
 
 

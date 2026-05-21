@@ -315,3 +315,38 @@ export interface VigenciaAnnotationBody {
   descricao_curta: string;
   notes?: string;
 }
+
+// Phase 13.0 — hierarchy masking probe
+
+export type LegalRank = 1 | 2 | 3 | 4 | 5;
+
+export interface HierarchyProbeBody {
+  query: string;
+  top_k?: number;
+  save_as_proposal?: boolean;
+  flagged_urns?: string[];
+  notes?: string;
+}
+
+export interface HierarchyRetrievedItem {
+  rank_position: number;
+  urn: string;
+  document_urn: string;
+  score: number;
+  legal_rank: LegalRank;
+  legal_rank_name: string;
+  flagged_by_caller: boolean;
+  snippet: string | null;
+  citation: string | null;
+  nav_text: string | null;
+}
+
+export interface HierarchyProbeResponse {
+  ok: boolean;
+  query: string;
+  top_k: number;
+  retrieved: HierarchyRetrievedItem[];
+  best_rank_in_top_k: LegalRank | null;
+  proposal: Proposal | null;
+  viewer: { email: string; is_operator: boolean };
+}
