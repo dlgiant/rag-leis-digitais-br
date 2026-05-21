@@ -134,6 +134,30 @@ const fullTitle = title === "RAG-leis/revisa" ? title : `${title} — RAG-leis/r
         outline-offset: 1px;
       }
       ::selection { background: var(--accent); color: #ffffff; }
+
+      /* Phase 11.1 — Pin Clerk <UserButton /> avatar dimensions +
+         circular shape. Without this, the View Transitions body swap
+         + Clerk's React hydration combination occasionally lets our
+         global styles win over Clerk's inline sizing on second render
+         — the avatar balloons and loses its border-radius. !important
+         is justified here because we're competing with Clerk's own
+         component-internal stylesheet, not our own.
+
+         The .cl-userButtonAvatarBox class is part of Clerk's stable
+         "elements" surface (documented in their appearance API for
+         several years; safe to target). */
+      .cl-userButtonAvatarBox,
+      .cl-userButtonAvatarBox > * {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 50% !important;
+      }
+      .cl-userButtonAvatarImage {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 50% !important;
+        object-fit: cover;
+      }
     </style>
   </head>
   <body>
