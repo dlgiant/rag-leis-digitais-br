@@ -5,14 +5,22 @@
 // server-only path. Browser-side code calls `/api/admin/...` instead
 // (same-origin proxy in src/pages/api/admin/[...path].ts).
 
-// Resolve the backend URL with defensive normalization. Empty string,
-// missing protocol, or trailing whitespace all break `new URL()`
-// silently with "Invalid URL" — surface the actual offending value
-// in the error so deploy bugs are diagnosable from one log line.
+// Resolve the backend URL with defensive normalization. Common
+// paste-from-editor failure modes that all break `new URL()`:
+//   - Trailing newline (from text editors that auto-newline pastes)
+//   - Embedded newline / carriage return (multi-line paste collapsed
+//     into one env var)
+//   - Trailing slash (changes path-joining semantics)
+//   - Zero-width characters (BOM, U+200B) from copy/paste artifacts
+// Strip ALL whitespace (not just leading/trailing) — a URL can't
+// legally contain whitespace anywhere. Surface the resolved value
+// in errors so deploy bugs are diagnosable from one log line.
 function resolveBackendUrl(): string {
-  const raw = (process.env.RAG_BACKEND_URL ?? "").trim();
-  const candidate = raw || "https://rag-leis-digitais-br.fly.dev";
-  // Strip any trailing slashes so we control path joining
+  const raw = process.env.RAG_BACKEND_URL ?? "";
+  // Strip every whitespace char (incl. embedded \n, \r, \t) AND
+  // common zero-width chars that copy/paste tools add silently.
+  const cleaned = raw.replace(/[\s​‌‍﻿]+/g, "");
+  const candidate = cleaned || "https://rag-leis-digitais-br.fly.dev";
   return candidate.replace(/\/+$/, "");
 }
 
