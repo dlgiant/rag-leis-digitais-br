@@ -30,6 +30,15 @@ if _db_url is None:
         "Set the env var via `flyctl secrets set` on prod or "
         "via .env locally."
     )
+# Rewrite the URL scheme so SQLAlchemy uses psycopg v3 (the modern
+# driver we installed) instead of the default `postgresql://` →
+# psycopg2 dispatch. Without this, alembic crashes at startup with
+# `ModuleNotFoundError: No module named 'psycopg2'`.
+if _db_url.startswith("postgresql://"):
+    _db_url = "postgresql+psycopg://" + _db_url[len("postgresql://"):]
+elif _db_url.startswith("postgres://"):
+    # Some providers emit `postgres://` (older scheme); same fix
+    _db_url = "postgresql+psycopg://" + _db_url[len("postgres://"):]
 config.set_main_option("sqlalchemy.url", _db_url)
 
 # Alembic in this project uses RAW SQL migrations (no ORM models).
