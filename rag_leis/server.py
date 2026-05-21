@@ -200,13 +200,49 @@ async def lifespan(app: FastAPI):
     load_dotenv(PROJECT_ROOT / ".env", override=False)
     # Phase 8.3 — configure structured logging + OTel SDK.
     obs.configure(level=os.environ.get("RAG_LOG_LEVEL", "INFO"))
+
+    # Phase 11.2.1 — Postgres connection pool + schema migrations.
+    # Only runs if DATABASE_URL is set; absence falls back to the
+    # legacy file-based JSONL backends (proposals.py + pii_audit.py
+    # dispatch on db.is_configured()).
+    from rag_leis import db
+    if db.database_url():
+        try:
+            db.init_pool()
+            _run_alembic_upgrade()
+        except Exception as e:
+            # If DB init fails, bail loudly. Better than starting up
+            # in a half-configured state that would silently lose
+            # writes by falling back to the gitignored file path.
+            import sys
+            print(f"ERROR initializing Postgres: {type(e).__name__}: {e}", file=sys.stderr)
+            raise
+
     app.state.pipeline = _build_pipeline_from_env()
     try:
         yield
     finally:
-        # No teardown needed — FAISS index + chunks are in-process memory,
-        # garbage-collected at process exit.
+        # No teardown needed for the pipeline — FAISS index + chunks
+        # are in-process memory, garbage-collected at process exit.
         app.state.pipeline = None
+        # Close the DB pool cleanly so connections drain to Neon.
+        import contextlib
+        with contextlib.suppress(Exception):
+            db.close_pool()
+
+
+def _run_alembic_upgrade() -> None:
+    """Run `alembic upgrade head` programmatically at startup.
+
+    Postgres row-locks `alembic_version` so concurrent startups from
+    multiple Fly machines serialize safely — only the first to acquire
+    the lock applies migrations; the rest no-op.
+    """
+    from alembic import command
+    from alembic.config import Config
+    cfg = Config(str(PROJECT_ROOT / "alembic.ini"))
+    cfg.set_main_option("script_location", str(PROJECT_ROOT / "migrations"))
+    command.upgrade(cfg, "head")
 
 
 # ============================================================================

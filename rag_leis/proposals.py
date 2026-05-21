@@ -1,41 +1,34 @@
-"""Phase 11.2 — Proposal storage for lawyer-review workflows.
+"""Phase 11.2.1 — Postgres-backed proposal storage.
+
+Replaces the Phase 11.2 JSONL append-only file with Postgres
+INSERT / SELECT against `rag_leis.db`. The public API
+(append_proposal, load_pending_proposals, etc.) stays unchanged
+so admin.py and tests don't need updates beyond setting up the
+DB connection.
 
 A `Proposal` is one of three kinds:
 
   - `review`     — a reviewer submitted a verdict (correct / incorrect /
-                   needs_followup) on an existing eval row. May include
-                   suggested gold URNs or a suggested classified_type.
-  - `new_row`    — the operator proposed a brand-new eval row (only the
-                   operator can write these; gated upstream by the
-                   operator allowlist).
-  - `refinement` — Phase 11.3 only. The reviewer typed an alternate
-                   phrasing and ran it through the pipeline; the result
-                   is captured for later promotion to the eval set.
+                   needs_followup) on an existing eval row.
+  - `new_row`    — the operator proposed a brand-new eval row.
+  - `refinement` — Phase 11.3 only.
 
-Proposals are append-only to `data/review/proposals.jsonl`. The
-operator (you) reviews them via Phase 11.4's `scripts/
-phase_11_merge_proposals.py`, which writes accepted ones into
-`eval/queries.yaml` and records the proposal IDs in
-`data/review/merged.jsonl` so they don't show up in the pending
-queue again.
+The merge tool (Phase 11.4) reads from `proposals` and writes
+proposal IDs to `merged_proposals` after merging into
+`eval/queries.yaml`. `load_pending_proposals()` filters those out
+via a NOT EXISTS subquery.
 
 The UI / admin API NEVER write to `eval/queries.yaml` directly —
 that's the operator's PR-style git workflow.
 """
 from __future__ import annotations
 
-import json
-import os
-import threading
 import uuid
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Literal
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_PROPOSALS_PATH = PROJECT_ROOT / "data" / "review" / "proposals.jsonl"
-DEFAULT_MERGED_PATH = PROJECT_ROOT / "data" / "review" / "merged.jsonl"
+from rag_leis.db import get_conn
 
 ProposalKind = Literal["review", "new_row", "refinement"]
 Verdict = Literal["correct", "incorrect", "needs_followup"]
@@ -43,8 +36,9 @@ Verdict = Literal["correct", "incorrect", "needs_followup"]
 
 @dataclass(frozen=True)
 class Proposal:
-    """A single proposal record. Fields are explicit so the JSONL is
-    self-describing for the merge tool + the lawyer-review checklist."""
+    """A single proposal record. Fields are explicit so the queue
+    page + merge tool can decide what to show without guessing
+    intent from a JSON blob."""
 
     # Identity
     id: str  # uuid4 hex; unique per proposal
@@ -77,27 +71,8 @@ class Proposal:
 
 
 # ---------------------------------------------------------------------------
-# Append (thread-safe)
+# Helpers
 # ---------------------------------------------------------------------------
-
-
-# A single in-process lock guards append writes. JSONL is append-only +
-# line-terminated, so concurrent appends from different processes can
-# interleave at line boundaries safely — but within ONE process, two
-# threads writing simultaneously could interleave bytes mid-line.
-_append_lock = threading.Lock()
-
-
-def _proposal_path() -> Path:
-    """Return the active proposals path, honoring RAG_PROPOSALS_PATH env."""
-    override = os.environ.get("RAG_PROPOSALS_PATH")
-    return Path(override) if override else DEFAULT_PROPOSALS_PATH
-
-
-def _merged_path() -> Path:
-    """Return the active merged-IDs path, honoring RAG_MERGED_PATH env."""
-    override = os.environ.get("RAG_MERGED_PATH")
-    return Path(override) if override else DEFAULT_MERGED_PATH
 
 
 def new_proposal_id() -> str:
@@ -106,121 +81,172 @@ def new_proposal_id() -> str:
 
 
 def utc_now_iso() -> str:
-    """ISO-8601 timestamp with UTC offset. Used as the 'ts' field."""
+    """ISO-8601 timestamp with UTC offset. Used as the `ts` field
+    when constructing a Proposal client-side. The DB column stores
+    TIMESTAMPTZ so the time-zone is preserved end-to-end."""
     return datetime.now(UTC).isoformat()
 
 
 def to_jsonable(p: Proposal) -> dict:
-    """Convert a Proposal into a JSON-serializable dict.
-
-    Tuples become lists (JSON has no tuple). None fields stay None.
-    """
-    d = asdict(p)
-    # asdict already collapses dataclass nesting; convert tuples → lists
-    for k, v in list(d.items()):
-        if isinstance(v, tuple):
-            d[k] = list(v)
-    return d
-
-
-def append_proposal(p: Proposal, *, path: Path | None = None) -> None:
-    """Append one Proposal as a JSONL line. Creates parent directory
-    if missing. Thread-safe via process-local lock."""
-    target = path or _proposal_path()
-    line = json.dumps(to_jsonable(p), ensure_ascii=False, sort_keys=True) + "\n"
-    with _append_lock:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with target.open("a", encoding="utf-8") as f:
-            f.write(line)
+    """Convert a Proposal into a JSON-serializable dict — used by
+    the admin API responses + the /proposals page rendering."""
+    return {
+        "id": p.id,
+        "ts": p.ts,
+        "reviewer_email": p.reviewer_email,
+        "is_operator": p.is_operator,
+        "kind": p.kind,
+        "query_id": p.query_id,
+        "verdict": p.verdict,
+        "notes": p.notes,
+        "suggested_gold_urns": list(p.suggested_gold_urns),
+        "suggested_classified_type": p.suggested_classified_type,
+        "new_query_text": p.new_query_text,
+        "new_qtype": p.new_qtype,
+        "new_core_urns": list(p.new_core_urns),
+        "new_supporting_urns": list(p.new_supporting_urns),
+        "refined_query_text": p.refined_query_text,
+    }
 
 
 # ---------------------------------------------------------------------------
-# Read (for the operator's queue page + merge tool)
+# Append (single INSERT)
 # ---------------------------------------------------------------------------
 
 
-def load_all_proposals(*, path: Path | None = None) -> list[Proposal]:
-    """Load every proposal from the JSONL. Order preserved (oldest
-    first). Missing file → empty list."""
-    target = path or _proposal_path()
-    if not target.exists():
-        return []
-    out: list[Proposal] = []
-    with target.open("r", encoding="utf-8") as f:
-        for line_no, raw in enumerate(f, 1):
-            stripped = raw.strip()
-            if not stripped:
-                continue
-            try:
-                obj = json.loads(stripped)
-            except json.JSONDecodeError as e:
-                # Skip malformed lines — log to stderr in production.
-                # Better to lose one corrupted proposal than fail the
-                # whole queue.
-                import sys
-                print(
-                    f"proposals: skipping malformed line {line_no} in "
-                    f"{target}: {e}",
-                    file=sys.stderr,
-                )
-                continue
-            out.append(_from_dict(obj))
-    return out
+_INSERT_SQL = """
+INSERT INTO proposals (
+    id, ts, reviewer_email, is_operator, kind,
+    query_id, verdict, notes, suggested_gold_urns, suggested_classified_type,
+    new_query_text, new_qtype, new_core_urns, new_supporting_urns,
+    refined_query_text
+) VALUES (
+    %s, %s, %s, %s, %s,
+    %s, %s, %s, %s, %s,
+    %s, %s, %s, %s,
+    %s
+)
+ON CONFLICT (id) DO NOTHING
+"""
 
 
-def load_merged_ids(*, path: Path | None = None) -> set[str]:
-    """Return the set of proposal IDs already merged into eval/queries.yaml.
-    Missing file → empty set."""
-    target = path or _merged_path()
-    if not target.exists():
-        return set()
-    ids: set[str] = set()
-    with target.open("r", encoding="utf-8") as f:
-        for raw in f:
-            stripped = raw.strip()
-            if not stripped:
-                continue
-            try:
-                obj = json.loads(stripped)
-            except json.JSONDecodeError:
-                continue
-            pid = obj.get("id")
-            if isinstance(pid, str):
-                ids.add(pid)
-    return ids
+def append_proposal(p: Proposal) -> None:
+    """Insert one Proposal. ON CONFLICT clause makes it idempotent —
+    re-running an import script with the same row IDs is a no-op."""
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            _INSERT_SQL,
+            (
+                p.id,
+                p.ts,
+                p.reviewer_email,
+                p.is_operator,
+                p.kind,
+                p.query_id,
+                p.verdict,
+                p.notes,
+                list(p.suggested_gold_urns),
+                p.suggested_classified_type,
+                p.new_query_text,
+                p.new_qtype,
+                list(p.new_core_urns),
+                list(p.new_supporting_urns),
+                p.refined_query_text,
+            ),
+        )
 
 
-def load_pending_proposals(
-    *,
-    path: Path | None = None,
-    merged_path: Path | None = None,
-) -> list[Proposal]:
-    """Proposals not yet in `merged.jsonl`. Useful for the operator's
-    queue page + the merge tool's CLI prompts."""
-    all_p = load_all_proposals(path=path)
-    merged = load_merged_ids(path=merged_path)
-    return [p for p in all_p if p.id not in merged]
+# ---------------------------------------------------------------------------
+# Read
+# ---------------------------------------------------------------------------
 
 
-def _from_dict(obj: dict) -> Proposal:
-    """Inverse of to_jsonable — reconstruct a Proposal from a JSONL row.
+_SELECT_COLUMNS = """
+    id, ts, reviewer_email, is_operator, kind,
+    query_id, verdict, notes, suggested_gold_urns, suggested_classified_type,
+    new_query_text, new_qtype, new_core_urns, new_supporting_urns,
+    refined_query_text
+"""
 
-    Defensive: any missing optional field uses the dataclass default.
-    Tuples get re-tupled from lists."""
+
+def _row_to_proposal(row: tuple) -> Proposal:
+    """Convert a fetched row into a Proposal dataclass."""
+    (
+        pid, ts, reviewer_email, is_operator, kind,
+        query_id, verdict, notes, suggested_gold_urns, suggested_classified_type,
+        new_query_text, new_qtype, new_core_urns, new_supporting_urns,
+        refined_query_text,
+    ) = row
+    # ts is a datetime from psycopg; serialize to ISO for API consistency
+    ts_str = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
     return Proposal(
-        id=obj.get("id", ""),
-        ts=obj.get("ts", ""),
-        reviewer_email=obj.get("reviewer_email", ""),
-        is_operator=bool(obj.get("is_operator", False)),
-        kind=obj.get("kind", "review"),
-        query_id=obj.get("query_id"),
-        verdict=obj.get("verdict"),
-        notes=obj.get("notes", ""),
-        suggested_gold_urns=tuple(obj.get("suggested_gold_urns") or ()),
-        suggested_classified_type=obj.get("suggested_classified_type"),
-        new_query_text=obj.get("new_query_text"),
-        new_qtype=obj.get("new_qtype"),
-        new_core_urns=tuple(obj.get("new_core_urns") or ()),
-        new_supporting_urns=tuple(obj.get("new_supporting_urns") or ()),
-        refined_query_text=obj.get("refined_query_text"),
+        id=pid,
+        ts=ts_str,
+        reviewer_email=reviewer_email,
+        is_operator=bool(is_operator),
+        kind=kind,
+        query_id=query_id,
+        verdict=verdict,
+        notes=notes or "",
+        suggested_gold_urns=tuple(suggested_gold_urns or ()),
+        suggested_classified_type=suggested_classified_type,
+        new_query_text=new_query_text,
+        new_qtype=new_qtype,
+        new_core_urns=tuple(new_core_urns or ()),
+        new_supporting_urns=tuple(new_supporting_urns or ()),
+        refined_query_text=refined_query_text,
     )
+
+
+def load_all_proposals() -> list[Proposal]:
+    """Every proposal in chronological order (oldest first).
+
+    Used by tests + by the merge tool when it wants the full
+    history (including already-merged proposals)."""
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            f"SELECT {_SELECT_COLUMNS} FROM proposals ORDER BY ts ASC, id ASC"
+        )
+        rows = cur.fetchall()
+    return [_row_to_proposal(r) for r in rows]
+
+
+def load_pending_proposals() -> list[Proposal]:
+    """Proposals NOT yet in `merged_proposals` — the operator's
+    inbox. Ordered oldest first so the merge tool processes them in
+    submission order."""
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            f"""
+                SELECT {_SELECT_COLUMNS}
+                FROM proposals p
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM merged_proposals m WHERE m.proposal_id = p.id
+                )
+                ORDER BY p.ts ASC, p.id ASC
+                """
+        )
+        rows = cur.fetchall()
+    return [_row_to_proposal(r) for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# Merge-marking (used by Phase 11.4's merge tool)
+# ---------------------------------------------------------------------------
+
+
+def mark_merged(proposal_id: str, *, merged_by: str, commit_sha: str | None = None) -> None:
+    """Record that a proposal was merged into eval/queries.yaml.
+
+    Subsequent calls to `load_pending_proposals()` will skip it.
+    ON CONFLICT clause makes re-marking the same ID a no-op.
+    """
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+                INSERT INTO merged_proposals (proposal_id, merged_by, commit_sha)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (proposal_id) DO NOTHING
+                """,
+            (proposal_id, merged_by, commit_sha),
+        )

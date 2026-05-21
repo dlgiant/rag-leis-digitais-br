@@ -17,6 +17,7 @@ Covers:
 """
 from __future__ import annotations
 
+import os as _os
 import time
 
 import jwt
@@ -62,10 +63,8 @@ INTRUDER_EMAIL = "intruder@example.test"
 
 
 @pytest.fixture(autouse=True)
-def env_config(monkeypatch, keypair, tmp_path):
-    """Configure env vars for every test: pubkey, allowlist, operator.
-    Also point proposals.jsonl / merged.jsonl at tmp paths so tests
-    don't litter the real data/review/ directory."""
+def env_config(monkeypatch, keypair):
+    """Configure env vars for every test: pubkey, allowlist, operator."""
     monkeypatch.setenv("CLERK_JWT_KEY", keypair["public"])
     monkeypatch.setenv(
         "RAG_ADMIN_ALLOWLIST",
@@ -74,11 +73,67 @@ def env_config(monkeypatch, keypair, tmp_path):
     monkeypatch.setenv("RAG_OPERATOR_EMAIL", OPERATOR_EMAIL)
     # No CLERK_AUDIENCE set → audience check skipped (matches dev-mode).
     monkeypatch.delenv("CLERK_AUDIENCE", raising=False)
-    # Phase 11.2 — isolate the proposal write paths per test
-    monkeypatch.setenv("RAG_PROPOSALS_PATH", str(tmp_path / "proposals.jsonl"))
-    monkeypatch.setenv("RAG_MERGED_PATH", str(tmp_path / "merged.jsonl"))
     # Reset the chunks cache so each test gets a fresh load.
     eval_loader.reset_caches()
+
+
+# Phase 11.2.1 — DB fixture. Tests that hit /v1/admin/* endpoints
+# need a real Postgres because proposals.py now writes via SQL.
+# If DATABASE_URL_TEST isn't set, skip those tests with a clear
+# message — the auth-only tests (no DB writes) still run.
+_HAS_DB = bool(_os.environ.get("DATABASE_URL_TEST"))
+
+skip_if_no_db = pytest.mark.skipif(
+    not _HAS_DB,
+    reason="Set DATABASE_URL_TEST (separate Neon branch) to run DB-backed tests",
+)
+
+
+@pytest.fixture(autouse=True)
+def db_state():
+    """Per-test DB isolation: ensure schema is migrated, then truncate
+    proposals + merged_proposals + pii_audit_log before each test.
+
+    Skips silently if DATABASE_URL_TEST isn't set — tests that need DB
+    are individually marked with @skip_if_no_db.
+    """
+    if not _HAS_DB:
+        yield
+        return
+
+    from rag_leis import db
+    if not db.is_configured():
+        db.init_pool(url=_os.environ["DATABASE_URL_TEST"])
+
+    _ensure_schema_migrated_once()
+
+    # Truncate every DB-managed Phase 11.2.1 table for isolation
+    with db.get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            "TRUNCATE proposals, merged_proposals, pii_audit_log RESTART IDENTITY"
+        )
+
+    yield
+
+
+_schema_migrated = False
+
+
+def _ensure_schema_migrated_once() -> None:
+    """Run `alembic upgrade head` exactly once per pytest session
+    against DATABASE_URL_TEST."""
+    global _schema_migrated
+    if _schema_migrated:
+        return
+    from pathlib import Path
+
+    from alembic import command
+    from alembic.config import Config
+    project_root = Path(__file__).resolve().parents[1]
+    cfg = Config(str(project_root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(project_root / "migrations"))
+    command.upgrade(cfg, "head")
+    _schema_migrated = True
 
 
 @pytest.fixture
@@ -289,8 +344,9 @@ def _first_query_id(client, keypair) -> str:
     return r.json()["rows"][0]["id"]
 
 
+@skip_if_no_db
 def test_submit_review_happy_path(client, keypair):
-    """Lawyer submits a verdict; proposal appended to JSONL on disk."""
+    """Lawyer submits a verdict; proposal landed in Postgres."""
     qid = _first_query_id(client, keypair)
     token = make_token(keypair=keypair, email=LAWYER_EMAIL)
     r = client.post(
@@ -311,19 +367,15 @@ def test_submit_review_happy_path(client, keypair):
     assert p["reviewer_email"] == LAWYER_EMAIL
     assert p["is_operator"] is False
     assert p["notes"] == "Confirmed against LGPD art. 5, I."
-    # Verify it landed on disk
-    import os
-    from pathlib import Path
-    proposals_path = Path(os.environ["RAG_PROPOSALS_PATH"])
-    assert proposals_path.exists()
-    lines = proposals_path.read_text(encoding="utf-8").strip().split("\n")
-    assert len(lines) == 1
-    import json
-    on_disk = json.loads(lines[0])
-    assert on_disk["id"] == p["id"]
-    assert on_disk["verdict"] == "correct"
+    # Verify it landed in Postgres
+    from rag_leis import proposals
+    db_rows = proposals.load_all_proposals()
+    assert len(db_rows) == 1
+    assert db_rows[0].id == p["id"]
+    assert db_rows[0].verdict == "correct"
 
 
+@skip_if_no_db
 def test_submit_review_with_suggested_urns(client, keypair):
     """Suggested URNs are persisted in the proposal."""
     qid = _first_query_id(client, keypair)
@@ -349,6 +401,7 @@ def test_submit_review_with_suggested_urns(client, keypair):
     assert p["verdict"] == "incorrect"
 
 
+@skip_if_no_db
 def test_submit_review_unknown_query_id_returns_404(client, keypair):
     token = make_token(keypair=keypair, email=LAWYER_EMAIL)
     r = client.post(
@@ -359,6 +412,7 @@ def test_submit_review_unknown_query_id_returns_404(client, keypair):
     assert r.status_code == 404
 
 
+@skip_if_no_db
 def test_submit_review_invalid_verdict_returns_422(client, keypair):
     qid = _first_query_id(client, keypair)
     token = make_token(keypair=keypair, email=LAWYER_EMAIL)
@@ -370,6 +424,7 @@ def test_submit_review_invalid_verdict_returns_422(client, keypair):
     assert r.status_code == 422  # Pydantic Literal validation
 
 
+@skip_if_no_db
 def test_submit_review_requires_auth(client, keypair):
     qid = _first_query_id(client, keypair)
     r = client.post(
@@ -379,6 +434,7 @@ def test_submit_review_requires_auth(client, keypair):
     assert r.status_code == 401
 
 
+@skip_if_no_db
 def test_submit_review_not_in_allowlist_returns_403(client, keypair):
     qid = _first_query_id(client, keypair)
     token = make_token(keypair=keypair, email=INTRUDER_EMAIL)
@@ -390,6 +446,7 @@ def test_submit_review_not_in_allowlist_returns_403(client, keypair):
     assert r.status_code == 403
 
 
+@skip_if_no_db
 def test_submit_review_marks_operator_correctly(client, keypair):
     """Operator submits a review → is_operator: true in the proposal."""
     qid = _first_query_id(client, keypair)
@@ -408,6 +465,7 @@ def test_submit_review_marks_operator_correctly(client, keypair):
 # ---------------------------------------------------------------------------
 
 
+@skip_if_no_db
 def test_list_proposals_operator_only(client, keypair):
     """Lawyer cannot list proposals (operator-only endpoint)."""
     lawyer_token = make_token(keypair=keypair, email=LAWYER_EMAIL)
@@ -415,6 +473,7 @@ def test_list_proposals_operator_only(client, keypair):
     assert r.status_code == 403
 
 
+@skip_if_no_db
 def test_list_proposals_empty(client, keypair):
     """Fresh test fixture → no proposals yet."""
     operator_token = make_token(keypair=keypair, email=OPERATOR_EMAIL)
@@ -425,6 +484,7 @@ def test_list_proposals_empty(client, keypair):
     assert body["proposals"] == []
 
 
+@skip_if_no_db
 def test_list_proposals_after_submissions(client, keypair):
     """Submit two reviews → both appear in /proposals listing."""
     qid = _first_query_id(client, keypair)
@@ -448,8 +508,9 @@ def test_list_proposals_after_submissions(client, keypair):
     assert all(p["kind"] == "review" for p in body["proposals"])
 
 
-def test_list_proposals_filters_merged(client, keypair, tmp_path):
-    """Proposals whose IDs are in merged.jsonl don't show up as pending."""
+@skip_if_no_db
+def test_list_proposals_filters_merged(client, keypair):
+    """Proposals whose IDs are in merged_proposals don't show up as pending."""
     qid = _first_query_id(client, keypair)
     lawyer_token = make_token(keypair=keypair, email=LAWYER_EMAIL)
     operator_token = make_token(keypair=keypair, email=OPERATOR_EMAIL)
@@ -463,12 +524,10 @@ def test_list_proposals_filters_merged(client, keypair, tmp_path):
     # Pre-merge listing shows it
     r = client.get("/v1/admin/proposals", headers=auth_header(operator_token))
     assert r.json()["total"] == 1
-    # Mark as merged by writing to merged.jsonl
-    import json
-    import os
-    merged_path = os.environ["RAG_MERGED_PATH"]
-    with open(merged_path, "a", encoding="utf-8") as f:
-        f.write(json.dumps({"id": proposal_id}) + "\n")
+    # Mark as merged via the proposals helper (Phase 11.4's merge tool
+    # uses this same call site).
+    from rag_leis import proposals
+    proposals.mark_merged(proposal_id, merged_by=OPERATOR_EMAIL)
     # Post-merge listing skips it
     r = client.get("/v1/admin/proposals", headers=auth_header(operator_token))
     assert r.json()["total"] == 0

@@ -39,6 +39,15 @@ server = [
     # use Clerk's published PEM public key (CLERK_JWT_KEY env var)
     # rather than fetching JWKS at runtime.
     "pyjwt[crypto]>=2.10",
+    # Phase 11.2.1 — Postgres-backed storage for proposals + PII
+    # audit log (replaces JSONL on Fly's ephemeral disk). psycopg
+    # v3 (the modern driver) + psycopg_pool for connection pooling
+    # under FastAPI's concurrent request load. Alembic manages
+    # schema migrations (run by the app's lifespan on startup).
+    # Neon-hosted Postgres in BR region (`sa-east-1` São Paulo).
+    "psycopg[binary]>=3.2",
+    "psycopg_pool>=3.2",
+    "alembic>=1.13",
 ]
 
 [dependency-groups]

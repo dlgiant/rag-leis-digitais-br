@@ -1,26 +1,25 @@
 """PII redaction audit log — append-only, no PII stored.
 
 LGPD compliance for the system itself: when the redactor processes a
-query, write a single-line JSON record so the operations team can
-later audit "how many queries had PII?", "which types?", "did the
-redactor ever crash?" without retaining the original query content.
+query, write a single record so the operations team can later audit
+"how many queries had PII?", "which types?", "did the redactor ever
+crash?" without retaining the original query content.
 
-Design:
-  - Append-only JSONL at `data/audit/pii-redactions.jsonl` (gitignored)
-  - One record per `redact()` call (caller invokes `write_audit(rq)`)
-  - Record schema (forward-compatible):
-        timestamp           ISO 8601 with timezone
-        original_hash       SHA-256 of original (NOT recoverable to PII)
-        redacted_text       the placeholder-substituted text
-        pii_types_found     sorted list
-        n_matches           total matches across all types
-        schema_version      1   (bump when adding fields)
-  - Production add: SQLite with indexed timestamp is faster for query but
-    JSONL keeps the operations story simple (just `grep` + `jq`).
+Phase 11.2.1 storage refactor — the audit log was previously a JSONL
+file at `data/audit/pii-redactions.jsonl`. On Fly's ephemeral disk
+that meant the log was silently wiped on every redeploy. Now:
 
-The audit log is the artifact LGPD art. 37 mentions — registro das
-operações de tratamento. Storing ONLY the hash + counts satisfies
-data minimization (art. 6, III).
+  - If `rag_leis.db` pool is initialized (production w/ DATABASE_URL):
+    INSERT into `pii_audit_log` table.
+  - Else (eval CLI / tests / dev w/o DB): fall back to JSONL append
+    at the `log_path` Path argument (legacy behavior).
+
+The dispatch keeps existing call sites (`rag.py`, tests using
+`tmp_path`) working unchanged. Production gains durability.
+
+Storing ONLY the hash + counts satisfies LGPD art. 6, III (data
+minimization). The audit log is the artifact LGPD art. 37 mentions —
+registro das operações de tratamento.
 """
 
 from __future__ import annotations
@@ -29,6 +28,7 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+from rag_leis import db
 from rag_leis.pii import RedactedQuery
 
 SCHEMA_VERSION = 1
@@ -37,7 +37,7 @@ SCHEMA_VERSION = 1
 def audit_record(rq: RedactedQuery, when: datetime | None = None) -> dict:
     """Build the dict that gets serialized — exposed for tests + introspection.
 
-    `when=None` uses datetime.now(timezone.utc); callers can inject a
+    `when=None` uses datetime.now(UTC); callers can inject a
     fixed timestamp for deterministic tests."""
     ts = (when or datetime.now(UTC)).isoformat()
     return {
@@ -51,31 +51,101 @@ def audit_record(rq: RedactedQuery, when: datetime | None = None) -> dict:
 
 
 def write_audit(rq: RedactedQuery, log_path: Path, when: datetime | None = None) -> None:
-    """Append a JSON line to `log_path`. Creates the parent dir if missing.
+    """Persist a single audit record.
 
-    Atomic enough for single-writer use (CPython open() with append mode
-    on Linux/POSIX writes single-line-sized payloads atomically). For
-    multi-writer production deploys (Phase 7+), this should move to a
-    proper logging backend (syslog, fluent-bit, etc.); for v0 a JSONL
-    file is correct.
+    Dispatches based on DB availability:
+      - DB pool configured  → INSERT into pii_audit_log table
+      - Otherwise           → append a JSON line to `log_path`
+
+    `log_path` is still required for backwards compatibility with
+    callers that don't know about the DB layer (`rag.py`, eval CLI).
     """
-    log_path.parent.mkdir(parents=True, exist_ok=True)
     record = audit_record(rq, when=when)
+    if db.is_configured():
+        _write_audit_to_db(record)
+    else:
+        _write_audit_to_file(record, log_path)
+
+
+def read_audit(log_path: Path) -> list[dict]:
+    """Load all records. Dispatches the same way as write_audit:
+    DB if configured, file otherwise. Returns empty list if neither
+    source has data.
+    """
+    if db.is_configured():
+        return _read_audit_from_db()
+    return _read_audit_from_file(log_path)
+
+
+# ---------------------------------------------------------------------------
+# Postgres backend (Phase 11.2.1)
+# ---------------------------------------------------------------------------
+
+
+def _write_audit_to_db(record: dict) -> None:
+    with db.get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+                INSERT INTO pii_audit_log (
+                    ts, schema_version, original_hash, redacted_text,
+                    pii_types_found, n_matches
+                ) VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+            (
+                record["timestamp"],
+                record["schema_version"],
+                record["original_hash"],
+                record["redacted_text"],
+                list(record["pii_types_found"]),
+                record["n_matches"],
+            ),
+        )
+
+
+def _read_audit_from_db() -> list[dict]:
+    with db.get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+                SELECT ts, schema_version, original_hash, redacted_text,
+                       pii_types_found, n_matches
+                FROM pii_audit_log
+                ORDER BY ts ASC, id ASC
+                """
+        )
+        rows = cur.fetchall()
+    out: list[dict] = []
+    for ts, schema_version, original_hash, redacted_text, pii_types, n_matches in rows:
+        out.append({
+            "schema_version": schema_version,
+            "timestamp": ts.isoformat() if hasattr(ts, "isoformat") else str(ts),
+            "original_hash": original_hash,
+            "redacted_text": redacted_text,
+            "pii_types_found": list(pii_types or []),
+            "n_matches": n_matches,
+        })
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Legacy file backend (eval CLI / tests / dev-without-DB)
+# ---------------------------------------------------------------------------
+
+
+def _write_audit_to_file(record: dict, log_path: Path) -> None:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
     line = json.dumps(record, ensure_ascii=False) + "\n"
     with log_path.open("a", encoding="utf-8") as f:
         f.write(line)
 
 
-def read_audit(log_path: Path) -> list[dict]:
-    """Load all records from a JSONL file. For analysis / reporting.
-    Returns empty list if the file doesn't exist."""
+def _read_audit_from_file(log_path: Path) -> list[dict]:
     if not log_path.exists():
         return []
     out: list[dict] = []
     with log_path.open(encoding="utf-8") as f:
         for line in f:
-            line = line.strip()
-            if not line:
+            stripped = line.strip()
+            if not stripped:
                 continue
-            out.append(json.loads(line))
+            out.append(json.loads(stripped))
     return out
