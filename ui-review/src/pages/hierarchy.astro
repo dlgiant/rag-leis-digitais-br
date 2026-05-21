@@ -132,11 +132,18 @@ import Layout from "../layouts/Layout.astro";
     console.log("[hierarchy-probe]", msg);
   }
 
+  // Capture-phase listener so we run BEFORE Astro's <ClientRouter /> sees
+  // the submit event. Without `capture: true`, ClientRouter intercepts the
+  // form submission as an SPA navigation, fetches /hierarchy with the form
+  // data as query params, and swaps the body — wiping our JS-rendered list
+  // items the instant after we finished rendering them. capture: true +
+  // stopImmediatePropagation() keeps the event from reaching ClientRouter.
   document.addEventListener("submit", async (e) => {
     const target = e.target;
     if (!(target instanceof HTMLFormElement)) return;
     if (target.id !== "hierarchy-form") return;
     e.preventDefault();
+    e.stopImmediatePropagation();
     debugLog("submit handler fired");
 
     const runBtn = document.getElementById("run-probe-btn") as HTMLButtonElement | null;
@@ -238,7 +245,7 @@ import Layout from "../layouts/Layout.astro";
     } finally {
       if (runBtn) runBtn.disabled = false;
     }
-  });
+  }, { capture: true });
 
   document.addEventListener("click", async (e) => {
     const target = e.target;
