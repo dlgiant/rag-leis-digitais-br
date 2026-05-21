@@ -764,7 +764,7 @@ const lexmlUrn = (urn: string) => {
   }
   .refine-details {
     border: 1px solid var(--border);
-    background: var(--surface-2);
+    background: var(--bg-sunken);
   }
   .refine-details > summary {
     cursor: pointer;
@@ -781,7 +781,7 @@ const lexmlUrn = (urn: string) => {
     margin-right: 0.4rem;
   }
   .refine-details[open] > summary::before { content: "▼ "; }
-  .refine-details > summary:hover { background: var(--surface-3, var(--border)); }
+  .refine-details > summary:hover { background: var(--bg-card)); }
 
   .refine-form {
     padding: 1rem;
@@ -790,9 +790,9 @@ const lexmlUrn = (urn: string) => {
   .refine-form textarea,
   .refine-form input[type="number"] {
     width: 100%;
-    background: var(--surface);
+    background: var(--bg-card);
     border: 1px solid var(--border);
-    color: var(--text);
+    color: var(--fg);
     padding: 0.5rem 0.65rem;
     font-family: inherit;
     font-size: 0.95rem;
@@ -853,11 +853,11 @@ const lexmlUrn = (urn: string) => {
   .refine-retrieved-item {
     border: 1px solid var(--border);
     padding: 0.6rem 0.75rem;
-    background: var(--surface);
+    background: var(--bg-card);
   }
   .refine-retrieved-item.is-match {
     border-left: 3px solid var(--success, #2e7d32);
-    background: var(--surface);
+    background: var(--bg-card);
   }
   .refine-retrieved-header {
     display: flex;
@@ -892,7 +892,7 @@ const lexmlUrn = (urn: string) => {
     font-size: 0.9rem;
     line-height: 1.5;
     margin: 0.35rem 0;
-    color: var(--text);
+    color: var(--fg);
   }
   .refine-urn {
     display: block;

@@ -160,9 +160,14 @@ const hasNext = data ? nextOffset < data.total : false;
                 <div class="field field-inline">
                   <label class="label-eyebrow">DESDE</label>
                   <input
-                    type="date"
+                    type="text"
                     name="desde"
                     required
+                    inputmode="numeric"
+                    placeholder="dd/mm/aaaa"
+                    pattern="\d{2}/\d{2}/\d{4}"
+                    maxlength="10"
+                    autocomplete="off"
                   />
                 </div>
 
@@ -223,16 +228,40 @@ const hasNext = data ? nextOffset < data.total : false;
     if (!statusEl) return;
 
     const formData = new FormData(target);
+    const desdeBr = (formData.get("desde") ?? "").toString().trim();
+    // Convert dd/mm/yyyy → yyyy-mm-dd for the API. Validates the
+    // format AND the calendar value (rejects 31/02/2026, 13/13/2026,
+    // etc.). The backend expects ISO; client converts here so the
+    // form UX stays Brazilian-native (the lawyer types BR format).
+    const brMatch = desdeBr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    let desdeIso = "";
+    if (brMatch) {
+      const [, dd, mm, yyyy] = brMatch;
+      const d = new Date(`${yyyy}-${mm}-${dd}T00:00:00Z`);
+      // Round-trip check: the constructed date must parse back to the
+      // same yyyy-mm-dd. Catches 31/02/2026 (auto-corrects to 03/03)
+      // or 32/01/2026 (becomes 01/02).
+      const roundTrip = d.toISOString().slice(0, 10);
+      if (roundTrip === `${yyyy}-${mm}-${dd}`) {
+        desdeIso = roundTrip;
+      }
+    }
+
     const body = {
       status: (formData.get("status") ?? "").toString(),
       fundamento: (formData.get("fundamento") ?? "").toString(),
-      desde: (formData.get("desde") ?? "").toString(),
+      desde: desdeIso,
       descricao_curta: (formData.get("descricao_curta") ?? "").toString(),
       notes: (formData.get("notes") ?? "").toString(),
     };
 
-    if (!body.status || !body.fundamento || !body.desde || !body.descricao_curta) {
+    if (!body.status || !body.fundamento || !body.descricao_curta) {
       statusEl.textContent = "Preencha todos os campos obrigatórios.";
+      statusEl.setAttribute("data-state", "error");
+      return;
+    }
+    if (!body.desde) {
+      statusEl.textContent = "Data inválida. Use o formato dd/mm/aaaa (ex: 21/05/2026).";
       statusEl.setAttribute("data-state", "error");
       return;
     }
@@ -274,7 +303,7 @@ const hasNext = data ? nextOffset < data.total : false;
 <style>
   .breadcrumb { margin-bottom: 1.5rem; }
   .breadcrumb a { color: var(--muted); text-decoration: none; }
-  .breadcrumb a:hover { color: var(--text); }
+  .breadcrumb a:hover { color: var(--fg); }
 
   .doc-urn-display {
     display: block;
@@ -296,7 +325,7 @@ const hasNext = data ? nextOffset < data.total : false;
   .chunk-card {
     border: 1px solid var(--border);
     padding: 1rem 1.2rem;
-    background: var(--surface);
+    background: var(--bg-card);
   }
   .chunk-card.has-overlay {
     border-left: 3px solid var(--emphasis);
@@ -335,7 +364,7 @@ const hasNext = data ? nextOffset < data.total : false;
   .chunk-caput {
     margin: 0.5rem 0;
     padding: 0.4rem 0.6rem;
-    background: var(--surface-2);
+    background: var(--bg-sunken);
     border-left: 2px solid var(--border);
   }
   .chunk-caput-body { display: block; margin-top: 0.1rem; }
@@ -345,7 +374,7 @@ const hasNext = data ? nextOffset < data.total : false;
   }
 
   .current-overlay {
-    background: var(--surface-2);
+    background: var(--bg-sunken);
     padding: 0.6rem 0.9rem;
     margin: 0.8rem 0;
     border-left: 3px solid var(--emphasis);
@@ -386,9 +415,9 @@ const hasNext = data ? nextOffset < data.total : false;
   .annotate-form select,
   .annotate-form textarea {
     width: 100%;
-    background: var(--surface);
+    background: var(--bg-card);
     border: 1px solid var(--border);
-    color: var(--text);
+    color: var(--fg);
     padding: 0.5rem 0.65rem;
     font-family: inherit;
     font-size: 0.95rem;
