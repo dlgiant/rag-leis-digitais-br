@@ -27,15 +27,18 @@ const availableQtypes = data
   : [];
 ---
 
-<Layout title="Queries — rag-leis review">
+<Layout title="Queries">
   <div class="container">
     <header class="page-header">
       <div>
-        <h1>Queries</h1>
+        <span class="label-eyebrow">QUERIES / 02</span>
+        <h1>Catálogo do eval set</h1>
         {data && (
-          <p class="muted small">
-            Mostrando {data.rows.length} de {data.total}
-            {qtypeFilter && <> (filtrado por <code>{qtypeFilter}</code>)</>}
+          <p class="counter muted small mono">
+            <span class="counter-num">{data.rows.length}</span>
+            <span> de </span>
+            <span class="counter-num">{data.total}</span>
+            {qtypeFilter && <> · filtro <code>{qtypeFilter}</code></>}
           </p>
         )}
       </div>
@@ -43,7 +46,7 @@ const availableQtypes = data
         <form method="get" action="/queries">
           <label for="qtype-filter" class="visually-hidden">Filtrar por tipo</label>
           <select id="qtype-filter" name="qtype" onchange="this.form.submit()">
-            <option value="">Todos os tipos</option>
+            <option value="">— TODOS OS TIPOS —</option>
             {availableQtypes.map((t) => (
               <option value={t} selected={t === qtypeFilter}>{t}</option>
             ))}
@@ -53,36 +56,49 @@ const availableQtypes = data
     </header>
 
     {fetchError && (
-      <div class="error">
-        <strong>Erro:</strong> <code>{fetchError}</code>
+      <div class="alert alert-danger">
+        <span class="alert-label">ERRO</span>
+        <div class="alert-body">
+          <strong>Falha ao carregar.</strong>
+          <code>{fetchError}</code>
+          {!verbose && (
+            <p class="alert-hint muted small">
+              Para detalhes técnicos, adicione <code>?debug=1</code> à URL.
+            </p>
+          )}
+        </div>
       </div>
     )}
 
     {data && data.rows.length === 0 && (
-      <p class="muted">Nenhuma query encontrada para o filtro atual.</p>
+      <div class="empty-state">
+        <p class="muted mono">Nenhuma query corresponde ao filtro atual.</p>
+      </div>
     )}
 
     {data && data.rows.length > 0 && (
       <table class="queries-table">
         <thead>
           <tr>
+            <th class="col-idx">#</th>
             <th>Query</th>
             <th class="col-type">Tipo</th>
-            <th class="col-urns">URNs gold</th>
+            <th class="col-urns">Gold</th>
             <th class="col-action"></th>
           </tr>
         </thead>
         <tbody>
-          {data.rows.map((row) => (
+          {data.rows.map((row, i) => (
             <tr>
+              <td class="col-idx mono muted">{String(i + 1).padStart(3, "0")}</td>
               <td>
                 <a href={`/queries/${row.id}`} class="query-link">{row.query}</a>
-                {row.notes && <div class="muted small">{row.notes}</div>}
+                {row.notes && <div class="row-notes muted small">{row.notes}</div>}
               </td>
               <td class="col-type">
                 {row.qtype && <span class="type-pill">{row.qtype}</span>}
               </td>
-              <td class="col-urns">
+              <td class="col-urns mono">
                 <span class="urn-count">{row.core_urns.length}</span>
                 {row.supporting_urns.length > 0 && (
                   <span class="muted small"> +{row.supporting_urns.length}</span>
@@ -105,89 +121,158 @@ const availableQtypes = data
     justify-content: space-between;
     align-items: flex-end;
     margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
     gap: 1rem;
     flex-wrap: wrap;
   }
   .page-header h1 {
-    margin: 0;
-    font-size: 1.75rem;
+    margin: 0.5rem 0 0.5rem;
+    font-size: 2rem;
+    font-weight: 700;
     letter-spacing: -0.02em;
   }
-  .page-header p { margin: 0.25rem 0 0; }
+  .counter {
+    margin: 0;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+  }
+  .counter-num {
+    color: var(--fg);
+    font-weight: 700;
+  }
   .filters select {
     background: var(--bg-card);
     color: var(--fg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.45rem 0.625rem;
-    font-family: inherit;
-    font-size: 0.9rem;
+    border: 1px solid var(--border-strong);
+    padding: 0.55rem 0.875rem;
+    font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     cursor: pointer;
+    transition: border-color 0.12s ease, background 0.12s ease;
   }
-  .filters select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .filters select:hover { border-color: var(--accent); background: var(--bg-sunken); }
+  .filters select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-  .error {
-    background: color-mix(in srgb, var(--danger) 8%, var(--bg-card));
-    border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
-    border-radius: 8px;
+  /* Reused mission-control alert pattern */
+  .alert {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: stretch;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-strong);
+  }
+  .alert-label {
     padding: 0.875rem 1rem;
-    margin-bottom: 1.25rem;
-    font-size: 0.9rem;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--bg-card);
+    background: var(--danger);
+    display: flex;
+    align-items: center;
+  }
+  .alert-body {
+    padding: 0.875rem 1.125rem;
+    background: var(--danger-soft);
+    font-size: 0.88rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .alert-body code { word-break: break-all; background: rgba(0,0,0,0.06); }
+  .alert-hint { margin: 0; }
+
+  .empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+    border: 1px dashed var(--border-strong);
   }
 
   .queries-table {
     width: 100%;
     border-collapse: collapse;
     background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
+    border: 1px solid var(--border-strong);
   }
   .queries-table th, .queries-table td {
     text-align: left;
-    padding: 0.75rem 1rem;
+    padding: 0.65rem 0.875rem;
     border-bottom: 1px solid var(--border);
     vertical-align: top;
   }
   .queries-table tr:last-child td { border-bottom: none; }
-  .queries-table th {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--muted);
-    font-weight: 600;
+  .queries-table thead tr {
+    background: var(--bg-sunken);
   }
-  .col-type { width: 140px; }
-  .col-urns { width: 90px; font-variant-numeric: tabular-nums; }
-  .col-action { width: 40px; text-align: right; }
+  .queries-table th {
+    font-size: 0.68rem;
+    font-family: ui-monospace, Menlo, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border-strong);
+  }
+  .queries-table tbody tr {
+    transition: background 0.1s ease;
+  }
+  .queries-table tbody tr:hover {
+    background: var(--accent-soft);
+  }
+  .queries-table tbody tr:has(.query-link:active) {
+    background: var(--accent);
+  }
+  .queries-table tbody tr:has(.query-link:active) .query-link {
+    color: var(--bg-card);
+  }
+  .col-idx { width: 56px; font-size: 0.78rem; letter-spacing: 0.04em; }
+  .col-type { width: 160px; }
+  .col-urns { width: 80px; }
+  .col-action { width: 44px; text-align: right; }
   .query-link {
     color: var(--fg);
     font-weight: 500;
     text-decoration: none;
     display: block;
+    transition: color 0.1s ease;
   }
   .query-link:hover {
     color: var(--accent);
-    text-decoration: underline;
+    text-decoration: none;
   }
+  .row-notes { margin-top: 0.2rem; }
   .type-pill {
-    background: var(--code);
-    padding: 0.15rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.78rem;
-    color: var(--muted);
-    font-family: ui-monospace, SFMono-Regular, monospace;
+    background: var(--bg-sunken);
+    border: 1px solid var(--border);
+    padding: 0.15rem 0.55rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--fg-dim);
+    font-family: ui-monospace, Menlo, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
   .urn-count {
     font-size: 0.95rem;
-    font-weight: 500;
+    font-weight: 700;
   }
   .action-link {
     color: var(--muted);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+    font-family: ui-monospace, Menlo, monospace;
     text-decoration: none;
+    transition: color 0.1s ease, transform 0.1s ease;
+    display: inline-block;
   }
-  .action-link:hover { color: var(--accent); }
+  .action-link:hover { color: var(--accent); transform: translateX(2px); text-decoration: none; }
+  .action-link:active { color: var(--emphasis); }
 
   .visually-hidden {
     position: absolute;

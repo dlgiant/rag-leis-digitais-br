@@ -3,13 +3,16 @@ import Layout from "../../layouts/Layout.astro";
 import { SignIn } from "@clerk/astro/components";
 ---
 
-<Layout title="Entrar — rag-leis review" hideHeader={true}>
+<Layout title="Entrar" hideHeader={true}>
   <section class="signin">
     <header class="signin-header">
-      <h1>rag-leis<span class="muted">/review</span></h1>
-      <p class="tagline muted">
-        Acesso restrito. Para revisar o eval set, faça login com sua conta
-        autorizada.
+      <span class="label-eyebrow">ACESSO / 00</span>
+      <h1>
+        <span class="brand-mark">RAG-leis</span><span class="brand-slash">/revisa</span>
+      </h1>
+      <p class="tagline">
+        Acesso restrito. Faça login com a conta autorizada para revisar
+        o eval set.
       </p>
     </header>
 
@@ -21,37 +24,59 @@ import { SignIn } from "@clerk/astro/components";
       />
     </div>
 
-    <footer class="signin-footer muted small">
-      <p>
-        Endpoints acessados: <code>/v1/admin/*</code> em rag-leis-digitais-br.fly.dev.
-        Apenas e-mails na allowlist <code>RAG_ADMIN_ALLOWLIST</code> têm acesso.
+    <footer class="signin-footer">
+      <p class="footer-line">
+        <span class="label-eyebrow">STATUS</span>
+        <span class="footer-status">Apenas e-mails na allowlist têm acesso aos endpoints administrativos.</span>
       </p>
     </footer>
   </section>
 
   <style>
     .signin {
-      max-width: 460px;
+      max-width: 480px;
       margin: 4rem auto 2rem;
-      padding: 0 1.25rem;
+      padding: 0 1.5rem;
     }
-    .signin-header { margin-bottom: 2rem; text-align: center; }
+    .signin-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
     .signin-header h1 {
-      margin: 0 0 0.5rem;
-      font-size: 1.75rem;
-      letter-spacing: -0.02em;
+      margin: 0.5rem 0 0.75rem;
+      font-size: 1.875rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+      text-transform: uppercase;
     }
-    .tagline { margin: 0; font-size: 0.95rem; line-height: 1.5; }
+    .brand-slash { color: var(--muted); font-weight: 400; }
+    .tagline {
+      margin: 0;
+      color: var(--fg-dim);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
     .signin-widget {
       display: flex;
       justify-content: center;
       margin-bottom: 2rem;
     }
     .signin-footer {
-      text-align: center;
       padding-top: 1.5rem;
       border-top: 1px solid var(--border);
     }
-    .signin-footer p { margin: 0; line-height: 1.5; }
+    .footer-line {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .footer-status {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
   </style>
 </Layout>

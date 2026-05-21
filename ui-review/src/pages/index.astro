@@ -30,27 +30,32 @@ if (data) {
 const sortedTypes = Object.entries(countsByType).sort((a, b) => b[1] - a[1]);
 ---
 
-<Layout title="Dashboard — rag-leis review">
+<Layout title="Dashboard">
   <div class="container">
     <header class="page-header">
+      <span class="label-eyebrow">DASHBOARD / 01</span>
       <h1>Revisão do eval set</h1>
       {data && (
-        <p class="muted">
-          Bem-vindo, <code>{data.viewer.email}</code>
-          {data.viewer.is_operator && <span class="badge badge-operator">operador</span>}
+        <p class="viewer-line">
+          <span class="muted">Operador:</span>
+          <code class="mono">{data.viewer.email}</code>
+          {data.viewer.is_operator && <span class="badge badge-operator">OPERADOR</span>}
         </p>
       )}
     </header>
 
     {fetchError && (
-      <div class="error">
-        <strong>Erro ao carregar eval queries:</strong>
-        <code>{fetchError}</code>
-        {!verbose && (
-          <p class="error-hint muted small">
-            Para detalhes técnicos, adicione <code>?debug=1</code> à URL.
-          </p>
-        )}
+      <div class="alert alert-danger">
+        <span class="alert-label">ERRO</span>
+        <div class="alert-body">
+          <strong>Falha ao carregar eval queries.</strong>
+          <code>{fetchError}</code>
+          {!verbose && (
+            <p class="alert-hint muted small">
+              Para detalhes técnicos, adicione <code>?debug=1</code> à URL.
+            </p>
+          )}
+        </div>
       </div>
     )}
 
@@ -58,27 +63,33 @@ const sortedTypes = Object.entries(countsByType).sort((a, b) => b[1] - a[1]);
       <>
         <section class="metric-cards">
           <div class="metric-card">
+            <span class="label-eyebrow">TOTAL</span>
             <div class="metric-value">{data.total}</div>
-            <div class="metric-label">queries no eval</div>
+            <div class="metric-label">queries no eval set</div>
           </div>
           <div class="metric-card">
+            <span class="label-eyebrow">REVISADAS</span>
             <div class="metric-value">0</div>
-            <div class="metric-label">revisadas <span class="muted small">(Fase 11.2)</span></div>
+            <div class="metric-label">aguardando Fase 11.2</div>
           </div>
           <div class="metric-card">
+            <span class="label-eyebrow">PENDENTES</span>
             <div class="metric-value">{data.total}</div>
-            <div class="metric-label">aguardando revisão</div>
+            <div class="metric-label">a revisar</div>
           </div>
         </section>
 
         <section class="by-type">
-          <h2>Por tipo</h2>
+          <header class="section-header">
+            <h2>Distribuição por tipo</h2>
+            <span class="muted small mono">{sortedTypes.length} tipos / {data.total} total</span>
+          </header>
           <ul class="type-list">
             {sortedTypes.map(([qtype, count]) => (
               <li>
                 <a href={`/queries?qtype=${encodeURIComponent(qtype)}`}>
                   <span class="type-name">{qtype}</span>
-                  <span class="type-count">{count}</span>
+                  <span class="type-count mono">{count}</span>
                 </a>
               </li>
             ))}
@@ -86,7 +97,9 @@ const sortedTypes = Object.entries(countsByType).sort((a, b) => b[1] - a[1]);
         </section>
 
         <section class="cta">
-          <a href="/queries" class="button">Ver todas as queries →</a>
+          <a href="/queries" class="button button-primary">
+            VER TODAS AS QUERIES <span class="button-arrow">→</span>
+          </a>
         </section>
       </>
     )}
@@ -94,110 +107,200 @@ const sortedTypes = Object.entries(countsByType).sort((a, b) => b[1] - a[1]);
 </Layout>
 
 <style>
-  .page-header { margin-bottom: 2rem; }
-  .page-header h1 {
-    margin: 0 0 0.25rem;
-    font-size: 1.875rem;
-    letter-spacing: -0.02em;
+  .page-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
   }
-  .page-header p { margin: 0; font-size: 0.95rem; }
+  .page-header h1 {
+    margin: 0.5rem 0 0.625rem;
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+  .viewer-line {
+    margin: 0;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
   .badge {
     display: inline-block;
-    padding: 0.15em 0.5em;
-    border-radius: 4px;
-    font-size: 0.75em;
-    font-weight: 600;
+    padding: 0.18em 0.6em;
+    font-size: 0.7em;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-left: 0.5em;
+    letter-spacing: 0.12em;
+    font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
   }
   .badge-operator {
-    background: var(--accent-soft);
-    color: var(--accent);
-    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    background: var(--emphasis);
+    color: var(--bg-card);
+    border: 1px solid var(--emphasis);
   }
 
-  .error {
-    background: color-mix(in srgb, var(--danger) 8%, var(--bg-card));
-    border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
+  /* Mission-control style alert block */
+  .alert {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: stretch;
+    margin-bottom: 1.75rem;
+    border: 1px solid var(--border-strong);
   }
-  .error code { word-break: break-all; }
-  .error-hint { margin: 0.5rem 0 0; }
+  .alert-label {
+    padding: 0.875rem 1rem;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--bg-card);
+    background: var(--danger);
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+  }
+  .alert-body {
+    padding: 0.875rem 1.125rem;
+    background: var(--danger-soft);
+    font-size: 0.88rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .alert-body code { word-break: break-all; background: rgba(0,0,0,0.06); }
+  .alert-hint { margin: 0; }
+  .alert-danger .alert-label { background: var(--danger); }
 
+  /* Metric cards: sharp, technical, monospace numbers */
   .metric-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
+    gap: 1px;
     margin-bottom: 2.5rem;
+    background: var(--border);
+    border: 1px solid var(--border);
   }
   .metric-card {
     background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
     padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    transition: background 0.15s ease;
   }
+  .metric-card:hover { background: var(--bg-sunken); }
   .metric-value {
-    font-size: 2.25rem;
+    font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+    font-size: 2.5rem;
     font-weight: 700;
-    line-height: 1.1;
+    line-height: 1;
     letter-spacing: -0.02em;
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
   }
   .metric-label {
     color: var(--muted);
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
+    font-size: 0.82rem;
   }
 
-  .by-type h2 {
-    font-size: 0.85rem;
+  /* Section header pattern */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.875rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed var(--border);
+  }
+  .section-header h2 {
+    margin: 0;
+    font-size: 0.95rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--muted);
-    margin: 0 0 0.75rem;
+    letter-spacing: 0;
+    color: var(--fg);
+  }
+
+  .by-type {
+    margin-bottom: 2.5rem;
   }
   .type-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 2.5rem;
+    margin: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
   }
   .type-list a {
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.6rem 0.875rem;
+    padding: 0.7rem 1rem;
     color: var(--fg);
+    transition: all 0.12s ease;
+    border-left: 2px solid transparent;
   }
   .type-list a:hover {
-    border-color: var(--accent);
-    background: var(--accent-soft);
+    background: var(--bg-sunken);
+    border-left-color: var(--accent);
+    color: var(--accent);
     text-decoration: none;
   }
-  .type-name { font-weight: 500; }
+  .type-list a:active {
+    background: var(--accent);
+    color: var(--bg-card);
+    border-left-color: var(--emphasis);
+  }
+  .type-list a:active .type-count { color: var(--bg-card); }
+  .type-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
   .type-count {
     color: var(--muted);
-    font-variant-numeric: tabular-nums;
     font-size: 0.95rem;
+    font-weight: 600;
+    transition: color 0.12s ease;
   }
 
-  .cta { display: flex; }
+  .cta { display: flex; margin-top: 2rem; }
   .button {
-    background: var(--accent);
-    color: white;
-    padding: 0.7rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    transition: all 0.12s ease;
+    cursor: pointer;
   }
-  .button:hover { filter: brightness(1.1); text-decoration: none; }
+  .button-primary {
+    background: var(--accent);
+    color: var(--bg-card);
+  }
+  .button-primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    text-decoration: none;
+    color: var(--bg-card);
+  }
+  .button-primary:active {
+    background: var(--emphasis);
+    border-color: var(--emphasis);
+    transform: translateY(1px);
+  }
+  .button-arrow {
+    transition: transform 0.12s ease;
+  }
+  .button:hover .button-arrow { transform: translateX(3px); }
 </style>
