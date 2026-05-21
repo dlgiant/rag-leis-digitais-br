@@ -85,6 +85,16 @@ def init_pool(*, url: str | None = None, min_size: int = 1, max_size: int = 10) 
         # construction time which would block app startup if the DB
         # is briefly unreachable.
         open=False,
+        # `check` runs `SELECT 1` before handing the connection to the
+        # caller. Required for Neon serverless: Neon kills idle
+        # connections from its end with `terminating connection due
+        # to administrator command`. Without check, the next request
+        # gets a 500 instead of a silently-recycled connection.
+        check=ConnectionPool.check_connection,
+        # Recycle below Neon's idle-kill threshold (≈5min on free
+        # tier) so check_connection rarely needs to fail-and-replace.
+        # Default was 600s; 240s = 4min keeps us comfortably under.
+        max_idle=240.0,
     )
     _pool.open()
 
