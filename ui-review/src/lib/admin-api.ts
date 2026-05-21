@@ -44,6 +44,53 @@ export class AdminApiError extends Error {
   constructor(public status: number, public bodyText: string) {
     super(`admin API ${status}: ${bodyText.slice(0, 200)}`);
   }
+
+  /** Friendly, non-leaking message for end users (lawyer, etc.) */
+  userMessage(): string {
+    if (this.status === 0) return "Não foi possível contatar o backend. Tente novamente em alguns instantes.";
+    if (this.status === 401) return "Sessão expirada. Saia e entre novamente.";
+    if (this.status === 403) return "Seu e-mail não está autorizado para esta área.";
+    if (this.status === 404) return "Recurso não encontrado.";
+    if (this.status === 429) return "Limite de requisições atingido. Tente novamente em um minuto.";
+    if (this.status >= 500) return "Backend indisponível. Verifique o status do serviço.";
+    return `Erro ${this.status}.`;
+  }
+
+  /** Full diagnostic message — internal infrastructure detail, do not show by default. */
+  verboseMessage(): string {
+    return `${this.status}: ${this.bodyText}`;
+  }
+}
+
+/**
+ * Decide whether the current request wants verbose error detail.
+ *
+ * Two toggles, either enables verbose:
+ *   - `?debug=1` query param on the page URL (ad-hoc; no redeploy)
+ *   - `RAG_VERBOSE_ERRORS=true` env var (persistent override)
+ *
+ * Default (neither set): friendly, non-leaking error messages only.
+ * Internal URLs, env-var names, Node error codes never reach the
+ * browser unless verbose is explicitly on.
+ */
+export function isVerbose(url: URL): boolean {
+  if (url.searchParams.get("debug") === "1") return true;
+  if (process.env.RAG_VERBOSE_ERRORS === "true") return true;
+  return false;
+}
+
+/**
+ * Format a thrown error for display, respecting verbose mode.
+ * `e` may be an AdminApiError (preferred) or any thrown value.
+ */
+export function formatError(e: unknown, verbose: boolean): string {
+  if (e instanceof AdminApiError) {
+    return verbose ? e.verboseMessage() : e.userMessage();
+  }
+  if (verbose) {
+    return e instanceof Error ? e.message : String(e);
+  }
+  return "Erro inesperado. Tente novamente.";
 }
 
 export async function adminFetch<T = unknown>(

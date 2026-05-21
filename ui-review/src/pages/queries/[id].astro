@@ -1,7 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { adminFetch, AdminApiError, type EvalQueryDetailResponse } from "../../lib/admin-api";
+import { adminFetch, AdminApiError, formatError, isVerbose, type EvalQueryDetailResponse } from "../../lib/admin-api";
 
+const verbose = isVerbose(Astro.url);
 const { id } = Astro.params;
 const auth = Astro.locals.auth();
 const token = await auth.getToken();
@@ -14,14 +15,10 @@ if (token && id) {
   try {
     data = await adminFetch<EvalQueryDetailResponse>(`eval/queries/${id}`, { token });
   } catch (e) {
-    if (e instanceof AdminApiError) {
-      if (e.status === 404) {
-        notFound = true;
-      } else {
-        fetchError = `${e.status}: ${e.bodyText.slice(0, 200)}`;
-      }
+    if (e instanceof AdminApiError && e.status === 404) {
+      notFound = true;
     } else {
-      fetchError = e instanceof Error ? e.message : String(e);
+      fetchError = formatError(e, verbose);
     }
   }
 }

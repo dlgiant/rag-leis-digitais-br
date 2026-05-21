@@ -1,7 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { adminFetch, AdminApiError, type EvalQueriesListResponse } from "../../lib/admin-api";
+import { adminFetch, formatError, isVerbose, type EvalQueriesListResponse } from "../../lib/admin-api";
 
+const verbose = isVerbose(Astro.url);
 const auth = Astro.locals.auth();
 const token = await auth.getToken();
 
@@ -16,11 +17,7 @@ if (token) {
       query: { limit: 500, offset: 0, qtype: qtypeFilter },
     });
   } catch (e) {
-    if (e instanceof AdminApiError) {
-      fetchError = `${e.status}: ${e.bodyText.slice(0, 200)}`;
-    } else {
-      fetchError = e instanceof Error ? e.message : String(e);
-    }
+    fetchError = formatError(e, verbose);
   }
 }
 

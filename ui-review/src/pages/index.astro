@@ -1,7 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { adminFetch, AdminApiError, type EvalQueriesListResponse } from "../lib/admin-api";
+import { adminFetch, formatError, isVerbose, type EvalQueriesListResponse } from "../lib/admin-api";
 
+const verbose = isVerbose(Astro.url);
 const auth = Astro.locals.auth();
 const token = await auth.getToken();
 
@@ -14,11 +15,7 @@ if (token) {
       query: { limit: 500, offset: 0 },
     });
   } catch (e) {
-    if (e instanceof AdminApiError) {
-      fetchError = `${e.status}: ${e.bodyText.slice(0, 200)}`;
-    } else {
-      fetchError = e instanceof Error ? e.message : String(e);
-    }
+    fetchError = formatError(e, verbose);
   }
 }
 
@@ -49,6 +46,11 @@ const sortedTypes = Object.entries(countsByType).sort((a, b) => b[1] - a[1]);
       <div class="error">
         <strong>Erro ao carregar eval queries:</strong>
         <code>{fetchError}</code>
+        {!verbose && (
+          <p class="error-hint muted small">
+            Para detalhes técnicos, adicione <code>?debug=1</code> à URL.
+          </p>
+        )}
       </div>
     )}
 
@@ -124,6 +126,7 @@ const sortedTypes = Object.entries(countsByType).sort((a, b) => b[1] - a[1]);
     font-size: 0.9rem;
   }
   .error code { word-break: break-all; }
+  .error-hint { margin: 0.5rem 0 0; }
 
   .metric-cards {
     display: grid;
