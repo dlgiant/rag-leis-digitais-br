@@ -365,6 +365,41 @@ import Layout from "../layouts/Layout.astro";
     flex-direction: column;
     gap: 0.5rem;
   }
+  /* (dynamic-list-item styles moved to <style is:global> below) */
+
+  .flag-form {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .flag-form-header { margin-bottom: 0.75rem; }
+  .flag-form-header p { margin: 0.3rem 0 0 0; }
+  .flag-form textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 0.65rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    border-radius: 0;
+    box-sizing: border-box;
+  }
+  .flag-status[data-state="sending"] { color: var(--emphasis); }
+  .flag-status[data-state="success"] { color: var(--success, #2e7d32); }
+  .flag-status[data-state="error"] { color: var(--danger, #c62828); }
+</style>
+
+<!--
+  These classes target DYNAMICALLY-CREATED <li> elements (via
+  document.createElement in the script above). Astro's default scoped
+  CSS adds a data-astro-cid-XXXX attribute to author-written elements
+  only; JS-created elements don't get the attribute, so scoped styles
+  don't apply to them. Marking is:global ensures the styles reach the
+  dynamic items.
+-->
+<style is:global>
   .probe-retrieved-item {
     border: 1px solid var(--border);
     padding: 0.6rem 0.75rem;
@@ -391,9 +426,9 @@ import Layout from "../layouts/Layout.astro";
     gap: 0.35rem;
     cursor: pointer;
   }
-  .probe-rank { color: var(--muted); font-weight: 600; }
+  .probe-rank { color: var(--muted, #888); font-weight: 600; }
   .probe-citation { font-weight: 600; flex: 1; }
-  .probe-score { color: var(--muted); font-size: 0.85rem; }
+  .probe-score { color: var(--muted, #888); font-size: 0.85rem; }
 
   .rank-pill {
     padding: 0.15rem 0.4rem;
@@ -408,30 +443,7 @@ import Layout from "../layouts/Layout.astro";
   .rank-pill-4 { background: rgba(217, 119, 6, 0.18); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.5); }
   .rank-pill-5 { background: rgba(176, 74, 47, 0.18); color: #b04a2f; border: 1px solid rgba(176, 74, 47, 0.5); }
 
-  .probe-nav { margin: 0.2rem 0 0.3rem 0; }
-  .probe-snippet { font-size: 0.9rem; line-height: 1.5; margin: 0.35rem 0; color: var(--text); }
-  .probe-urn { display: block; word-break: break-all; margin-top: 0.3rem; }
-
-  .flag-form {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    border: 1px solid var(--border);
-    background: var(--surface-2);
-  }
-  .flag-form-header { margin-bottom: 0.75rem; }
-  .flag-form-header p { margin: 0.3rem 0 0 0; }
-  .flag-form textarea {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 0.5rem 0.65rem;
-    font-family: inherit;
-    font-size: 0.95rem;
-    border-radius: 0;
-    box-sizing: border-box;
-  }
-  .flag-status[data-state="sending"] { color: var(--emphasis); }
-  .flag-status[data-state="success"] { color: var(--success, #2e7d32); }
-  .flag-status[data-state="error"] { color: var(--danger, #c62828); }
+  .probe-nav { margin: 0.2rem 0 0.3rem 0; color: var(--muted, #888); font-size: 0.85rem; }
+  .probe-snippet { font-size: 0.9rem; line-height: 1.5; margin: 0.35rem 0; }
+  .probe-urn { display: block; word-break: break-all; margin-top: 0.3rem; color: var(--muted, #888); font-size: 0.78rem; font-family: ui-monospace, monospace; }
 </style>
