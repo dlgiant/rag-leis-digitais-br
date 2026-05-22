@@ -83,6 +83,19 @@ class IndexChunk:
     # Decreto 8.771 art.13). Empty when document not in any TIER (e.g.,
     # synthetic test fixtures).
     document_title: str = ""
+    # Phase 17.6 — when this chunk's document is a regulamento (decreto,
+    # resolução) that implements a parent lei, these carry the parent
+    # lei's URN + human-readable label. Empty for original legislation
+    # and for regulamentos not yet in the registry.
+    # Rendered as `regulamenta_urn=` + `regulamenta_label=` attributes
+    # on the `<fonte>` tag by rag.py:_build_context. The SYSTEM_PROMPT
+    # (rule 7) tells the LLM not to refuse on an orphaned regulamento
+    # — the registry entry tells it explicitly that the parent lei
+    # exists, even though the parent lei's chunks aren't necessarily
+    # in the retrieved context. Structural fix for the Decreto-8.771-
+    # class false-refusal that sabia-4 currently masks.
+    regulamenta_urn: str = ""
+    regulamenta_label: str = ""
 
 
 @dataclass(frozen=True)
@@ -112,6 +125,19 @@ def _locate_fetched_at_registry(chunks_dir: Path) -> Path | None:
     pattern below so callers don't have to thread an extra path."""
     for ancestor in [chunks_dir, *chunks_dir.parents]:
         candidate = ancestor / "metadata" / "fetched_at.json"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _locate_regulamentation_targets_registry(chunks_dir: Path) -> Path | None:
+    """Phase 17.6 — auto-discover data/metadata/regulamentation_targets.json
+    using the same walk-up pattern as the fetched_at registry. Returns
+    None when the file isn't present; callers degrade to empty mapping
+    (no regulamento chunks get their parent-lei attribute, which is the
+    pre-17.6 behavior — non-breaking on fresh checkouts)."""
+    for ancestor in [chunks_dir, *chunks_dir.parents]:
+        candidate = ancestor / "metadata" / "regulamentation_targets.json"
         if candidate.exists():
             return candidate
     return None
@@ -223,6 +249,32 @@ def load_chunks(
         d.urn: d.title for d in (*TIER_1, *TIER_2, *TIER_3, *TIER_4)
     }
 
+    # Phase 17.6 — load regulamentation_targets registry (doc-level
+    # mapping of regulamento_urn → {regulamenta_urn, regulamenta_label}).
+    # Empty dict when registry is absent; chunks degrade to empty
+    # regulamenta_* fields (pre-17.6 behavior). Underscore-prefixed
+    # entries in the JSON are documentation comments and are filtered
+    # out at load time.
+    reg_targets_by_doc: dict[str, dict[str, str]] = {}
+    reg_registry_path = _locate_regulamentation_targets_registry(chunks_dir)
+    if reg_registry_path is not None and reg_registry_path.exists():
+        try:
+            raw_reg = json.loads(reg_registry_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            raw_reg = {}
+        # Filter out leading-underscore documentation keys; keep only
+        # entries whose value is a mapping with the required fields.
+        for k, v in raw_reg.items():
+            if k.startswith("_") or not isinstance(v, dict):
+                continue
+            tgt_urn = v.get("regulamenta_urn", "")
+            tgt_label = v.get("regulamenta_label", "")
+            if tgt_urn and tgt_label:
+                reg_targets_by_doc[k] = {
+                    "urn": tgt_urn,
+                    "label": tgt_label,
+                }
+
     # Load overlays from explicit path, or auto-discover the canonical
     # location relative to this project. Empty dict if file absent — fresh
     # checkouts shouldn't crash.
@@ -256,6 +308,7 @@ def load_chunks(
         nav_text = " > ".join(_normalize_nav_casing(v) for v in nav.values() if v)
         caput_text = _resolve_caput_chain(obj)
         citation = _resolve_citation(obj)
+        reg_tgt = reg_targets_by_doc.get(obj["document_urn"])
         out.append(
             IndexChunk(
                 urn=obj["urn"],
@@ -268,6 +321,8 @@ def load_chunks(
                 fetched_at=fetched_at_by_doc.get(obj["document_urn"], ""),
                 amended_by=tuple(_extract_amended_by(obj.get("notes", []))),
                 document_title=title_by_doc_urn.get(obj["document_urn"], ""),
+                regulamenta_urn=(reg_tgt or {}).get("urn", ""),
+                regulamenta_label=(reg_tgt or {}).get("label", ""),
             )
         )
     return out

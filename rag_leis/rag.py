@@ -274,6 +274,31 @@ próprio), uma sentença iniciando com "⚠️ Atenção:" reproduzindo o conte�
 da ressalva — status, fundamento (processo / ato normativo) e o que isso \
 significa para a aplicação do dispositivo. Não silencie a ressalva, mesmo \
 que o usuário não tenha perguntado sobre ela.
+
+7. **Regulamento → lei regulamentada — REGRA ESTRUTURAL**: se uma `<fonte>` \
+tiver os atributos `regulamenta_urn=` e `regulamenta_label=`, essa fonte é \
+um regulamento (decreto, resolução de autoridade) que implementa uma lei. \
+Quando sua resposta usar essa fonte:
+
+- NÃO recuse só porque a lei regulamentada não está entre as `<fonte>` do \
+contexto. O regulamento é norma vinculante por si só dentro do seu escopo; \
+o atributo `regulamenta_label=` já fornece o nome da lei para você \
+contextualizar a resposta.
+
+- MENCIONE a lei regulamentada no texto da resposta usando o valor de \
+`regulamenta_label`, explicitando que o dispositivo citado é regulamentação \
+dela. Exemplo: "O Decreto 8.771/2016, que regulamenta o Marco Civil da \
+Internet (Lei 12.965/2014), determina em seu art. X que...".
+
+- Em `citations` cite APENAS o URN do regulamento (o que aparece em \
+`urn=`), NÃO o URN da lei regulamentada — o URN em `regulamenta_urn=` é \
+informação contextual, não fonte citável (os chunks da lei mãe podem não \
+estar no contexto recuperado).
+
+Esta regra existe para evitar uma falha estrutural: ao ver apenas chunks \
+de um decreto sem a lei mãe, modelos mais antigos recusavam tratando o \
+decreto como norma órfã. O atributo `regulamenta_*` carrega o vínculo \
+explicitamente para que a resposta possa ser dada com confiança.
 """
 
 
@@ -928,8 +953,28 @@ class RAGPipeline:
             vig_attr = ""
             if chunk.vigencia is not None:
                 vig_attr = f' vigencia="{vigencia_warning(chunk.vigencia)}"'
+            # Phase 17.6 — regulamento → parent-lei attributes. When this
+            # chunk's document is a decreto/resolução registered in
+            # data/metadata/regulamentation_targets.json, render the
+            # parent lei's URN + label as XML attrs. SYSTEM_PROMPT rule 7
+            # instructs the LLM to (a) not refuse on an orphaned
+            # regulamento and (b) mention the parent lei in the answer
+            # text without citing it (the parent lei's chunks may not
+            # be in the retrieved context — `regulamenta_label` is a
+            # contextualization string, not a citable URN).
+            reg_attr = ""
+            if chunk.regulamenta_urn and chunk.regulamenta_label:
+                # Escape double-quotes in the label defensively so we
+                # don't break the XML attribute (Brazilian law titles
+                # don't typically contain `"` but the encode is cheap
+                # insurance).
+                safe_label = chunk.regulamenta_label.replace('"', "'")
+                reg_attr = (
+                    f' regulamenta_urn="{chunk.regulamenta_urn}"'
+                    f' regulamenta_label="{safe_label}"'
+                )
             parts.append(
-                f'<fonte urn="{urn}"{vig_attr}>\n{header}\n{chunk.text}\n</fonte>'
+                f'<fonte urn="{urn}"{vig_attr}{reg_attr}>\n{header}\n{chunk.text}\n</fonte>'
             )
         return "\n\n".join(parts)
 

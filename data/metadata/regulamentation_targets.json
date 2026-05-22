@@ -1,0 +1,22 @@
+{
+  "_schema_version": 1,
+  "_note": "Phase 17.6 — doc-level registry of regulamento → parent-lei relationships. Loaded by rag_leis.eval_harness.load_chunks; populated onto IndexChunk.regulamenta_{urn,label}; rendered as XML attributes on <fonte> in rag_leis.rag._build_context. The SYSTEM_PROMPT (rule 7) instructs the LLM that a regulamento with this attribute is NOT an orphaned norm and should be cited with its parent lei mentioned in the answer text. Closes the Decreto 8.771-class false-refusal structurally — the previous fix was switching models (sabia-3.1 → sabia-4); this addresses it at the prompt-context level so cheaper future models inherit the correctness.",
+
+  "urn:lex:br:federal:decreto:2016-05-11;8771": {
+    "regulamenta_urn": "urn:lex:br:federal:lei:2014-04-23;12965",
+    "regulamenta_label": "Marco Civil da Internet (Lei 12.965/2014)",
+    "_evidence": "Title from data/metadata/tier-1/br_federal_decreto_2016-05-11_8771.json: 'Decreto 8.771/2016 — regulamenta o Marco Civil da Internet'. Confirmed by art. 1 of Decreto 8.771 itself ('Este Decreto regulamenta a Lei nº 12.965, de 23 de abril de 2014')."
+  },
+
+  "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4": {
+    "regulamenta_urn": "urn:lex:br:federal:lei:2018-08-14;13709",
+    "regulamenta_label": "Lei Geral de Proteção de Dados Pessoais (LGPD — Lei 13.709/2018)",
+    "_evidence": "Res. CD/ANPD 4/2023 dispõe sobre dosimetria das sanções administrativas previstas no art. 52 da LGPD. Constitutionally bound to LGPD via Lei 13.853/2019 (art. 55-J inciso XX gives ANPD the regulamentação competence)."
+  },
+
+  "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15": {
+    "regulamenta_urn": "urn:lex:br:federal:lei:2018-08-14;13709",
+    "regulamenta_label": "Lei Geral de Proteção de Dados Pessoais (LGPD — Lei 13.709/2018)",
+    "_evidence": "Res. CD/ANPD 15/2024 regulamenta a aplicação da LGPD ao tratamento de dados pessoais por agentes de tratamento no setor público. Same ANPD competence chain via art. 55-J."
+  }
+}
