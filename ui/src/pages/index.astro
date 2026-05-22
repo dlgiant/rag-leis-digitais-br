@@ -159,18 +159,13 @@ function lexmlHref(urn: string): string {
 
 <Layout title="rag-leis demo — perguntas sobre leis digitais brasileiras">
   <div class="page-wrap">
+    <div class="sidebar-column">
     <aside class="sidebar" data-conv-active={activeConvId ?? ""}>
       <div class="sidebar-header">
         <a href="/" class="new-chat-btn" aria-label="Nova conversa">
           <span class="plus" aria-hidden="true">+</span>
           <span>NOVA CONVERSA</span>
         </a>
-        <p class="sidebar-code-link">
-          <span class="label-eyebrow">CÓDIGO</span>
-          <a href="https://github.com/dlgiant/rag-leis-digitais-br" target="_blank" rel="noopener">
-            github.com/dlgiant/rag-leis-digitais-br
-          </a>
-        </p>
       </div>
       <nav class="sidebar-list" aria-label="Conversas anteriores">
         {conversations.length === 0 ? (
@@ -196,6 +191,13 @@ function lexmlHref(urn: string): string {
         )}
       </nav>
     </aside>
+    <p class="sidebar-code-link">
+      <span class="label-eyebrow">CÓDIGO</span>
+      <a href="https://github.com/dlgiant/rag-leis-digitais-br" target="_blank" rel="noopener">
+        github.com/dlgiant/rag-leis-digitais-br
+      </a>
+    </p>
+    </div>
 
     <main>
       <header class="page-header">
@@ -360,11 +362,19 @@ function lexmlHref(urn: string): string {
     }
 
     /* ---------- Sidebar ---------- */
-    .sidebar {
+    /* `.sidebar-column` is the grid item; sticky positioning lives here
+       so the "Código:" link below the .sidebar box stays in view with
+       the rest of the column on long pages. */
+    .sidebar-column {
       position: sticky;
       top: 4rem; /* below the layout's sticky header */
       max-height: calc(100vh - 5rem);
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .sidebar {
       background: var(--bg-card);
       border: 1px solid var(--border);
       padding: 1rem 0.75rem;
@@ -374,12 +384,13 @@ function lexmlHref(urn: string): string {
       border-bottom: 1px solid var(--border);
       margin-bottom: 0.75rem;
     }
-    /* The "Código:" reference. Sits under the new-chat button, kept
-       visually quiet so it doesn't compete with the conversation
-       list for attention. */
+    /* The "Código:" reference. Sits BELOW the sidebar box (outside the
+       border), aligned with the sidebar's horizontal padding so the
+       eyebrow + link line up visually with the conversation items
+       above. */
     .sidebar-code-link {
-      margin: 0.75rem 0 0;
-      padding: 0 0.15rem;
+      margin: 0;
+      padding: 0 0.9rem;
       display: flex;
       flex-direction: column;
       gap: 0.2rem;
@@ -849,9 +860,10 @@ function lexmlHref(urn: string): string {
         grid-template-columns: 1fr;
         padding: 0.5rem 1rem 3rem;
       }
-      .sidebar {
+      .sidebar-column {
         position: static;
         max-height: none;
+        overflow: visible;
         order: 2;
       }
       main {
