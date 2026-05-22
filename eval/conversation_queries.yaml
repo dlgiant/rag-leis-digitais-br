@@ -1,0 +1,201 @@
+# Phase 17.2 — conversation-shape eval (10 rows).
+#
+# Contract spec for the multi-turn classifier rewriter that Phase 10d
+# will implement. See `rag_leis/query_type.py` for the prose contract.
+#
+# Each row is a two-turn conversation. The eval measures whether a
+# rewriter can produce a STANDALONE form of `turn_2` (using `turn_1` as
+# context) that:
+#
+#   * Classifies as `expected_classified_type_turn_2` when passed to
+#     `rag_leis.query_type.classify_query`.
+#   * Retrieves the gold URNs in `gold_for_turn_2` from the corpus.
+#   * Stays OOS when `turn_2` is itself OOS even if `turn_1` was on-
+#     corpus (the rewriter must not launder scope by inlining
+#     entities).
+#
+# Rows cover the meaningful shapes where multi-turn breaks the single-
+# turn assumption — pronouns, ellipsis, narrowing, topic shift,
+# clarification, comparison, article follow-up, negation, OOS follow-
+# up, explicit new-law follow-up.
+#
+# `expected_rewrite_turn_2` is a REFERENCE rewrite — one acceptable
+# standalone form. A Phase 10d implementation that produces a different
+# rewrite is still acceptable provided downstream classification +
+# retrieval + OOS-shape match the expected fields. The rewrite field is
+# documentation, not assertion.
+#
+# Phase 10d eval-runner contract:
+#   1. For each row, call `rewrite_for_classification(prior_turns=[
+#      ("user", turn_1)], current_query=turn_2)`.
+#   2. Pass the rewrite to `classify_query`; compare to
+#      `expected_classified_type_turn_2`.
+#   3. Pass the rewrite to the retriever; compute hit rate against
+#      `gold_for_turn_2`.
+#   4. For OOS rows, verify the pipeline refuses with the expected
+#      subtype.
+#
+# Target post-10d: 9/10 classification match, ≥8/10 gold retrieval at
+# top-12, all OOS rows refuse. The exact bar will be set in the
+# Phase 10d findings doc.
+
+- source_id: conv-01-entity-reference-back
+  category: entity-reference
+  turn_1: "qual a definição de dado pessoal na LGPD?"
+  turn_2: "e o art. 5º que você mencionou?"
+  expected_rewrite_turn_2: "o que diz o art. 5º da LGPD sobre definição de dado pessoal?"
+  expected_classified_type_turn_2: citacao-literal
+  gold_for_turn_2:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art5;inc1"
+  notes: |
+    Pronoun "que você mencionou" needs to resolve against turn_1's
+    reference to LGPD art. 5. A naive single-turn classifier sees no
+    "art. N" mention in turn_2's literal text and would mis-classify
+    as parafrase; after rewrite the citação-literal regex matches.
+
+- source_id: conv-02-subject-continuation-isso
+  category: subject-continuation
+  turn_1: "o que a LGPD diz sobre tratamento de dados pessoais?"
+  turn_2: "quem fiscaliza isso?"
+  expected_rewrite_turn_2: "quem fiscaliza o tratamento de dados pessoais na LGPD?"
+  expected_classified_type_turn_2: parafrase
+  gold_for_turn_2:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art55-j"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art55-k"
+  notes: |
+    "isso" = tratamento de dados pessoais na LGPD. Without inlining,
+    the embedding of "quem fiscaliza isso?" lands nowhere near ANPD
+    chunks. After rewrite the retriever can find the ANPD competence
+    articles (55-J, 55-K).
+
+- source_id: conv-03-implicit-narrowing-public-sector
+  category: implicit-narrowing
+  turn_1: "como a LGPD trata bases legais para empresas privadas?"
+  turn_2: "e para o setor público?"
+  expected_rewrite_turn_2: "como a LGPD trata bases legais para o setor público?"
+  expected_classified_type_turn_2: parafrase
+  gold_for_turn_2:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art23"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art24"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art26"
+  notes: |
+    Ellipsis follow-up — "e para X" leaves the verb + topic implicit.
+    Rewriter must carry "LGPD + bases legais" from turn_1 while
+    substituting "setor público" for "empresas privadas". LGPD's
+    public-sector chapter starts at art. 23.
+
+- source_id: conv-04-topic-shift-explicit
+  category: topic-shift
+  turn_1: "qual a definição de dado pessoal na LGPD?"
+  turn_2: "mudando de assunto, o que diz o Marco Civil sobre responsabilidade do provedor de aplicações?"
+  expected_rewrite_turn_2: "o que diz o Marco Civil sobre responsabilidade do provedor de aplicações?"
+  expected_classified_type_turn_2: parafrase
+  gold_for_turn_2:
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art19"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art21"
+  notes: |
+    "Mudando de assunto" is the canonical topic-shift marker. Rewriter
+    MUST NOT carry LGPD context into the rewrite — the rewrite should
+    look identical to a fresh single-turn query on Marco Civil
+    responsabilidade. Failure mode: a greedy rewriter that always
+    inlines prior topic produces "responsabilidade do provedor de
+    aplicações sob a LGPD" which mis-retrieves.
+
+- source_id: conv-05-clarification-request
+  category: clarification
+  turn_1: "o que é hipossuficiência no CDC?"
+  turn_2: "pode dar mais detalhes?"
+  expected_rewrite_turn_2: "qual a definição mais detalhada de hipossuficiência no CDC?"
+  expected_classified_type_turn_2: definicao
+  gold_for_turn_2:
+    - "urn:lex:br:federal:lei:1990-09-11;8078~art4"
+    - "urn:lex:br:federal:lei:1990-09-11;8078~art6;inc8"
+  notes: |
+    "Pode dar mais detalhes" carries no domain entities at all — the
+    rewrite must reconstruct the subject entirely from turn_1. The
+    rewrite uses the "qual a definição" lemma so the regex stays in
+    definicao territory (a naïve "explique em detalhes" rewrite
+    drops to parafrase — the rewriter has latitude to pick wording
+    that preserves the underlying intent's classification).
+
+- source_id: conv-06-comparison-cross-doc
+  category: comparison
+  turn_1: "quais os princípios da LGPD?"
+  turn_2: "como isso compara com os princípios do Marco Civil?"
+  expected_rewrite_turn_2: "comparação entre os princípios da LGPD e os princípios do Marco Civil"
+  expected_classified_type_turn_2: cross-doc
+  gold_for_turn_2:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art6"
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art3"
+  notes: |
+    Comparison-shape follow-up. Rewrite must transform "como isso
+    compara com X" into a form that triggers the cross-doc regex —
+    which requires the literal pattern "(diferença|comparação|relação)
+    entre". Imperative "compare X com Y" reads natural but doesn't
+    match; "comparação entre X e Y" is the rewriter-friendly form.
+
+- source_id: conv-07-article-follow-up
+  category: article-follow-up
+  turn_1: "princípios da Administração Pública na Constituição"
+  turn_2: "e o art. 37 especificamente?"
+  expected_rewrite_turn_2: "o que diz o art. 37 da Constituição sobre princípios da Administração Pública?"
+  expected_classified_type_turn_2: citacao-literal
+  gold_for_turn_2:
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art37"
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art37;cpt"
+  notes: |
+    Specific article narrowing. Rewriter must carry "Constituição"
+    forward (turn_2 has no document mention) so the retriever lands on
+    CF art. 37, not e.g. LGPD art. 37 or MCI art. 37.
+
+- source_id: conv-08-negation-exclusion
+  category: negation
+  turn_1: "quais os direitos do titular dos dados pessoais segundo a LGPD?"
+  turn_2: "e o que NÃO é considerado um direito do titular?"
+  expected_rewrite_turn_2: "o que NÃO é considerado um direito do titular dos dados pessoais segundo a LGPD?"
+  expected_classified_type_turn_2: parafrase
+  gold_for_turn_2:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art18"
+  notes: |
+    Negation follow-up. Gold target is the same enumeração-shaped
+    article (LGPD art. 18) — the LLM derives "what isn't included" by
+    examining the explicit enumeration. The natural rewrite ("o que
+    NÃO é considerado...") doesn't match any of the 5 type regexes
+    (negation breaks "o que é"; no "quais" lemma); falls through to
+    parafrase. parafrase's top_k=12 is plenty for art. 18 + family,
+    so the classification miss is harmless. A more aggressive
+    rewriter that reshapes to "quais NÃO são considerados direitos"
+    would match enumeração; this row tests the conservative path.
+
+- source_id: conv-09-oos-follow-up-jurisprudence
+  category: oos-follow-up
+  turn_1: "definições de dado pessoal na LGPD"
+  turn_2: "e jurisprudência do STF sobre isso?"
+  expected_rewrite_turn_2: "jurisprudência do STF sobre dado pessoal na LGPD"
+  expected_classified_type_turn_2: parafrase
+  expected_oos_subtype_turn_2: c
+  gold_for_turn_2: []
+  notes: |
+    Topic-on-corpus, scope-off-corpus follow-up. The rewriter MUST
+    preserve "jurisprudência do STF" — that's the OOS signal. A
+    rewriter that hallucinates the question into "art. 5 da LGPD"
+    (rescuing scope) is the failure mode this row catches. After
+    rewrite, retrieval-time cosine fast-path should refuse (subtype
+    c = jurisprudência) even though some chunks match on "dado
+    pessoal" lexically.
+
+- source_id: conv-10-explicit-new-law-follow-up
+  category: explicit-new-law
+  turn_1: "o que a LGPD diz sobre tratamento de dados pessoais?"
+  turn_2: "e na Constituição, art. 5, X?"
+  expected_rewrite_turn_2: "o que diz o art. 5, inciso X da Constituição?"
+  expected_classified_type_turn_2: citacao-literal
+  gold_for_turn_2:
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"
+  notes: |
+    User explicitly switched law. Rewriter MUST NOT carry LGPD context
+    — turn_2 named CF art. 5, X directly. Inciso X of CF art. 5 is the
+    privacy/intimidade fundamental right, the canonical
+    constitutional-anchor for LGPD discussions, but the rewrite
+    target is the CF article alone, not a cross-doc query.
