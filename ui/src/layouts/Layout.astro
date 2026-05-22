@@ -168,7 +168,9 @@ const initials = deriveInitials(userName, userEmail);
           </a>
           <nav class="header-nav">
             {isAuthed ? (
-              <div class="avatar-shell">
+              <>
+                <a href="/guia" class="nav-link">GUIA</a>
+                <div class="avatar-shell">
                 <button
                   id="avatar-button"
                   class="avatar-button"
@@ -206,8 +208,12 @@ const initials = deriveInitials(userName, userEmail);
                   </button>
                 </div>
               </div>
+              </>
             ) : (
-              <a href="/sign-in" class="nav-link">ENTRAR</a>
+              <>
+                <a href="/guia" class="nav-link">GUIA</a>
+                <a href="/sign-in" class="nav-link">ENTRAR</a>
+              </>
             )}
           </nav>
         </div>

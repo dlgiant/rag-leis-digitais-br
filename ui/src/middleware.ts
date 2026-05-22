@@ -18,6 +18,10 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/astro/server";
 const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
+  // Phase 10c follow-up — /guia is readable without login so a
+  // prospect can decide whether to sign up. The guide itself doesn't
+  // call any backend endpoints; pure SSR content.
+  "/guia(.*)",
 ]);
 
 export const onRequest = clerkMiddleware((auth, context) => {
