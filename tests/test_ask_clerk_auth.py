@@ -95,7 +95,9 @@ def _auth_env(monkeypatch, keypair):
     - API key: one valid key for the X-API-Key path tests.
     """
     monkeypatch.setenv("CLERK_JWT_KEY", keypair["public"])
-    monkeypatch.setenv("CLERK_AUDIENCE", "")  # see test_admin_endpoints.py for why
+    # Phase 17.3 — delenv works cleanly now that load_dotenv was
+    # moved out of module-import in rag_leis.llm + .maritaca.
+    monkeypatch.delenv("CLERK_AUDIENCE", raising=False)
     monkeypatch.setenv("RAG_API_KEYS", VALID_KEY)
     monkeypatch.setenv("RAG_RATE_LIMIT_PER_MINUTE", "1000")
     limiter.reset()

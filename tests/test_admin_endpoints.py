@@ -71,16 +71,11 @@ def env_config(monkeypatch, keypair):
         f"{OPERATOR_EMAIL},{LAWYER_EMAIL}",
     )
     monkeypatch.setenv("RAG_OPERATOR_EMAIL", OPERATOR_EMAIL)
-    # No CLERK_AUDIENCE check — empty string (NOT delenv). Reason:
-    # `rag_leis.llm` calls `load_dotenv()` at module-import time, which
-    # repopulates os.environ from .env on first lazy import. If the
-    # operator has CLERK_AUDIENCE set in their local .env (as production
-    # requires), `delenv` would clear it but a later transitive import
-    # could put it right back, mid-test, causing intermittent 401s.
-    # `setenv("", "")` keeps it set-but-empty; `load_dotenv(override=False)`
-    # skips already-set keys; clerk_auth's `if audience:` short-circuits
-    # on empty strings exactly like on missing keys.
-    monkeypatch.setenv("CLERK_AUDIENCE", "")
+    # Phase 17.3 — load_dotenv moved out of module-import in
+    # rag_leis.llm + .maritaca, so transitive imports no longer
+    # repopulate cleared keys mid-test. Plain delenv now does what
+    # it says (previously we had to `setenv("", "")` as a workaround).
+    monkeypatch.delenv("CLERK_AUDIENCE", raising=False)
     # Reset the chunks cache so each test gets a fresh load.
     eval_loader.reset_caches()
 

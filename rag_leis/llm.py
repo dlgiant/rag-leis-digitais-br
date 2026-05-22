@@ -15,8 +15,17 @@ Two surfaces every impl must support:
   forcing. The contract from the pipeline's perspective is that the
   returned dict matches the tool's `input_schema`.
 
-Keys come from `.env` via python-dotenv. Models hard-coded as defaults
-but overridable per-instance.
+Keys come from `os.environ` — callers MUST load `.env` themselves at
+entry-point time (server lifespan, eval CLI top, test conftest).
+Module-import-time `load_dotenv()` used to live here (Phase 4.0
+through 17.2) but was removed in Phase 17.3 because the side effect
+of populating env vars on lazy module import broke test isolation:
+the three Clerk-auth test files needed `monkeypatch.setenv("CLERK_AUDIENCE", "")`
+instead of `delenv` because a later transitive `import rag_leis.llm`
+would repopulate cleared keys mid-test. Centralizing dotenv loading
+at entry points + adding `tests/conftest.py` removes that fragility.
+
+Models hard-coded as defaults but overridable per-instance.
 """
 
 from __future__ import annotations
@@ -27,11 +36,8 @@ from typing import Any, Protocol, runtime_checkable
 
 from anthropic import Anthropic
 from anthropic.types import TextBlock, ToolUseBlock
-from dotenv import load_dotenv
 
 from rag_leis import llm_cache
-
-load_dotenv()
 
 
 DEFAULT_GENERATOR_MODEL = "claude-sonnet-4-5"

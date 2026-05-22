@@ -32,12 +32,13 @@ import os
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
 from openai import OpenAI
 
 from rag_leis import llm_cache
 
-load_dotenv()
+# Phase 17.3 — dotenv loading moved to entry points (server lifespan,
+# eval CLI tops, tests/conftest.py). See rag_leis/llm.py module
+# docstring for the rationale.
 
 
 MARITACA_BASE_URL = "https://chat.maritaca.ai/api"
