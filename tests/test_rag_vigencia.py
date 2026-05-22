@@ -151,6 +151,7 @@ def test_load_chunks_no_overlay_no_vigencia():
 
 
 @pytest.mark.network
+@pytest.mark.requires_local_data
 @pytest.mark.skipif(
     "ANTHROPIC_API_KEY" not in os.environ,
     reason="ANTHROPIC_API_KEY not set; skipping live API test",
@@ -160,10 +161,48 @@ def test_pipeline_emits_vigencia_warning_for_mci_art19():
     pipeline to (a) populate flagged_vigencia and (b) the model must emit
     ⚠️ Atenção + reference to Tema 987 in its answer text. This is the
     end-to-end test that the SYSTEM_PROMPT change is doing real work, not
-    just decorating the context."""
+    just decorating the context.
+
+    Phase 16.3 added a `PENDENTE_` filter in load_chunks that excludes 3
+    Tier-4 stub Temas — any Voyage index built before May 22 2026 is
+    stale by 3 chunks and will fail the cache_is_fresh check. Rather
+    than fail loudly here (the test isn't about cache freshness), we
+    detect the stale state up-front and skip with the rebuild command,
+    matching the requires_local_data marker added above.
+    """
+    project_root = Path(__file__).resolve().parents[1]
+    # Stale-cache guard — cheap to compute (~7k chunks, ~30ms).
+    import json as _json
+
+    from rag_leis.cache import texts_hash
+    from rag_leis.eval_harness import format_texts, load_chunks
+
+    text_mode = "title+label+nav+caput+text"
+    meta_path = (
+        project_root / "data" / "index" / f"voyage-3-large__{text_mode}.meta.json"
+    )
+    if not meta_path.exists():
+        pytest.skip(
+            f"Voyage index not built at {meta_path}. Build it with: "
+            f"`uv run python -m rag_leis.run_eval --model voyage-3-large "
+            f"--text-mode {text_mode}`."
+        )
+    current_hash = texts_hash(
+        format_texts(load_chunks(project_root / "data" / "chunks"), text_mode)
+    )
+    cached_hash = _json.loads(meta_path.read_text(encoding="utf-8")).get(
+        "content_hash", ""
+    )
+    if current_hash != cached_hash:
+        pytest.skip(
+            f"Voyage index stale (current chunks hash "
+            f"{current_hash[:8]}… != cached {cached_hash[:8]}…). "
+            f"Rebuild with: `uv run python -m rag_leis.run_eval "
+            f"--model voyage-3-large --text-mode {text_mode}`."
+        )
+
     from rag_leis.rag import load_pipeline
 
-    project_root = Path(__file__).resolve().parents[1]
     pipe = load_pipeline(
         chunks_dir=project_root / "data" / "chunks",
         index_dir=project_root / "data" / "index",
