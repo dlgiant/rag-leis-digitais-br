@@ -216,6 +216,15 @@ def load_chunks(
         # for JSONL written before the flag existed.
         if obj.get("is_revoked", False) or is_revoked_text(obj["text"]):
             continue
+        # Phase 16.3 — exclude Tier-4 stub Temas (e.g. 533/815/987) whose
+        # `notes` flag the chunk's `text` as a curator summary, not the
+        # verbatim STF tese. The chunks document their own hallucination
+        # risk ("Confabulação esperada: LLM pode citar este chunk como se
+        # fosse a tese") yet earlier gold pinned them as relevant. Gated
+        # on D7 verbatim transcription (Phase 19.1).
+        notes_list = obj.get("notes") or []
+        if any(isinstance(n, str) and n.startswith("PENDENTE_") for n in notes_list):
+            continue
         nav = obj.get("nav") or {}
         nav_text = " > ".join(_normalize_nav_casing(v) for v in nav.values() if v)
         caput_text = _resolve_caput_chain(obj)

@@ -130,6 +130,7 @@ def test_valid_statuses_taxonomy():
         "eficacia_limitada",
         "revogado_tacito",
         "alterado_por_ec",
+        "alterado_por_jurisprudencia",  # Phase 16.2
         "atualizado_recentemente",
     }
     assert expected == VALID_STATUSES

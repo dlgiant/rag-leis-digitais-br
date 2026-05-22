@@ -978,15 +978,20 @@
   relevant: ["urn:lex:br:supremo.tribunal.federal:tema:786~tese"]
   notes: "Paráfrase do Tema 786. Resposta do STF é NÃO — incompatível com a CF."
 
-- query: "a Receita Federal pode acessar meus dados bancários sem ordem judicial?"
-  type: parafrase
-  relevant: ["urn:lex:br:supremo.tribunal.federal:tema:533~ementa"]
-  notes: "Paráfrase do Tema 533 — sigilo bancário e RFB. Chunk é stub (D7 pendente)."
-
-- query: "juiz pode bloquear o WhatsApp inteiro por descumprimento de ordem?"
-  type: parafrase
-  relevant: ["urn:lex:br:supremo.tribunal.federal:tema:815~ementa"]
-  notes: "Paráfrase do Tema 815 — bloqueio judicial de aplicações. Chunk é stub (julgamento pendente)."
+# Phase 16.3 (2026-05-22) — Tema 533/815 paráfrase rows disabled because
+# the only gold URN is a Tier-4 stub chunk excluded from retrieval until
+# verbatim tese transcription lands (D7 / Phase 19.1). Restoring these
+# rows is part of Phase 19.1 acceptance.
+#
+# - query: "a Receita Federal pode acessar meus dados bancários sem ordem judicial?"
+#   type: parafrase
+#   relevant: ["urn:lex:br:supremo.tribunal.federal:tema:533~ementa"]
+#   notes: "Paráfrase do Tema 533 — sigilo bancário e RFB. Chunk é stub (D7 pendente)."
+#
+# - query: "juiz pode bloquear o WhatsApp inteiro por descumprimento de ordem?"
+#   type: parafrase
+#   relevant: ["urn:lex:br:supremo.tribunal.federal:tema:815~ementa"]
+#   notes: "Paráfrase do Tema 815 — bloqueio judicial de aplicações. Chunk é stub (julgamento pendente)."
 
 # --- cross-doc: jurisprudência + texto legal subjacente ---
 
@@ -994,11 +999,12 @@
   type: cross-doc
   relevant:
     core:
-      - "urn:lex:br:supremo.tribunal.federal:tema:987~ementa"
+      # Phase 16.3 — tema:987~ementa removed (stub chunk excluded from
+      # retrieval; will return on Phase 19.1 verbatim transcription).
       - "urn:lex:br:federal:lei:2014-04-23;12965~art19"
     supporting:
       - "urn:lex:br:federal:lei:2014-04-23;12965~art21"
-  notes: "Cross-doc Tier-4 + Tier-1 (MCI). Tema 987 é stub (D7 pendente para tese verbatim); MCI art.19 é o dispositivo cuja constitucionalidade o STF apreciou. art.21 entra como supporting (notificação extrajudicial, regime alternativo)."
+  notes: "Cross-doc Tier-4 + Tier-1 (MCI). Tema 987 stub removed Phase 16.3 — overlay agora marca MCI art.19 como `alterado_por_jurisprudencia` com Tema 987 julgado 2024-06-26; MCI art.19 é o dispositivo cuja constitucionalidade o STF apreciou. art.21 entra como supporting (notificação extrajudicial, regime alternativo)."
 
 # ============================================================================
 # Código Civil — Direitos da Personalidade (arts. 11-21). Indexado em

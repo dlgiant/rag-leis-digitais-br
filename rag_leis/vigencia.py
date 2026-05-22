@@ -16,14 +16,22 @@ flag in the answer with a leading "⚠️ Atenção:" sentence.
 
 Status taxonomy (the YAML's controlled vocabulary):
 
-    vigente                  default; not overlaid
-    sub_judice               controvérsia constitucional pendente
-    suspenso                 eficácia suspensa por liminar
-    vacatio_legis            promulgado mas ainda não em vigor
-    eficacia_limitada        depende de regulamentação infralegal
-    revogado_tacito          incompatível com norma posterior
-    alterado_por_ec          constitucional, EC modificadora (informativo)
-    atualizado_recentemente  lei alteradora recente (informativo)
+    vigente                      default; not overlaid
+    sub_judice                   controvérsia constitucional pendente
+    suspenso                     eficácia suspensa por liminar
+    vacatio_legis                promulgado mas ainda não em vigor
+    eficacia_limitada            depende de regulamentação infralegal
+    revogado_tacito              incompatível com norma posterior
+    alterado_por_ec              constitucional, EC modificadora (informativo)
+    alterado_por_jurisprudencia  STF/STJ fixou tese que altera aplicação
+                                 (Phase 16.2 — distinct from sub_judice;
+                                 a tese has been *fixed*, not is pending)
+    atualizado_recentemente      lei alteradora recente (informativo)
+
+Operator-facing field `proxima_revisao` (ISO date, optional) tracks
+when an entry should be re-audited. Phase 16.2 introduced this to
+prevent the Tema-987-class staleness: a `sub_judice` overlay that
+never got re-checked after STF fixed the tese on 2024-06-26.
 """
 
 from __future__ import annotations
@@ -42,6 +50,7 @@ VALID_STATUSES = frozenset({
     "eficacia_limitada",
     "revogado_tacito",
     "alterado_por_ec",
+    "alterado_por_jurisprudencia",
     "atualizado_recentemente",
 })
 
@@ -53,6 +62,7 @@ class Vigencia:
     fundamento: str
     desde: str           # ISO date (YYYY-MM-DD)
     descricao_curta: str
+    proxima_revisao: str = ""  # ISO date; Phase 16.2 — quarterly audit cadence
 
     def short_label(self) -> str:
         """One-line summary for the <fonte> XML attribute."""
@@ -89,6 +99,7 @@ def load_overlays(path: Path) -> dict[str, Vigencia]:
             fundamento=str(item.get("fundamento", "")),
             desde=str(item.get("desde", "")),
             descricao_curta=str(item.get("descricao_curta", "")).strip(),
+            proxima_revisao=str(item.get("proxima_revisao", "")),
         )
     return out
 

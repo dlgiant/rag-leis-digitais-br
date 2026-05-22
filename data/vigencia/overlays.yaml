@@ -1,4 +1,4 @@
-# Vigência overlays — v0 (2026-05-14)
+# Vigência overlays — v1 (Phase 16.2, 2026-05-22)
 #
 # Reviewer round 2 (legal-domain) flagged that `is_revoked_text` only
 # catches Planalto markers `(Revogado)`/`(Vetado)`/`(Suprimido)`. It misses
@@ -7,48 +7,67 @@
 # Without these, the RAG commits the parecerista's worst error: treating
 # formally-vigente text as applicable while ignoring active controversy.
 #
+# Phase 16.2 added `alterado_por_jurisprudencia` (distinct from `sub_judice`:
+# a tese has been *fixed*, not is pending) + `proxima_revisao` field for
+# quarterly audit cadence. Reason: round-3 review found MCI art. 19/21
+# still flagged `sub_judice` referencing Tema 987 — but STF fixed the tese
+# on 2024-06-26. An overlay without a review date silently rots; this
+# closes the loop.
+#
 # Schema:
 #   urn               — must resolve in the corpus (validated at load time)
 #   status            — one of:
-#                         vigente               (default; not overlaid here)
-#                         sub_judice            (controvérsia constitucional pendente)
-#                         suspenso              (eficácia suspensa por liminar)
-#                         vacatio_legis         (promulgado mas ainda não em vigor)
-#                         eficacia_limitada     (depende de regulamentação infralegal)
-#                         revogado_tacito       (incompatível com norma posterior)
-#                         alterado_por_ec       (constitucional, EC modificadora — informativo)
-#                         atualizado_recentemente (lei alteradora recente; informativo)
+#                         vigente                      (default; not overlaid here)
+#                         sub_judice                   (controvérsia constitucional pendente)
+#                         suspenso                     (eficácia suspensa por liminar)
+#                         vacatio_legis                (promulgado mas ainda não em vigor)
+#                         eficacia_limitada            (depende de regulamentação infralegal)
+#                         revogado_tacito              (incompatível com norma posterior)
+#                         alterado_por_ec              (constitucional, EC modificadora — informativo)
+#                         alterado_por_jurisprudencia  (STF/STJ fixou tese que altera aplicação)
+#                         atualizado_recentemente      (lei alteradora recente; informativo)
 #   fundamento        — processo (STF/STJ), ato normativo, ou EC
-#   desde             — data ISO (afetação, edição, etc.)
+#   desde             — data ISO (afetação, edição, julgamento, etc.)
 #   descricao_curta   — 1-3 frases que vão para o warning no answer
+#   proxima_revisao   — data ISO (operador) — quando re-auditar este overlay
 #
-# v0 cobre 13 dispositivos selecionados por pegar os casos canônicos da
-# crítica do reviewer + linkagem EC + alterações recentes do CP. Lista
-# pra expandir conforme novos casos surgirem (ANPD jurisprudência STF/STJ
-# em Phase 6 Tier-4).
+# v1 cobre 13 dispositivos. Lista expande conforme novos casos surgirem
+# (ANPD jurisprudência STF/STJ em Phase 6 Tier-4). Quarterly cadence:
+# `proxima_revisao` defaults para +90 dias da última edição da entrada.
 
 # ============================================================================
-# sub_judice — STF / STJ pendente
+# alterado_por_jurisprudencia — STF/STJ fixou tese que altera aplicação
 # ============================================================================
+#
+# Phase 16.2 (2026-05-22): MCI art. 19 + art. 21 movidos de `sub_judice`
+# para `alterado_por_jurisprudencia`. STF concluiu o julgamento do Tema
+# 987 em 2024-06-26 e fixou tese declarando inconstitucionalidade parcial
+# do art. 19. O regime aplicável hoje é o estabelecido pela tese, não a
+# literalidade do artigo. Transcrição verbatim do acórdão gated no D7
+# lawyer review (Phase 19.1).
 
 - urn: urn:lex:br:federal:lei:2014-04-23;12965~art19
-  status: sub_judice
-  fundamento: STF RE 1.037.396 (Tema 987 da repercussão geral)
-  desde: 2017-09-29  # afetação como repercussão geral
+  status: alterado_por_jurisprudencia
+  fundamento: STF RE 1.037.396 (Tema 987) — julgado em 2024-06-26
+  desde: 2024-06-26  # data do julgamento do Tema 987
   descricao_curta: |
-    Aplicação em discussão no STF. Tema 987 da repercussão geral
-    questiona constitucionalidade do regime que condiciona a
-    responsabilidade do provedor de aplicações por conteúdo de
-    terceiros à existência de ordem judicial específica.
+    O STF julgou o Tema 987 da repercussão geral em 26/06/2024 e fixou
+    tese declarando inconstitucionalidade parcial do art. 19. O regime
+    aplicável hoje é o estabelecido pela tese, não a literalidade do
+    artigo. Consultar o acórdão publicado para a redação verbatim antes
+    de aplicar — transcrição verbatim pendente (Phase 19.1 / D7).
+  proxima_revisao: 2026-08-22
 
 - urn: urn:lex:br:federal:lei:2014-04-23;12965~art21
-  status: sub_judice
-  fundamento: STF RE 1.037.396 (Tema 987)
-  desde: 2017-09-29
+  status: alterado_por_jurisprudencia
+  fundamento: STF RE 1.037.396 (Tema 987) — julgado em 2024-06-26
+  desde: 2024-06-26
   descricao_curta: |
-    Conexo ao Tema 987 do STF. Discussão sobre o regime de remoção
-    independentemente de ordem judicial em casos de imagens íntimas
-    pode ser afetada pela tese de repercussão geral.
+    Conexo ao Tema 987. Verificar na tese fixada em 26/06/2024 se o
+    julgamento alcança o art. 21 (regime de remoção de imagens íntimas
+    independentemente de ordem judicial) ou se este voltou a aplicação
+    plena. Transcrição verbatim do acórdão pendente (Phase 19.1 / D7).
+  proxima_revisao: 2026-08-22
 
 # ============================================================================
 # eficacia_limitada — depende de regulamentação infralegal
@@ -63,6 +82,7 @@
     dosimetria estabelecida pela ANPD na Res. CD/ANPD 4/2023 (não
     indexada neste corpus — Phase 4 Tier-3). Dispositivos VII, VIII e
     IX foram vetados na sanção presidencial.
+  proxima_revisao: 2026-08-22
 
 - urn: urn:lex:br:federal:lei:2018-08-14;13709~art52;par1
   status: eficacia_limitada
@@ -72,6 +92,7 @@
     A dosimetria das sanções (gradação, agravantes, atenuantes) é
     operacionalizada pela Res. CD/ANPD 4/2023, não pela própria LGPD.
     Consultar a resolução para o cálculo concreto.
+  proxima_revisao: 2026-08-22
 
 - urn: urn:lex:br:federal:lei:2018-08-14;13709~art41;par3
   status: eficacia_limitada
@@ -81,6 +102,7 @@
     A dispensa da nomeação de encarregado para agentes de pequeno porte
     é operacionalizada pela Res. CD/ANPD 2/2022 (não indexada neste
     corpus — Phase 4 Tier-3).
+  proxima_revisao: 2026-08-22
 
 - urn: urn:lex:br:federal:lei:2018-08-14;13709~art55-a
   status: eficacia_limitada
@@ -90,6 +112,7 @@
     A ANPD foi criada pela Lei 13.853/2019 e tem estrutura regimental
     definida pelo Decreto 10.474/2020 (não indexado neste corpus —
     Phase 4 / Phase 6).
+  proxima_revisao: 2026-08-22
 
 # ============================================================================
 # vacatio_legis — informativo histórico (já vigente, mas relevante para
@@ -105,6 +128,7 @@
     em vigor em 1º de agosto de 2021 (Lei 14.010/2020 art. 20). Demais
     dispositivos vigoraram em 18 de setembro de 2020. Hoje toda a Lei
     está vigente; este overlay serve apenas para datar fatos pretéritos.
+  proxima_revisao: 2026-08-22
 
 # ============================================================================
 # alterado_por_ec — origem constitucional via EC (informativo)
@@ -119,6 +143,7 @@
     pessoais (inclusive nos meios digitais) à categoria de direito
     fundamental. Antes da EC, a proteção decorria de leitura combinada
     do art. 5º, X, e da LGPD (Lei 13.709/2018).
+  proxima_revisao: 2026-08-22
 
 # ============================================================================
 # atualizado_recentemente — lei alteradora dentro dos últimos ~5 anos
@@ -134,6 +159,7 @@
     significativamente alterado pela Lei 14.155/2021, que aumentou as
     penas e ampliou as qualificadoras (§§ 3º a 5º). Jurisprudência ainda
     em formação sobre a nova redação.
+  proxima_revisao: 2026-08-22
 
 - urn: urn:lex:br:federal:decreto.lei:1940-12-07;2848~art154-b
   status: atualizado_recentemente
@@ -143,6 +169,7 @@
     Regra de ação penal para o art. 154-A. A Lei 14.155/2021 alterou as
     hipóteses de ação penal pública incondicionada para o tipo de
     invasão de dispositivo informático.
+  proxima_revisao: 2026-08-22
 
 - urn: urn:lex:br:federal:decreto.lei:1940-12-07;2848~art218-c
   status: atualizado_recentemente
@@ -153,6 +180,7 @@
     introduzido pela Lei 13.718/2018. Conduta tipicamente associada a
     publicações em redes sociais e mensageiros — verificar interação
     com MCI art. 21 e jurisprudência STF/STJ em formação.
+  proxima_revisao: 2026-08-22
 
 - urn: urn:lex:br:federal:decreto.lei:1940-12-07;2848~art171
   status: atualizado_recentemente
@@ -164,3 +192,4 @@
     eletrônico que não titulariza o agente) e 2º-B (qualificadora pelo
     valor envolvido). Atenção ao texto Planalto onde os §§ podem estar
     fundidos no chunk do § 2º.
+  proxima_revisao: 2026-08-22

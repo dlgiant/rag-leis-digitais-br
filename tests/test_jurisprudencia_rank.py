@@ -41,35 +41,39 @@ def test_tema_with_tese_fixada_keeps_rank_3():
     )
 
 
-def test_tema_pendente_julgamento_rank_down_to_5():
-    """Tema 815 (bloqueio WhatsApp) está pendente de julgamento — sem
-    tese fixada, sem efeito vinculante difusa, deve cair para rank 5."""
+def test_tema_pendente_julgamento_excluded_from_retrieval():
+    """Phase 16.3 supersedes the old Phase 6.5 rank-down policy for
+    pending-judgment Temas. The chunks document their own confabulation
+    risk in `notes` ("PENDENTE_JULGAMENTO" / "PENDENTE_REVISAO_JURIDICA")
+    so load_chunks excludes them outright until verbatim transcription
+    lands (Phase 19.1 / D7). Asserting absence is the stronger contract
+    than rank-down."""
     by_urn = _by_urn()
     chunk = by_urn.get("urn:lex:br:supremo.tribunal.federal:tema:815~ementa")
-    assert chunk is not None
-    assert chunk.legal_rank == RANK_INFRALEGAL, (
-        f"Tema 815 com status=pendente_julgamento deve rank-down para 5, "
-        f"foi {chunk.legal_rank}"
+    assert chunk is None, (
+        "Tema 815 (PENDENTE_JULGAMENTO) deve ser excluído do índice em Phase 16.3 — "
+        "voltará na transcrição verbatim (Phase 19.1)."
     )
 
 
-def test_tema_tese_fixada_pendente_transcricao_rank_down_to_5():
-    """Tema 987 e 533: tese juridicamente existe (fixada), mas o RAG não
-    tem o texto verbatim transcrito — chunks são stubs. Não devemos
-    permitir que esses stubs disparem rank-up para 3 e suprimam o
-    hierarchy_warning quando o LLM cita uma lei mais autoritativa.
+def test_tema_tese_fixada_pendente_transcricao_excluded_from_retrieval():
+    """Temas 987 e 533: tese juridicamente existe (fixada), mas o RAG não
+    tem o texto verbatim transcrito — chunks são stubs e disparam
+    confabulação ("LLM pode citar este chunk como se fosse a tese").
 
-    Política: status contendo 'pendente' rank-down para infralegal."""
+    Phase 16.3 política: stubs marcados com notes "PENDENTE_*" são
+    excluídos no load_chunks. Política Phase 6.5 (rank-down para 5)
+    permanece como defense-in-depth em legal_rank.py caso um futuro
+    stub não siga a convenção de notes, mas o caminho primário é a
+    exclusão. Voltará na transcrição verbatim (Phase 19.1 / D7)."""
     by_urn = _by_urn()
     for urn in [
         "urn:lex:br:supremo.tribunal.federal:tema:987~ementa",
         "urn:lex:br:supremo.tribunal.federal:tema:533~ementa",
     ]:
         chunk = by_urn.get(urn)
-        assert chunk is not None, f"{urn} não indexado"
-        assert chunk.legal_rank == RANK_INFRALEGAL, (
-            f"{urn} (status pendente-transcricao-verbatim) deve ser rank 5, "
-            f"foi {chunk.legal_rank}"
+        assert chunk is None, (
+            f"{urn} (stub PENDENTE_REVISAO_JURIDICA) deve ser excluído em Phase 16.3"
         )
 
 

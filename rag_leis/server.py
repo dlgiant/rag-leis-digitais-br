@@ -26,6 +26,10 @@ Override defaults via env vars:
     RAG_OOS_THRESHOLD (default: 0.4)
     RAG_LLM_PROVIDER (default: maritaca)
     RAG_LLM_CACHE_DIR (default: unset — no caching)
+    RAG_SCOPE_CHECK_ENABLED (default: true — Phase 7.6.2 concept-scope gate)
+    RAG_RELEVANCE_GATE_ENABLED (default: true — Phase 7.8 per-citation relevance gate)
+    RAG_RELEVANCE_JUDGE (default: unset — judge reuses generator LLM; set to a
+        provider name like "anthropic" to A/B Opus-as-judge in prod)
 """
 from __future__ import annotations
 
@@ -201,6 +205,16 @@ def _rag_answer_to_response(ans: RAGAnswer) -> AskResponse:
 # ============================================================================
 
 
+def _parse_bool_env(name: str, default: bool) -> bool:
+    """Parse a boolean env var. Accepts 1/true/yes/on (any case); anything
+    else is False. Unset returns the default. Centralized so the three
+    Phase 16.4 gate vars share semantics."""
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _build_pipeline_from_env() -> RAGPipeline:
     """Construct the pipeline from environment variables. Same defaults
     as the eval CLI so HTTP behavior matches CLI behavior byte-for-byte
@@ -212,12 +226,18 @@ def _build_pipeline_from_env() -> RAGPipeline:
     llm_provider = os.environ.get("RAG_LLM_PROVIDER", "maritaca")
     llm_cache_dir_raw = os.environ.get("RAG_LLM_CACHE_DIR")
     llm_cache_dir = Path(llm_cache_dir_raw) if llm_cache_dir_raw else None
+    scope_check_enabled = _parse_bool_env("RAG_SCOPE_CHECK_ENABLED", True)
+    relevance_gate_enabled = _parse_bool_env("RAG_RELEVANCE_GATE_ENABLED", True)
+    relevance_judge_provider = os.environ.get("RAG_RELEVANCE_JUDGE") or None
     return load_pipeline(
         chunks_dir=CHUNKS_DIR, index_dir=INDEX_DIR,
         embedder_name=embedder, text_mode=text_mode,
         llm_provider=llm_provider, llm_model=None,
         top_k=top_k, oos_threshold=oos_threshold,
         llm_cache_dir=llm_cache_dir,
+        scope_check_enabled=scope_check_enabled,
+        relevance_gate_enabled=relevance_gate_enabled,
+        relevance_judge_provider=relevance_judge_provider,
     )
 
 

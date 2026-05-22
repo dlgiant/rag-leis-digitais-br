@@ -120,8 +120,13 @@ def test_load_chunks_applies_real_overlays_to_mci_art19():
         "MCI art.19 must carry vigência overlay — auto-discovery of "
         "data/vigencia/overlays.yaml broke OR overlays.yaml lost the entry"
     )
-    assert art19.vigencia.status == "sub_judice"
+    # Phase 16.2 (2026-05-22) — MCI art.19 movido de `sub_judice` para
+    # `alterado_por_jurisprudencia` após o STF fixar a tese do Tema 987
+    # em 26/06/2024. Status `sub_judice` afirmava que a matéria estava
+    # pendente; era falso.
+    assert art19.vigencia.status == "alterado_por_jurisprudencia"
     assert "Tema 987" in art19.vigencia.fundamento
+    assert "2024-06-26" in art19.vigencia.fundamento
 
 
 @pytest.mark.requires_local_data

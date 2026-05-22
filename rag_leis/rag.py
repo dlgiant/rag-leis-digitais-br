@@ -950,6 +950,9 @@ def load_pipeline(
     top_k: int = DEFAULT_TOP_K,
     oos_threshold: float = DEFAULT_OOS_THRESHOLD,
     llm_cache_dir: Path | None = None,
+    scope_check_enabled: bool = True,
+    relevance_gate_enabled: bool = True,
+    relevance_judge_provider: str | None = None,
 ) -> RAGPipeline:
     """Build a RAGPipeline from existing chunks + cached index.
 
@@ -966,6 +969,15 @@ def load_pipeline(
     responses — when set, identical (system, user, tool_schema, max_tokens)
     inputs return cached responses instead of re-billing the provider.
     None (default) disables caching.
+
+    Phase 16.4 — three gate-control kwargs surfaced so production can
+    A/B them via env without redeploying:
+      - scope_check_enabled (Phase 7.6.2 concept-scope gate)
+      - relevance_gate_enabled (Phase 7.8 per-citation relevance gate)
+      - relevance_judge_provider — when set, instantiates a separate LLM
+        via get_llm() for the relevance judge (e.g. "anthropic" to use
+        Opus while the generator runs Sabiá). None → judge reuses the
+        generator LLM, matching the Phase 7.8.1 production default.
     """
     from rag_leis.cache import cache_is_fresh, texts_hash
 
@@ -989,6 +1001,11 @@ def load_pipeline(
     chunks_by_urn = {c.urn: c for c in chunks}
 
     llm = get_llm(provider=llm_provider, model=llm_model, cache_dir=llm_cache_dir)
+    relevance_judge: LLM | None = (
+        get_llm(provider=relevance_judge_provider, cache_dir=llm_cache_dir)
+        if relevance_judge_provider
+        else None
+    )
 
     return RAGPipeline(
         embedder=embedder,
@@ -998,4 +1015,7 @@ def load_pipeline(
         llm=llm,
         top_k=top_k,
         oos_threshold=oos_threshold,
+        scope_check_enabled=scope_check_enabled,
+        relevance_gate_enabled=relevance_gate_enabled,
+        relevance_judge=relevance_judge,
     )
