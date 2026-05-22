@@ -1,16 +1,22 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import vercel from "@astrojs/vercel";
+import clerk from "@clerk/astro";
 
 // Phase 10b — Astro on Vercel.
-// Was Fly+Node SSR; switched to Vercel because the operator already
-// has Vercel and prefers it. LGPD residency preserved by pinning the
-// serverless function region to `gru1` (São Paulo) via vercel.json.
+// Phase 14.6 — Clerk auth added (mirrors ui-review/). Same Clerk app
+// as revisada.nunes.work; rag.nunes.work is configured as a satellite
+// domain in the Clerk Dashboard so the session cookie is scoped to
+// `.nunes.work` and signed-in users on one surface stay signed in
+// on the other.
 //
-// SSR is required for the /api/ask/stream proxy endpoint that keeps
-// the backend API key server-side (never reaches the browser).
+// SSR is required for:
+//   - /api/ask/stream proxy: extracts Clerk JWT from the session +
+//     forwards to the backend's /v1/ask/stream as Bearer.
+//   - Astro.locals.auth(): Clerk SDK lives on the server.
 export default defineConfig({
   output: "server",
+  integrations: [clerk()],
   adapter: vercel({
     // Defaults are fine — SSR via Vercel Serverless Functions (Node
     // runtime). Edge runtime would be faster but doesn't support

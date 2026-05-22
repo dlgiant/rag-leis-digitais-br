@@ -1,15 +1,43 @@
 ---
 // Phase 10b + style refresh — minimal layout for the public RAG.
-// Adopts the same mission-control palette as the review UI at
-// revisada.nunes.work so both surfaces feel like one product:
-// paper-cream bg, deep-navy text, amber emphasis, sharp corners,
-// Inter for body + ui-monospace for headings/labels.
+// Phase 14.6 — Clerk auth + custom avatar menu (same pattern as
+// ui-review/Layout.astro). The avatar is server-rendered from the
+// session claims; no Clerk-rendered components on the page, which
+// sidesteps the Phase 11.1-class of CSS-injection bugs.
 
 interface Props {
   title?: string;
+  hideHeader?: boolean;
 }
 
-const { title = "RAG-leis / digitais-br" } = Astro.props;
+const { title = "RAG-leis / digitais-br", hideHeader = false } = Astro.props;
+
+// Phase 14.6 — read session claims attached by the Clerk middleware
+// (src/middleware.ts). On a /sign-in page we render without the header.
+const auth = (Astro.locals as any).auth?.();
+const userId: string | null = auth?.userId ?? null;
+const isAuthed = !!userId;
+const claims = (auth?.sessionClaims ?? null) as {
+  email?: string;
+  image_url?: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+} | null;
+
+const userEmail = claims?.email ?? "";
+const userImage = claims?.image_url ?? "";
+const userName =
+  (claims?.full_name || claims?.first_name || userEmail.split("@")[0]) ?? "";
+
+function deriveInitials(name: string, email: string): string {
+  const source = name || email;
+  if (!source) return "?";
+  const parts = source.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0]!.charAt(0).toUpperCase();
+  return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase();
+}
+const initials = deriveInitials(userName, userEmail);
 ---
 
 <!doctype html>
@@ -44,6 +72,7 @@ const { title = "RAG-leis / digitais-br" } = Astro.props;
         --danger-soft:        #ebd2d2;
         --code-bg:            #e8e4dc;
         --shadow-sm:          0 1px 0 rgba(10,26,46,0.06);
+        --shadow-menu:        0 8px 24px rgba(10,26,46,0.16), 0 0 0 1px var(--border-strong);
       }
       @media (prefers-color-scheme: dark) {
         :root {
@@ -131,6 +160,244 @@ const { title = "RAG-leis / digitais-br" } = Astro.props;
     </style>
   </head>
   <body>
+    {!hideHeader && (
+      <header class="site-header">
+        <div class="site-header-inner">
+          <a href="/" class="brand">
+            <span class="brand-mark">RAG-leis</span><span class="brand-slash">/digitais-br</span>
+          </a>
+          <nav class="header-nav">
+            {isAuthed ? (
+              <div class="avatar-shell">
+                <button
+                  id="avatar-button"
+                  class="avatar-button"
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded="false"
+                  aria-controls="avatar-menu"
+                  aria-label={`Menu de ${userName}`}
+                  style="height: 30px; width: 30px; border-radius: 30px;"
+                >
+                  {userImage ? (
+                    <img
+                      src={userImage}
+                      alt=""
+                      class="avatar-img"
+                      referrerpolicy="no-referrer"
+                    />
+                  ) : (
+                    <span class="avatar-initials">{initials}</span>
+                  )}
+                </button>
+                <div id="avatar-menu" class="avatar-menu" role="menu" hidden>
+                  <div class="avatar-menu-header">
+                    <span class="label-eyebrow">SESSÃO</span>
+                    <span class="avatar-menu-name">{userName || userEmail}</span>
+                    <span class="avatar-menu-email">{userEmail}</span>
+                  </div>
+                  <button
+                    id="sign-out-btn"
+                    type="button"
+                    class="avatar-menu-item avatar-menu-item-destructive"
+                    role="menuitem"
+                  >
+                    SAIR
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <a href="/sign-in" class="nav-link">ENTRAR</a>
+            )}
+          </nav>
+        </div>
+      </header>
+    )}
     <slot />
+
+    <style>
+      .site-header {
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-strong);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .site-header-inner {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 0.75rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+      }
+      .brand {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--fg);
+        letter-spacing: -0.01em;
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+        text-transform: uppercase;
+        transition: color 0.12s ease;
+        text-decoration: none;
+      }
+      .brand:hover { color: var(--accent); text-decoration: none; }
+      .brand:active { color: var(--emphasis); }
+      .brand-slash { color: var(--muted); font-weight: 400; }
+      .header-nav { display: flex; align-items: center; gap: 0.75rem; }
+      .nav-link {
+        color: var(--fg-dim);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid transparent;
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+        transition: all 0.12s ease;
+        text-decoration: none;
+      }
+      .nav-link:hover {
+        color: var(--fg);
+        border-color: var(--border-strong);
+        background: var(--bg-sunken);
+      }
+
+      /* Custom avatar + menu — ported from ui-review/Layout.astro. */
+      .avatar-shell { position: relative; }
+      .avatar-button {
+        appearance: none;
+        background: var(--bg-sunken);
+        border: 1px solid var(--border-strong);
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        transition: border-color 0.12s ease, transform 0.08s ease;
+      }
+      .avatar-button:hover { border-color: var(--accent); }
+      .avatar-button:active { transform: translateY(1px); border-color: var(--emphasis); }
+      .avatar-button[aria-expanded="true"] {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .avatar-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .avatar-initials {
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--fg);
+      }
+
+      .avatar-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        min-width: 240px;
+        background: var(--bg-card);
+        box-shadow: var(--shadow-menu);
+        z-index: 100;
+        animation: avatarMenuOpen 0.12s ease;
+      }
+      .avatar-menu[hidden] { display: none; }
+      @keyframes avatarMenuOpen {
+        from { opacity: 0; transform: translateY(-4px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .avatar-menu-header {
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+      }
+      .avatar-menu-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--fg);
+        line-height: 1.3;
+      }
+      .avatar-menu-email {
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+        font-size: 0.75rem;
+        color: var(--muted);
+        word-break: break-all;
+      }
+      .avatar-menu-item {
+        appearance: none;
+        background: transparent;
+        border: none;
+        width: 100%;
+        padding: 0.7rem 1rem;
+        text-align: left;
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        color: var(--fg-dim);
+        cursor: pointer;
+        transition: all 0.1s ease;
+      }
+      .avatar-menu-item:hover { background: var(--bg-sunken); color: var(--fg); }
+      .avatar-menu-item:active { background: var(--accent); color: var(--bg-card); }
+      .avatar-menu-item-destructive:hover { background: var(--danger-soft); color: var(--danger); }
+      .avatar-menu-item-destructive:active { background: var(--danger); color: var(--bg-card); }
+    </style>
+
+    <script>
+      // Event-delegated handlers for the custom avatar menu. Bound to
+      // document so they keep working across all client-side navigations.
+      const closeMenu = () => {
+        const btn = document.getElementById("avatar-button");
+        const menu = document.getElementById("avatar-menu");
+        if (menu) menu.hidden = true;
+        if (btn) btn.setAttribute("aria-expanded", "false");
+      };
+
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+
+        if (target.closest("#avatar-button")) {
+          const btn = document.getElementById("avatar-button");
+          const menu = document.getElementById("avatar-menu");
+          if (!btn || !menu) return;
+          const open = menu.hidden;
+          menu.hidden = !open;
+          btn.setAttribute("aria-expanded", String(open));
+          return;
+        }
+
+        if (target.closest("#sign-out-btn")) {
+          e.preventDefault();
+          const clerk = (window as any).Clerk;
+          if (clerk && typeof clerk.signOut === "function") {
+            clerk.signOut({ redirectUrl: "/sign-in" });
+          } else {
+            window.location.href = "/sign-in";
+          }
+          return;
+        }
+
+        const menu = document.getElementById("avatar-menu");
+        if (
+          menu &&
+          !menu.hidden &&
+          !target.closest("#avatar-menu") &&
+          !target.closest("#avatar-button")
+        ) {
+          closeMenu();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeMenu();
+      });
+    </script>
   </body>
 </html>
