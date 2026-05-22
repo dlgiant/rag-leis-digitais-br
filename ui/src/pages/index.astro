@@ -165,6 +165,12 @@ function lexmlHref(urn: string): string {
           <span class="plus" aria-hidden="true">+</span>
           <span>NOVA CONVERSA</span>
         </a>
+        <p class="sidebar-code-link">
+          <span class="label-eyebrow">CÓDIGO</span>
+          <a href="https://github.com/dlgiant/rag-leis-digitais-br" target="_blank" rel="noopener">
+            github.com/dlgiant/rag-leis-digitais-br
+          </a>
+        </p>
       </div>
       <nav class="sidebar-list" aria-label="Conversas anteriores">
         {conversations.length === 0 ? (
@@ -332,14 +338,6 @@ function lexmlHref(urn: string): string {
         </details>
       )}
 
-      <footer class="page-footer">
-        <p>
-          Código:
-          <a href="https://github.com/dlgiant/rag-leis-digitais-br" target="_blank" rel="noopener">
-            github.com/dlgiant/rag-leis-digitais-br
-          </a>
-        </p>
-      </footer>
     </main>
   </div>
 
@@ -376,6 +374,26 @@ function lexmlHref(urn: string): string {
       border-bottom: 1px solid var(--border);
       margin-bottom: 0.75rem;
     }
+    /* The "Código:" reference. Sits under the new-chat button, kept
+       visually quiet so it doesn't compete with the conversation
+       list for attention. */
+    .sidebar-code-link {
+      margin: 0.75rem 0 0;
+      padding: 0 0.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+    .sidebar-code-link .label-eyebrow { font-size: 0.62rem; }
+    .sidebar-code-link a {
+      color: var(--muted);
+      text-decoration: none;
+      word-break: break-all;
+      transition: color 0.12s ease;
+    }
+    .sidebar-code-link a:hover { color: var(--accent); text-decoration: underline; }
     .new-chat-btn {
       display: flex;
       align-items: center;
@@ -813,16 +831,6 @@ function lexmlHref(urn: string): string {
       border-color: var(--accent);
       color: var(--fg);
     }
-
-    /* ---------- Footer ---------- */
-    .page-footer {
-      margin-top: 3rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-      font-size: 0.875rem;
-      color: var(--muted);
-    }
-    .page-footer p { margin: 0; }
 
     /* ---------- Utility ---------- */
     .muted { color: var(--muted); }
