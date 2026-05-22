@@ -148,6 +148,13 @@ class AskResponse(BaseModel):
     llm_calls: int
     latency_ms: float
     rejected_irrelevant_citations: list[str]
+    # Phase 17.4 — count of LLM calls during this answer that fell
+    # back from tool-use to complete()+JSON-parse. Zero = clean run.
+    # Operators aggregate `tool_use_fallback_count / llm_calls` across
+    # `pipeline.answered` log lines to compute the fallback rate.
+    # Defaulted (=0) so older clients deserializing this response
+    # don't need to know the field exists.
+    tool_use_fallback_count: int = 0
     # Phase 10c — conversation this turn was persisted into. Populated
     # only on the JWT auth path (Clerk-authenticated browser callers);
     # None for API-key callers (CI smoke tests, MCP) since they have no
@@ -195,6 +202,7 @@ def _rag_answer_to_response(ans: RAGAnswer) -> AskResponse:
         cost_estimate_usd=ans.cost_estimate_usd,
         tokens_used=dict(ans.tokens_used),
         llm_calls=ans.llm_calls,
+        tool_use_fallback_count=ans.tool_use_fallback_count,
         latency_ms=ans.latency_ms,
         rejected_irrelevant_citations=list(ans.rejected_irrelevant_citations),
     )
@@ -824,6 +832,7 @@ async def ask(
         refusal_reason=ans.refusal_reason,
         cost_estimate_usd=ans.cost_estimate_usd,
         llm_calls=ans.llm_calls,
+        tool_use_fallback_count=ans.tool_use_fallback_count,
         tokens_input=(ans.tokens_used or {}).get("input_tokens", 0),
         tokens_output=(ans.tokens_used or {}).get("output_tokens", 0),
         pipeline_latency_ms=ans.latency_ms,
@@ -945,6 +954,7 @@ async def ask_stream(
                 refusal_reason=ans.refusal_reason,
                 cost_estimate_usd=ans.cost_estimate_usd,
                 llm_calls=ans.llm_calls,
+                tool_use_fallback_count=ans.tool_use_fallback_count,
                 tokens_input=(ans.tokens_used or {}).get("input_tokens", 0),
                 tokens_output=(ans.tokens_used or {}).get("output_tokens", 0),
                 pipeline_latency_ms=ans.latency_ms,

@@ -401,6 +401,14 @@ class RAGAnswer:
     # partial-irrelevance audit trail. Empty list = gate didn't run OR
     # all citations passed.
     rejected_irrelevant_citations: list[str] = field(default_factory=list)
+    # Phase 17.4 — count of LLM `complete_structured` calls during this
+    # pipeline.answer() that had to fall back to complete()+JSON parse
+    # because tool-use returned no/malformed result. Zero = clean run.
+    # Operators compute `tool_use_fallback_rate` across pipeline runs
+    # by aggregating `(sum tool_use_fallback_count) / (count answers
+    # with ≥1 LLM call)` over a window. Per-call provenance lives in
+    # the structured `llm.tool_use_fallback` log events.
+    tool_use_fallback_count: int = 0
 
 
 # ----------------------------------------------------------------------------
@@ -598,6 +606,11 @@ class RAGPipeline:
                     f"query=[{','.join(query_concepts)}] "
                     f"vs retrieval=[{','.join(top_retrieval)}]"
                 )
+                # Phase 17.4 — extractor is the only LLM call before
+                # this refusal. If it used the fallback, surface that.
+                extractor_fallback = bool(
+                    getattr(self.llm, "last_call_used_fallback", False)
+                )
                 return RAGAnswer(
                     answer="Fora do escopo da base (verificação semântica).",
                     citations=[],
@@ -618,6 +631,7 @@ class RAGPipeline:
                         "output_tokens": extractor_out_t,
                     },
                     llm_calls=1,
+                    tool_use_fallback_count=1 if extractor_fallback else 0,
                     latency_ms=round((_time.monotonic() - _t0) * 1000.0, 3),
                 )
             # Gate cleared — extractor cost gets folded into the main
@@ -627,6 +641,9 @@ class RAGPipeline:
                 "in_tokens": extractor_in_t,
                 "out_tokens": extractor_out_t,
                 "cost": extractor_cost,
+                "tool_use_fallback": bool(
+                    getattr(self.llm, "last_call_used_fallback", False)
+                ),
             }
         else:
             _scope_check_extra = None
@@ -654,11 +671,20 @@ class RAGPipeline:
         tokens_total = {"input_tokens": 0, "output_tokens": 0}
         cost_total = 0.0
         llm_call_count = 0
+        # Phase 17.4 — accumulator for `tool_use_fallback_count` (the
+        # surface RAGAnswer exposes). Bumped here right after each
+        # complete_structured call by reading the LLM's
+        # `last_call_used_fallback` attribute; the per-attribute read
+        # is necessary because the LLM instance is shared across calls
+        # and its state resets at each new call.
+        tool_use_fallback_count = 0
         if _scope_check_extra:
             tokens_total["input_tokens"] += _scope_check_extra["in_tokens"]
             tokens_total["output_tokens"] += _scope_check_extra["out_tokens"]
             cost_total += _scope_check_extra["cost"]
             llm_call_count += 1
+            if _scope_check_extra.get("tool_use_fallback"):
+                tool_use_fallback_count += 1
         usage = getattr(self.llm, "last_call_usage", None)
         if usage:
             tokens_total["input_tokens"] += usage["input_tokens"]
@@ -668,6 +694,8 @@ class RAGPipeline:
                 usage["input_tokens"], usage["output_tokens"],
             )
             llm_call_count += 1
+            if getattr(self.llm, "last_call_used_fallback", False):
+                tool_use_fallback_count += 1
 
         answer_text = str(result.get("answer", ""))
         cited = [str(u) for u in result.get("citations", [])]
@@ -709,6 +737,8 @@ class RAGPipeline:
                         usage["input_tokens"], usage["output_tokens"],
                     )
                     llm_call_count += 1
+                    if getattr(self.llm, "last_call_used_fallback", False):
+                        tool_use_fallback_count += 1
                 # Take the retry's output regardless — even if mismatches
                 # remain. The flag tells the caller a retry happened.
                 answer_text = str(retry_result.get("answer", answer_text))
@@ -773,6 +803,8 @@ class RAGPipeline:
                     usage["input_tokens"], usage["output_tokens"],
                 )
                 llm_call_count += 1
+                if getattr(active_judge, "last_call_used_fallback", False):
+                    tool_use_fallback_count += 1
             if decisions:
                 rejected_irrelevant = [
                     urn for urn, relevant in decisions.items() if not relevant
@@ -831,6 +863,7 @@ class RAGPipeline:
             cost_estimate_usd=round(cost_total, 6),
             tokens_used=tokens_total,
             llm_calls=llm_call_count,
+            tool_use_fallback_count=tool_use_fallback_count,
             latency_ms=round((_time.monotonic() - _t0) * 1000.0, 3),
             rejected_irrelevant_citations=rejected_irrelevant,
         )

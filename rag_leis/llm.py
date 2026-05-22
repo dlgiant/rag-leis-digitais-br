@@ -30,14 +30,79 @@ Models hard-coded as defaults but overridable per-instance.
 
 from __future__ import annotations
 
+import json
 import os
+import re
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 from anthropic import Anthropic
 from anthropic.types import TextBlock, ToolUseBlock
 
-from rag_leis import llm_cache
+from rag_leis import llm_cache, obs
+
+
+def _build_fallback_prompt(tool_schema: dict[str, Any], original_user: str) -> str:
+    """Phase 17.4 — construct the JSON-mode fallback prompt.
+
+    When the tool-use path fails (provider returned no tool block, or
+    returned a parse-error JSON in the OpenAI-compatible path), we
+    retry via free-form `complete()` asking the model to output JSON
+    matching the schema. The prompt embeds the tool's name + input
+    schema verbatim so the model has the same target as the tool path.
+
+    The instruction wording is critical: "ONLY a JSON object" (not
+    "respond with JSON") + "no markdown fences" — both common
+    failure modes when models default to chat-style formatting.
+    """
+    schema_str = json.dumps(tool_schema.get("input_schema", {}), indent=2)
+    return (
+        f"{original_user}\n\n"
+        f"---\n\n"
+        f"INSTRUÇÃO TÉCNICA (fallback): a chamada `tool_use` falhou. "
+        f"Responda agora APENAS com um objeto JSON válido que satisfaça "
+        f"o seguinte schema:\n\n"
+        f"```\n{schema_str}\n```\n\n"
+        f"Sem texto explicativo, sem ```json fences, sem prefixo/sufixo. "
+        f"Apenas o objeto JSON puro, começando com `{{` e terminando com `}}`."
+    )
+
+
+def _parse_fallback_json(text: str) -> dict[str, Any]:
+    """Extract + parse JSON from a free-form completion.
+
+    Models routinely wrap JSON in markdown code fences or prefix it
+    with "Aqui está o JSON:" despite instructions to the contrary.
+    Strip the most common shapes before attempting to parse. Raises
+    `RuntimeError` (matching the existing `complete_structured`
+    failure surface) if no valid JSON found.
+    """
+    stripped = text.strip()
+    # Drop ```json … ``` and ``` … ``` fences.
+    fence_re = re.compile(r"^```(?:json)?\s*\n?(.*?)\n?```\s*$", re.DOTALL)
+    m = fence_re.match(stripped)
+    if m:
+        stripped = m.group(1).strip()
+    # If the model prepended prose, find the first `{` and try to parse
+    # the balanced JSON object starting there.
+    if not stripped.startswith("{"):
+        idx = stripped.find("{")
+        if idx == -1:
+            raise RuntimeError(
+                f"fallback completion contained no JSON object: {text!r}"
+            )
+        stripped = stripped[idx:]
+    try:
+        parsed = json.loads(stripped)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(
+            f"fallback completion JSON parse failed: {e}; text was {text!r}"
+        ) from e
+    if not isinstance(parsed, dict):
+        raise RuntimeError(
+            f"fallback completion JSON was not an object (got {type(parsed).__name__}): {text!r}"
+        )
+    return parsed
 
 
 DEFAULT_GENERATOR_MODEL = "claude-sonnet-4-5"
@@ -105,6 +170,12 @@ class AnthropicLLM:
         # behavior preserved). A Path activates the cache for both complete()
         # and complete_structured(). See rag_leis.llm_cache module docstring.
         self.cache_dir = cache_dir
+        # Phase 17.4 — set to True by the most recent `complete_structured`
+        # call IFF it had to fall back to the `complete`+JSON-parse path
+        # because the tool-use response was empty/malformed. Reset to
+        # False at the top of each `complete_structured` call. Read by
+        # RAGPipeline.answer to bump RAGAnswer.tool_use_fallback_count.
+        self.last_call_used_fallback: bool = False
 
     def complete(
         self,
@@ -163,9 +234,18 @@ class AnthropicLLM:
         """Force the model to respond via the named tool.
 
         Returns the tool-call's `input` dict — validated by Anthropic against
-        the supplied `input_schema`. Raises `RuntimeError` if no tool block
-        comes back (shouldn't happen with `tool_choice`, but we guard).
+        the supplied `input_schema`.
+
+        Phase 17.4 — provider-aware tool-use retry. If the primary
+        tool-use call returns no tool block (e.g., the model refused
+        or the SDK contract drifted), retry ONCE via `complete()` with
+        a JSON-mode prompt that embeds the tool's input schema. On
+        fallback success, set `self.last_call_used_fallback = True`
+        and emit `llm.tool_use_fallback` to structured logs so
+        downstream aggregators can compute the fallback rate. Both
+        paths fail → raise the original RuntimeError.
         """
+        self.last_call_used_fallback = False
         if self.cache_dir is not None:
             key = llm_cache.cache_key(
                 provider=self.provider, model=self.model,
@@ -208,10 +288,66 @@ class AnthropicLLM:
                         },
                     )
                 return response
-        raise RuntimeError(
-            f"LLM did not return a tool_use block for {tool_schema['name']!r}; "
-            f"stop_reason={resp.stop_reason!r}"
+        # Phase 17.4 — tool-use missing. Retry once via complete()+JSON
+        # parse. Tokens from the fallback call OVERWRITE last_call_usage
+        # so cost attribution stays honest (the failed primary call's
+        # tokens are still in last_call_usage at this point, but the
+        # fallback call's resp.usage above is what we report — the
+        # primary call DID happen and DID consume tokens; for the
+        # purposes of per-pipeline cost we sum both calls. Sum logic
+        # lives in the next-call wrapper below).
+        primary_input = self.last_call_usage.get("input_tokens", 0)
+        primary_output = self.last_call_usage.get("output_tokens", 0)
+        fallback_text = self.complete(
+            system=system,
+            user=_build_fallback_prompt(tool_schema, user),
+            max_tokens=max_tokens,
+            temperature=temperature,
         )
+        # complete() set last_call_usage to the fallback's tokens.
+        fallback_input = (self.last_call_usage or {}).get("input_tokens", 0)
+        fallback_output = (self.last_call_usage or {}).get("output_tokens", 0)
+        # Total tokens for this complete_structured call = primary + fallback.
+        # Cost attribution reflects the full retry; an operator looking at
+        # `cost_estimate_usd` sees the true spend.
+        self.last_call_usage = {
+            "input_tokens": primary_input + fallback_input,
+            "output_tokens": primary_output + fallback_output,
+        }
+        try:
+            response = _parse_fallback_json(fallback_text)
+        except RuntimeError:
+            # Both paths failed — surface the original signal so the
+            # operator sees that the primary tool-use returned nothing
+            # AND the fallback couldn't be parsed.
+            raise RuntimeError(
+                f"LLM did not return a tool_use block for {tool_schema['name']!r}; "
+                f"stop_reason={resp.stop_reason!r}. Fallback complete()+JSON "
+                f"also failed to parse: {fallback_text!r}"
+            )
+        self.last_call_used_fallback = True
+        obs.get_logger().info(
+            "llm.tool_use_fallback",
+            provider=self.provider,
+            model=self.model,
+            tool_name=tool_schema["name"],
+            primary_stop_reason=str(resp.stop_reason),
+            fallback_input_tokens=fallback_input,
+            fallback_output_tokens=fallback_output,
+        )
+        if self.cache_dir is not None:
+            llm_cache.store(
+                cache_dir=self.cache_dir, key=key, kind="structured",
+                provider=self.provider, model=self.model,
+                response=response, usage=self.last_call_usage,
+                key_inputs={
+                    "system": system, "user": user,
+                    "tool_name": tool_schema["name"],
+                    "max_tokens": max_tokens,
+                    "fallback": True,
+                },
+            )
+        return response
 
 
 def get_llm(

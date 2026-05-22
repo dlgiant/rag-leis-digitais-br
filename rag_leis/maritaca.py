@@ -34,7 +34,8 @@ from typing import Any
 
 from openai import OpenAI
 
-from rag_leis import llm_cache
+from rag_leis import llm_cache, obs
+from rag_leis.llm import _build_fallback_prompt, _parse_fallback_json
 
 # Phase 17.3 — dotenv loading moved to entry points (server lifespan,
 # eval CLI tops, tests/conftest.py). See rag_leis/llm.py module
@@ -82,6 +83,14 @@ class MaritacaLLM:
         self.last_call_usage: dict[str, int] | None = None
         # Phase 7.9 — opt-in filesystem cache (same mechanism as AnthropicLLM).
         self.cache_dir = cache_dir
+        # Phase 17.4 — see rag_leis.llm.AnthropicLLM for the contract.
+        # Set True iff this provider had to fall back from tool-use to
+        # complete()+JSON-parse. The benchmark stance from the module
+        # docstring ("don't retry on parse failure here") is reversed
+        # in 17.4: production resilience matters more than honest
+        # benchmark surface — the failure rate is still visible via
+        # the structured `llm.tool_use_fallback` log event.
+        self.last_call_used_fallback: bool = False
 
     def complete(
         self,
@@ -138,10 +147,13 @@ class MaritacaLLM:
         (`{type: function, function: {name, description, parameters}}`).
         Return the parsed `arguments` dict.
 
-        Raises RuntimeError if no tool_call comes back, or if the
-        arguments fail to parse as JSON (no retry here — the benchmark
-        needs to see the failure rate honestly).
+        Phase 17.4 — when the function-call path fails (no tool_call,
+        wrong tool, JSON parse error), retry ONCE via complete()+JSON
+        parse with a fallback prompt. Resilience > benchmark honesty
+        for production reliability; the underlying failure rate is
+        still observable via structured `llm.tool_use_fallback` logs.
         """
+        self.last_call_used_fallback = False
         if self.cache_dir is not None:
             key = llm_cache.cache_key(
                 provider=self.provider, model=self.model,
@@ -172,24 +184,68 @@ class MaritacaLLM:
         resp = self.client.chat.completions.create(**kwargs)
         self.last_call_usage = _extract_usage(resp)
         msg = resp.choices[0].message
+        # Phase 17.4 — three failure surfaces are folded into a single
+        # fallback retry: (1) no tool_calls returned, (2) wrong tool
+        # name, (3) JSON parse error on arguments. All three are
+        # recoverable via the complete()+JSON-mode fallback below.
+        fallback_reason: str | None = None
+        response: dict[str, Any] | None = None
         if not msg.tool_calls:
-            raise RuntimeError(
-                f"Marítaca did not return a tool_call for {tool_schema['name']!r}; "
-                f"finish_reason={resp.choices[0].finish_reason!r}, "
-                f"content={msg.content!r}"
+            fallback_reason = (
+                f"no tool_call returned (finish_reason="
+                f"{resp.choices[0].finish_reason!r}, content={msg.content!r})"
             )
-        tc = msg.tool_calls[0]
-        if tc.function.name != tool_schema["name"]:
-            raise RuntimeError(
-                f"Marítaca returned tool_call for {tc.function.name!r}, "
-                f"expected {tool_schema['name']!r}"
+        else:
+            tc = msg.tool_calls[0]
+            if tc.function.name != tool_schema["name"]:
+                fallback_reason = (
+                    f"wrong tool name returned ({tc.function.name!r} vs "
+                    f"expected {tool_schema['name']!r})"
+                )
+            else:
+                try:
+                    response = dict(json.loads(tc.function.arguments))
+                except (json.JSONDecodeError, TypeError):
+                    fallback_reason = (
+                        f"tool_call arguments not parseable as JSON: "
+                        f"{tc.function.arguments!r}"
+                    )
+
+        if response is None:
+            assert fallback_reason is not None
+            primary_input = (self.last_call_usage or {}).get("input_tokens", 0)
+            primary_output = (self.last_call_usage or {}).get("output_tokens", 0)
+            fallback_text = self.complete(
+                system=system,
+                user=_build_fallback_prompt(tool_schema, user),
+                max_tokens=max_tokens,
+                temperature=temperature,
             )
-        try:
-            response = dict(json.loads(tc.function.arguments))
-        except (json.JSONDecodeError, TypeError) as e:
-            raise RuntimeError(
-                f"Marítaca tool_call arguments not parseable as JSON: {tc.function.arguments!r}"
-            ) from e
+            fallback_input = (self.last_call_usage or {}).get("input_tokens", 0)
+            fallback_output = (self.last_call_usage or {}).get("output_tokens", 0)
+            self.last_call_usage = {
+                "input_tokens": primary_input + fallback_input,
+                "output_tokens": primary_output + fallback_output,
+            }
+            try:
+                response = _parse_fallback_json(fallback_text)
+            except RuntimeError:
+                # Both paths failed — combine signals.
+                raise RuntimeError(
+                    f"Marítaca tool_use failed ({fallback_reason}); "
+                    f"fallback complete()+JSON also failed: {fallback_text!r}"
+                )
+            self.last_call_used_fallback = True
+            obs.get_logger().info(
+                "llm.tool_use_fallback",
+                provider=self.provider,
+                model=self.model,
+                tool_name=tool_schema["name"],
+                primary_failure=fallback_reason,
+                fallback_input_tokens=fallback_input,
+                fallback_output_tokens=fallback_output,
+            )
+
         if self.cache_dir is not None:
             llm_cache.store(
                 cache_dir=self.cache_dir, key=key, kind="structured",
@@ -199,6 +255,7 @@ class MaritacaLLM:
                     "system": system, "user": user,
                     "tool_name": tool_schema["name"],
                     "max_tokens": max_tokens,
+                    "fallback": self.last_call_used_fallback,
                 },
             )
         return response
