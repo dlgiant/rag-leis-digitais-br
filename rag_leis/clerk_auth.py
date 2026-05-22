@@ -33,10 +33,27 @@ from fastapi import HTTPException, Request, status
 
 @dataclass(frozen=True)
 class ClerkClaims:
-    """Verified Clerk session claims, narrowed to what admin endpoints need."""
+    """Verified Clerk session claims.
+
+    Always carries `email` + `is_operator`. The Phase 10c fields below
+    (user_id, image_url, full_name, first_name, last_name) come from the
+    Clerk session token — they're optional and default empty for any
+    construction site that doesn't supply them (admin code paths,
+    pre-10c tests). The /v1/ask Clerk path needs user_id to upsert the
+    users row + scope conversations; the profile fields are nice-to-have
+    so the users table mirrors what Clerk knows.
+    """
 
     email: str
     is_operator: bool
+    # Phase 10c — Clerk session profile fields. Default empty so admin
+    # code paths + older tests that construct ClerkClaims(email=..., is_operator=...)
+    # keep working unchanged.
+    user_id: str = ""
+    image_url: str = ""
+    full_name: str = ""
+    first_name: str = ""
+    last_name: str = ""
 
 
 class ClerkAuthError(Exception):
@@ -113,6 +130,24 @@ def _extract_email(payload: dict) -> str:
     return email
 
 
+def _extract_profile(payload: dict) -> dict[str, str]:
+    """Phase 10c — pull profile fields (user_id, image_url, names) from a
+    decoded Clerk JWT payload. Missing fields return empty strings; the
+    only required field across the system is `email` (handled separately).
+
+    `sub` is the standard JWT subject claim; Clerk uses it for the
+    user_id (`user_xxx`). The profile fields match what `sessionClaims`
+    exposes to the Astro layouts (see ui/src/layouts/Layout.astro).
+    """
+    return {
+        "user_id": str(payload.get("sub") or "").strip(),
+        "image_url": str(payload.get("image_url") or "").strip(),
+        "full_name": str(payload.get("full_name") or "").strip(),
+        "first_name": str(payload.get("first_name") or "").strip(),
+        "last_name": str(payload.get("last_name") or "").strip(),
+    }
+
+
 def _is_operator(email: str) -> bool:
     """True if the email matches `RAG_OPERATOR_EMAIL`."""
     operator_email = _read_operator_email()
@@ -128,12 +163,13 @@ def verify_token(token: str) -> ClerkClaims:
     """
     payload = _decode_token(token)
     email = _extract_email(payload)
+    profile = _extract_profile(payload)
 
     allowlist = _read_allowlist()
     if email not in allowlist:
         raise ClerkAuthError(f"email {email!r} not in admin allowlist")
 
-    return ClerkClaims(email=email, is_operator=_is_operator(email))
+    return ClerkClaims(email=email, is_operator=_is_operator(email), **profile)
 
 
 def verify_session_token(token: str) -> ClerkClaims:
@@ -143,11 +179,13 @@ def verify_session_token(token: str) -> ClerkClaims:
     user — e.g. the public `/v1/ask` endpoint after Phase 14.6's
     Clerk integration on rag.nunes.work. Same signature + audience
     + email-claim checks as `verify_token`; just doesn't gate on
-    `RAG_ADMIN_ALLOWLIST`.
+    `RAG_ADMIN_ALLOWLIST`. Phase 10c: also extracts profile fields
+    (user_id, image_url, name) needed for the users-table upsert.
     """
     payload = _decode_token(token)
     email = _extract_email(payload)
-    return ClerkClaims(email=email, is_operator=_is_operator(email))
+    profile = _extract_profile(payload)
+    return ClerkClaims(email=email, is_operator=_is_operator(email), **profile)
 
 
 # ---------------------------------------------------------------------------

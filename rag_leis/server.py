@@ -51,8 +51,14 @@ from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from rag_leis import obs
-from rag_leis.clerk_auth import ClerkAuthError, verify_session_token
+from rag_leis import conversations as convos
+from rag_leis import db, obs
+from rag_leis.clerk_auth import (
+    ClerkAuthError,
+    ClerkClaims,
+    clerk_session_dependency,
+    verify_session_token,
+)
 from rag_leis.rag import DEFAULT_TOP_K, RAGAnswer, RAGPipeline, load_pipeline
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -66,10 +72,27 @@ INDEX_DIR = PROJECT_ROOT / "data" / "index"
 
 
 class AskRequest(BaseModel):
-    """User-facing request payload."""
+    """User-facing request payload.
+
+    Phase 10c: optional `conversation_id` lets the browser thread a
+    follow-up question into an existing conversation. v1 doesn't pass
+    prior turns into the pipeline as context — each query is still
+    answered independently — but the message is appended to the
+    requested conversation so the sidebar groups it correctly.
+    Missing/null `conversation_id` → backend auto-creates a new
+    conversation and returns its id in the response.
+    """
 
     query: str = Field(..., min_length=1, max_length=2000,
                        description="The legal question to answer.")
+    conversation_id: str | None = Field(
+        default=None,
+        description=(
+            "Optional existing-conversation UUID to append this turn to. "
+            "If null/missing, a new conversation is created and its id "
+            "is returned in the response."
+        ),
+    )
 
 
 class RejectedCitationModel(BaseModel):
@@ -121,6 +144,11 @@ class AskResponse(BaseModel):
     llm_calls: int
     latency_ms: float
     rejected_irrelevant_citations: list[str]
+    # Phase 10c — conversation this turn was persisted into. Populated
+    # only on the JWT auth path (Clerk-authenticated browser callers);
+    # None for API-key callers (CI smoke tests, MCP) since they have no
+    # users-table row to scope conversations under.
+    conversation_id: str | None = None
 
 
 class HealthResponse(BaseModel):
@@ -299,12 +327,23 @@ def verify_api_key(x_api_key: str | None = Header(default=None)) -> str:
 @_dataclass(frozen=True)
 class AskCaller:
     """Identity of an authenticated `/v1/ask` caller. One of:
-      - `email` populated → Clerk-authed user (browser via rag.nunes.work)
-      - `api_key_prefix` populated → API-key caller (CI / MCP / curl)
-    Used for telemetry; the handler reads `.identity` for log lines.
+      - `email` + `user_id` populated → Clerk-authed user (browser via rag.nunes.work).
+        `user_id` is the Clerk `sub` claim; profile fields mirror what
+        Clerk has so the users-table upsert is one statement, not
+        multiple round trips.
+      - `api_key_prefix` populated → API-key caller (CI / MCP / curl).
+        No persistence happens for this path — there's no users row to
+        scope conversations to.
+
+    `.identity` is the telemetry handle for log lines.
     """
 
     email: str | None = None
+    user_id: str | None = None
+    image_url: str | None = None
+    full_name: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
     api_key_prefix: str | None = None
 
     @property
@@ -314,6 +353,12 @@ class AskCaller:
         if self.api_key_prefix:
             return f"key:{self.api_key_prefix}"
         return "unknown"
+
+    @property
+    def is_clerk_authed(self) -> bool:
+        """True for the Clerk-JWT path (has a user_id we can persist
+        under). Phase 10c persistence only fires when this is true."""
+        return bool(self.user_id)
 
 
 def verify_clerk_or_api_key(request: Request) -> AskCaller:
@@ -343,7 +388,14 @@ def verify_clerk_or_api_key(request: Request) -> AskCaller:
                 "auth.failed", reason=f"bad-bearer:{e}", api_key_prefix="none",
             )
             raise HTTPException(status_code=401, detail=str(e)) from e
-        return AskCaller(email=claims.email)
+        return AskCaller(
+            email=claims.email,
+            user_id=claims.user_id or None,
+            image_url=claims.image_url or None,
+            full_name=claims.full_name or None,
+            first_name=claims.first_name or None,
+            last_name=claims.last_name or None,
+        )
 
     # Fall back to X-API-Key
     x_api_key = request.headers.get("X-API-Key")
@@ -592,6 +644,101 @@ def get_pipeline(request: Request) -> RAGPipeline:
 
 
 # ============================================================================
+# Phase 10c — conversation persistence helper
+# ============================================================================
+
+
+def _persist_turn(
+    *,
+    caller: AskCaller,
+    payload: AskRequest,
+    response: AskResponse,
+    redacted_query: str,
+) -> str | None:
+    """Persist one Q+A turn into the conversation history tables.
+
+    Returns the conversation_id the turn was stored under, or None if
+    persistence was skipped (API-key caller, DB unavailable, or any
+    repo-level failure — the answer was already returned successfully
+    to the caller; persistence is best-effort).
+
+    Skips silently when:
+      - caller is on the API-key path (no users row to scope under)
+      - the DB pool is unconfigured (eval CLI / tests without DATABASE_URL_TEST)
+
+    On a repo-level exception we log + degrade. The handler returns the
+    answer regardless; a downstream operator can replay from logs if a
+    persisted turn turns out to be load-bearing.
+    """
+    if not caller.is_clerk_authed:
+        return None
+    if not db.is_configured():
+        return None
+
+    log = obs.get_logger()
+    try:
+        convos.upsert_user(
+            user_id=caller.user_id or "",
+            email=caller.email or "",
+            image_url=caller.image_url or "",
+            full_name=caller.full_name or "",
+            first_name=caller.first_name or "",
+            last_name=caller.last_name or "",
+        )
+
+        # If no conversation_id supplied → create one with the first
+        # user message as the auto-title. Existing-conversation
+        # appends just reuse the id (no title rewrite — first message
+        # is the canonical label). If the caller supplied an id but
+        # it doesn't belong to them, fall through to creating a new
+        # one — never bleed turns into another user's history.
+        conv_id = payload.conversation_id
+        if conv_id and not convos.conversation_belongs_to(
+            conversation_id=conv_id, user_id=caller.user_id or "",
+        ):
+            log.warning(
+                "conversation.ownership_mismatch",
+                caller=caller.identity,
+                requested_conversation_id=conv_id,
+            )
+            conv_id = None
+        if not conv_id:
+            conv_id = convos.create_conversation_from_first_query(
+                user_id=caller.user_id or "",
+                redacted_query=redacted_query,
+            )
+
+        # Persist the user message — redacted text only, never raw query.
+        convos.append_message(
+            conversation_id=conv_id,
+            role="user",
+            content_redacted=redacted_query,
+        )
+        # Persist the assistant message — answer text in content_redacted
+        # for full-text-search friendliness, full AskResponse JSON in
+        # answer_json so historical renders show citations + refusals.
+        convos.append_message(
+            conversation_id=conv_id,
+            role="assistant",
+            content_redacted=response.answer,
+            answer_json=response.model_dump(mode="json"),
+        )
+        convos.touch_conversation(conversation_id=conv_id)
+        return conv_id
+    except Exception as e:
+        # Best-effort persistence — never break the user's answer for a
+        # DB hiccup. Log loudly so the operator can investigate.
+        log.error(
+            "conversation.persist_failed",
+            error_type=type(e).__name__,
+            error_message=str(e),
+            caller=caller.identity,
+            requested_conversation_id=payload.conversation_id,
+        )
+        return None
+
+
+# ============================================================================
 # Endpoints
 # ============================================================================
 
@@ -661,7 +808,19 @@ async def ask(
         tokens_output=(ans.tokens_used or {}).get("output_tokens", 0),
         pipeline_latency_ms=ans.latency_ms,
     )
-    return _rag_answer_to_response(ans)
+    response = _rag_answer_to_response(ans)
+    # Phase 10c — persist user msg + assistant msg if JWT-authed and DB
+    # is configured. The redacted query is the post-PII text used inside
+    # the pipeline (surfaced via RAGAnswer.pii_redacted_query so we don't
+    # re-run the redactor here just to capture the same string).
+    conv_id = _persist_turn(
+        caller=caller,
+        payload=payload,
+        response=response,
+        redacted_query=ans.pii_redacted_query or payload.query,
+    )
+    response.conversation_id = conv_id
+    return response
 
 
 # ============================================================================
@@ -772,8 +931,19 @@ async def ask_stream(
                 streaming=True,
             )
             response = _rag_answer_to_response(ans)
+            # Phase 10c — persist same as /v1/ask. The conversation_id
+            # is returned in the "complete" SSE event so the browser
+            # can update its URL + sidebar without a separate fetch.
+            conv_id = _persist_turn(
+                caller=caller,
+                payload=payload,
+                response=response,
+                redacted_query=ans.pii_redacted_query or payload.query,
+            )
+            response.conversation_id = conv_id
             yield _sse_format({"event": "complete",
-                               "answer": response.model_dump()})
+                               "answer": response.model_dump(mode="json"),
+                               "conversation_id": conv_id})
         except asyncio.CancelledError:
             # Client disconnected; let the pipeline thread finish in
             # the background (no good way to cancel it mid-LLM-call).
@@ -787,3 +957,70 @@ async def ask_stream(
             "X-Accel-Buffering": "no",  # disable nginx buffering if behind one
         },
     )
+
+
+# ============================================================================
+# Phase 10c — conversation history endpoints
+# ============================================================================
+#
+# Both endpoints are gated by `clerk_session_dependency` (any registered
+# Clerk user) — NOT the admin allowlist. Reads are scoped to the calling
+# user's user_id at the SQL level; there is no operator/admin bypass for
+# viewing other users' history. (LGPD: data subject access is by
+# definition self-only.)
+
+
+@app.get("/v1/conversations")
+@limiter.limit(_rate_limit_cap)
+async def list_conversations_endpoint(
+    request: Request,
+    claims: ClerkClaims = Depends(clerk_session_dependency),  # noqa: B008
+):
+    """List the calling user's conversations, most-recent-first.
+
+    Returns up to 50 rows. The sidebar in the UI renders this directly;
+    pagination is a Phase 10c.1 follow-up if/when histories grow long.
+    """
+    if not db.is_configured():
+        # Eval CLI / tests without DATABASE_URL_TEST. Return empty
+        # rather than 503 so the UI degrades gracefully — the chat
+        # form still works without history.
+        return {"conversations": []}
+    if not claims.user_id:
+        # Defensive: clerk_session_dependency validates the JWT but
+        # doesn't require user_id (the `sub` claim) to be present.
+        # In practice every Clerk session token has it; if it's
+        # missing we return empty rather than crash.
+        return {"conversations": []}
+    items = convos.list_conversations(user_id=claims.user_id, limit=50)
+    return {
+        "conversations": [convos.conversation_to_dict(c) for c in items],
+    }
+
+
+@app.get("/v1/conversations/{conversation_id}")
+@limiter.limit(_rate_limit_cap)
+async def get_conversation_endpoint(
+    conversation_id: str,
+    request: Request,
+    claims: ClerkClaims = Depends(clerk_session_dependency),  # noqa: B008
+):
+    """Load one conversation + its messages, scoped to the calling user.
+
+    404 if the conversation doesn't exist OR if it does exist but is
+    owned by a different user — we don't distinguish so the response
+    doesn't leak "conversation X exists, you just can't see it" to a
+    fishing attempt.
+    """
+    if not db.is_configured() or not claims.user_id:
+        raise HTTPException(status_code=404, detail="conversation not found")
+    result = convos.get_conversation(
+        conversation_id=conversation_id, user_id=claims.user_id,
+    )
+    if result is None:
+        raise HTTPException(status_code=404, detail="conversation not found")
+    conv, messages = result
+    return {
+        "conversation": convos.conversation_to_dict(conv),
+        "messages": [convos.message_to_dict(m) for m in messages],
+    }

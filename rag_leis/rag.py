@@ -320,6 +320,11 @@ class RAGAnswer:
     # Phase 4.2: PII types redacted before query crossed provider boundary.
     # Empty list when the query had no PII OR when redact_pii=False.
     pii_types_redacted: list[str] = field(default_factory=list)
+    # Phase 10c: the query text after PII redaction (or the original query
+    # if redact_pii=False / no PII patterns matched). Surfaced so HTTP
+    # callers can persist it into conversation_messages.content_redacted
+    # without re-running the redactor and without storing PII.
+    pii_redacted_query: str = ""
     # Phase 5.2: hierarchy warning string when the LLM cites lower-rank
     # sources (e.g., Decreto, Resolução) while higher-rank sources (CF, LC,
     # LO) were in top-K context. None when not applicable.
@@ -509,6 +514,7 @@ class RAGPipeline:
                 classified_type=classified,
                 classified_top_k=effective_top_k,
                 pii_types_redacted=pii_types,
+                pii_redacted_query=query_for_pipeline,
                 prose_citation_mismatches=[],
                 prose_check_retried=False,
                 latency_ms=(_time.monotonic() - _t0) * 1000.0,
@@ -568,6 +574,7 @@ class RAGPipeline:
                     classified_type=classified,
                     classified_top_k=effective_top_k,
                     pii_types_redacted=pii_types,
+                    pii_redacted_query=query_for_pipeline,
                     prose_citation_mismatches=[],
                     prose_check_retried=False,
                     cost_estimate_usd=round(extractor_cost, 6),
@@ -781,6 +788,7 @@ class RAGPipeline:
             classified_type=classified,
             classified_top_k=effective_top_k,
             pii_types_redacted=pii_types,
+            pii_redacted_query=query_for_pipeline,
             hierarchy_warning=hier_warn,
             prose_citation_mismatches=prose_mismatches,
             prose_check_retried=prose_retried,
