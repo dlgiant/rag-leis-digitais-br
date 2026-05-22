@@ -377,11 +377,16 @@ def test_openapi_endpoint_lists_v1_ask():
 
 
 def test_ask_rejects_missing_api_key(client_with_stub):
+    """Phase 14.6 update: error message now reads 'missing credentials
+    (Bearer JWT or X-API-Key)' since /v1/ask accepts either auth type.
+    The X-API-Key path still works identically; just the no-credentials
+    error string + WWW-Authenticate header changed."""
     client, _ = client_with_stub
     r = client.post("/v1/ask", json={"query": "anything"})
     assert r.status_code == 401
-    assert r.json() == {"detail": "missing API key"}
-    assert r.headers.get("www-authenticate") == "ApiKey"
+    assert "missing credentials" in r.json()["detail"].lower()
+    auth = r.headers.get("www-authenticate", "")
+    assert "Bearer" in auth and "ApiKey" in auth
 
 
 def test_ask_rejects_wrong_api_key(client_with_stub):
@@ -561,12 +566,14 @@ def test_pipeline_answered_log_contains_expected_fields(client_with_stub, captur
 
 
 def test_auth_failed_event_on_missing_key(client_with_stub, captured_logs):
+    """Phase 14.6: reason now `missing-credentials` (was `missing-key`)
+    since the dependency accepts either Bearer JWT or X-API-Key."""
     client, _ = client_with_stub
     r = client.post("/v1/ask", json={"query": "test"})
     assert r.status_code == 401
     events = [e for e in _parse_logs(captured_logs) if e.get("event") == "auth.failed"]
     assert len(events) == 1
-    assert events[0]["reason"] == "missing-key"
+    assert events[0]["reason"] == "missing-credentials"
     assert events[0]["api_key_prefix"] == "none"
 
 

@@ -37,6 +37,7 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 from dataclasses import asdict
+from dataclasses import dataclass as _dataclass
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,7 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from rag_leis import obs
+from rag_leis.clerk_auth import ClerkAuthError, verify_session_token
 from rag_leis.rag import DEFAULT_TOP_K, RAGAnswer, RAGPipeline, load_pipeline
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -294,13 +296,92 @@ def verify_api_key(x_api_key: str | None = Header(default=None)) -> str:
     )
 
 
+@_dataclass(frozen=True)
+class AskCaller:
+    """Identity of an authenticated `/v1/ask` caller. One of:
+      - `email` populated → Clerk-authed user (browser via rag.nunes.work)
+      - `api_key_prefix` populated → API-key caller (CI / MCP / curl)
+    Used for telemetry; the handler reads `.identity` for log lines.
+    """
+
+    email: str | None = None
+    api_key_prefix: str | None = None
+
+    @property
+    def identity(self) -> str:
+        if self.email:
+            return self.email
+        if self.api_key_prefix:
+            return f"key:{self.api_key_prefix}"
+        return "unknown"
+
+
+def verify_clerk_or_api_key(request: Request) -> AskCaller:
+    """FastAPI dep for `/v1/ask` + `/v1/ask/stream`: accept EITHER
+
+      - `Authorization: Bearer <clerk-jwt>` — browser path (rag.nunes.work
+        Clerk session, no allowlist gate; any registered user passes)
+      - `X-API-Key: <key>` — programmatic path (CI smoke tests, MCP,
+        curl scripts), keys read from RAG_API_KEYS
+
+    Bearer takes precedence if both headers present. Returns an
+    `AskCaller` with whichever identity validated. 401 if neither.
+    """
+    # Try Clerk Bearer first
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header[len("Bearer "):].strip()
+        if not token:
+            obs.get_logger().warning(
+                "auth.failed", reason="empty-bearer", api_key_prefix="none",
+            )
+            raise HTTPException(status_code=401, detail="empty bearer token")
+        try:
+            claims = verify_session_token(token)
+        except ClerkAuthError as e:
+            obs.get_logger().warning(
+                "auth.failed", reason=f"bad-bearer:{e}", api_key_prefix="none",
+            )
+            raise HTTPException(status_code=401, detail=str(e)) from e
+        return AskCaller(email=claims.email)
+
+    # Fall back to X-API-Key
+    x_api_key = request.headers.get("X-API-Key")
+    if x_api_key:
+        allowed = _allowed_keys()
+        for candidate in allowed:
+            if secrets.compare_digest(x_api_key, candidate):
+                return AskCaller(api_key_prefix=x_api_key[:8])
+        obs.get_logger().warning(
+            "auth.failed", reason="invalid-key", api_key_prefix=x_api_key[:8],
+        )
+        raise HTTPException(
+            status_code=401, detail="invalid API key",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+
+    obs.get_logger().warning(
+        "auth.failed", reason="missing-credentials", api_key_prefix="none",
+    )
+    raise HTTPException(
+        status_code=401,
+        detail="missing credentials (Bearer JWT or X-API-Key)",
+        headers={"WWW-Authenticate": 'Bearer realm="rag-leis", ApiKey'},
+    )
+
+
 def _rate_limit_key(request: Request) -> str:
-    """slowapi key function: bucket by validated API key. The auth
-    dependency runs BEFORE this, so a missing/invalid key would have
-    already 401'd. Falls back to the literal "no-key" string for
-    defense in depth (any unauth'd request that reaches slowapi gets
-    a shared bucket and trips fast)."""
-    return request.headers.get("X-API-Key", "no-key")
+    """slowapi key function: bucket by validated caller identity. For
+    Bearer-JWT callers, bucket by the JWT signature suffix (stable per
+    session, changes ~every 60s when Clerk auto-refreshes the token —
+    that's fine; a per-token quota is functionally per-user-per-minute).
+    For X-API-Key callers, bucket by the key. Falls back to "no-key"
+    for any unauthenticated request (defense in depth)."""
+    auth = request.headers.get("Authorization", "")
+    if auth.lower().startswith("bearer "):
+        token = auth[len("Bearer "):].strip()
+        return f"jwt:{token[-16:]}" if token else "jwt:empty"
+    return f"key:{request.headers.get('X-API-Key', 'no-key')}"
 
 
 def _rate_limit_cap() -> str:
@@ -532,7 +613,7 @@ async def health(request: Request) -> HealthResponse:
 async def ask(
     request: Request,
     payload: AskRequest,
-    api_key: str = Depends(verify_api_key),
+    caller: AskCaller = Depends(verify_clerk_or_api_key),  # noqa: B008 — FastAPI Depends() in defaults IS the framework pattern
     pipeline: RAGPipeline = Depends(get_pipeline),  # noqa: B008 — FastAPI Depends() in defaults IS the framework pattern
 ) -> AskResponse:
     """Answer a single query against the pipeline. Byte-for-byte
@@ -566,6 +647,7 @@ async def ask(
     # that don't have the same PII handling as the pii_audit_log path.
     log.info(
         "pipeline.answered",
+        caller=caller.identity,
         query_length=len(payload.query),
         classified_type=ans.classified_type,
         top_1_cosine=ans.raw_retrieval[0][1] if ans.raw_retrieval else None,
@@ -614,7 +696,7 @@ def _sse_format(event_dict: dict[str, Any]) -> bytes:
 async def ask_stream(
     request: Request,
     payload: AskRequest,
-    api_key: str = Depends(verify_api_key),
+    caller: AskCaller = Depends(verify_clerk_or_api_key),  # noqa: B008 — FastAPI Depends() in defaults IS the framework pattern
     pipeline: RAGPipeline = Depends(get_pipeline),  # noqa: B008
 ):
     """Streaming variant of /v1/ask.
@@ -674,6 +756,7 @@ async def ask_stream(
             # Log just like /v1/ask does (Phase 8.3 schema)
             log.info(
                 "pipeline.answered",
+                caller=caller.identity,
                 query_length=len(payload.query),
                 classified_type=ans.classified_type,
                 top_1_cosine=ans.raw_retrieval[0][1] if ans.raw_retrieval else None,

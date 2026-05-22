@@ -70,11 +70,12 @@ def _read_operator_email() -> str | None:
     return raw or None
 
 
-def verify_token(token: str) -> ClerkClaims:
-    """Verify a Clerk-issued JWT and return narrowed claims.
+def _decode_token(token: str) -> dict:
+    """Verify signature + decode payload. Raises ClerkAuthError on failure.
 
-    Raises ClerkAuthError on signature failure, expired token,
-    audience mismatch, missing email claim, or not-in-allowlist.
+    Shared by `verify_token` (admin path) and `verify_session_token`
+    (any-authed-user path) — they differ only in whether they apply
+    the admin allowlist.
     """
     pubkey = _read_public_key()
     audience = os.environ.get("CLERK_AUDIENCE")
@@ -87,7 +88,7 @@ def verify_token(token: str) -> ClerkClaims:
         decode_kwargs["audience"] = audience
 
     try:
-        payload = jwt.decode(token, **decode_kwargs)
+        return jwt.decode(token, **decode_kwargs)
     except jwt.ExpiredSignatureError as e:
         raise ClerkAuthError("token expired") from e
     except jwt.InvalidAudienceError as e:
@@ -97,21 +98,56 @@ def verify_token(token: str) -> ClerkClaims:
     except jwt.PyJWTError as e:
         raise ClerkAuthError(f"jwt decode failed: {type(e).__name__}") from e
 
-    # Clerk emits email under `email` for personal connections OR
-    # as a primary_email_address. Be defensive about both.
+
+def _extract_email(payload: dict) -> str:
+    """Pull the email claim out of a decoded JWT payload.
+
+    Clerk emits email under `email` for personal connections OR as
+    `primary_email_address`. Be defensive about both. Returns the
+    lowercased, stripped email; raises if missing.
+    """
     email = payload.get("email") or payload.get("primary_email_address") or ""
     email = str(email).strip().lower()
     if not email:
         raise ClerkAuthError("token missing email claim")
+    return email
+
+
+def _is_operator(email: str) -> bool:
+    """True if the email matches `RAG_OPERATOR_EMAIL`."""
+    operator_email = _read_operator_email()
+    return bool(operator_email) and email == operator_email
+
+
+def verify_token(token: str) -> ClerkClaims:
+    """Verify a Clerk-issued JWT AND check the admin allowlist.
+
+    Use for `/v1/admin/*` endpoints. Raises ClerkAuthError on
+    signature failure, expired token, audience mismatch, missing
+    email claim, or email not in allowlist.
+    """
+    payload = _decode_token(token)
+    email = _extract_email(payload)
 
     allowlist = _read_allowlist()
     if email not in allowlist:
         raise ClerkAuthError(f"email {email!r} not in admin allowlist")
 
-    operator_email = _read_operator_email()
-    is_operator = bool(operator_email) and email == operator_email
+    return ClerkClaims(email=email, is_operator=_is_operator(email))
 
-    return ClerkClaims(email=email, is_operator=is_operator)
+
+def verify_session_token(token: str) -> ClerkClaims:
+    """Verify a Clerk-issued JWT WITHOUT the admin-allowlist check.
+
+    Use for endpoints that require AUTH but accept any registered
+    user — e.g. the public `/v1/ask` endpoint after Phase 14.6's
+    Clerk integration on rag.nunes.work. Same signature + audience
+    + email-claim checks as `verify_token`; just doesn't gate on
+    `RAG_ADMIN_ALLOWLIST`.
+    """
+    payload = _decode_token(token)
+    email = _extract_email(payload)
+    return ClerkClaims(email=email, is_operator=_is_operator(email))
 
 
 # ---------------------------------------------------------------------------
@@ -151,6 +187,35 @@ def clerk_auth_dependency(request: Request) -> ClerkClaims:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=msg,
+        ) from e
+
+
+def clerk_session_dependency(request: Request) -> ClerkClaims:
+    """FastAPI Depends() target for non-admin endpoints (e.g. `/v1/ask`).
+
+    Same Bearer-token parsing as `clerk_auth_dependency` but uses
+    `verify_session_token` (no allowlist), so any registered Clerk
+    user passes. Raises 401 on missing/bad token.
+    """
+    header = request.headers.get("Authorization", "")
+    if not header.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="missing bearer token",
+        )
+    token = header[len("Bearer "):].strip()
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="empty bearer token",
+        )
+
+    try:
+        return verify_session_token(token)
+    except ClerkAuthError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
         ) from e
 
 

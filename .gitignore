@@ -83,3 +83,4 @@ REVIEWER_NOTES_*.md
 # Regen via `uv run python -m scripts.extract_oab_pilot`.
 eval/oab_pilot_*_candidates.yaml
 
+.vercel
