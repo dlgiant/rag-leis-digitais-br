@@ -1,0 +1,87 @@
+name: Nightly refusal canary
+
+# Phase 17.1 — run scripts/phase_17_1_refusal_canary.py every night.
+# Gates on:
+#   * oos_refusal_recall ≥ 0.55
+#   * false_refusal_rate ≤ 0.02
+# On gate failure: the job exits non-zero (so the run shows red in
+# the Actions tab) AND posts a one-line alert to Slack via the
+# existing Phase 8.6 SLACK_WEBHOOK_URL secret.
+#
+# Cost / latency: ~$0.30 + ~3 min per run; 30 nights/month → ~$9/mo.
+# An order of magnitude cheaper than catching a refusal-discipline
+# regression in production via user complaints + manual eval rerun.
+
+on:
+  schedule:
+    # 04:30 UTC = 01:30 in São Paulo (no Brazil-timezone friction with
+    # GHA's UTC-only crons). Off-peak so Anthropic/Marítaca quotas
+    # aren't competing with daytime traffic.
+    - cron: "30 4 * * *"
+  workflow_dispatch:
+    inputs:
+      n_oos:
+        description: "OOS row count (default 20)"
+        type: string
+        required: false
+        default: "20"
+      n_inscope:
+        description: "In-scope row count (default 10)"
+        type: string
+        required: false
+        default: "10"
+
+concurrency:
+  # If a manual run is in-flight when the cron fires (or vice-versa),
+  # the older one is cancelled. Avoids double-billing the API.
+  group: nightly-refusal-canary
+  cancel-in-progress: true
+
+jobs:
+  canary:
+    name: Refusal canary
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install Python deps
+        # `voyage` is needed for the embedder; `server` brings the
+        # OTel + structlog runtime obs.py depends on.
+        run: uv sync --extra voyage --extra server
+
+      - name: Run canary
+        env:
+          # Production-equivalent secrets:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MARITACA_API_KEY: ${{ secrets.MARITACA_API_KEY }}
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+          # Slack-only on failure path (script reads this env var).
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          # Match production stack defaults — Phase 8.0.1 chose
+          # sabia-4; Phase 17.5 pinned the OOS threshold; both
+          # already live in rag_leis.rag defaults, no override
+          # needed here. Phase 16.4 env-exposed gates default to
+          # production (scope-check on, relevance gate on); the
+          # canary uses those defaults so the gate measures the
+          # production posture, not a custom test config.
+          RAG_LLM_PROVIDER: "maritaca"
+        run: |
+          uv run python scripts/phase_17_1_refusal_canary.py \
+            --n-oos "${{ github.event.inputs.n_oos || '20' }}" \
+            --n-inscope "${{ github.event.inputs.n_inscope || '10' }}" \
+            --json-out canary-report.json
+
+      - name: Upload report artifact
+        if: always()  # upload even on gate failure so we can post-mortem
+        uses: actions/upload-artifact@v4
+        with:
+          name: canary-report-${{ github.run_id }}
+          path: canary-report.json
+          retention-days: 30
