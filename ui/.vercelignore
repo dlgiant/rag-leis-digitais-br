@@ -1,0 +1,24 @@
+# Phase 10c — Vercel CLI ignore list.
+#
+# Without this file, `vercel --prod` from the CLI falls back to broad
+# defaults and can pick up content from outside the conventional Astro
+# tree, producing 1GB+ source uploads. Explicit exclusions below mirror
+# what the GitHub-triggered build already excludes via .gitignore.
+
+# Build artifacts
+dist/
+.astro/
+.vercel/output/
+
+# Dependencies (Vercel reinstalls remotely)
+node_modules/
+
+# Local env overrides (Vercel project env vars are the source of truth)
+.env
+.env.local
+.env.*.local
+
+# Editor + OS noise
+.DS_Store
+.idea/
+.vscode/
