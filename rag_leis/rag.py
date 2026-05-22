@@ -112,7 +112,17 @@ DEFAULT_AUDIT_LOG_PATH = Path(__file__).resolve().parents[1] / "data" / "audit" 
 # clearly OOS queries (e.g. someone pasting a paragraph in a different
 # language); the load-bearing OOS detection happens at the LLM-self-refusal
 # level, since the model has full context to make that call.
-DEFAULT_OOS_THRESHOLD = 0.40
+#
+# Phase 17.5 (2026-05-22) — re-calibrated on the post-16.3 corpus (7201
+# chunks, voyage-3-large @ title+label+nav+caput+text) against
+# `eval/legalbench_br_oos.yaml` (49 rows) and `eval/queries.yaml`
+# (102 rows). Full sweep in `study/phase-17.5-oos-threshold-
+# calibration.md` + raw data in `eval/runs/phase-17.5-oos-threshold-
+# sweep.json`. The pin moved from 0.40 (no-op — below the measured OOS
+# floor of 0.4205) to 0.425, catching 1/49 OOS rows at zero false-
+# refusal cost. The next defensible step (0.450) would false-refuse
+# the Súmula 403 query (in-scope min 0.4388); rejected.
+DEFAULT_OOS_THRESHOLD = 0.425
 # Phase 6.6 r4 (2026-05-16): switched from `label+nav+caput+text` to
 # `title+label+nav+caput+text`. Hypothesis test surfaced by Phase 6.6 audit
 # (art.13 MCI vs Decreto 8.771 art.13 cross-corpus collision): prepending the

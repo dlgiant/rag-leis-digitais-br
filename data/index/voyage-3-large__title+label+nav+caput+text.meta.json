@@ -1,6 +1,6 @@
 {
-  "content_hash": "80d46d640567600cfef0243e5ac283bd5e4254de6c5a96ba40ac1cd41b822e6a",
-  "n_chunks": 7204,
+  "content_hash": "c0e3aa193983db14d243c404473c5b65a521ec91d876a63d591bf3b24cd80914",
+  "n_chunks": 7201,
   "model": "voyage-3-large",
   "text_mode": "title+label+nav+caput+text"
 }

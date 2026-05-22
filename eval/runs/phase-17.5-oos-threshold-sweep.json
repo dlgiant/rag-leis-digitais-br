@@ -1,0 +1,770 @@
+{
+  "config": {
+    "embedder": "voyage-3-large",
+    "text_mode": "title+label+nav+caput+text",
+    "n_docs": 7201,
+    "n_oos": 49,
+    "n_inscope": 102,
+    "false_refusal_cap": 0.02
+  },
+  "oos_distribution": {
+    "label": "OOS top-1 cosine",
+    "n": 49,
+    "min": 0.4204551577568054,
+    "max": 0.7779015302658081,
+    "mean": 0.5904127706070336,
+    "median": 0.587206244468689,
+    "p10": 0.46874319911003115,
+    "p25": 0.5311192870140076,
+    "p75": 0.6574872732162476,
+    "p90": 0.7036456346511841
+  },
+  "inscope_distribution": {
+    "label": "In-scope top-1 cosine",
+    "n": 102,
+    "min": 0.43875637650489807,
+    "max": 0.7912930846214294,
+    "mean": 0.6583698862323574,
+    "median": 0.6611131429672241,
+    "p10": 0.5666457712650299,
+    "p25": 0.614749938249588,
+    "p75": 0.7144543677568436,
+    "p90": 0.749829888343811
+  },
+  "sweep": [
+    {
+      "threshold": 0.2,
+      "oos_refusal_recall": 0.0,
+      "false_refusal_rate": 0.0,
+      "oos_caught_n": 0,
+      "false_refusal_n": 0
+    },
+    {
+      "threshold": 0.225,
+      "oos_refusal_recall": 0.0,
+      "false_refusal_rate": 0.0,
+      "oos_caught_n": 0,
+      "false_refusal_n": 0
+    },
+    {
+      "threshold": 0.25,
+      "oos_refusal_recall": 0.0,
+      "false_refusal_rate": 0.0,
+      "oos_caught_n": 0,
+      "false_refusal_n": 0
+    },
+    {
+      "threshold": 0.275,
+      "oos_refusal_recall": 0.0,
+      "false_refusal_rate": 0.0,
+      "oos_caught_n": 0,
+      "false_refusal_n": 0
+    },
+    {
+      "threshold": 0.3,
+      "oos_refusal_recall": 0.0,
+      "false_refusal_rate": 0.0,
+      "oos_caught_n": 0,
+      "false_refusal_n": 0
+    },
+    {
+      "threshold": 0.325,
+      "oos_refusal_recall": 0.0,
+      "false_refusal_rate": 0.0,
+      "oos_caught_n": 0,
+      "false_refusal_n": 0
+    },
+    {
+      "threshold": 0.35,
+      "oos_refusal_recall": 0.0,
+      "false_refusal_rate": 0.0,
+      "oos_caught_n": 0,
+      "false_refusal_n": 0
+    },
+    {
+      "threshold": 0.375,
+      "oos_refusal_recall": 0.0,
+      "false_refusal_rate": 0.0,
+      "oos_caught_n": 0,
+      "false_refusal_n": 0
+    },
+    {
+      "threshold": 0.4,
+      "oos_refusal_recall": 0.0,
+      "false_refusal_rate": 0.0,
+      "oos_caught_n": 0,
+      "false_refusal_n": 0
+    },
+    {
+      "threshold": 0.425,
+      "oos_refusal_recall": 0.02040816326530612,
+      "false_refusal_rate": 0.0,
+      "oos_caught_n": 1,
+      "false_refusal_n": 0
+    },
+    {
+      "threshold": 0.45,
+      "oos_refusal_recall": 0.10204081632653061,
+      "false_refusal_rate": 0.00980392156862745,
+      "oos_caught_n": 5,
+      "false_refusal_n": 1
+    },
+    {
+      "threshold": 0.475,
+      "oos_refusal_recall": 0.12244897959183673,
+      "false_refusal_rate": 0.029411764705882353,
+      "oos_caught_n": 6,
+      "false_refusal_n": 3
+    },
+    {
+      "threshold": 0.5,
+      "oos_refusal_recall": 0.14285714285714285,
+      "false_refusal_rate": 0.029411764705882353,
+      "oos_caught_n": 7,
+      "false_refusal_n": 3
+    },
+    {
+      "threshold": 0.525,
+      "oos_refusal_recall": 0.22448979591836735,
+      "false_refusal_rate": 0.029411764705882353,
+      "oos_caught_n": 11,
+      "false_refusal_n": 3
+    },
+    {
+      "threshold": 0.55,
+      "oos_refusal_recall": 0.3469387755102041,
+      "false_refusal_rate": 0.0784313725490196,
+      "oos_caught_n": 17,
+      "false_refusal_n": 8
+    },
+    {
+      "threshold": 0.575,
+      "oos_refusal_recall": 0.46938775510204084,
+      "false_refusal_rate": 0.12745098039215685,
+      "oos_caught_n": 23,
+      "false_refusal_n": 13
+    },
+    {
+      "threshold": 0.6,
+      "oos_refusal_recall": 0.5714285714285714,
+      "false_refusal_rate": 0.17647058823529413,
+      "oos_caught_n": 28,
+      "false_refusal_n": 18
+    }
+  ],
+  "recommended": {
+    "threshold": 0.45,
+    "oos_refusal_recall": 0.10204081632653061,
+    "false_refusal_rate": 0.00980392156862745,
+    "oos_caught_n": 5,
+    "false_refusal_n": 1
+  },
+  "oos_scores": [
+    {
+      "source_id": "celsowm/legalbench.br/182",
+      "top_1": 0.43665969371795654
+    },
+    {
+      "source_id": "celsowm/legalbench.br/149",
+      "top_1": 0.5141804218292236
+    },
+    {
+      "source_id": "celsowm/legalbench.br/143",
+      "top_1": 0.5502851605415344
+    },
+    {
+      "source_id": "celsowm/legalbench.br/189",
+      "top_1": 0.4470878541469574
+    },
+    {
+      "source_id": "celsowm/legalbench.br/159",
+      "top_1": 0.47415703535079956
+    },
+    {
+      "source_id": "celsowm/legalbench.br/157",
+      "top_1": 0.4204551577568054
+    },
+    {
+      "source_id": "celsowm/legalbench.br/156",
+      "top_1": 0.43973031640052795
+    },
+    {
+      "source_id": "celsowm/legalbench.br/247",
+      "top_1": 0.5484502911567688
+    },
+    {
+      "source_id": "celsowm/legalbench.br/266",
+      "top_1": 0.5311192870140076
+    },
+    {
+      "source_id": "celsowm/legalbench.br/246",
+      "top_1": 0.4305136203765869
+    },
+    {
+      "source_id": "celsowm/legalbench.br/264",
+      "top_1": 0.5183980464935303
+    },
+    {
+      "source_id": "celsowm/legalbench.br/272",
+      "top_1": 0.5443744659423828
+    },
+    {
+      "source_id": "celsowm/legalbench.br/260",
+      "top_1": 0.5890438556671143
+    },
+    {
+      "source_id": "celsowm/legalbench.br/245",
+      "top_1": 0.5570239424705505
+    },
+    {
+      "source_id": "celsowm/legalbench.br/301",
+      "top_1": 0.5546128749847412
+    },
+    {
+      "source_id": "celsowm/legalbench.br/276",
+      "top_1": 0.5634430646896362
+    },
+    {
+      "source_id": "celsowm/legalbench.br/275",
+      "top_1": 0.7073491811752319
+    },
+    {
+      "source_id": "celsowm/legalbench.br/279",
+      "top_1": 0.52774977684021
+    },
+    {
+      "source_id": "celsowm/legalbench.br/280",
+      "top_1": 0.532996416091919
+    },
+    {
+      "source_id": "celsowm/legalbench.br/281",
+      "top_1": 0.6487104296684265
+    },
+    {
+      "source_id": "celsowm/legalbench.br/290",
+      "top_1": 0.5977516770362854
+    },
+    {
+      "source_id": "celsowm/legalbench.br/347",
+      "top_1": 0.6864897608757019
+    },
+    {
+      "source_id": "celsowm/legalbench.br/310",
+      "top_1": 0.6839617490768433
+    },
+    {
+      "source_id": "celsowm/legalbench.br/344",
+      "top_1": 0.7141509056091309
+    },
+    {
+      "source_id": "celsowm/legalbench.br/321",
+      "top_1": 0.6838512420654297
+    },
+    {
+      "source_id": "celsowm/legalbench.br/354",
+      "top_1": 0.6240555047988892
+    },
+    {
+      "source_id": "celsowm/legalbench.br/350",
+      "top_1": 0.6938660144805908
+    },
+    {
+      "source_id": "celsowm/legalbench.br/343",
+      "top_1": 0.7027197480201721
+    },
+    {
+      "source_id": "celsowm/legalbench.br/372",
+      "top_1": 0.5945554971694946
+    },
+    {
+      "source_id": "celsowm/legalbench.br/366",
+      "top_1": 0.5628999471664429
+    },
+    {
+      "source_id": "celsowm/legalbench.br/373",
+      "top_1": 0.5188995599746704
+    },
+    {
+      "source_id": "celsowm/legalbench.br/377",
+      "top_1": 0.6499106287956238
+    },
+    {
+      "source_id": "celsowm/legalbench.br/367",
+      "top_1": 0.5234427452087402
+    },
+    {
+      "source_id": "celsowm/legalbench.br/359",
+      "top_1": 0.5346148610115051
+    },
+    {
+      "source_id": "celsowm/legalbench.br/364",
+      "top_1": 0.4939458668231964
+    },
+    {
+      "source_id": "celsowm/legalbench.br/397",
+      "top_1": 0.7526934146881104
+    },
+    {
+      "source_id": "celsowm/legalbench.br/389",
+      "top_1": 0.738426148891449
+    },
+    {
+      "source_id": "celsowm/legalbench.br/388",
+      "top_1": 0.637586236000061
+    },
+    {
+      "source_id": "celsowm/legalbench.br/386",
+      "top_1": 0.587206244468689
+    },
+    {
+      "source_id": "celsowm/legalbench.br/387",
+      "top_1": 0.663976788520813
+    },
+    {
+      "source_id": "celsowm/legalbench.br/398",
+      "top_1": 0.6435931324958801
+    },
+    {
+      "source_id": "celsowm/legalbench.br/385",
+      "top_1": 0.601971447467804
+    },
+    {
+      "source_id": "celsowm/legalbench.br/402",
+      "top_1": 0.5751885175704956
+    },
+    {
+      "source_id": "celsowm/legalbench.br/412",
+      "top_1": 0.6627373099327087
+    },
+    {
+      "source_id": "celsowm/legalbench.br/403",
+      "top_1": 0.5639290809631348
+    },
+    {
+      "source_id": "celsowm/legalbench.br/405",
+      "top_1": 0.7779015302658081
+    },
+    {
+      "source_id": "celsowm/legalbench.br/413",
+      "top_1": 0.6574872732162476
+    },
+    {
+      "source_id": "celsowm/legalbench.br/414",
+      "top_1": 0.6159566640853882
+    },
+    {
+      "source_id": "celsowm/legalbench.br/409",
+      "top_1": 0.6501153707504272
+    }
+  ],
+  "inscope_scores": [
+    {
+      "source_id": "qual a defini\u00e7\u00e3o de dado pessoal na LGPD",
+      "top_1": 0.7649890184402466
+    },
+    {
+      "source_id": "o que s\u00e3o dados pessoais sens\u00edveis?",
+      "top_1": 0.7076271772384644
+    },
+    {
+      "source_id": "dado anonimizado significa o qu\u00ea?",
+      "top_1": 0.7275447249412537
+    },
+    {
+      "source_id": "por quanto tempo um provedor de conex\u00e3o ",
+      "top_1": 0.6767593026161194
+    },
+    {
+      "source_id": "qual o prazo de guarda de registros de a",
+      "top_1": 0.6913853883743286
+    },
+    {
+      "source_id": "provedor de conex\u00e3o responde civilmente ",
+      "top_1": 0.6922617554664612
+    },
+    {
+      "source_id": "quais medidas de seguran\u00e7a a LGPD exige ",
+      "top_1": 0.6950039863586426
+    },
+    {
+      "source_id": "o que \u00e9 neutralidade de rede no Marco Ci",
+      "top_1": 0.7742630243301392
+    },
+    {
+      "source_id": "qual a defini\u00e7\u00e3o legal de programa de co",
+      "top_1": 0.7137121558189392
+    },
+    {
+      "source_id": "por quantos anos \u00e9 protegido um programa",
+      "top_1": 0.6974032521247864
+    },
+    {
+      "source_id": "o que a Lei de Acesso \u00e0 Informa\u00e7\u00e3o consi",
+      "top_1": 0.7260004878044128
+    },
+    {
+      "source_id": "qual lei brasileira tipificou os crimes ",
+      "top_1": 0.757308304309845
+    },
+    {
+      "source_id": "qual a defini\u00e7\u00e3o de tratamento de dados ",
+      "top_1": 0.7699505090713501
+    },
+    {
+      "source_id": "qual a defini\u00e7\u00e3o de controlador na LGPD?",
+      "top_1": 0.7912930846214294
+    },
+    {
+      "source_id": "qual a defini\u00e7\u00e3o de operador na LGPD?",
+      "top_1": 0.7699524760246277
+    },
+    {
+      "source_id": "quais s\u00e3o as hip\u00f3teses legais para trata",
+      "top_1": 0.7102783918380737
+    },
+    {
+      "source_id": "como tratar dados sens\u00edveis sem o consen",
+      "top_1": 0.7215924263000488
+    },
+    {
+      "source_id": "quais direitos o titular dos dados tem s",
+      "top_1": 0.7222520709037781
+    },
+    {
+      "source_id": "direitos garantidos ao usu\u00e1rio de intern",
+      "top_1": 0.7007745504379272
+    },
+    {
+      "source_id": "quais s\u00e3o os princ\u00edpios do tratamento de",
+      "top_1": 0.7506321668624878
+    },
+    {
+      "source_id": "quando \u00e9 permitido transferir dados pess",
+      "top_1": 0.7374101877212524
+    },
+    {
+      "source_id": "como se avalia se um pa\u00eds estrangeiro te",
+      "top_1": 0.6916522979736328
+    },
+    {
+      "source_id": "quais san\u00e7\u00f5es administrativas a ANPD pod",
+      "top_1": 0.7174423933029175
+    },
+    {
+      "source_id": "o que N\u00c3O constitui ofensa aos direitos ",
+      "top_1": 0.7023922801017761
+    },
+    {
+      "source_id": "quais s\u00e3o os agentes de tratamento de da",
+      "top_1": 0.7502334117889404
+    },
+    {
+      "source_id": "o que diz o art. 7\u00ba da LGPD?",
+      "top_1": 0.6256716847419739
+    },
+    {
+      "source_id": "o que diz o art. 18 da LGPD?",
+      "top_1": 0.5902175307273865
+    },
+    {
+      "source_id": "o que diz o art. 9\u00ba do Marco Civil da In",
+      "top_1": 0.621891975402832
+    },
+    {
+      "source_id": "o que diz o art. 5 da LGPD?",
+      "top_1": 0.6354592442512512
+    },
+    {
+      "source_id": "o que diz o art. 154-A do C\u00f3digo Penal?",
+      "top_1": 0.5337809324264526
+    },
+    {
+      "source_id": "o que diz o art. 11 da LGPD?",
+      "top_1": 0.6050866842269897
+    },
+    {
+      "source_id": "o que diz o art. 13 do Marco Civil?",
+      "top_1": 0.6046010851860046
+    },
+    {
+      "source_id": "o que diz o art. 46 da Lei de Direitos A",
+      "top_1": 0.6181901693344116
+    },
+    {
+      "source_id": "minha empresa precisa pedir autoriza\u00e7\u00e3o ",
+      "top_1": 0.5689210891723633
+    },
+    {
+      "source_id": "fui invadido no celular sem permiss\u00e3o, i",
+      "top_1": 0.6832043528556824
+    },
+    {
+      "source_id": "posso fazer uma c\u00f3pia de backup de um pr",
+      "top_1": 0.7272475361824036
+    },
+    {
+      "source_id": "posso reproduzir um trecho de livro para",
+      "top_1": 0.7273613810539246
+    },
+    {
+      "source_id": "a empresa pode usar dados de uma crian\u00e7a",
+      "top_1": 0.6827303171157837
+    },
+    {
+      "source_id": "quero saber tudo que uma empresa tem sob",
+      "top_1": 0.6689011454582214
+    },
+    {
+      "source_id": "se vazaram meus dados, algu\u00e9m me avisa?",
+      "top_1": 0.6038134098052979
+    },
+    {
+      "source_id": "policial pode pedir meus dados pra inves",
+      "top_1": 0.5563714504241943
+    },
+    {
+      "source_id": "quais os prazos de reten\u00e7\u00e3o de logs de i",
+      "top_1": 0.6196045875549316
+    },
+    {
+      "source_id": "diferen\u00e7a entre dado pessoal e informa\u00e7\u00e3",
+      "top_1": 0.6228412389755249
+    },
+    {
+      "source_id": "como uma empresa pode coletar dados pess",
+      "top_1": 0.635496973991394
+    },
+    {
+      "source_id": "se vazaram meus dados, qual o caminho le",
+      "top_1": 0.6376510262489319
+    },
+    {
+      "source_id": "responsabilidade do provedor de aplica\u00e7\u00f5",
+      "top_1": 0.6497048735618591
+    },
+    {
+      "source_id": "compartilhamento de dados entre \u00f3rg\u00e3os d",
+      "top_1": 0.6590269804000854
+    },
+    {
+      "source_id": "qual a defini\u00e7\u00e3o de autor segundo a Lei ",
+      "top_1": 0.7550168633460999
+    },
+    {
+      "source_id": "o que a Constitui\u00e7\u00e3o entende por inviola",
+      "top_1": 0.6702903509140015
+    },
+    {
+      "source_id": "o que \u00e9 habeas data?",
+      "top_1": 0.7092934250831604
+    },
+    {
+      "source_id": "o que define a Constitui\u00e7\u00e3o como prote\u00e7\u00e3",
+      "top_1": 0.6120567321777344
+    },
+    {
+      "source_id": "qual a defini\u00e7\u00e3o de invas\u00e3o de dispositi",
+      "top_1": 0.7339342832565308
+    },
+    {
+      "source_id": "quais obras intelectuais s\u00e3o protegidas ",
+      "top_1": 0.7645815014839172
+    },
+    {
+      "source_id": "o que N\u00c3O \u00e9 objeto de prote\u00e7\u00e3o como dire",
+      "top_1": 0.7310234308242798
+    },
+    {
+      "source_id": "como o C\u00f3digo Penal define crime consuma",
+      "top_1": 0.654961347579956
+    },
+    {
+      "source_id": "quais hip\u00f3teses justificam discrimina\u00e7\u00e3o",
+      "top_1": 0.5835787057876587
+    },
+    {
+      "source_id": "quais direitos pertencem ao autor de uma",
+      "top_1": 0.714701771736145
+    },
+    {
+      "source_id": "o que diz o art. 154-A do C\u00f3digo Penal?",
+      "top_1": 0.5337809324264526
+    },
+    {
+      "source_id": "o que diz o art. 121 do C\u00f3digo Penal?",
+      "top_1": 0.623568058013916
+    },
+    {
+      "source_id": "o que diz o art. 147 do C\u00f3digo Penal?",
+      "top_1": 0.5357914566993713
+    },
+    {
+      "source_id": "o que diz o art. 5 inciso X da Constitui",
+      "top_1": 0.5663929581642151
+    },
+    {
+      "source_id": "o que diz o art. 5 inciso XII da Constit",
+      "top_1": 0.541700005531311
+    },
+    {
+      "source_id": "o que diz o art. 7 da Lei de Direitos Au",
+      "top_1": 0.6144253015518188
+    },
+    {
+      "source_id": "o que diz o art. 41 da LGPD?",
+      "top_1": 0.5302774906158447
+    },
+    {
+      "source_id": "algu\u00e9m me amea\u00e7ou online, posso processa",
+      "top_1": 0.6333942413330078
+    },
+    {
+      "source_id": "clonaram meu cart\u00e3o pela internet, qual ",
+      "top_1": 0.6082294583320618
+    },
+    {
+      "source_id": "publicaram fotos \u00edntimas minhas sem auto",
+      "top_1": 0.6497818827629089
+    },
+    {
+      "source_id": "criaram um perfil falso com meu nome nas",
+      "top_1": 0.5929390788078308
+    },
+    {
+      "source_id": "tenho direito de saber o que o governo g",
+      "top_1": 0.6381298303604126
+    },
+    {
+      "source_id": "podem me processar por escrever opini\u00e3o ",
+      "top_1": 0.5851262211799622
+    },
+    {
+      "source_id": "minha empresa precisa nomear algu\u00e9m resp",
+      "top_1": 0.6601262092590332
+    },
+    {
+      "source_id": "se vazaram dados e eu sofri preju\u00edzo, qu",
+      "top_1": 0.6955522298812866
+    },
+    {
+      "source_id": "intimidade na Constitui\u00e7\u00e3o e prote\u00e7\u00e3o de",
+      "top_1": 0.6173048615455627
+    },
+    {
+      "source_id": "habeas data e direitos do titular de dad",
+      "top_1": 0.65308678150177
+    },
+    {
+      "source_id": "remo\u00e7\u00e3o de conte\u00fado na internet \u2014 quem d",
+      "top_1": 0.6196754574775696
+    },
+    {
+      "source_id": "neutralidade de rede e suas exce\u00e7\u00f5es",
+      "top_1": 0.6598321199417114
+    },
+    {
+      "source_id": "responsabilidade civil por vazamento de ",
+      "top_1": 0.6147016286849976
+    },
+    {
+      "source_id": "sigilo de comunica\u00e7\u00e3o na Constitui\u00e7\u00e3o e ",
+      "top_1": 0.6148948669433594
+    },
+    {
+      "source_id": "o que \u00e9 assinatura eletr\u00f4nica qualificad",
+      "top_1": 0.7403595447540283
+    },
+    {
+      "source_id": "quais os tipos de assinatura eletr\u00f4nica ",
+      "top_1": 0.6709284782409668
+    },
+    {
+      "source_id": "o que \u00e9 certificado digital ICP-Brasil?",
+      "top_1": 0.718263566493988
+    },
+    {
+      "source_id": "quais s\u00e3o os princ\u00edpios do Governo Digit",
+      "top_1": 0.70615553855896
+    },
+    {
+      "source_id": "o governo pode obrigar tudo em meio digi",
+      "top_1": 0.6208677291870117
+    },
+    {
+      "source_id": "o que a Lei do Governo Digital entende p",
+      "top_1": 0.7597822546958923
+    },
+    {
+      "source_id": "como funciona intima\u00e7\u00e3o eletr\u00f4nica no ju",
+      "top_1": 0.678834080696106
+    },
+    {
+      "source_id": "o que diz a S\u00famula 227 do STJ?",
+      "top_1": 0.47469890117645264
+    },
+    {
+      "source_id": "o que diz a S\u00famula 403 do STJ?",
+      "top_1": 0.43875637650489807
+    },
+    {
+      "source_id": "o que diz a S\u00famula 479 do STJ sobre inst",
+      "top_1": 0.5568127036094666
+    },
+    {
+      "source_id": "qual a tese fixada pelo STF no Tema 786?",
+      "top_1": 0.456778347492218
+    },
+    {
+      "source_id": "uma empresa pode pedir indeniza\u00e7\u00e3o por d",
+      "top_1": 0.5722426176071167
+    },
+    {
+      "source_id": "preciso de autoriza\u00e7\u00e3o para usar a foto ",
+      "top_1": 0.6807290315628052
+    },
+    {
+      "source_id": "se um terceiro usa meus dados banc\u00e1rios ",
+      "top_1": 0.6197612881660461
+    },
+    {
+      "source_id": "existe direito ao esquecimento no Brasil",
+      "top_1": 0.6828962564468384
+    },
+    {
+      "source_id": "qual o regime de responsabilidade civil ",
+      "top_1": 0.6576062440872192
+    },
+    {
+      "source_id": "qual a regra do C\u00f3digo Civil sobre o uso",
+      "top_1": 0.7298993468284607
+    },
+    {
+      "source_id": "a vida privada \u00e9 protegida pela lei?",
+      "top_1": 0.7029641270637512
+    },
+    {
+      "source_id": "posso usar o nome de outra pessoa em uma",
+      "top_1": 0.7461981773376465
+    },
+    {
+      "source_id": "tenho um e-commerce pequeno, preciso seg",
+      "top_1": 0.5899596214294434
+    },
+    {
+      "source_id": "como fa\u00e7o pra pedir uma informa\u00e7\u00e3o pra u",
+      "top_1": 0.6226857900619507
+    },
+    {
+      "source_id": "meu pedido administrativo de retifica\u00e7\u00e3o",
+      "top_1": 0.6025619506835938
+    },
+    {
+      "source_id": "pena maior pra estelionato cometido pela",
+      "top_1": 0.70584636926651
+    },
+    {
+      "source_id": "transferiram dinheiro da minha conta sem",
+      "top_1": 0.662100076675415
+    }
+  ]
+}
