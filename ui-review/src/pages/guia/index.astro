@@ -1,0 +1,117 @@
+---
+// Phase 14.5 — guia landing. Hub linking the two persona-specific
+// guides. Lives behind Clerk auth like the rest of the review UI.
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Guia">
+  <div class="container">
+    <header class="page-header">
+      <div>
+        <span class="label-eyebrow">GUIA / 06</span>
+        <h1>Como usar o sistema</h1>
+        <p class="muted small intro">
+          Há dois papéis. Pode ser que você ocupe os dois — ou só um.
+          Cada guia cobre um fluxo de trabalho do início ao fim.
+        </p>
+      </div>
+    </header>
+
+    <div class="guide-cards">
+      <a href="/guia/revisor" class="guide-card">
+        <span class="label-eyebrow">PAPEL A</span>
+        <h2>Revisora</h2>
+        <p class="guide-card-desc">
+          Você audita o que o sistema já tem: o eval set (139 queries),
+          o corpus (~15.000 chunks), as anotações de vigência, os
+          padrões do redator de PII. Você flaga gaps e propõe correções.
+          Sua interface é este site.
+        </p>
+        <ul class="guide-card-bullets">
+          <li><code>/queries</code> — auditar o eval set</li>
+          <li><code>/vigencia</code> — curar overlays de vigência</li>
+          <li><code>/hierarchy</code> — flagar mascaramento hierárquico</li>
+          <li><code>/pii</code> — auditar o redator de PII</li>
+        </ul>
+        <span class="guide-card-arrow">LER GUIA →</span>
+      </a>
+
+      <a href="/guia/usuario" class="guide-card">
+        <span class="label-eyebrow">PAPEL B</span>
+        <h2>Usuária do RAG</h2>
+        <p class="guide-card-desc">
+          Você faz perguntas e o sistema responde citando os artigos
+          relevantes. Use quando precisar de uma pesquisa preliminar
+          em legislação federal coberta. Sua interface é
+          <code>rag-leis-ui.fly.dev</code> (pública, sem login).
+        </p>
+        <ul class="guide-card-bullets">
+          <li>Como formular uma pergunta eficaz</li>
+          <li>Como ler a resposta (citações, recusas, avisos)</li>
+          <li>O que o sistema cobre — e o que NÃO cobre</li>
+          <li>Quando não confiar no resultado</li>
+        </ul>
+        <span class="guide-card-arrow">LER GUIA →</span>
+      </a>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .intro { max-width: 65ch; margin-top: 0.5rem; }
+
+  .guide-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .guide-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.25rem 1.4rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.12s ease, transform 0.12s ease;
+  }
+  .guide-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .guide-card h2 {
+    margin: 0.2rem 0 0.4rem 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .guide-card-desc {
+    margin: 0;
+    line-height: 1.55;
+    color: var(--fg-dim);
+  }
+  .guide-card-bullets {
+    margin: 0.5rem 0 0.5rem 0;
+    padding-left: 1.1rem;
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+  .guide-card-bullets code {
+    background: var(--code-bg);
+    padding: 0 0.25rem;
+    color: var(--fg);
+  }
+  .guide-card-arrow {
+    margin-top: auto;
+    padding-top: 0.6rem;
+    font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--emphasis);
+    border-top: 1px solid var(--border);
+  }
+</style>

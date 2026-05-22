@@ -1,0 +1,318 @@
+---
+// Phase 14.5 — guia/revisor: workflows de auditoria.
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Guia · Revisora">
+  <article class="guide-article">
+    <nav class="breadcrumb"><a href="/guia">← GUIA</a></nav>
+
+    <header class="article-header">
+      <span class="label-eyebrow">GUIA · PAPEL A</span>
+      <h1>Como auditar o sistema</h1>
+      <p class="article-intro">
+        O sistema tem quatro superfícies de revisão. Cada uma audita
+        uma parte diferente do RAG. Você pode usar uma de cada vez ou
+        intercalar — todas escrevem para a mesma fila do operador.
+      </p>
+    </header>
+
+    <section class="guide-section">
+      <h2>Como o ciclo funciona</h2>
+      <ol class="cycle-list">
+        <li>
+          Você abre uma das quatro páginas de revisão e submete uma
+          <strong>proposta</strong> (verdict, anotação de vigência,
+          flag de hierarquia, ou flag de PII não detectada).
+        </li>
+        <li>
+          A proposta vai para o Postgres em São Paulo. Você
+          <strong>não edita os arquivos do projeto diretamente</strong>
+          — só o operador faz isso, via merge tool offline.
+        </li>
+        <li>
+          O operador roda o merge tool localmente, escolhe quais
+          propostas aceitar, e as aceitas viram alterações em
+          <code>eval/queries.yaml</code> /
+          <code>data/vigencia/overlays.yaml</code> /
+          <code>data/hierarchy/flagged.yaml</code> /
+          <code>data/pii/missed.yaml</code> dependendo do tipo.
+        </li>
+        <li>
+          O operador faz commit e push. O próximo deploy aplica
+          as mudanças.
+        </li>
+      </ol>
+      <p class="muted small">
+        Você não tem que esperar — pode continuar submetendo
+        propostas. Elas se acumulam até o operador processar.
+      </p>
+    </section>
+
+    <section class="guide-section">
+      <h2><code>/queries</code> — Eval set</h2>
+      <p class="what">
+        <span class="label-eyebrow">O QUE</span>
+        Catálogo das 139 perguntas que rodamos pra testar o sistema.
+        Cada linha é uma pergunta com URNs <em>gold</em> — chunks que
+        DEVERIAM ser recuperados quando essa pergunta é feita.
+      </p>
+      <p class="how">
+        <span class="label-eyebrow">COMO</span>
+        Abrir uma query. Ler a pergunta e os chunks gold expandidos.
+        Decidir o veredito:
+      </p>
+      <ul class="status-list">
+        <li><strong class="verdict-pill verdict-correct">CORRETO</strong> — os URNs gold cobrem a pergunta direito; o tipo classificado faz sentido.</li>
+        <li><strong class="verdict-pill verdict-incorrect">INCORRETO</strong> — você quer trocar URN ou mudar o tipo. Sugira nos campos opcionais.</li>
+        <li><strong class="verdict-pill verdict-followup">PRECISA REVISÃO</strong> — ambíguo; precisa pesquisa adicional ou contexto.</li>
+      </ul>
+      <p class="when">
+        <span class="label-eyebrow">QUANDO</span>
+        Quando você quer auditar se o conjunto de teste está
+        avaliando os casos certos. Esta é a auditoria mais comum: ela
+        mantém o eval set honesto.
+      </p>
+
+      <h3>Refinar query (botão na mesma página)</h3>
+      <p>
+        Se você quer testar um phrasing alternativo da pergunta sem
+        sair, abra <em>Refinar query</em>, digite a nova versão, e
+        clique <strong>Rodar Refine</strong>. O sistema mostra quais
+        chunks o novo phrasing recupera, marcando em verde os que
+        coincidem com o gold da query original. Útil para descobrir
+        se uma alternativa de frase é tão boa quanto a original — ou
+        para propor uma nova linha no eval set inteiramente.
+      </p>
+    </section>
+
+    <section class="guide-section">
+      <h2><code>/vigencia</code> — Overlays</h2>
+      <p class="what">
+        <span class="label-eyebrow">O QUE</span>
+        Anotar o status de vigência de chunks individuais do corpus.
+        O sistema entende oito categorias: <code>vigente</code> (padrão),
+        <code>sub_judice</code>, <code>suspenso</code>, <code>vacatio_legis</code>,
+        <code>eficacia_limitada</code>, <code>revogado_tacito</code>,
+        <code>alterado_por_ec</code>, <code>atualizado_recentemente</code>.
+      </p>
+      <p class="how">
+        <span class="label-eyebrow">COMO</span>
+        Em <code>/vigencia</code> você vê uma tabela de documentos
+        ordenada por cobertura crescente (os menos anotados aparecem
+        primeiro). Escolher um documento abre o caminhador de chunks.
+        Para cada chunk: ler o texto, abrir <em>Anotar vigência</em>,
+        preencher status + fundamento (processo STF / ato normativo /
+        EC) + data desde (formato dd/mm/aaaa) + descrição curta
+        (1-3 frases — esse texto vira o aviso que aparece nas respostas
+        do RAG).
+      </p>
+      <p class="when">
+        <span class="label-eyebrow">QUANDO</span>
+        Este é o gap mais crítico do projeto v1. Hoje cobrimos cerca
+        de 12 dispositivos de ~15.000 chunks. Sem overlay, o RAG pode
+        citar com confiança uma norma sub-judice ou revogada
+        tacitamente sem nenhum aviso ao usuário. Toda contribuição
+        aqui melhora o sistema imediatamente após o próximo merge.
+      </p>
+    </section>
+
+    <section class="guide-section">
+      <h2><code>/hierarchy</code> — Mascaramento</h2>
+      <p class="what">
+        <span class="label-eyebrow">O QUE</span>
+        Identificar casos onde o retriever retorna chunks de menor
+        autoridade normativa (rank 5 = infralegal) quando deveria ter
+        priorizado autoridade maior (rank 1 = Constituição). O sistema
+        usa uma escala numérica 1-5 baseada no tipo do ato no URN
+        LexML.
+      </p>
+      <p class="how">
+        <span class="label-eyebrow">COMO</span>
+        Digitar uma query que você suspeita ter problema. Clicar
+        <strong>Rodar Probe</strong>. Ver os top-k chunks com a rank
+        legal de cada um colorida (verde = CF, vermelho = infralegal).
+        Marcar checkboxes nos URNs que estão mascarando autoridade
+        primária. Adicionar uma nota explicando. Enviar.
+      </p>
+      <p class="when">
+        <span class="label-eyebrow">QUANDO</span>
+        Quando você lê uma resposta do RAG e percebe que ele citou
+        uma Resolução ANPD onde deveria ter citado a LGPD diretamente,
+        ou citou um Decreto onde deveria ter citado a Lei. Casos
+        flagados aqui vão para <code>data/hierarchy/flagged.yaml</code>;
+        o operador usa o histórico pra tunar os pesos em
+        <code>rag_leis/legal_rank.py</code> ou adicionar novas linhas
+        de eval.
+      </p>
+    </section>
+
+    <section class="guide-section">
+      <h2><code>/pii</code> — Redator</h2>
+      <p class="what">
+        <span class="label-eyebrow">O QUE</span>
+        O sistema redige PII (CPF, CNPJ, email, telefone, CEP, RG) das
+        queries antes de processá-las, e mantém um audit log. Esta
+        página é onde você revisa o log e flaga categorias que o
+        regex atual deixa passar.
+      </p>
+      <p class="how">
+        <span class="label-eyebrow">COMO</span>
+        Para cada entrada do log: ler o texto redactado. Se você vê
+        PII visível no texto (porque o regex não capturou), marcar
+        a categoria correspondente — covered (CPF/CNPJ/email/telefone/
+        CEP/RG) ou gap (OAB/CRM/processo SEI/processo CNJ/eleitoral/
+        NIS/PIS/IBAN/cartão de crédito). Notas opcionais ajudam o
+        operador a tunar o regex.
+      </p>
+      <p class="when">
+        <span class="label-eyebrow">QUANDO</span>
+        Esta auditoria importa menos antes do produto ter tráfego
+        real (ainda não tem). Em v1, é mais relevante depois que o
+        deploy público começar a acumular entradas no log. Marcado
+        como 🟡 (importante mas não bloqueante) na checklist
+        jurídica.
+      </p>
+    </section>
+
+    <section class="guide-section">
+      <h2>O que NÃO está coberto v1</h2>
+      <ul>
+        <li>
+          Edição direta de <code>eval/queries.yaml</code> ou
+          <code>data/vigencia/overlays.yaml</code> via UI. Suas
+          propostas viram alterações depois que o operador roda o
+          merge tool localmente — não em tempo real.
+        </li>
+        <li>
+          Reverter uma proposta já aceita. Se você submeter uma
+          anotação e mudar de ideia depois, fale com o operador.
+        </li>
+        <li>
+          Histórico das suas próprias propostas. Você não vê uma lista
+          do que já submeteu (a página <code>/proposals</code> é
+          operator-only).
+        </li>
+        <li>
+          NER de nomes próprios para PII. O redator atual cobre só
+          regex; nomes em português são deferred.
+        </li>
+        <li>
+          Múltiplos revisores simultâneos. Se outro revisor existir,
+          não há resolução de conflito automática — duas propostas
+          contraditórias sobre o mesmo chunk vão para a fila, e o
+          operador decide manualmente.
+        </li>
+      </ul>
+    </section>
+
+    <section class="guide-section">
+      <h2>Dicas práticas</h2>
+      <ul>
+        <li>
+          <strong>Comece pelo gap mais crítico</strong>: <code>/vigencia</code>.
+          A tabela ordena documentos por cobertura crescente —
+          os primeiros são os que mais precisam de você.
+        </li>
+        <li>
+          <strong>Sessões curtas funcionam melhor</strong>. Cada anotação
+          dura ~2 minutos. Quinze anotações = 30 minutos de trabalho focado.
+        </li>
+        <li>
+          <strong>Não se preocupe com o número</strong>. Uma anotação certa
+          é melhor que dez aproximadas. A qualidade do overlay define
+          a qualidade dos avisos no RAG.
+        </li>
+        <li>
+          <strong>Se uma decisão é ambígua</strong>, registre nas notas
+          e marque <code>verdict=needs_followup</code> ou
+          <code>vigencia_status</code> apropriado. O operador prefere
+          uma nota honesta a uma decisão precipitada.
+        </li>
+      </ul>
+    </section>
+  </article>
+</Layout>
+
+<style>
+  .breadcrumb { margin-bottom: 1.5rem; }
+  .breadcrumb a { color: var(--muted); text-decoration: none; font-family: ui-monospace, monospace; font-size: 0.85rem; }
+  .breadcrumb a:hover { color: var(--fg); }
+
+  .guide-article {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  .article-header { margin-bottom: 2.5rem; }
+  .article-header h1 {
+    margin: 0.4rem 0 0.8rem;
+    font-size: 2rem;
+    line-height: 1.15;
+  }
+  .article-intro { color: var(--fg-dim); line-height: 1.6; max-width: 60ch; }
+
+  .guide-section {
+    margin: 2.5rem 0;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .guide-section:last-child { border-bottom: none; }
+  .guide-section h2 {
+    font-size: 1.35rem;
+    margin: 0 0 1rem;
+    letter-spacing: -0.01em;
+  }
+  .guide-section h2 code,
+  .guide-section h3 code {
+    background: var(--code-bg);
+    padding: 0.1rem 0.4rem;
+    font-size: 0.9em;
+    color: var(--fg);
+  }
+  .guide-section h3 {
+    margin: 1.4rem 0 0.6rem;
+    font-size: 1rem;
+    color: var(--fg);
+  }
+  .guide-section p { line-height: 1.6; margin: 0.7rem 0; }
+  .guide-section ul, .guide-section ol { padding-left: 1.4rem; line-height: 1.7; }
+  .guide-section li { margin: 0.3rem 0; }
+  .guide-section code {
+    background: var(--code-bg);
+    padding: 0 0.25rem;
+    font-size: 0.92em;
+    color: var(--fg);
+  }
+  .guide-section .label-eyebrow {
+    display: inline-block;
+    margin-right: 0.5rem;
+    color: var(--muted);
+    font-family: ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .verdict-pill {
+    display: inline-block;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-family: ui-monospace, monospace;
+    margin-right: 0.3rem;
+  }
+  .verdict-correct { background: var(--success-soft); color: var(--success); border: 1px solid var(--success); }
+  .verdict-incorrect { background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger); }
+  .verdict-followup { background: var(--warning-soft); color: var(--warning); border: 1px solid var(--warning); }
+
+  .status-list { list-style: none; padding: 0; }
+  .status-list li { padding: 0.3rem 0; }
+
+  .cycle-list {
+    counter-reset: cycle;
+  }
+  .cycle-list li { padding-left: 0.2rem; }
+</style>

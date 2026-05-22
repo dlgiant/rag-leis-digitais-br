@@ -1,0 +1,308 @@
+---
+// Phase 14.5 — guia/usuario: como usar o RAG público.
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Guia · Usuária do RAG">
+  <article class="guide-article">
+    <nav class="breadcrumb"><a href="/guia">← GUIA</a></nav>
+
+    <header class="article-header">
+      <span class="label-eyebrow">GUIA · PAPEL B</span>
+      <h1>Como usar o RAG-leis</h1>
+      <p class="article-intro">
+        O RAG público responde perguntas sobre 17 documentos da
+        legislação federal brasileira. Você faz a pergunta, ele
+        busca os artigos relevantes e gera uma resposta citando as
+        fontes. <strong>Ferramenta de pesquisa preliminar</strong> —
+        não substitui leitura direta da norma para uso em peça
+        processual.
+      </p>
+    </header>
+
+    <section class="guide-section">
+      <h2>Onde acessar</h2>
+      <p>
+        <a href="https://rag-leis-ui.fly.dev" target="_blank" rel="noopener">
+          rag-leis-ui.fly.dev
+        </a>
+        — pública, sem necessidade de login. Pode abrir do celular ou
+        compartilhar com colega para QA rápido.
+      </p>
+      <p class="muted small">
+        Este site (<code>revisada.nunes.work</code>) e o RAG são duas
+        coisas diferentes. Aqui você revisa o sistema; lá você usa.
+      </p>
+    </section>
+
+    <section class="guide-section">
+      <h2>O que está no corpus</h2>
+      <p>
+        Aproximadamente <strong>17 documentos federais</strong>, ~15.000
+        chunks (cada chunk é um artigo, parágrafo, inciso ou alínea).
+        Inclui:
+      </p>
+      <ul>
+        <li><strong>Constituição Federal</strong> (1988)</li>
+        <li><strong>LGPD</strong> (Lei 13.709/2018)</li>
+        <li><strong>Marco Civil da Internet</strong> (Lei 12.965/2014)</li>
+        <li><strong>Código de Defesa do Consumidor</strong> (Lei 8.078/1990)</li>
+        <li><strong>Decreto 8.771/2016</strong> (regulamenta o Marco Civil)</li>
+        <li><strong>Lei do Software</strong> (Lei 9.609/1998), Lei do Direito Autoral (9.610/1998)</li>
+        <li><strong>LAI</strong> (Lei 12.527/2011)</li>
+        <li><strong>Lei das Estatais</strong>, Lei do Cadastro Positivo, e outros</li>
+      </ul>
+      <p>NÃO inclui:</p>
+      <ul>
+        <li>Jurisprudência (acórdãos, súmulas — exceto algumas vinculantes em Tier-4 deferido)</li>
+        <li>Legislação estadual ou municipal</li>
+        <li>Doutrina</li>
+        <li>Atos infralegais (resoluções, portarias) — exceto ANPD que tem cobertura parcial</li>
+        <li>Legislação MUITO recente (depende da última atualização do corpus)</li>
+      </ul>
+    </section>
+
+    <section class="guide-section">
+      <h2>Como formular uma pergunta</h2>
+      <p class="how">
+        <span class="label-eyebrow">EFICAZ</span>
+        Específico, em português jurídico natural, citando o ato se você souber:
+      </p>
+      <ul class="example-list good">
+        <li>"Qual a definição de dado pessoal na LGPD?"</li>
+        <li>"O que diz o Marco Civil sobre responsabilidade do provedor de aplicações?"</li>
+        <li>"Quais são os princípios da Administração Pública na Constituição art. 37?"</li>
+      </ul>
+      <p class="how">
+        <span class="label-eyebrow">MENOS EFICAZ</span>
+        Muito genérico, sem referência a ato ou tema:
+      </p>
+      <ul class="example-list bad">
+        <li>"o que é LGPD" (curto demais; o sistema pode recusar como OOS)</li>
+        <li>"me dá um parecer sobre dados pessoais" (peça de parecer, não pergunta de pesquisa)</li>
+        <li>"jurisprudência do STF sobre Marco Civil" (não está no corpus)</li>
+      </ul>
+      <p class="muted small">
+        Limites técnicos: até ~500 caracteres. Queries muito longas
+        podem ser truncadas. Use Português; outros idiomas funcionam
+        mal porque o corpus é PT-BR.
+      </p>
+    </section>
+
+    <section class="guide-section">
+      <h2>Como ler a resposta</h2>
+
+      <h3>Citações</h3>
+      <p>
+        Cada citação no texto aparece como link para o
+        <strong>LexML</strong> (portal oficial). Clicar abre o
+        dispositivo na sua redação atual. Sempre confira a citação no
+        LexML antes de usar em peça — o RAG cita o chunk armazenado,
+        que pode estar fora de data se o corpus não foi atualizado.
+      </p>
+
+      <h3>Streaming (durante a geração)</h3>
+      <p>
+        Você vê o sistema progredindo por estágios: classificação da
+        pergunta → busca por chunks → geração da resposta →
+        verificação de relevância. O texto da resposta aparece
+        progressivamente. Latência típica:
+      </p>
+      <ul>
+        <li><strong>Warm</strong>: ~15-20 segundos (chamada normal)</li>
+        <li><strong>Cold</strong>: ~30-40 segundos (primeira chamada do dia; máquina dormindo no Fly acorda)</li>
+      </ul>
+
+      <h3>Recusas</h3>
+      <p>
+        O sistema é deliberadamente conservador: prefere recusar a
+        inventar. Tipos de recusa que você pode ver:
+      </p>
+      <ul class="status-list">
+        <li>
+          <strong>Out of scope</strong> — a pergunta não está coberta pelo
+          corpus. Acontece muito com jurisprudência ou legislação
+          estadual.
+        </li>
+        <li>
+          <strong>Sem fontes relevantes</strong> — encontrei chunks mas
+          nenhum responde diretamente à pergunta. Reformule sendo mais
+          específica.
+        </li>
+        <li>
+          <strong>Hierarquia comprometida</strong> — só achei fontes de
+          baixa autoridade normativa. Resposta não-confiável.
+        </li>
+      </ul>
+
+      <h3>Avisos no topo da resposta</h3>
+      <p>
+        Se o RAG cita uma fonte que tem <strong>overlay de vigência</strong>
+        (sub-judice, suspensa, revogada tacitamente, etc.), você vê
+        um aviso com <code>⚠️ ATENÇÃO</code> antes do texto. Leia o
+        aviso ANTES de citar.
+      </p>
+      <p>
+        Se o RAG cita uma fonte de rank baixo (Resolução, por exemplo)
+        e existe fonte de rank maior também recuperada, aparece um
+        <strong>aviso de hierarquia</strong> sugerindo verificar a
+        fonte de autoridade superior.
+      </p>
+    </section>
+
+    <section class="guide-section">
+      <h2>Quando NÃO usar (ou usar com cuidado)</h2>
+      <ul>
+        <li>
+          <strong>Em peça processual sem verificação manual</strong>. O RAG
+          é ferramenta de pesquisa, não de produção de texto jurídico
+          definitivo. Sempre leia a fonte original no LexML.
+        </li>
+        <li>
+          <strong>Quando precisa de jurisprudência</strong>. Não está no
+          corpus. Use STF, STJ, ou base própria.
+        </li>
+        <li>
+          <strong>Para legislação muito recente</strong>. O corpus tem uma
+          data de corte. Se a norma foi editada após essa data, não
+          está aqui.
+        </li>
+        <li>
+          <strong>Para legislação estadual / municipal</strong>. Só federal.
+        </li>
+        <li>
+          <strong>Quando o aviso de vigência aparece</strong>. O sistema
+          está te dizendo: "eu encontrei a norma mas ela está
+          controversa". Trate como sinal vermelho.
+        </li>
+      </ul>
+    </section>
+
+    <section class="guide-section">
+      <h2>Limites técnicos</h2>
+      <ul>
+        <li>
+          <strong>Sem histórico de conversas</strong>. Cada query é
+          independente; o sistema não lembra da pergunta anterior.
+          (Phase 10c, futuro.)
+        </li>
+        <li>
+          <strong>Sem conta de usuário</strong>. Você não precisa de
+          login pra usar a versão pública. (Phase 10c, futuro.)
+        </li>
+        <li>
+          <strong>Demo API key compartilhada</strong>. Há um rate limit
+          global; se o sistema estiver lento, talvez seja por causa
+          de muitas chamadas simultâneas.
+        </li>
+        <li>
+          <strong>Postgres em São Paulo (LGPD)</strong>. Todo o
+          processamento e armazenamento (audit log do redator, etc.)
+          fica em <code>sa-east-1</code>. Cumprimos requisito de
+          residência de dados no Brasil.
+        </li>
+      </ul>
+    </section>
+
+    <section class="guide-section">
+      <h2>Se você achar um problema</h2>
+      <p>
+        Você não tem como reportar bugs do RAG diretamente daqui (não
+        existe um "flag this answer" botão na versão pública). Se
+        notar um problema:
+      </p>
+      <ul>
+        <li>
+          <strong>Resposta cita norma sub-judice sem aviso</strong> → use
+          <code>/vigencia</code> aqui no painel pra anotar o overlay.
+        </li>
+        <li>
+          <strong>Resposta mascara hierarquia normativa</strong> → use
+          <code>/hierarchy</code> pra flagar.
+        </li>
+        <li>
+          <strong>Resposta ruim mas certa do ponto de vista do retrieval</strong>
+          → use <code>/queries</code> pra propor uma nova linha de eval
+          que pegue esse caso.
+        </li>
+      </ul>
+      <p class="muted small">
+        Suas anotações vão para a fila do operador; o sistema melhora
+        no próximo merge.
+      </p>
+    </section>
+  </article>
+</Layout>
+
+<style>
+  .breadcrumb { margin-bottom: 1.5rem; }
+  .breadcrumb a { color: var(--muted); text-decoration: none; font-family: ui-monospace, monospace; font-size: 0.85rem; }
+  .breadcrumb a:hover { color: var(--fg); }
+
+  .guide-article {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  .article-header { margin-bottom: 2.5rem; }
+  .article-header h1 {
+    margin: 0.4rem 0 0.8rem;
+    font-size: 2rem;
+    line-height: 1.15;
+  }
+  .article-intro { color: var(--fg-dim); line-height: 1.6; max-width: 60ch; }
+
+  .guide-section {
+    margin: 2.5rem 0;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .guide-section:last-child { border-bottom: none; }
+  .guide-section h2 {
+    font-size: 1.35rem;
+    margin: 0 0 1rem;
+    letter-spacing: -0.01em;
+  }
+  .guide-section h3 {
+    margin: 1.4rem 0 0.6rem;
+    font-size: 1rem;
+    color: var(--fg);
+  }
+  .guide-section p { line-height: 1.6; margin: 0.7rem 0; }
+  .guide-section ul, .guide-section ol { padding-left: 1.4rem; line-height: 1.7; }
+  .guide-section li { margin: 0.3rem 0; }
+  .guide-section code {
+    background: var(--code-bg);
+    padding: 0 0.25rem;
+    font-size: 0.92em;
+    color: var(--fg);
+  }
+  .guide-section a {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .guide-section a:hover { color: var(--emphasis); }
+  .guide-section .label-eyebrow {
+    display: inline-block;
+    margin-right: 0.5rem;
+    color: var(--muted);
+    font-family: ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .example-list { list-style: none; padding-left: 0; }
+  .example-list li {
+    padding: 0.3rem 0.7rem;
+    margin: 0.3rem 0;
+    border-left: 3px solid var(--border);
+    background: var(--bg-card);
+  }
+  .example-list.good li { border-left-color: var(--success); }
+  .example-list.bad li { border-left-color: var(--danger); color: var(--fg-dim); }
+
+  .status-list { list-style: none; padding-left: 0; }
+  .status-list li { padding: 0.3rem 0; }
+</style>
