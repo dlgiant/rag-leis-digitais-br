@@ -114,7 +114,7 @@ class LLM(Protocol):
     """Provider-agnostic LLM interface.
 
     Concrete impls expose `name` (model identifier — e.g., "claude-sonnet-4-5",
-    "sabia-3") and `provider` (vendor — e.g., "anthropic", "maritaca") for
+    "sabia-4") and `provider` (vendor — e.g., "anthropic", "maritaca") for
     logging, cost attribution, and per-provider fallback decisions.
 
     `complete_structured` must return a dict that matches the supplied

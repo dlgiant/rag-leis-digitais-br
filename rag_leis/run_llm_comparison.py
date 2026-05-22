@@ -337,7 +337,7 @@ def main() -> int:
         default=None,
         help=(
             "Comma-separated list of model overrides matching --providers "
-            "(e.g., 'claude-sonnet-4-5,sabia-3.1'). If omitted, each provider's "
+            "(e.g., 'claude-sonnet-4-5,sabia-4'). If omitted, each provider's "
             "default is used."
         ),
     )

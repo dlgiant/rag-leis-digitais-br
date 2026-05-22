@@ -41,7 +41,7 @@ Layout: `<cache_dir>/<sha256-of-key>.json` containing:
   {
     "kind": "complete" | "structured",
     "provider": "maritaca",
-    "model": "sabia-3.1",
+    "model": "sabia-4",
     "response": ...,           # str for complete, dict for structured
     "usage": {input_tokens, output_tokens},
     "cached_at": ISO timestamp,

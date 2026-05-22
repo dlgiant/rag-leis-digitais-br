@@ -1,12 +1,16 @@
-"""Marítaca AI LLM adapter — Sabiá-3 family, BR-resident.
+"""Marítaca AI LLM adapter — Sabiá family, BR-resident.
 
 Implements the `LLM` Protocol from rag_leis.llm. Uses the OpenAI-compatible
 endpoint at `chat.maritaca.ai/api`, so we ride on the openai SDK.
 
 Why this exists: D9 (LGPD data residency) — Anthropic doesn't host in BR.
 Marítaca is São Paulo-based and Sabiá is fine-tuned for Portuguese.
-Phase 4.0 benchmark compares against Anthropic on the project's
-answer-eval to make D9 a data-driven decision.
+Phase 4.0 benchmark compared against Anthropic on the project's
+answer-eval to make D9 a data-driven decision. Phase 8.0.1 (2026-05-19)
+then A/B'd Sabiá-3.1 vs Sabiá-4 and swapped production to Sabiá-4 (key
+fix: row 12 / Decreto 8.771 false-refusal). Sabiá-3.x is now being
+deprecated by Marítaca and has been removed from `KNOWN_MARITACA_MODELS`
+below.
 
 Critical contract decision: tool_choice forcing.
 
@@ -16,13 +20,12 @@ Critical contract decision: tool_choice forcing.
 
   Marítaca / OpenAI-compatible: `tool_choice={"type": "function",
   "function": {"name": ...}}` is the analogue. As of 2026-05-15
-  smoke tests (commit context), all three Sabiá-3.x models honor
-  this and return parseable JSON in `tool_calls[0].function.arguments`.
+  smoke tests (commit context), the Sabiá-4 family honors this and
+  returns parseable JSON in `tool_calls[0].function.arguments`.
 
-  We DON'T retry on parse failure here — if Sabiá returns invalid
-  JSON, that's a quality signal the benchmark needs to surface
-  (rejected_citation_rate proxy). A retry budget is appropriate
-  for a production fallback layer (Phase 7.4), not for the v0 adapter.
+  Phase 17.4 added a complete()+JSON-mode fallback for the three
+  failure surfaces (no tool_call / wrong tool name / invalid JSON
+  arguments) — see `complete_structured` for the retry path.
 """
 
 from __future__ import annotations
@@ -54,8 +57,13 @@ MARITACA_BASE_URL = "https://chat.maritaca.ai/api"
 DEFAULT_MARITACA_MODEL = "sabia-4"
 
 # All Marítaca models that expose chat completions + function calling.
-# Used by the comparison runner to iterate.
-KNOWN_MARITACA_MODELS = ("sabia-4", "sabiazinho-4", "sabia-3.1", "sabia-3", "sabiazinho-3")
+# Used by the comparison runner to iterate. The Sabiá-3 family
+# (sabia-3, sabia-3.1, sabiazinho-3) was removed in 2026-05-22 after
+# Marítaca announced deprecation — they would error at runtime once the
+# endpoints sunset, so keeping them as iteration targets would just burn
+# budget on doomed calls. Historical cost rates remain in cost.py so
+# eval cache lookups can still attribute spend to old runs.
+KNOWN_MARITACA_MODELS = ("sabia-4", "sabiazinho-4")
 
 
 class MaritacaLLM:

@@ -9,8 +9,9 @@ de PII (CPF/CNPJ/email/telefone/CEP/RG) **antes** de qualquer chamada a
 provider US-hosted (LGPD compliance).
 
 **Stack atual:** Voyage-3-large (embedding, `title+label+nav+caput+text`
-mode), Marítaca Sabiá-3.1 (gerador production, BR-hosted), Anthropic
-Claude Opus 4.7 (LLM-as-judge para eval). Pipeline com OOS gating em dois
+mode), Marítaca Sabiá-4 (gerador production, BR-hosted; swap de Sabiá-3.1
+em 2026-05-19 via Phase 8.0.1 A/B), Anthropic Claude Opus 4.7
+(LLM-as-judge para eval). Pipeline com OOS gating em dois
 níveis (cosine fast-path + LLM self-refusal), prose-vs-URN consistency
 check com retry, hierarchy warning quando o gerador cita fonte de rank
 inferior tendo superior em contexto, e footer de transparência

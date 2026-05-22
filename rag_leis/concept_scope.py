@@ -20,8 +20,10 @@ Defensive defaults are important:
   dropped — the structured-output tool can't constrain enum values
   cross-provider, so client-side filter is the guardrail.
 
-Cost: ~$0.0005-0.001 per query (Sabiá-3.1 with a short prompt + tool
-output). Latency: ~1-2s added p50.
+Cost: ~$0.0006-0.0012 per query (Sabiá-4 with a short prompt + tool
+output; ~1.20× the Sabiá-3.1 rate the gate was originally costed
+against — Sabiá-3.x has been deprecated since 2026-05). Latency:
+~2-3s added p50.
 
 Fail-fast gate (Phase 7.6.2): oos_a_refusal_rate on
 `eval/legalbench_br_oos.yaml` must move from 0.122 to ≥0.22 (≥+0.10pp)
@@ -137,7 +139,8 @@ def extract_concept_tags(query: str, llm: LLM) -> list[str]:
     indexed concept. Caller must NOT treat empty-list as a refusal
     signal on its own (see module docstring "Defensive defaults").
 
-    One LLM call. Cost ~$0.0005-0.001 per call at Sabiá-3.1 rates.
+    One LLM call. Cost ~$0.0006-0.0012 per call at Sabiá-4 rates
+    (production default since 2026-05-19; Sabiá-3.x deprecated).
     """
     if not query.strip():
         return []
