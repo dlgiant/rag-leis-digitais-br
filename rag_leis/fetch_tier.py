@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import datetime as _dt
 import json
 import sys
 from pathlib import Path
@@ -19,6 +20,10 @@ from rag_leis.planalto import PlanaltoDocument, PlanaltoScraper
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
 AUDIT_LOG = DATA_DIR / "audit" / "corpus_updates.jsonl"
+# Phase 16.1 — registry of last-successful-fetch dates, separate from the
+# per-doc sidecars so cron runs with unchanged content don't churn the
+# sidecar diffs that the Phase 7.1 gate already filters on html.sha256.
+FETCHED_AT_REGISTRY = DATA_DIR / "metadata" / "fetched_at.json"
 
 _TIERS: dict[str, tuple[tuple[Document, ...], str]] = {
     "1": (TIER_1, "tier-1"),
@@ -137,6 +142,41 @@ def write_outputs(
     return diff
 
 
+def _update_fetched_at_registry(
+    successful_urns: list[str],
+    registry_path: Path = FETCHED_AT_REGISTRY,
+    today_iso: str | None = None,
+) -> None:
+    """Phase 16.1 — record the ISO date of the most recent successful HTTP
+    fetch per document URN.
+
+    Writes a separate registry file (not the per-doc sidecar) so the
+    Phase 7.1 sha256-based diff gate isn't fooled by date-only sidecar
+    churn on cron runs with unchanged content. The registry's source of
+    truth is "we asked Planalto on this date and got HTML back" —
+    distinct from "the content changed".
+
+    Only urns whose fetch succeeded (html_doc is not None) are written.
+    A failed fetch must not overwrite a prior successful date — otherwise
+    transient Planalto errors silently regress the user-facing footer.
+    """
+    if today_iso is None:
+        today_iso = _dt.date.today().isoformat()
+    registry: dict[str, str] = {}
+    if registry_path.exists():
+        try:
+            registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            registry = {}
+    for urn in successful_urns:
+        registry[urn] = today_iso
+    registry_path.parent.mkdir(parents=True, exist_ok=True)
+    registry_path.write_text(
+        json.dumps(registry, indent=2, ensure_ascii=False, sort_keys=True),
+        encoding="utf-8",
+    )
+
+
 async def _fetch_one_tier(
     docs: tuple[Document, ...], tier_dir: str
 ) -> tuple[int, list[DiffEntry]]:
@@ -157,6 +197,7 @@ async def _fetch_one_tier(
 
     failures = 0
     diffs: list[DiffEntry] = []
+    successful_urns: list[str] = []
     for doc, record, html_doc, error in results:
         diff = write_outputs(doc, record, html_doc, error, raw_dir, meta_dir)
         if diff is not None:
@@ -166,8 +207,10 @@ async def _fetch_one_tier(
             failures += 1
         elif error:
             marker = "[PARTIAL]"
+            successful_urns.append(doc.urn)
         else:
             marker = "[OK]"
+            successful_urns.append(doc.urn)
         size_kb = f"{len(html_doc.html.encode('utf-8')) // 1024} KB" if html_doc else "—"
         lexml_status = "✓" if record else "?"
         # Phase 7.1 — surface diff status inline so the operator sees changes
@@ -176,6 +219,11 @@ async def _fetch_one_tier(
         print(f"{marker:9} html={size_kb:>8}  lexml={lexml_status}{diff_tag}  {doc.urn}")
         if error:
             print(f"          └─ {error}")
+
+    # Phase 16.1 — bump the fetched_at registry for every URN whose
+    # fetch produced HTML (OK or PARTIAL). Skipped for [FAIL] so transient
+    # Planalto errors don't silently regress the production footer.
+    _update_fetched_at_registry(successful_urns)
 
     print(f"Done {tier_dir}: {len(docs) - failures}/{len(docs)} downloaded.")
     print()

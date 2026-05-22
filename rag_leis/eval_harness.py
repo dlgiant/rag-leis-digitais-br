@@ -106,6 +106,17 @@ class Query:
         return 0
 
 
+def _locate_fetched_at_registry(chunks_dir: Path) -> Path | None:
+    """Phase 16.1 — auto-discover data/metadata/fetched_at.json by
+    walking up from the chunks dir. Mirrors the overlays discovery
+    pattern below so callers don't have to thread an extra path."""
+    for ancestor in [chunks_dir, *chunks_dir.parents]:
+        candidate = ancestor / "metadata" / "fetched_at.json"
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def load_chunks(
     chunks_dir: Path,
     min_text_chars: int = 10,
@@ -127,12 +138,25 @@ def load_chunks(
     # short to index (e.g. an artigo whose body is a colon and a list) but still
     # carries the parent context for its children.
     raw_by_urn: dict[str, dict[str, Any]] = {}
-    # Phase 5.5: per-document fetched_at, derived from the JSONL file's
-    # mtime (proxy for fetch+parse date). When fetch_tier writes explicit
-    # metadata files in the future, we can prefer those.
+    # Phase 5.5 + 16.1: per-document fetched_at. Primary source is the
+    # registry at data/metadata/fetched_at.json written by fetch_tier.py
+    # on each successful HTTP fetch. Falls back to JSONL mtime when the
+    # registry is absent (fresh checkouts) or doesn't cover a doc.
     import datetime as _dt
 
     fetched_at_by_doc: dict[str, str] = {}
+    # Phase 16.1 — prefer the explicit fetched_at registry written by
+    # fetch_tier.py over JSONL mtime. mtime is an unreliable proxy because
+    # Docker COPY resets it to image-build time, causing the production
+    # footer to report the deploy date instead of the actual Planalto
+    # fetch date. The registry survives the rebuild because its content
+    # (not its timestamp) carries the truth.
+    registry_path = _locate_fetched_at_registry(chunks_dir)
+    if registry_path is not None and registry_path.exists():
+        try:
+            fetched_at_by_doc = json.loads(registry_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            fetched_at_by_doc = {}
     for jsonl in sorted(chunks_dir.rglob("*.jsonl")):
         mtime = jsonl.stat().st_mtime
         date_iso = _dt.date.fromtimestamp(mtime).isoformat()
@@ -142,8 +166,11 @@ def load_chunks(
                     continue
                 obj = json.loads(line)
                 raw_by_urn[obj["urn"]] = obj
-                # Last-writer-wins per document URN
-                fetched_at_by_doc[obj["document_urn"]] = date_iso
+                # mtime fallback: only fill when the registry didn't carry
+                # this document. Once the registry catches up across all
+                # tiers, the fallback is dead code — kept here as a graceful
+                # degradation path for fresh checkouts.
+                fetched_at_by_doc.setdefault(obj["document_urn"], date_iso)
 
     def _resolve_caput_chain(obj: dict[str, Any]) -> str:
         parent_part = obj.get("parent_partition")

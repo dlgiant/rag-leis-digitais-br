@@ -93,7 +93,8 @@ def test_render_footer_includes_dd_mm_yyyy():
 
 
 def test_load_chunks_populates_fetched_at():
-    """End-to-end: load_chunks reads mtime → IndexChunk.fetched_at non-empty."""
+    """End-to-end: load_chunks reads the registry (Phase 16.1) or falls
+    back to JSONL mtime → IndexChunk.fetched_at non-empty."""
     chunks = load_chunks(PROJECT_ROOT / "data" / "chunks")
     assert chunks
     # Pick any chunk; fetched_at should be ISO date format
@@ -105,6 +106,99 @@ def test_load_chunks_populates_fetched_at():
     # Year should look reasonable (not 1970 epoch fallback or future)
     year = int(parts[0])
     assert 2024 <= year <= 2030, f"unexpected fetched_at year {year}"
+
+
+# ----------------------------------------------------------------------------
+# Phase 16.1 — fetched_at registry overrides JSONL mtime
+# ----------------------------------------------------------------------------
+
+
+def _write_minimal_chunk(jsonl_path: Path, urn: str, document_urn: str) -> None:
+    """Write a single chunk to jsonl. Schema is the minimal set load_chunks
+    needs — keeps the test fixture independent of parser evolution."""
+    import json as _json
+    obj = {
+        "urn": urn,
+        "document_urn": document_urn,
+        "text": "Texto de teste para o chunk — precisa passar do min_text_chars.",
+        "nav": {"artigo": "Art. 1"},
+        "label": "Art. 1",
+        "parent_partition": None,
+        "is_revoked": False,
+        "notes": [],
+    }
+    jsonl_path.write_text(_json.dumps(obj) + "\n", encoding="utf-8")
+
+
+def test_load_chunks_prefers_registry_over_mtime(tmp_path: Path):
+    """Phase 16.1 — when data/metadata/fetched_at.json exists, its dates
+    win over JSONL mtime. This is the load-bearing invariant: Docker COPY
+    resets mtime to build date but preserves the registry's content."""
+    chunks_dir = tmp_path / "data" / "chunks" / "tier-1"
+    chunks_dir.mkdir(parents=True)
+    jsonl = chunks_dir / "br_federal_lei_test.jsonl"
+    doc_urn = "urn:lex:br:federal:lei:2020-01-01;9999"
+    _write_minimal_chunk(jsonl, doc_urn + "~art1", doc_urn)
+    # mtime says today (or whenever tmp_path was created); registry says
+    # a year in the past. Registry must win.
+    metadata_dir = tmp_path / "data" / "metadata"
+    metadata_dir.mkdir(parents=True)
+    (metadata_dir / "fetched_at.json").write_text(
+        '{"' + doc_urn + '": "2025-03-15"}', encoding="utf-8"
+    )
+
+    chunks = load_chunks(tmp_path / "data" / "chunks")
+    assert len(chunks) == 1
+    assert chunks[0].fetched_at == "2025-03-15", (
+        f"registry should win over mtime; got {chunks[0].fetched_at}"
+    )
+
+
+def test_load_chunks_falls_back_to_mtime_when_registry_absent(tmp_path: Path):
+    """Phase 16.1 — fresh checkouts or docs not yet covered by the
+    registry must fall back to mtime so existing behavior is preserved."""
+    import datetime as _dt
+    chunks_dir = tmp_path / "data" / "chunks" / "tier-1"
+    chunks_dir.mkdir(parents=True)
+    jsonl = chunks_dir / "br_federal_lei_test.jsonl"
+    doc_urn = "urn:lex:br:federal:lei:2020-01-01;9999"
+    _write_minimal_chunk(jsonl, doc_urn + "~art1", doc_urn)
+    # No registry file written.
+
+    chunks = load_chunks(tmp_path / "data" / "chunks")
+    assert len(chunks) == 1
+    # mtime fallback → today's date (the file was just written)
+    expected = _dt.date.fromtimestamp(jsonl.stat().st_mtime).isoformat()
+    assert chunks[0].fetched_at == expected
+
+
+def test_load_chunks_registry_partial_coverage_falls_back_per_doc(tmp_path: Path):
+    """Phase 16.1 — when the registry covers some docs but not others,
+    covered docs use the registry date; uncovered docs fall back to mtime.
+    This protects against a partial fetch run leaving the registry stale
+    for some documents."""
+    import datetime as _dt
+    chunks_dir = tmp_path / "data" / "chunks" / "tier-1"
+    chunks_dir.mkdir(parents=True)
+    doc_a = "urn:lex:br:federal:lei:2020-01-01;1111"
+    doc_b = "urn:lex:br:federal:lei:2020-01-01;2222"
+    jsonl_a = chunks_dir / "a.jsonl"
+    jsonl_b = chunks_dir / "b.jsonl"
+    _write_minimal_chunk(jsonl_a, doc_a + "~art1", doc_a)
+    _write_minimal_chunk(jsonl_b, doc_b + "~art1", doc_b)
+    metadata_dir = tmp_path / "data" / "metadata"
+    metadata_dir.mkdir(parents=True)
+    # Only doc_a in the registry.
+    (metadata_dir / "fetched_at.json").write_text(
+        '{"' + doc_a + '": "2025-03-15"}', encoding="utf-8"
+    )
+
+    chunks = load_chunks(tmp_path / "data" / "chunks")
+    by_doc = {c.urn.split("~")[0]: c for c in chunks}
+    assert by_doc[doc_a].fetched_at == "2025-03-15"
+    # doc_b falls back to its jsonl mtime
+    expected_b = _dt.date.fromtimestamp(jsonl_b.stat().st_mtime).isoformat()
+    assert by_doc[doc_b].fetched_at == expected_b
 
 
 # ----------------------------------------------------------------------------
