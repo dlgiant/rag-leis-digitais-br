@@ -16,10 +16,14 @@ const EXAMPLES = [
 <Layout title="rag-leis demo — perguntas sobre leis digitais brasileiras">
   <main>
     <header class="page-header">
-      <h1>rag-leis<span class="muted">-digitais-br</span></h1>
+      <span class="label-eyebrow">CONSULTA / 00</span>
+      <h1>
+        <span class="brand-mark">RAG-leis</span><span class="brand-slash">/digitais-br</span>
+      </h1>
       <p class="tagline">
-        RAG sobre leis digitais brasileiras: LGPD, Marco Civil, Lei
-        do Software e correlatas.
+        Pesquisa em legislação digital brasileira: LGPD, Marco Civil,
+        Lei do Software, CDC, Constituição e correlatas. Resposta com
+        citações dos artigos.
       </p>
     </header>
 
@@ -118,33 +122,40 @@ const EXAMPLES = [
       font-size: 17px;
     }
 
-    /* ---------- Header ---------- */
+    /* ---------- Header (mission-control brand mark) ---------- */
     .page-header {
       margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-header .label-eyebrow {
+      display: block;
+      margin-bottom: 0.4rem;
     }
     h1 {
       margin: 0;
-      font-size: 2rem;
+      font-size: 1.875rem;
       font-weight: 700;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
       line-height: 1.1;
+      font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+      text-transform: uppercase;
     }
-    h1 .muted {
-      color: var(--muted);
-      font-weight: 400;
-    }
+    .brand-mark { color: var(--fg); }
+    .brand-slash { color: var(--muted); font-weight: 400; }
     .tagline {
-      margin: 0.5rem 0 0;
-      color: var(--muted);
-      font-size: 1rem;
-      line-height: 1.5;
+      margin: 0.75rem 0 0;
+      color: var(--fg-dim);
+      font-size: 0.95rem;
+      line-height: 1.55;
+      max-width: 60ch;
     }
 
     /* ---------- Collapsible notice ---------- */
     .notice {
       background: color-mix(in srgb, var(--accent) 6%, var(--bg-card));
       border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-      border-radius: 12px;
+      border-radius: 0;
       margin-bottom: 1.5rem;
       overflow: hidden;
       transition: background 0.15s ease;
@@ -239,15 +250,16 @@ const EXAMPLES = [
       background: var(--bg-card);
       color: var(--fg);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 0;
       resize: vertical;
       min-height: 88px;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+      outline: 2px solid var(--emphasis);
+      outline-offset: -2px;
+      border-color: var(--border);
+      box-shadow: none;
     }
     .form-row {
       display: flex;
@@ -256,25 +268,34 @@ const EXAMPLES = [
       gap: 1rem;
     }
     button {
-      padding: 0.7rem 1.5rem;
-      font-size: 0.95rem;
-      font-family: inherit;
+      padding: 0.65rem 1.5rem;
+      font-size: 0.85rem;
+      font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: 0;
       border: 1px solid var(--accent);
       background: var(--accent);
-      color: white;
-      font-weight: 500;
-      transition: filter 0.15s ease, transform 0.05s ease;
+      color: #ffffff;
+      transition: background 0.12s ease, transform 0.05s ease;
     }
     button:hover:not(:disabled) {
-      filter: brightness(1.08);
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+    button:focus-visible:not(:disabled) {
+      outline: 2px solid var(--emphasis);
+      outline-offset: 1px;
     }
     button:active:not(:disabled) {
+      background: var(--emphasis);
+      border-color: var(--emphasis);
       transform: translateY(1px);
     }
     button:disabled {
-      opacity: 0.55;
+      opacity: 0.5;
       cursor: not-allowed;
     }
 
@@ -282,10 +303,10 @@ const EXAMPLES = [
     .result {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 0;
       padding: 1.25rem 1.5rem;
       margin-bottom: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      box-shadow: var(--shadow-sm);
     }
     .result.hidden {
       display: none;
@@ -457,7 +478,7 @@ const EXAMPLES = [
       font-weight: 400;
       text-align: left;
       width: 100%;
-      border-radius: 8px;
+      border-radius: 0;
     }
     .example-btn:hover:not(:disabled) {
       background: var(--code);

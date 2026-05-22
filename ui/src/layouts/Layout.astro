@@ -1,72 +1,132 @@
 ---
-// Phase 10b — minimal layout. Brazilian Portuguese. Single page, single
-// chat surface. No tracking, no analytics, no third-party fonts.
+// Phase 10b + style refresh — minimal layout for the public RAG.
+// Adopts the same mission-control palette as the review UI at
+// revisada.nunes.work so both surfaces feel like one product:
+// paper-cream bg, deep-navy text, amber emphasis, sharp corners,
+// Inter for body + ui-monospace for headings/labels.
 
 interface Props {
   title?: string;
 }
 
-const { title = "rag-leis-digitais-br — demo" } = Astro.props;
+const { title = "RAG-leis / digitais-br" } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="Demo: RAG sobre leis digitais brasileiras (LGPD, Marco Civil, Lei do Software, etc.)" />
+    <meta name="description" content="RAG sobre legislação digital brasileira: LGPD, Marco Civil, CDC, e correlatas. Resposta com citações dos artigos." />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     <style is:global>
       :root {
-        --bg: #fafaf7;
-        --fg: #1a1a1a;
-        --muted: #6b6b66;
-        --accent: #b04a2f;
-        --success: #5e8b87;
-        --border: #d9d6cf;
-        --bg-card: #ffffff;
-        --code: #f0eee8;
+        --bg:                 #f4f1ec;
+        --bg-card:            #ffffff;
+        --bg-sunken:          #ebe7df;
+        --fg:                 #0a1a2e;
+        --fg-dim:             #2c3a52;
+        --muted:              #6a7689;
+        --border:             #c5bfb5;
+        --border-strong:      #8a94a8;
+        --accent:             #1e3a5f;
+        --accent-hover:       #14283f;
+        --accent-soft:        #dde3ec;
+        --emphasis:           #c47318;
+        --emphasis-soft:      #f4e6d2;
+        --success:            #2d5d3f;
+        --success-soft:       #d6e3dc;
+        --warning:            #a85410;
+        --warning-soft:       #f4ddc2;
+        --danger:             #8b1f1f;
+        --danger-soft:        #ebd2d2;
+        --code-bg:            #e8e4dc;
+        --shadow-sm:          0 1px 0 rgba(10,26,46,0.06);
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg: #1a1a1a;
-          --fg: #e8e4dc;
-          --muted: #989288;
-          --accent: #d97559;
-          --success: #84b3af;
-          --border: #3a3733;
-          --bg-card: #232220;
-          --code: #2a2925;
+          --bg:               #0a1019;
+          --bg-card:          #131a28;
+          --bg-sunken:        #060a12;
+          --fg:               #e8e4dc;
+          --fg-dim:           #c5bfb5;
+          --muted:            #8a94a8;
+          --border:           #3a3733;
+          --border-strong:    #6a7689;
+          --accent:           #6a9fd9;
+          --accent-hover:     #94bce4;
+          --accent-soft:      #1e2d3f;
+          --emphasis:         #e09040;
+          --emphasis-soft:    #3a2818;
+          --success:          #84b3af;
+          --success-soft:     #1a2a26;
+          --warning:          #d97559;
+          --warning-soft:     #2a1a14;
+          --danger:           #c47373;
+          --danger-soft:      #2a1818;
+          --code-bg:          #232220;
         }
       }
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
       body {
         margin: 0;
-        padding: 0;
         background: var(--bg);
         color: var(--fg);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-          "Helvetica Neue", Arial, sans-serif;
-        line-height: 1.5;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         font-size: 16px;
+        line-height: 1.55;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
       }
       a {
         color: var(--accent);
         text-decoration: none;
+        transition: color 0.12s ease;
       }
-      a:hover {
-        text-decoration: underline;
+      a:hover { color: var(--accent-hover); text-decoration: underline; }
+      a:active { color: var(--emphasis); }
+      code, pre {
+        font-family: ui-monospace, "JetBrains Mono", "Menlo", monospace;
+        font-size: 0.875em;
       }
-      code {
-        background: var(--code);
-        padding: 0.1em 0.3em;
-        border-radius: 3px;
-        font-size: 0.9em;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      code { background: var(--code-bg); padding: 0.1em 0.35em; }
+      .muted { color: var(--muted); }
+      .small { font-size: 0.82em; }
+      .mono {
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+        font-variant-numeric: tabular-nums;
+      }
+      .label-eyebrow {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+      }
+      input, select, textarea, button {
+        font-family: inherit;
+        font-size: inherit;
+      }
+      :where(input, select, textarea):focus-visible {
+        outline: 2px solid var(--emphasis);
+        outline-offset: 1px;
+      }
+      ::selection { background: var(--accent); color: #ffffff; }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
     </style>
   </head>
