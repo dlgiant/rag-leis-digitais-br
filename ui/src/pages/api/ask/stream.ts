@@ -15,6 +15,12 @@
 // callers (CI smoke tests, MCP) still hit the backend directly with
 // X-API-Key on /v1/ask; this proxy is browser-only and uses Clerk.
 //
+// Phase 10c — the body may include an optional `conversation_id` (UUID
+// string) to thread the turn into an existing conversation. The proxy
+// validates the shape (UUID-like or absent) but the authoritative
+// ownership check is on the backend — a foreign id is silently rotated
+// server-side, never bled into another user's history.
+//
 // The response is streamed back to the browser as text/event-stream
 // without re-buffering; the backend's SSE format passes through.
 
@@ -49,6 +55,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   // Minimal body validation — reject empty / non-JSON early without
   // burning a backend round-trip.
+  // Loose UUID check: 8-4-4-4-12 hex with dashes. Strict-enough to
+  // reject the obvious junk (XSS attempt, malformed string) but not
+  // strict on version bits — the backend treats unknown ids as
+  // ownership-mismatch and rotates anyway.
+  const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
   try {
     const parsed = JSON.parse(body);
     if (!parsed.query || typeof parsed.query !== "string" || parsed.query.length === 0) {
@@ -62,6 +73,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
         JSON.stringify({ error: "query too long (max 2000 chars)" }),
         { status: 400, headers: { "Content-Type": "application/json" } },
       );
+    }
+    if (parsed.conversation_id !== undefined && parsed.conversation_id !== null) {
+      if (
+        typeof parsed.conversation_id !== "string" ||
+        !UUID_RE.test(parsed.conversation_id)
+      ) {
+        return new Response(
+          JSON.stringify({ error: "invalid conversation_id format" }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        );
+      }
     }
   } catch {
     return new Response(

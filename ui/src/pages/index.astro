@@ -1,9 +1,13 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
-// Phase 10b — chat page. SSR-rendered HTML; the streaming logic
-// lives in an inline-script tag that hits the same-origin proxy at
-// /api/ask/stream. Brazilian Portuguese throughout.
+// Phase 10b — chat page (SSR-rendered HTML; streaming logic in an
+// inline-script tag that hits the same-origin proxy at /api/ask/stream).
+// Phase 10c — server-side fetch of the user's conversation history;
+// sidebar with grouped past threads; ?c=<uuid> loads a past
+// conversation's messages inline. New /v1/ask turns return a
+// conversation_id in the SSE "complete" event so we can update the URL
+// and refresh the sidebar without a full reload.
 
 const EXAMPLES = [
   "qual a definição de dado pessoal na LGPD?",
@@ -11,121 +15,441 @@ const EXAMPLES = [
   "quais são os princípios do tratamento de dados pessoais?",
   "o que diz o art. 9º do Marco Civil da Internet?",
 ];
+
+// Authenticated state — middleware (src/middleware.ts) already gated;
+// this is just the data fetch.
+const auth = (Astro.locals as any).auth?.();
+const userId: string | null = auth?.userId ?? null;
+const token: string | null = userId ? await auth.getToken() : null;
+
+const BACKEND_URL =
+  process.env.RAG_BACKEND_URL || "https://rag-leis-digitais-br.fly.dev";
+
+type ConversationRow = {
+  id: string;
+  title: string;
+  created_at: string;
+  last_message_at: string;
+  message_count: number;
+};
+
+type MessageRow = {
+  id: string;
+  ts: string;
+  role: "user" | "assistant" | "system";
+  content_redacted: string;
+  answer_json: any | null;
+};
+
+let conversations: ConversationRow[] = [];
+const activeConvId = Astro.url.searchParams.get("c");
+let activeConv: { conversation: ConversationRow; messages: MessageRow[] } | null = null;
+
+if (token) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/v1/conversations`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      conversations = data.conversations ?? [];
+    }
+  } catch {
+    /* silent degrade — sidebar stays empty if the backend hiccups */
+  }
+
+  if (activeConvId) {
+    try {
+      const res = await fetch(
+        `${BACKEND_URL}/v1/conversations/${encodeURIComponent(activeConvId)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (res.ok) {
+        activeConv = await res.json();
+      }
+    } catch {
+      /* silent — activeConv stays null, URL param is harmless on failure */
+    }
+  }
+}
+
+// Per-user authed pages must NOT be cached at the Vercel edge — each
+// user sees their own conversations in the sidebar.
+Astro.response.headers.set("Cache-Control", "private, no-store");
+
+// ----------- Sidebar grouping helpers (pure / server-side) -----------
+
+function bucketLabel(isoTs: string): string {
+  // Bucket conversations by activity recency. The buckets are coarse
+  // by design — most users have ≤20 threads where day-precision is
+  // plenty; ChatGPT-style "Last 7 days / Last 30 days" buckets would
+  // be over-engineered for the data volume.
+  if (!isoTs) return "Antes";
+  const t = new Date(isoTs).getTime();
+  if (Number.isNaN(t)) return "Antes";
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const diffDays = Math.floor((now - t) / dayMs);
+  if (diffDays <= 0) return "Hoje";
+  if (diffDays === 1) return "Ontem";
+  if (diffDays < 7) return "Esta semana";
+  if (diffDays < 30) return "Este mês";
+  return "Antes";
+}
+
+type Bucket = { label: string; items: ConversationRow[] };
+const BUCKET_ORDER = ["Hoje", "Ontem", "Esta semana", "Este mês", "Antes"];
+const groupedConversations: Bucket[] = (() => {
+  const map = new Map<string, ConversationRow[]>();
+  for (const c of conversations) {
+    const k = bucketLabel(c.last_message_at);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k)!.push(c);
+  }
+  return BUCKET_ORDER
+    .filter((k) => map.has(k))
+    .map((k) => ({ label: k, items: map.get(k)! }));
+})();
+
+// ----------- Past-turns helpers — group messages into Q+A pairs -------
+
+type PastTurn = {
+  question: string;
+  answer: string;
+  citations: string[];
+  refused: boolean;
+  refusalReason: string | null;
+};
+
+function pairTurns(messages: MessageRow[]): PastTurn[] {
+  // Messages are in chronological order (user, assistant, user, assistant…).
+  // We pair them by walking the array; an unpaired trailing user message
+  // is rendered with an empty answer placeholder (shouldn't happen in
+  // practice since /v1/ask persists both rows in the same transaction
+  // boundary, but defensive).
+  const out: PastTurn[] = [];
+  let i = 0;
+  while (i < messages.length) {
+    const m = messages[i];
+    if (m.role !== "user") { i++; continue; }
+    const next = messages[i + 1];
+    const isAns = next && next.role === "assistant";
+    const ans = isAns ? next : null;
+    const aj = ans?.answer_json ?? null;
+    out.push({
+      question: m.content_redacted,
+      answer: ans?.content_redacted ?? "",
+      citations: Array.isArray(aj?.citations) ? aj.citations : [],
+      refused: Boolean(aj?.refused),
+      refusalReason: aj?.refusal_reason ?? null,
+    });
+    i += isAns ? 2 : 1;
+  }
+  return out;
+}
+
+const pastTurns: PastTurn[] = activeConv ? pairTurns(activeConv.messages) : [];
+const activeTitle = activeConv?.conversation.title ?? "";
+
+function lexmlHref(urn: string): string {
+  const docUrn = String(urn).split("~")[0].split("!")[0];
+  return `https://www.lexml.gov.br/urn/${encodeURI(docUrn)}`;
+}
 ---
 
 <Layout title="rag-leis demo — perguntas sobre leis digitais brasileiras">
-  <main>
-    <header class="page-header">
-      <span class="label-eyebrow">CONSULTA / 00</span>
-      <h1>
-        <span class="brand-mark">RAG-leis</span><span class="brand-slash">/digitais-br</span>
-      </h1>
-      <p class="tagline">
-        Pesquisa em legislação digital brasileira: LGPD, Marco Civil,
-        Lei do Software, CDC, Constituição e correlatas. Resposta com
-        citações dos artigos.
-      </p>
-    </header>
-
-    <details class="notice" open>
-      <summary>
-        <span class="notice-icon" aria-hidden="true">ℹ</span>
-        <span class="notice-summary-text">Aviso sobre a demonstração</span>
-        <span class="notice-toggle" aria-hidden="true"></span>
-      </summary>
-      <div class="notice-body">
-        <p>
-          Esta é uma versão de demonstração. As consultas são
-          processadas mas não são associadas a contas de usuário.
-        </p>
-        <ul>
-          <li><strong>Não envie dados pessoais reais</strong> (CPF, CNPJ, nomes de terceiros).</li>
-          <li>Respostas geradas por IA — <strong>verifique cada citação</strong> antes de confiar.</li>
-          <li>O serviço é hospedado no Brasil (Fly.io · São Paulo) por questões de conformidade LGPD.</li>
-        </ul>
+  <div class="page-wrap">
+    <aside class="sidebar" data-conv-active={activeConvId ?? ""}>
+      <div class="sidebar-header">
+        <a href="/" class="new-chat-btn" aria-label="Nova conversa">
+          <span class="plus" aria-hidden="true">+</span>
+          <span>NOVA CONVERSA</span>
+        </a>
       </div>
-    </details>
+      <nav class="sidebar-list" aria-label="Conversas anteriores">
+        {conversations.length === 0 ? (
+          <p class="sidebar-empty">
+            Suas conversas aparecerão aqui. Cada pergunta que você faz
+            inicia uma nova conversa.
+          </p>
+        ) : (
+          groupedConversations.map((bucket) => (
+            <section class="bucket">
+              <h3 class="bucket-label label-eyebrow">{bucket.label}</h3>
+              <ul>
+                {bucket.items.map((c) => (
+                  <li class={c.id === activeConvId ? "is-active" : ""}>
+                    <a href={`/?c=${c.id}`} title={c.title}>
+                      <span class="conv-title">{c.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))
+        )}
+      </nav>
+    </aside>
 
-    <section class="chat-input">
-      <form id="askForm">
-        <label for="queryInput" class="visually-hidden">Sua pergunta</label>
-        <textarea
-          id="queryInput"
-          name="query"
-          placeholder="Faça uma pergunta sobre LGPD, Marco Civil, ou outra lei digital brasileira…"
-          rows="3"
-          maxlength="2000"
-          required
-          autocomplete="off"
-        ></textarea>
-        <div class="form-row">
-          <span id="charCount" class="muted small">0 / 2000</span>
-          <button type="submit" id="askBtn">Perguntar</button>
-        </div>
-      </form>
-    </section>
-
-    <!-- Single result component: holds the in-progress stepper, the
-         eventual answer, and the refusal-state UI. One card, three
-         possible states (running / answered / refused). -->
-    <article id="result" class="result hidden" aria-live="polite">
-      <header class="result-progress">
-        <ol class="steps" id="steps">
-          <li class="step" data-stage="classify"><span class="step-dot"></span>Classificar</li>
-          <li class="step" data-stage="retrieve"><span class="step-dot"></span>Buscar</li>
-          <li class="step" data-stage="generate"><span class="step-dot"></span>Gerar resposta</li>
-          <li class="step" data-stage="verify"><span class="step-dot"></span>Verificar</li>
-          <li class="step" data-stage="relevance_judge"><span class="step-dot"></span>Avaliar</li>
-        </ol>
-        <span id="elapsed" class="elapsed muted small"></span>
+    <main>
+      <header class="page-header">
+        <span class="label-eyebrow">
+          {activeConv ? "CONVERSA / " + (pastTurns.length) : "CONSULTA / 00"}
+        </span>
+        <h1>
+          {activeConv ? (
+            <span class="active-title">{activeTitle}</span>
+          ) : (
+            <Fragment><span class="brand-mark">RAG-leis</span><span class="brand-slash">/digitais-br</span></Fragment>
+          )}
+        </h1>
+        {!activeConv && (
+          <p class="tagline">
+            Pesquisa em legislação digital brasileira: LGPD, Marco Civil,
+            Lei do Software, CDC, Constituição e correlatas. Resposta com
+            citações dos artigos.
+          </p>
+        )}
       </header>
 
-      <section id="answerBody" class="result-body hidden">
-        <div id="answerText" class="answer-text"></div>
-        <section id="citationsSection" class="citations hidden">
-          <h3>Citações</h3>
-          <ul id="citationsList"></ul>
+      {!activeConv && (
+        <details class="notice" open>
+          <summary>
+            <span class="notice-icon" aria-hidden="true">ℹ</span>
+            <span class="notice-summary-text">Aviso sobre a demonstração</span>
+            <span class="notice-toggle" aria-hidden="true"></span>
+          </summary>
+          <div class="notice-body">
+            <p>
+              Esta é uma versão de demonstração. Suas consultas são
+              persistidas para histórico — você pode reabrir conversas
+              anteriores na barra lateral.
+            </p>
+            <ul>
+              <li><strong>Não envie dados pessoais reais</strong> (CPF, CNPJ, nomes de terceiros).</li>
+              <li>Respostas geradas por IA — <strong>verifique cada citação</strong> antes de confiar.</li>
+              <li>O serviço é hospedado no Brasil (Fly.io · São Paulo) por questões de conformidade LGPD.</li>
+            </ul>
+          </div>
+        </details>
+      )}
+
+      {pastTurns.length > 0 && (
+        <section class="past-turns" aria-label="Histórico desta conversa">
+          {pastTurns.map((t, idx) => (
+            <article class="past-turn">
+              <header class="past-turn-q">
+                <span class="label-eyebrow">PERGUNTA / {String(idx + 1).padStart(2, "0")}</span>
+                <p>{t.question}</p>
+              </header>
+              {t.refused ? (
+                <section class="past-turn-refusal">
+                  <p>{t.refusalReason ?? "Não consegui responder com confiança."}</p>
+                </section>
+              ) : (
+                <section class="past-turn-a">
+                  <div class="answer-text">{t.answer}</div>
+                  {t.citations.length > 0 && (
+                    <section class="citations">
+                      <h4>Citações</h4>
+                      <ul>
+                        {t.citations.map((urn) => (
+                          String(urn).startsWith("urn:lex:") ? (
+                            <li>
+                              <a href={lexmlHref(urn)} target="_blank" rel="noopener">
+                                <code>{urn}</code>
+                              </a>
+                              <span class="muted small"> (documento)</span>
+                            </li>
+                          ) : (
+                            <li><code>{urn}</code></li>
+                          )
+                        ))}
+                      </ul>
+                    </section>
+                  )}
+                </section>
+              )}
+            </article>
+          ))}
         </section>
+      )}
+
+      <section class="chat-input">
+        <form id="askForm" data-conversation-id={activeConvId ?? ""}>
+          <label for="queryInput" class="visually-hidden">Sua pergunta</label>
+          <textarea
+            id="queryInput"
+            name="query"
+            placeholder={activeConv ? "Faça uma pergunta de seguimento…" : "Faça uma pergunta sobre LGPD, Marco Civil, ou outra lei digital brasileira…"}
+            rows="3"
+            maxlength="2000"
+            required
+            autocomplete="off"
+          ></textarea>
+          <div class="form-row">
+            <span id="charCount" class="muted small">0 / 2000</span>
+            <button type="submit" id="askBtn">Perguntar</button>
+          </div>
+        </form>
       </section>
 
-      <section id="refusalSection" class="result-refusal hidden">
-        <p id="refusalText"></p>
-      </section>
+      <article id="result" class="result hidden" aria-live="polite">
+        <header class="result-progress">
+          <ol class="steps" id="steps">
+            <li class="step" data-stage="classify"><span class="step-dot"></span>Classificar</li>
+            <li class="step" data-stage="retrieve"><span class="step-dot"></span>Buscar</li>
+            <li class="step" data-stage="generate"><span class="step-dot"></span>Gerar resposta</li>
+            <li class="step" data-stage="verify"><span class="step-dot"></span>Verificar</li>
+            <li class="step" data-stage="relevance_judge"><span class="step-dot"></span>Avaliar</li>
+          </ol>
+          <span id="elapsed" class="elapsed muted small"></span>
+        </header>
 
-      <section id="errorSection" class="result-error hidden">
-        <p id="errorText"></p>
-      </section>
-    </article>
+        <section id="answerBody" class="result-body hidden">
+          <div id="answerText" class="answer-text"></div>
+          <section id="citationsSection" class="citations hidden">
+            <h3>Citações</h3>
+            <ul id="citationsList"></ul>
+          </section>
+        </section>
 
-    <details class="examples" id="examplesEl">
-      <summary>Experimente uma destas perguntas</summary>
-      <ul>
-        {EXAMPLES.map((q) => <li><button type="button" class="example-btn" data-query={q}>{q}</button></li>)}
-      </ul>
-    </details>
+        <section id="refusalSection" class="result-refusal hidden">
+          <p id="refusalText"></p>
+        </section>
 
-    <footer class="page-footer">
-      <p>
-        Código:
-        <a href="https://github.com/dlgiant/rag-leis-digitais-br" target="_blank" rel="noopener">
-          github.com/dlgiant/rag-leis-digitais-br
-        </a>
-      </p>
-    </footer>
-  </main>
+        <section id="errorSection" class="result-error hidden">
+          <p id="errorText"></p>
+        </section>
+      </article>
+
+      {!activeConv && (
+        <details class="examples" id="examplesEl">
+          <summary>Experimente uma destas perguntas</summary>
+          <ul>
+            {EXAMPLES.map((q) => <li><button type="button" class="example-btn" data-query={q}>{q}</button></li>)}
+          </ul>
+        </details>
+      )}
+
+      <footer class="page-footer">
+        <p>
+          Código:
+          <a href="https://github.com/dlgiant/rag-leis-digitais-br" target="_blank" rel="noopener">
+            github.com/dlgiant/rag-leis-digitais-br
+          </a>
+        </p>
+      </footer>
+    </main>
+  </div>
 
   <style>
-    main {
-      max-width: 780px;
+    /* ---------- Two-column layout (sidebar + main) ---------- */
+    .page-wrap {
+      max-width: 1180px;
       margin: 0 auto;
-      padding: 3rem 1.25rem 4rem;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 1.5rem;
+      padding: 1rem 1.25rem 4rem;
+      align-items: start;
+    }
+    main {
+      min-width: 0;
+      max-width: 780px;
+      padding: 2rem 0;
       font-size: 17px;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: sticky;
+      top: 4rem; /* below the layout's sticky header */
+      max-height: calc(100vh - 5rem);
+      overflow-y: auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 1rem 0.75rem;
+    }
+    .sidebar-header {
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.75rem;
+    }
+    .new-chat-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.75rem;
+      width: 100%;
+      background: var(--accent);
+      color: #ffffff;
+      font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      border: 1px solid var(--accent);
+      transition: background 0.12s ease, transform 0.05s ease;
+    }
+    .new-chat-btn:hover {
+      background: var(--accent-hover);
+      color: #ffffff;
+      text-decoration: none;
+    }
+    .new-chat-btn:active {
+      background: var(--emphasis);
+      transform: translateY(1px);
+    }
+    .new-chat-btn .plus { font-size: 1.15rem; line-height: 1; font-weight: 700; }
+
+    .sidebar-list { display: flex; flex-direction: column; gap: 1rem; }
+    .sidebar-empty {
+      margin: 0;
+      padding: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .bucket { display: flex; flex-direction: column; gap: 0.3rem; }
+    .bucket-label {
+      padding: 0 0.5rem;
+      font-size: 0.65rem;
+    }
+    .bucket ul { list-style: none; margin: 0; padding: 0; }
+    .bucket li { position: relative; }
+    .bucket li a {
+      display: block;
+      padding: 0.45rem 0.65rem;
+      font-size: 0.82rem;
+      color: var(--fg-dim);
+      line-height: 1.35;
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
+    }
+    .bucket li a:hover {
+      background: var(--bg-sunken);
+      color: var(--fg);
+      text-decoration: none;
+    }
+    .bucket li.is-active a {
+      background: var(--accent-soft);
+      color: var(--fg);
+      border-left-color: var(--emphasis);
+      font-weight: 500;
+    }
+    .conv-title {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     /* ---------- Header (mission-control brand mark) ---------- */
     .page-header {
-      margin-bottom: 2rem;
-      padding-bottom: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.25rem;
       border-bottom: 1px solid var(--border);
     }
     .page-header .label-eyebrow {
@@ -137,12 +461,20 @@ const EXAMPLES = [
       font-size: 1.875rem;
       font-weight: 700;
       letter-spacing: -0.01em;
-      line-height: 1.1;
+      line-height: 1.2;
       font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
       text-transform: uppercase;
     }
     .brand-mark { color: var(--fg); }
     .brand-slash { color: var(--muted); font-weight: 400; }
+    .active-title {
+      text-transform: none;
+      font-family: inherit;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--fg);
+      letter-spacing: -0.005em;
+    }
     .tagline {
       margin: 0.75rem 0 0;
       color: var(--fg-dim);
@@ -151,7 +483,7 @@ const EXAMPLES = [
       max-width: 60ch;
     }
 
-    /* ---------- Collapsible notice ---------- */
+    /* ---------- Collapsible notice (only on new-conversation view) ---------- */
     .notice {
       background: color-mix(in srgb, var(--accent) 6%, var(--bg-card));
       border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
@@ -171,9 +503,7 @@ const EXAMPLES = [
       list-style: none;
       user-select: none;
     }
-    .notice summary::-webkit-details-marker {
-      display: none;
-    }
+    .notice summary::-webkit-details-marker { display: none; }
     .notice-icon {
       flex-shrink: 0;
       width: 1.5rem;
@@ -188,9 +518,7 @@ const EXAMPLES = [
       font-weight: 700;
       font-size: 0.875rem;
     }
-    .notice-summary-text {
-      flex-grow: 1;
-    }
+    .notice-summary-text { flex-grow: 1; }
     .notice-toggle {
       flex-shrink: 0;
       width: 1rem;
@@ -221,26 +549,70 @@ const EXAMPLES = [
       font-size: 0.9rem;
       line-height: 1.55;
     }
-    .notice-body p {
-      margin: 0 0 0.5rem;
-    }
-    .notice-body ul {
-      margin: 0;
-      padding-left: 1.25rem;
-    }
-    .notice-body li {
-      margin-bottom: 0.25rem;
-    }
+    .notice-body p { margin: 0 0 0.5rem; }
+    .notice-body ul { margin: 0; padding-left: 1.25rem; }
+    .notice-body li { margin-bottom: 0.25rem; }
 
-    /* ---------- Chat input ---------- */
-    .chat-input {
-      margin-bottom: 1.5rem;
-    }
-    #askForm {
+    /* ---------- Past-turns (history rendered above the input) ---------- */
+    .past-turns {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
     }
+    .past-turn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 1rem 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .past-turn-q {
+      padding-bottom: 0.6rem;
+      margin-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .past-turn-q .label-eyebrow {
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    .past-turn-q p {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 600;
+      color: var(--fg);
+      line-height: 1.45;
+    }
+    .past-turn-a .answer-text,
+    .past-turn-refusal p {
+      white-space: pre-wrap;
+      font-size: 0.98rem;
+      line-height: 1.6;
+    }
+    .past-turn-refusal {
+      padding: 0.75rem 1rem;
+      background: color-mix(in srgb, var(--muted) 8%, transparent);
+      border-left: 3px solid var(--muted);
+    }
+    .past-turn-refusal p { color: var(--muted); margin: 0; }
+    .past-turn .citations {
+      margin-top: 1rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+    .past-turn .citations h4 {
+      margin: 0 0 0.4rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .past-turn .citations ul { list-style: none; padding: 0; margin: 0; }
+    .past-turn .citations li { padding: 0.25rem 0; font-size: 0.85rem; }
+
+    /* ---------- Chat input ---------- */
+    .chat-input { margin-bottom: 1.5rem; }
+    #askForm { display: flex; flex-direction: column; gap: 0.75rem; }
     textarea {
       width: 100%;
       padding: 1rem 1.125rem;
@@ -294,12 +666,9 @@ const EXAMPLES = [
       border-color: var(--emphasis);
       transform: translateY(1px);
     }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* ---------- Result card (single component for loading + answer) ---------- */
+    /* ---------- Streaming result card ---------- */
     .result {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -308,9 +677,7 @@ const EXAMPLES = [
       margin-bottom: 1.5rem;
       box-shadow: var(--shadow-sm);
     }
-    .result.hidden {
-      display: none;
-    }
+    .result.hidden { display: none; }
     .result-progress {
       display: flex;
       align-items: center;
@@ -320,11 +687,7 @@ const EXAMPLES = [
       border-bottom: 1px solid var(--border);
       margin-bottom: 1rem;
     }
-    .result-progress.done-final {
-      /* When the result is complete, soften the stepper so attention
-         shifts to the answer below. */
-      opacity: 0.7;
-    }
+    .result-progress.done-final { opacity: 0.7; }
     .steps {
       list-style: none;
       padding: 0;
@@ -350,20 +713,13 @@ const EXAMPLES = [
       background: var(--border);
       transition: background 0.2s ease, box-shadow 0.2s ease;
     }
-    .step.running {
-      color: var(--accent);
-      font-weight: 500;
-    }
+    .step.running { color: var(--accent); font-weight: 500; }
     .step.running .step-dot {
       background: var(--accent);
       animation: pulse 1.2s ease-in-out infinite;
     }
-    .step.done {
-      color: var(--success);
-    }
-    .step.done .step-dot {
-      background: var(--success);
-    }
+    .step.done { color: var(--success); }
+    .step.done .step-dot { background: var(--success); }
     @keyframes pulse {
       0%, 100% {
         box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent);
@@ -372,16 +728,11 @@ const EXAMPLES = [
         box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 0%, transparent);
       }
     }
-    .elapsed {
-      flex-shrink: 0;
-      font-variant-numeric: tabular-nums;
-    }
+    .elapsed { flex-shrink: 0; font-variant-numeric: tabular-nums; }
     .result-body.hidden,
     .result-refusal.hidden,
     .result-error.hidden,
-    .citations.hidden {
-      display: none;
-    }
+    .citations.hidden { display: none; }
     .answer-text {
       white-space: pre-wrap;
       font-size: 1rem;
@@ -400,15 +751,8 @@ const EXAMPLES = [
       letter-spacing: 0.04em;
       color: var(--muted);
     }
-    .citations ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .citations li {
-      padding: 0.3rem 0;
-      font-size: 0.875rem;
-    }
+    .citations ul { list-style: none; padding: 0; margin: 0; }
+    .citations li { padding: 0.3rem 0; font-size: 0.875rem; }
     .result-refusal {
       padding: 0.875rem 1rem;
       background: color-mix(in srgb, var(--muted) 8%, transparent);
@@ -428,16 +772,10 @@ const EXAMPLES = [
       border-left: 3px solid var(--accent);
       border-radius: 0 6px 6px 0;
     }
-    .result-error p {
-      color: var(--accent);
-    }
+    .result-error p { color: var(--accent); }
 
-    /* ---------- Examples (now AFTER the result card) ---------- */
-    .examples {
-      margin-top: 0.5rem;
-      margin-bottom: 2rem;
-      font-size: 0.9rem;
-    }
+    /* ---------- Examples (only on new-conversation view) ---------- */
+    .examples { margin-top: 0.5rem; margin-bottom: 2rem; font-size: 0.9rem; }
     .examples summary {
       cursor: pointer;
       color: var(--muted);
@@ -448,9 +786,7 @@ const EXAMPLES = [
       align-items: center;
       gap: 0.4rem;
     }
-    .examples summary::-webkit-details-marker {
-      display: none;
-    }
+    .examples summary::-webkit-details-marker { display: none; }
     .examples summary::before {
       content: "+";
       display: inline-block;
@@ -458,17 +794,9 @@ const EXAMPLES = [
       font-weight: 600;
       transition: transform 0.15s ease;
     }
-    .examples[open] summary::before {
-      content: "−";
-    }
-    .examples ul {
-      list-style: none;
-      padding: 0;
-      margin: 0.5rem 0 0;
-    }
-    .examples li {
-      margin-bottom: 0.4rem;
-    }
+    .examples[open] summary::before { content: "−"; }
+    .examples ul { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+    .examples li { margin-bottom: 0.4rem; }
     .example-btn {
       background: var(--bg-card);
       color: var(--fg);
@@ -481,7 +809,7 @@ const EXAMPLES = [
       border-radius: 0;
     }
     .example-btn:hover:not(:disabled) {
-      background: var(--code);
+      background: var(--code-bg);
       border-color: var(--accent);
       color: var(--fg);
     }
@@ -494,17 +822,11 @@ const EXAMPLES = [
       font-size: 0.875rem;
       color: var(--muted);
     }
-    .page-footer p {
-      margin: 0;
-    }
+    .page-footer p { margin: 0; }
 
     /* ---------- Utility ---------- */
-    .muted {
-      color: var(--muted);
-    }
-    .small {
-      font-size: 0.85em;
-    }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.85em; }
     .visually-hidden {
       position: absolute;
       width: 1px;
@@ -513,28 +835,31 @@ const EXAMPLES = [
       clip: rect(0 0 0 0);
     }
 
-    @media (max-width: 540px) {
+    /* ---------- Responsive: drop the sidebar below 900px ---------- */
+    @media (max-width: 900px) {
+      .page-wrap {
+        grid-template-columns: 1fr;
+        padding: 0.5rem 1rem 3rem;
+      }
+      .sidebar {
+        position: static;
+        max-height: none;
+        order: 2;
+      }
       main {
-        padding: 2rem 1rem 3rem;
-        font-size: 16px;
+        order: 1;
+        padding: 1.5rem 0 0;
       }
-      h1 {
-        font-size: 1.625rem;
-      }
-      .result {
-        padding: 1rem 1.125rem;
-      }
-      .steps {
-        font-size: 0.75rem;
-      }
+      h1 { font-size: 1.625rem; }
+      .result { padding: 1rem 1.125rem; }
+      .steps { font-size: 0.75rem; }
     }
   </style>
 
   <script is:inline>
-    // Phase 10b — vanilla JS chat client. Hits /api/ask/stream
-    // (same-origin) and renders the SSE event stream into a single
-    // result component that shows the stepper while running and the
-    // answer/refusal when complete.
+    // Phase 10b — vanilla JS chat client.
+    // Phase 10c — sends the active conversation_id (if any) and
+    // updates the URL when the backend returns a new one.
 
     const STAGE_ORDER = ["classify", "retrieve", "generate", "verify", "relevance_judge"];
 
@@ -565,8 +890,7 @@ const EXAMPLES = [
         queryInput.value = btn.dataset.query;
         charCount.textContent = `${queryInput.value.length} / 2000`;
         queryInput.focus();
-        // Auto-collapse the examples after picking one
-        examplesEl.removeAttribute("open");
+        if (examplesEl) examplesEl.removeAttribute("open");
       });
     });
 
@@ -584,9 +908,6 @@ const EXAMPLES = [
 
     function renderCitation(urn) {
       const safe = String(urn).replace(/</g, "&lt;");
-      // LexML's URN resolver only honors document-level URNs — article
-      // fragments (`!art5`, `~art5;inc1`, etc.) all fail. Strip the
-      // fragment, link to the document; keep the full URN as text.
       const isLexml = String(urn).startsWith("urn:lex:");
       if (!isLexml) {
         return `<li><code>${safe}</code></li>`;
@@ -629,6 +950,10 @@ const EXAMPLES = [
       const query = queryInput.value.trim();
       if (!query) return;
 
+      // The conversation_id is set as a data-attribute by the Astro page;
+      // null/empty → backend will auto-create and return the new id.
+      const currentConvId = form.dataset.conversationId || null;
+
       askBtn.disabled = true;
       askBtn.textContent = "Processando…";
       clearResult();
@@ -641,10 +966,13 @@ const EXAMPLES = [
       const elapsedTimer = setInterval(updateElapsed, 100);
 
       try {
+        const requestBody = { query };
+        if (currentConvId) requestBody.conversation_id = currentConvId;
+
         const response = await fetch("/api/ask/stream", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query }),
+          body: JSON.stringify(requestBody),
         });
         if (!response.ok || !response.body) {
           const err = await response.text().catch(() => "");
@@ -654,6 +982,7 @@ const EXAMPLES = [
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
+        let newConvId = null;
 
         while (true) {
           const { value, done } = await reader.read();
@@ -678,11 +1007,9 @@ const EXAMPLES = [
               setStageState(event.name, newState);
             } else if (event.event === "complete") {
               const ans = event.answer;
+              newConvId = event.conversation_id || ans?.conversation_id || null;
               clearInterval(elapsedTimer);
               updateElapsed();
-              // Any pending stages (e.g., relevance_judge skipped on
-              // cosine fast-path) get marked done so the stepper is
-              // a clean record of what ran.
               STAGE_ORDER.forEach((s) => {
                 const li = stepsEl.querySelector(`[data-stage="${s}"]`);
                 if (li && !li.classList.contains("done")) li.classList.add("done");
@@ -705,6 +1032,27 @@ const EXAMPLES = [
               throw new Error(event.detail || "erro do servidor");
             }
           }
+        }
+
+        // Phase 10c — after a successful turn:
+        //   * If we started without a conversation_id and got one back,
+        //     replace the URL so the sidebar shows the new thread on
+        //     next navigation + the URL is shareable / bookmarkable.
+        //   * If we already had one, the URL is already correct; no-op.
+        // We use replaceState (not pushState) so the back button doesn't
+        // get cluttered with same-conversation URL updates.
+        if (newConvId && !currentConvId) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("c", newConvId);
+          window.history.replaceState({}, "", url.toString());
+          form.dataset.conversationId = newConvId;
+          // Clear the input so a follow-up is ready to type.
+          queryInput.value = "";
+          charCount.textContent = "0 / 2000";
+        } else if (newConvId) {
+          // Already in a conversation; clear input for follow-up.
+          queryInput.value = "";
+          charCount.textContent = "0 / 2000";
         }
       } catch (err) {
         clearInterval(elapsedTimer);
