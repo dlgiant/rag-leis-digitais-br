@@ -214,8 +214,12 @@ import Layout from "../layouts/Layout.astro";
           perguntas e respostas são persistidas para histórico próprio +
           audit log do redator. Você é a única pessoa que vê seu próprio
           histórico — não há acesso de terceiros, nem operadora. A
-          redação automática remove CPF, CNPJ, e outros padrões antes de
-          armazenar qualquer texto.
+          redação automática remove, antes de armazenar qualquer texto,
+          os seguintes identificadores: CPF, CNPJ, email, telefone, CEP,
+          RG, OAB, CRM, processo CNJ (formato unificado
+          NNNNNNN-DD.AAAA.J.TR.OOOO) e título de eleitor no formato
+          espaçado 4-4-4. Esses padrões viram <code>[CPF#1]</code>,
+          <code>[OAB#1]</code>, etc. no texto persistido.
         </li>
         <li>
           <strong>Rate limit por usuário</strong>: 60 requisições por

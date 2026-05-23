@@ -45,6 +45,10 @@ const hasNext = data ? nextOffset < data.total : false;
 // Categories the lawyer can flag. Mirrors KNOWN_PII_TYPES on the
 // backend. Grouped for the UI: top row = currently-detected (rarely
 // flagged), bottom rows = gap categories (the targets of this audit).
+// Phase 18.5 (2026-05-22) — OAB, CRM, processo CNJ, título eleitoral
+// moved from "Gaps" to "Cobertas" after `rag_leis/pii.py` shipped
+// regex for all four. Remaining gaps are the 5 lower-frequency
+// categories Phase 14 audit hasn't yet escalated.
 const CATEGORY_GROUPS: Array<{ label: string; types: { value: string; label: string }[] }> = [
   {
     label: "Cobertas pelo redator atual",
@@ -55,16 +59,16 @@ const CATEGORY_GROUPS: Array<{ label: string; types: { value: string; label: str
       { value: "phone", label: "Telefone" },
       { value: "cep", label: "CEP" },
       { value: "rg", label: "RG" },
+      { value: "oab", label: "OAB" },
+      { value: "crm", label: "CRM" },
+      { value: "processo_cnj", label: "Processo CNJ" },
+      { value: "eleitoral", label: "Título eleitoral" },
     ],
   },
   {
     label: "Gaps identificados pela revisão jurídica",
     types: [
-      { value: "oab", label: "OAB" },
-      { value: "crm", label: "CRM" },
       { value: "processo_sei", label: "Processo SEI" },
-      { value: "processo_cnj", label: "Processo CNJ" },
-      { value: "eleitoral", label: "Título eleitoral" },
       { value: "nis", label: "NIS" },
       { value: "pis", label: "PIS" },
       { value: "iban", label: "IBAN" },
@@ -103,9 +107,10 @@ const CATEGORY_GROUPS: Array<{ label: string; types: { value: string; label: str
     <p class="muted small intro">
       Cada entrada é uma query do produto onde o redator processou PII.
       O texto redactado pode <strong>ainda conter</strong> categorias que
-      o regex atual não captura (OAB, processo SEI, eleitoral, …) — esse
-      é exatamente o caso a flagar. <code>kind=pii_miss</code> alimenta
-      tunagem das patterns em <code>rag_leis/pii.py</code>.
+      o regex atual não captura (processo SEI, NIS/PIS, IBAN, cartão de
+      crédito) — esse é exatamente o caso a flagar.
+      <code>kind=pii_miss</code> alimenta tunagem das patterns em
+      <code>rag_leis/pii.py</code>.
     </p>
 
     {fetchError && (
@@ -183,7 +188,7 @@ const CATEGORY_GROUPS: Array<{ label: string; types: { value: string; label: str
                     class="pii-notes"
                     rows="2"
                     maxlength="4000"
-                    placeholder="Ex: 'OAB 123.456/SP aparece literal no redacted_text; categoria não coberta pelo regex.'"
+                    placeholder="Ex: 'Processo SEI 12345.678901/2024-12 aparece literal no redacted_text; categoria não coberta pelo regex.'"
                   ></textarea>
                 </div>
 
