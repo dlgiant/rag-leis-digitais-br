@@ -6,10 +6,20 @@
 // payload (it's already in the user's Clerk session cookie); the
 // proxy just lifts it via Astro.locals.auth().getToken() and forwards.
 //
-// Required env vars (set as Vercel project env vars):
-//   RAG_BACKEND_URL    — defaults to https://rag-leis-digitais-br.fly.dev
-//   CLERK_PUBLISHABLE_KEY / CLERK_SECRET_KEY / CLERK_JWT_KEY — Clerk
-//                        config; see ui-review/'s vars (same Clerk app)
+// Required env vars (set as Vercel project env vars; mirror in .env
+// for local dev):
+//   RAG_BACKEND_URL                  — defaults to https://rag-leis-digitais-br.fly.dev
+//   PUBLIC_CLERK_PUBLISHABLE_KEY     — Clerk client-side key (PUBLIC_
+//                                      prefix is required by @clerk/astro v2
+//                                      so the value reaches the browser bundle)
+//   CLERK_SECRET_KEY                 — Clerk server-side key
+//   CLERK_JWT_KEY                    — JWT verification key
+//
+// Satellite-domain mode (used when the public UI shares a session with
+// the lawyer review surface under a common apex):
+//   PUBLIC_CLERK_IS_SATELLITE        — "true"
+//   PUBLIC_CLERK_DOMAIN              — this surface's own domain
+//   PUBLIC_CLERK_SIGN_IN_URL         — absolute URL to the primary app's /sign-in
 //
 // Phase 14.6 removed DEMO_API_KEY from this proxy. Programmatic
 // callers (CI smoke tests, MCP) still hit the backend directly with

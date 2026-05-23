@@ -1,9 +1,9 @@
-// Phase 14.6 — Clerk middleware for the public RAG UI (rag.nunes.work).
+// Phase 14.6 — Clerk middleware for the public RAG UI (aferida.com.br).
 //
 // Open registration: anyone can sign up. Auth is required to use the
 // RAG (replaces the shared DEMO_API_KEY). Cookie is scoped to
-// `.nunes.work` via Clerk's satellite-domain config so the lawyer's
-// session works on both rag.nunes.work and revisada.nunes.work.
+// `.aferida.com.br` via Clerk's satellite-domain config so the lawyer's
+// session works on both aferida.com.br and revisa.aferida.com.br.
 //
 // Mirrors the structure of ui-review/src/middleware.ts: gates
 // everything except /sign-in (and Clerk callbacks); unauthenticated

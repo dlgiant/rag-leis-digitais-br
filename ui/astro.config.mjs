@@ -5,9 +5,9 @@ import clerk from "@clerk/astro";
 
 // Phase 10b — Astro on Vercel.
 // Phase 14.6 — Clerk auth added (mirrors ui-review/). Same Clerk app
-// as revisada.nunes.work; rag.nunes.work is configured as a satellite
+// as revisa.aferida.com.br; aferida.com.br is configured as a satellite
 // domain in the Clerk Dashboard so the session cookie is scoped to
-// `.nunes.work` and signed-in users on one surface stay signed in
+// `.aferida.com.br` and signed-in users on one surface stay signed in
 // on the other.
 //
 // SSR is required for:

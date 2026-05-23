@@ -177,7 +177,7 @@ def verify_session_token(token: str) -> ClerkClaims:
 
     Use for endpoints that require AUTH but accept any registered
     user — e.g. the public `/v1/ask` endpoint after Phase 14.6's
-    Clerk integration on rag.nunes.work. Same signature + audience
+    Clerk integration on aferida.com.br. Same signature + audience
     + email-claim checks as `verify_token`; just doesn't gate on
     `RAG_ADMIN_ALLOWLIST`. Phase 10c: also extracts profile fields
     (user_id, image_url, name) needed for the users-table upsert.
