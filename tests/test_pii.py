@@ -298,3 +298,111 @@ def test_pii_types_found_is_deduplicated():
     rq = redact("CPFs 111.111.111-11 e 222.222.222-22")
     assert rq.pii_types_found == frozenset({"cpf"})
     assert len(rq.matches) == 2  # but matches preserves both
+
+
+# ----------------------------------------------------------------------------
+# Phase 18.5 — OAB, CRM, processo CNJ, título eleitor
+# ----------------------------------------------------------------------------
+
+
+def test_oab_formatted_with_state():
+    rq = redact("O advogado da OAB/SP 123.456 protocolou a peça.")
+    assert "[OAB#1]" in rq.redacted_text
+    assert "123.456" not in rq.redacted_text
+    assert "oab" in rq.pii_types_found
+
+
+def test_oab_dash_state():
+    rq = redact("OAB-RJ 234567 - advogado constituído")
+    assert "[OAB#1]" in rq.redacted_text
+    assert "234567" not in rq.redacted_text
+
+
+def test_oab_state_after_number():
+    rq = redact("inscrito na OAB nº 123.456/SP")
+    assert "[OAB#1]" in rq.redacted_text
+
+
+def test_oab_no_state_still_matched():
+    """State code is legally required but practitioners drop it. The
+    regex still matches — under-matching here is worse than over-
+    matching (LGPD posture)."""
+    rq = redact("OAB 234567 da subseção")
+    assert "[OAB#1]" in rq.redacted_text
+
+
+def test_oab_lowercase_doesnt_match_bare_word():
+    """'oab' lowercase is case-insensitive matched, but only when
+    followed by ID-shaped digits. Bare 'OAB' word in prose stays."""
+    rq = redact("o Conselho da OAB editou a resolução")
+    assert "[OAB#" not in rq.redacted_text
+    assert "oab" not in rq.pii_types_found
+
+
+def test_crm_formatted_with_state():
+    rq = redact("O médico CRM/SP 12345 atestou.")
+    assert "[CRM#1]" in rq.redacted_text
+    assert "12345" not in rq.redacted_text
+    assert "crm" in rq.pii_types_found
+
+
+def test_crm_dash_state():
+    rq = redact("CRM-MG 67890 emitiu o laudo")
+    assert "[CRM#1]" in rq.redacted_text
+
+
+def test_crm_does_not_overmatch_bare_word():
+    """'CRM' in prose without a following ID number stays unredacted."""
+    rq = redact("o paciente apresentou o CRM ao recepcionista")
+    assert "[CRM#" not in rq.redacted_text
+
+
+def test_processo_cnj():
+    """Unified case number — distinctive 7-2-4-1-2-4 grouping."""
+    rq = redact("autos nº 1234567-89.2020.8.26.0001 distribuídos hoje")
+    assert "[PROCESSO_CNJ#1]" in rq.redacted_text
+    assert "1234567-89.2020.8.26.0001" not in rq.redacted_text
+    assert "processo_cnj" in rq.pii_types_found
+
+
+def test_processo_cnj_does_not_match_partial_format():
+    """A 20-digit blob without the dash + dot punctuation is NOT a
+    CNJ-format match — we require the specific separators that uniquely
+    identify the format. This protects against unrelated long-digit
+    strings being mis-redacted."""
+    rq = redact("número 12345678920208260001 não é formato CNJ")
+    assert "[PROCESSO_CNJ#" not in rq.redacted_text
+
+
+def test_titulo_eleitor_spaced_format():
+    rq = redact("título de eleitor 1234 5678 9012 conferido")
+    assert "[TITULO_ELEITOR#1]" in rq.redacted_text
+    assert "1234 5678 9012" not in rq.redacted_text
+    assert "titulo_eleitor" in rq.pii_types_found
+
+
+def test_titulo_eleitor_does_not_match_bare_12_digits():
+    """The 4-4-4 spaced form is the redaction target; a 12-digit blob
+    is too generic (account numbers, dates, etc.) and stays. Documented
+    trade-off — see pii.py docstring."""
+    rq = redact("código 123456789012 do sistema interno")
+    assert "[TITULO_ELEITOR#" not in rq.redacted_text
+
+
+def test_lawyer_query_multi_pii_phase_18_5():
+    """Realistic Phase 14-audit-style query: a lawyer mentions OAB
+    + CPF + processo CNJ together. All three must redact independently."""
+    rq = redact(
+        "Cliente CPF 123.456.789-00, advogado OAB/SP 234.567, autos "
+        "1234567-89.2020.8.26.0001."
+    )
+    assert "[CPF#1]" in rq.redacted_text
+    assert "[OAB#1]" in rq.redacted_text
+    assert "[PROCESSO_CNJ#1]" in rq.redacted_text
+    assert rq.pii_types_found >= {"cpf", "oab", "processo_cnj"}
+
+
+def test_two_oabs_get_distinct_numbers():
+    rq = redact("OAB/SP 123.456 e OAB/RJ 234567 atuam no caso")
+    assert "[OAB#1]" in rq.redacted_text
+    assert "[OAB#2]" in rq.redacted_text

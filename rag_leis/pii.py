@@ -25,6 +25,20 @@ art. 5, I — "dado pessoal" identifiável):
   - RG        regional ID, 8-9 digits (loose match — RG formats vary
               by UF)
 
+Phase 18.5 additions — drained from Phase 14 audit findings (lawyer-
+review checklist 🟡 #6); these show up in lawyer queries with non-
+trivial frequency and are LGPD "dado pessoal" by art. 5, I (any data
+identifying a natural person):
+
+  - OAB             Brazilian Bar Association lawyer license —
+                    "OAB/SP 123.456" / "OAB-RJ 234567"
+  - CRM             Medical license (Conselho Regional de Medicina) —
+                    "CRM/SP 12345" / "CRM-MG 67890"
+  - processo_cnj    Unified case number (Resolução CNJ 65/2008) —
+                    "1234567-89.2020.8.26.0001" (NNNNNNN-DD.AAAA.J.TR.OOOO)
+  - titulo_eleitor  Voter registration ID — "1234 5678 9012" (4-4-4
+                    spaced form only; bare 12-digit blob too generic)
+
 NER for nomes próprios is deliberately separate (rag_leis.pii_ner), in
 an optional dep group. Regex is precision-heavy by design: it MUST NOT
 overmatch (false-redaction in a legal context is itself an LGPD-relevant
@@ -124,11 +138,57 @@ _RG_RE = re.compile(
     r"\b\d{1,2}\.\d{3}\.\d{3}-?[\dxX]\b",
 )
 
+# Phase 18.5 — Brazilian professional + judicial + voter identifiers.
+
+# OAB — Brazilian Bar Association number. Formats vary:
+#   "OAB/SP 123.456", "OAB-SP 123456", "OAB nº 123.456/SP", "OAB 234567"
+# Anchored on "OAB" so the bare-number false-positive surface is zero;
+# state code is optional (legally required but practitioners drop it).
+# ID accepts 4-8 digits, with optional 3.3 / 3.4 dot grouping that
+# many official renderings use.
+_OAB_RE = re.compile(
+    r"\bOAB[\s/.-]*(?:n[°º.]?\s*)?(?:[A-Z]{2}\s*[/-]?\s*)?"
+    r"(?:\d{1,3}\.\d{3,5}|\d{4,8})(?:\s*[/-]?\s*[A-Z]{2})?\b",
+    re.IGNORECASE,
+)
+
+# CRM — Conselho Regional de Medicina (medical license). Same anchor
+# strategy as OAB; smaller-jurisdiction IDs historically can be just
+# 3 digits, so the digit floor is lower than OAB.
+_CRM_RE = re.compile(
+    r"\bCRM[\s/.-]*(?:n[°º.]?\s*)?(?:[A-Z]{2}\s*[/-]?\s*)?"
+    r"(?:\d{1,3}\.\d{3,5}|\d{3,7})(?:\s*[/-]?\s*[A-Z]{2})?\b",
+    re.IGNORECASE,
+)
+
+# Processo CNJ — unified 20-digit case number set by Resolução CNJ
+# 65/2008. Format: NNNNNNN-DD.AAAA.J.TR.OOOO. The punctuation pattern
+# (7-digit, dash, 2-digit, dot, 4-digit, dot, 1-digit, dot, 2-digit,
+# dot, 4-digit) is so distinctive that false-positives are effectively
+# impossible — no other identifier shape in PT-BR uses it.
+_PROCESSO_CNJ_RE = re.compile(
+    r"\b\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}\b",
+)
+
+# Título de eleitor — Brazilian voter registration ID. 12 digits,
+# rendered as "0000 0000 0000" (4-4-4 spaced) in nearly all official
+# uses. Bare 12-digit blob is intentionally NOT matched here — too
+# generic, would catch account numbers and other unrelated identifiers.
+# The "Título nº 123456789012" contextual variant can be added by a
+# future iteration if Phase 14 audit shows it surfacing in queries.
+_TITULO_ELEITOR_RE = re.compile(
+    r"\b\d{4}\s\d{4}\s\d{4}\b",
+)
+
 
 # Order matters: each pattern's matches are extracted before the next,
 # substituted with a unique placeholder, and the substituted text is
 # what subsequent patterns scan. This avoids one pattern's match landing
-# inside another's tokens.
+# inside another's tokens. Phase 18.5 patterns are appended at the end
+# so the established CPF/CNPJ/RG/CEP/phone ordering invariants are
+# preserved — the new patterns are either prefix-anchored (OAB, CRM)
+# or precision-anchored (CNJ, voter 4-4-4) so overlap with bare-digit
+# patterns is structurally impossible.
 _PATTERN_PIPELINE: list[tuple[str, re.Pattern[str]]] = [
     ("email", _EMAIL_RE),
     ("cnpj", _CNPJ_RE),
@@ -136,6 +196,10 @@ _PATTERN_PIPELINE: list[tuple[str, re.Pattern[str]]] = [
     ("rg", _RG_RE),
     ("cep", _CEP_RE),
     ("phone", _PHONE_RE),
+    ("processo_cnj", _PROCESSO_CNJ_RE),
+    ("oab", _OAB_RE),
+    ("crm", _CRM_RE),
+    ("titulo_eleitor", _TITULO_ELEITOR_RE),
 ]
 
 
