@@ -1,0 +1,266 @@
+# Phase 18.4 — cross-doc gold DRAFTS — awaiting lawyer review.
+#
+# Source spec: study/lawyer-review-checklist.md:110-122. The 5 canonical
+# scenarios identified there as the highest-leverage cross-doc rows for
+# the project's legal-quality posture.
+#
+# WHY THIS IS A SEPARATE FILE
+# ===========================
+#
+# `eval/answer_queries.yaml` is the production gold — its rows drive
+# faithfulness scoring + citation P/R for every eval run. Merging
+# unvalidated cross-doc gold there would silently skew metrics in
+# directions a senior lawyer hasn't blessed. So these drafts live
+# here, NOT loaded by `run_answer_eval.py` by default. When the
+# lawyer-review pass completes, the merge is a one-shot script:
+# read this file, append blessed rows to answer_queries.yaml,
+# delete this draft file.
+#
+# WHAT THE LAWYER NEEDS TO DECIDE PER ROW
+# =======================================
+#
+# 1. **Primary gold vs companion**: which URN is the canonical answer
+#    target? The others go to `companion_urns` or
+#    `alternative_acceptable_urns`. Currently each row has a single
+#    primary gold + 2-3 companions; a lawyer might reorder.
+# 2. **Relationship typing**: each companion has a `relationship` value
+#    from {regulamenta, integra, contradiz, complementa}. See
+#    `rag_leis/run_answer_eval.py` AnswerQuery for the contract. The
+#    drafts make best-effort choices; a lawyer should validate. Note
+#    the schema doesn't (yet) have an `interpreta` relationship for
+#    jurisprudência that interprets a rule — currently using
+#    `complementa` as a stand-in. Tell us if a 5th relationship type
+#    is needed.
+# 3. **`expected_paragraph` fidelity**: the 1-5 sentence paraphrase
+#    that the LLM judge compares against. Drafts here are operator
+#    best-effort; lawyer should adjust wording / emphasis to match
+#    how a senior litigator would summarize.
+#
+# DOC-AVAILABILITY NOTES
+# ======================
+#
+# Scenarios 1-4 reference URNs ALL indexed in the current corpus
+# (post-Phase-18.1). Scenario 5 references Res. CD/ANPD 1/2021 +
+# 2/2022 — those are NOT yet indexed (Phase 18.2 is the indexing
+# work). The row uses URNs the indexed Res. 4/2023 covers
+# (dosimetria) + LGPD art. 52 (the rule); the unindexed Res. 1/2021
+# + 2/2022 are noted in the row comments for traceability but not
+# in companion_urns (citing unindexed URNs would generate retrieval
+# misses that hide as eval failures).
+
+# ============================================================================
+# Scenario 1 — Vazamento de dados de consumidor: responsabilidade do controlador
+# ============================================================================
+- query: "houve vazamento de dados de um consumidor pessoa física; qual a responsabilidade civil do controlador segundo a LGPD e o CDC?"
+  type: cross-doc
+  oos: false
+  draft_status: needs_lawyer_review  # informational flag; ignored by load_answer_queries
+  gold_urns:
+    # LGPD art. 42 — responsabilidade do controlador/operador por danos
+    # patrimoniais, morais, individuais ou coletivos. The primary
+    # rule when the question is framed as "responsabilidade".
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art42"
+  alternative_acceptable_urns:
+    # LGPD art. 43 — eximentes (não-tratamento, tratamento sem violação,
+    # culpa exclusiva de terceiro). A lawyer would naturally cite these
+    # to qualify the responsabilidade rule.
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art43"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art43;inc1"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art43;inc2"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art43;inc3"
+    # CDC art. 14 — responsabilidade objetiva do fornecedor pela
+    # qualidade da prestação. Brazilian doctrine bridges LGPD's
+    # controller liability with CDC's fornecedor liability when the
+    # data subject is a consumidor.
+    - "urn:lex:br:federal:lei:1990-09-11;8078~art14"
+  companion_urns:
+    - urn: "urn:lex:br:federal:lei:1990-09-11;8078~art14"
+      relationship: complementa  # CDC fornecedor + LGPD controlador both cover the data-breach scenario from different legal angles
+    - urn: "urn:lex:br:superior.tribunal.justica:sumula:2012-06-27;479~enunciado"
+      relationship: complementa  # Súmula 479 STJ — fortuito interno para fraudes em instituições financeiras; interpretes CDC art. 14 no setor financeiro. Note: "complementa" is a stand-in; lawyer may want a future "interpreta" relationship for jurisprudência.
+  expected_paragraph: |
+    A responsabilidade civil do controlador por vazamento de dados está
+    no art. 42 da LGPD: o controlador (ou operador) responde por danos
+    patrimoniais, morais, individuais ou coletivos causados em violação
+    à lei. As eximentes do art. 43 limitam essa responsabilidade — não
+    realizou o tratamento, não houve violação à lei, ou houve culpa
+    exclusiva do titular ou de terceiro. Quando o titular é
+    consumidor, o art. 14 do CDC também incide com responsabilidade
+    objetiva do fornecedor pela prestação. No setor financeiro
+    especificamente, a Súmula 479 do STJ fixa responsabilidade
+    objetiva por fortuito interno (fraudes de terceiros).
+
+
+# ============================================================================
+# Scenario 2 — Direito ao esquecimento na internet
+# ============================================================================
+- query: "existe direito ao esquecimento na internet no direito brasileiro?"
+  type: cross-doc
+  oos: false
+  draft_status: needs_lawyer_review
+  gold_urns:
+    # STF Tema 786 ~tese — o STF rejeitou o "direito ao esquecimento"
+    # como princípio autônomo. A resposta correta MENCIONA esta tese.
+    - "urn:lex:br:supremo.tribunal.federal:tema:786~tese"
+  alternative_acceptable_urns:
+    # CF art. 5 X — intimidade, vida privada, honra, imagem (a base
+    # constitucional do que o "direito ao esquecimento" tentou
+    # capturar sem sucesso como tese autônoma).
+    - "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"
+    # MCI art. 19 — regime de responsabilidade do provedor por
+    # remoção de conteúdo (sub judice no Tema 987 do STF — ver
+    # vigência overlay). Esta é a porta procedural para remoção
+    # de conteúdo concreto, no lugar do "direito ao esquecimento".
+    - "urn:lex:br:federal:lei:2014-04-23;12965~art19"
+  companion_urns:
+    - urn: "urn:lex:br:federal:constituicao:1988-10-05;1988~art5;inc10"
+      relationship: integra  # base constitucional dos direitos da personalidade
+    - urn: "urn:lex:br:federal:lei:2014-04-23;12965~art19"
+      relationship: complementa  # mecanismo procedural de remoção de conteúdo (vigência: alterado_por_jurisprudencia, Tema 987)
+  expected_paragraph: |
+    O STF rejeitou o "direito ao esquecimento" como tese autônoma no
+    julgamento do Tema 786 (RE 1.010.606), reafirmando que pretensões
+    de remoção de informações verídicas legitimamente obtidas devem
+    ser examinadas caso a caso à luz da intimidade, vida privada,
+    honra e imagem (art. 5º, X, CF) e da liberdade de expressão. Não
+    há, portanto, um direito ao esquecimento como categoria jurídica
+    autônoma. O regime procedural para remoção de conteúdo
+    específico permanece o do Marco Civil (art. 19), atualmente sob
+    revisão pelo Tema 987 — atenção: a aplicação está alterada pelo
+    STF (Tema 987, 2024-06-26).
+
+
+# ============================================================================
+# Scenario 3 — Tratamento de dados de crianças e adolescentes
+# ============================================================================
+- query: "como a LGPD trata dados pessoais de crianças e adolescentes?"
+  type: cross-doc
+  oos: false
+  draft_status: needs_lawyer_review
+  gold_urns:
+    # LGPD art. 14 — caput + parágrafos sobre tratamento de dados de
+    # criança/adolescente: melhor interesse, consentimento específico
+    # e em destaque por um dos pais ou responsável.
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art14"
+  alternative_acceptable_urns:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art14;par1"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art14;par2"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art14;par3"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art14;par5"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art14;par6"
+    # ECA art. 17 — direito ao respeito (inviolabilidade da imagem,
+    # identidade, autonomia, valores). Foi indexado na Phase 18.1
+    # exatamente pra fechar esse cross-doc.
+    - "urn:lex:br:federal:lei:1990-07-13;8069~art17"
+  companion_urns:
+    - urn: "urn:lex:br:federal:lei:1990-07-13;8069~art17"
+      relationship: integra  # ECA estabelece a moldura geral dos direitos da personalidade da criança; LGPD art. 14 é o desdobramento setorial pro tratamento de dados
+    - urn: "urn:lex:br:federal:lei:1990-09-11;8078~art39"
+      relationship: complementa  # CDC art. 39 IV proíbe prevalecer-se da fraqueza/ignorância do consumidor; criança/adolescente são caso paradigmático
+  expected_paragraph: |
+    O art. 14 da LGPD disciplina o tratamento de dados pessoais de
+    crianças e adolescentes. O caput exige que esse tratamento seja
+    realizado em seu melhor interesse. Os parágrafos do art. 14
+    estabelecem: o tratamento de dados de crianças deve ser feito
+    com consentimento específico e em destaque dado por pelo menos
+    um dos pais ou responsável legal (§ 1º); o controlador deve manter
+    pública informação sobre tipos de dados coletados, forma de
+    utilização e procedimentos (§ 2º); deve ser feito o esforço razoável
+    para verificar que o consentimento foi dado pelo responsável
+    (§ 5º). A LGPD integra com o ECA (art. 17, direito ao respeito —
+    inviolabilidade da imagem, identidade, autonomia e valores) e
+    com o CDC (art. 39, IV, vedação a prevalecer-se da fraqueza ou
+    ignorância do consumidor).
+
+
+# ============================================================================
+# Scenario 4 — Notificação de incidente de segurança
+# ============================================================================
+# OPERATOR NOTE TO LAWYER: o lawyer-review-checklist nomeia "Res. 15/2024
+# art. 6" como a peça regulamentar da notificação de incidente. A Res.
+# 15/2024, na verdade, regulamenta o tratamento de dados pessoais por
+# agentes de tratamento de pequeno porte (setor público) — NÃO é a
+# regulamentação principal de incidente. A regulamentação de incidente
+# está na Res. CD/ANPD 15/2024 art. 6º (comunicado de incidente para
+# agentes de pequeno porte) e em normativos ainda em fase de consulta
+# pública na ANPD em 2026-05. Validar com o lawyer qual norma citar
+# como companion regulamentadora — talvez nenhuma seja apropriada e
+# o row deva ficar só com LGPD art. 48.
+- query: "qual o prazo e o conteúdo da notificação de incidente de segurança envolvendo dados pessoais?"
+  type: cross-doc
+  oos: false
+  draft_status: needs_lawyer_review
+  gold_urns:
+    # LGPD art. 48 — comunicação à ANPD + titular quando houver
+    # incidente que possa acarretar risco ou dano relevante.
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art48"
+  alternative_acceptable_urns:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par1"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par2"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art48;par3"
+  companion_urns:
+    # LAWYER VALIDATE: is Res. 15/2024 art. 6 the right citation here?
+    # The Res. is about public-sector small-agent treatment, with art. 6
+    # mentioning "comunicado de incidente" in that context. Operator
+    # uncertain whether to include — see header note above.
+    - urn: "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15~art6"
+      relationship: regulamenta
+  expected_paragraph: |
+    O art. 48 da LGPD obriga o controlador a comunicar à ANPD e ao
+    titular a ocorrência de incidente de segurança que possa
+    acarretar risco ou dano relevante aos titulares. A comunicação
+    deve ser feita em prazo razoável (a LGPD não fixa um número
+    específico — a ANPD considera "razoável" 3 dias úteis nos termos
+    de sua regulamentação setorial). O conteúdo mínimo (§ 1º): natureza
+    dos dados afetados, titulares envolvidos, medidas técnicas e de
+    segurança utilizadas para a proteção, riscos relacionados e medidas
+    para reverter/mitigar os efeitos. A ANPD pode determinar
+    providências adicionais (§ 2º).
+
+
+# ============================================================================
+# Scenario 5 — Sanções: dosimetria + procedimento + agentes de pequeno porte
+# ============================================================================
+# OPERATOR NOTE TO LAWYER: as Res. CD/ANPD 1/2021 (regimento interno) e
+# 2/2022 (agentes de pequeno porte) NÃO estão indexadas no corpus atual
+# (Phase 18.2 é o trabalho de indexação). Por isso este row não cita
+# essas URNs em companion_urns — eval-runner geraria miss. Quando
+# Phase 18.2 indexar essas resoluções, este row deve ser atualizado
+# para incluir suas URNs como companions com relationship=regulamenta.
+- query: "como funciona a dosimetria das sanções da LGPD pela ANPD?"
+  type: cross-doc
+  oos: false
+  draft_status: needs_lawyer_review
+  gold_urns:
+    # LGPD art. 52 — caput + incisos das sanções administrativas:
+    # advertência, multa simples, multa diária, publicização,
+    # bloqueio, eliminação, suspensão parcial/total do funcionamento,
+    # proibição parcial/total de atividades.
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52"
+  alternative_acceptable_urns:
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;par1"
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;par2"
+    # Critérios de aplicação (gravidade, boa-fé, vantagem, condição
+    # econômica, reincidência, cooperação, recidiva, etc.)
+    - "urn:lex:br:federal:lei:2018-08-14;13709~art52;inc1"
+  companion_urns:
+    # Res. CD/ANPD 4/2023 — Regulamento de Dosimetria e Aplicação das
+    # Sanções pela ANPD. Indexada via Tier-3 (Phase 4.3.a).
+    - urn: "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2023-02-24;4~art1"
+      relationship: regulamenta
+  expected_paragraph: |
+    O art. 52 da LGPD elenca oito sanções administrativas que a ANPD
+    pode aplicar a agentes de tratamento que infrinjam a Lei:
+    advertência (com prazo de adoção de medidas), multa simples (até
+    2% do faturamento, limitada a R$ 50 milhões por infração), multa
+    diária, publicização da infração, bloqueio dos dados pessoais
+    pertinentes à infração, eliminação dos dados, suspensão parcial
+    do funcionamento do banco de dados, suspensão do exercício da
+    atividade de tratamento, e proibição parcial ou total do
+    exercício de atividades de tratamento. A dosimetria (gravidade,
+    boa-fé, vantagem auferida, condição econômica, reincidência,
+    cooperação) é regulamentada pela Res. CD/ANPD 4/2023. Para
+    agentes de pequeno porte há regime simplificado (Res. CD/ANPD
+    2/2022 — não indexada no corpus atual; ver Phase 18.2 do
+    BACKLOG). O procedimento sancionatório segue o regimento interno
+    da ANPD (Res. 1/2021 — também não indexada).

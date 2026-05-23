@@ -81,6 +81,31 @@ class AnswerQuery:
     #   d = matéria estadual / municipal
     #   e = doutrina sem positivação
     oos_subtype: str = ""
+    # Phase 18.4 — cross-doc gold typing. For rows whose answer
+    # legitimately spans ≥2 documents, `companion_urns` records each
+    # secondary URN + the relationship it has with the primary gold:
+    #   regulamenta  — A is a regulamento of B (decree → lei)
+    #   integra      — A is structurally integral to B (lex specialis,
+    #                  inciso ↔ caput, complementary regulation)
+    #   contradiz    — A contradicts / overrides B (later law,
+    #                  constitutional override, sub judice)
+    #   complementa  — A and B address the same topic from different
+    #                  legal angles (CDC fornecedor ↔ LGPD controlador
+    #                  on data-breach liability)
+    # Pure schema for now — `score_citations` doesn't yet read it.
+    # Phase 18.4 drafts are in eval/answer_queries_cross_doc_drafts.yaml
+    # awaiting lawyer review before merge into the production
+    # answer_queries.yaml.
+    companion_urns: tuple[tuple[str, str], ...] = ()
+
+
+# Phase 18.4 — allowed values for the `relationship` field on
+# companion_urns. Validated at load time; an unknown relationship
+# raises ValueError so typos in the YAML are caught immediately
+# rather than silently dropped from semantic analysis.
+_VALID_RELATIONSHIPS: frozenset[str] = frozenset({
+    "regulamenta", "integra", "contradiz", "complementa",
+})
 
 
 @dataclass
@@ -301,6 +326,27 @@ def load_answer_queries(path: Path) -> list[AnswerQuery]:
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     out: list[AnswerQuery] = []
     for item in raw:
+        # Phase 18.4 — read companion_urns if present. Each entry MUST be
+        # {urn: str, relationship: str ∈ _VALID_RELATIONSHIPS}; bad types
+        # or values raise ValueError at load time. Empty list / absent
+        # field both → empty tuple (preserves pre-18.4 behavior).
+        companions: list[tuple[str, str]] = []
+        for c in item.get("companion_urns") or []:
+            if not isinstance(c, dict):
+                raise ValueError(
+                    f"companion_urns entry must be a dict (got {type(c).__name__}): {c!r}"
+                )
+            urn = c.get("urn")
+            rel = c.get("relationship")
+            if not urn or not isinstance(urn, str):
+                raise ValueError(f"companion_urns entry missing 'urn': {c!r}")
+            if rel not in _VALID_RELATIONSHIPS:
+                raise ValueError(
+                    f"unknown relationship {rel!r} for {urn}; "
+                    f"valid: {sorted(_VALID_RELATIONSHIPS)}"
+                )
+            companions.append((urn, rel))
+
         out.append(
             AnswerQuery(
                 query=item["query"],
@@ -312,6 +358,7 @@ def load_answer_queries(path: Path) -> list[AnswerQuery]:
                 ),
                 expected_paragraph=str(item.get("expected_paragraph", "")),
                 oos_subtype=str(item.get("oos_subtype", "")),
+                companion_urns=tuple(companions),
             )
         )
     return out
