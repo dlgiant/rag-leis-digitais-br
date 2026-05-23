@@ -17,7 +17,19 @@
   "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2024-04-24;15": {
     "regulamenta_urn": "urn:lex:br:federal:lei:2018-08-14;13709",
     "regulamenta_label": "Lei Geral de Proteção de Dados Pessoais (LGPD — Lei 13.709/2018)",
-    "_evidence": "Res. CD/ANPD 15/2024 regulamenta a aplicação da LGPD ao tratamento de dados pessoais por agentes de tratamento no setor público. Same ANPD competence chain via art. 55-J."
+    "_evidence": "Res. CD/ANPD 15/2024 art. 1: 'Este Regulamento tem por objetivo estabelecer os procedimentos para Comunicação de Incidente de Segurança, que possa acarretar risco ou dano relevante aos titulares, nos termos do art. 48 da Lei nº 13.709/2018'. Direct regulamentação of LGPD art. 48 via the ANPD competence chain (LGPD art. 55-J inc. XX). Earlier entry text (corrected 2026-05-22) incorrectly described this resolution as public-sector treatment — that's a different ANPD resolution. The 15/2024 IS the incident-notification regulamento."
+  },
+
+  "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2021-10-28;1": {
+    "regulamenta_urn": "urn:lex:br:federal:lei:2018-08-14;13709",
+    "regulamenta_label": "Lei Geral de Proteção de Dados Pessoais (LGPD — Lei 13.709/2018)",
+    "_evidence": "Res. CD/ANPD 1/2021 disciplina o processo de fiscalização e o processo administrativo sancionador da ANPD; é a regulamentação procedural do regime sancionatório da LGPD (art. 52). Constitutional/legal anchor: LGPD art. 55-J inc. IV + XX (competência da ANPD para editar normas + regulamentos). Indexed in Phase 18.2 via manual HTML transcription (arts 1-15 only — operative core)."
+  },
+
+  "urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2022-01-27;2": {
+    "regulamenta_urn": "urn:lex:br:federal:lei:2018-08-14;13709",
+    "regulamenta_label": "Lei Geral de Proteção de Dados Pessoais (LGPD — Lei 13.709/2018)",
+    "_evidence": "Res. CD/ANPD 2/2022 art. 1: 'Este regulamento tem por objetivo regulamentar a aplicação da Lei nº 13.709, de 14 de agosto de 2018, Lei Geral de Proteção de Dados Pessoais (LGPD), para agentes de tratamento de pequeno porte, com base nas competências previstas no art. 55-J, inciso XVIII, da referida Lei'. Indexed in Phase 18.2 via manual HTML transcription."
   },
 
   "urn:lex:br:federal:decreto:2020-08-26;10474": {

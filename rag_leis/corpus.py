@@ -314,16 +314,33 @@ TIER_3: tuple[Document, ...] = (
     # Res. 2/2022 part1 has (cid:XXX) font-encoding issue — would need
     # OCR fallback (pytesseract). Both deferred to follow-on work.
     # ----------------------------------------------------------------------
-    # Document(
-    #     urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2021-10-28;1",
-    #     title="Resolução CD/ANPD nº 1/2021 — Regulamento do Processo de Fiscalização e Sancionador",
-    #     planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
-    # ),
-    # Document(
-    #     urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2022-01-27;2",
-    #     title="Resolução CD/ANPD nº 2/2022 — Aplicação da LGPD a agentes de tratamento de pequeno porte",
-    #     planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd",
-    # ),
+    # Phase 18.2 — manual transcription of arts 1-15 (the operative core)
+    # for both. Source: gov.br ANPD HTML pages, fetched 2026-05-22 (see
+    # scripts/phase_18_2_transcribe_anpd_res.py for the structured data
+    # + chunk emitter). The Phase 4.3 PDF-bundle path remained
+    # impractical (274-917pg SEI bundles, 20-page Read limit). The HTML
+    # path is cleaner — well-formatted by ANPD's CMS, no OCR cleanup
+    # cost. Tier-3 chunks for these get `source=manual-transcription-
+    # anpd-html-v1` in their audit metadata vs `pdfplumber-v1` for the
+    # PDF-parsed Res. 4/2023 + Res. 15/2024.
+    Document(
+        urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2021-10-28;1",
+        title="Resolução CD/ANPD nº 1/2021 — Regulamento do Processo de Fiscalização e do Processo Administrativo Sancionador",
+        planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd/resolucao-cd-anpd-no1-2021",
+        document_scope=(
+            "ANPD", "autoridade-fiscalizacao", "sancao-lgpd",
+            "processo-administrativo",
+        ),
+    ),
+    Document(
+        urn="urn:lex:br:autoridade.nacional.protecao.dados:resolucao.cd:2022-01-27;2",
+        title="Resolução CD/ANPD nº 2/2022 — Regulamento de aplicação da LGPD para agentes de tratamento de pequeno porte",
+        planalto_url="https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd/resolucao-cd-anpd-no-2-de-27-de-janeiro-de-2022",
+        document_scope=(
+            "ANPD", "agentes-pequeno-porte", "startups",
+            "tratamento-dados", "registro-tratamento",
+        ),
+    ),
 )
 
 

@@ -96,19 +96,24 @@ segurança envolvendo dados pessoais?"
 **Operator draft:** primary gold = LGPD art. 48; companion = Res.
 CD/ANPD 15/2024 art. 6 (`regulamenta`).
 
-**For the lawyer (uncertainty flag from the operator):**
-- The `lawyer-review-checklist.md` line 119 names "Res. 15/2024 art. 6"
-  as the regulamentação. But Res. 15/2024 actually disciplines
-  treatment by public-sector small agents — art. 6 there mentions
-  comunicado de incidente in THAT context, but it's not the main
-  regulamentação of LGPD art. 48 for the general case.
-- The main incident-notification regulamentação is still in ANPD
-  consulta pública in 2026-05; no firm CD resolution exists for the
-  general case.
-- **Decide:** either drop the Res. 15/2024 art. 6 companion (the row
-  stays LGPD-only, no regulamenta link); or keep it with a more
-  specific framing (e.g., "regulamenta the public-sector case
-  specifically").
+**For the lawyer (operator self-correction 2026-05-22):**
+- An earlier draft of this section incorrectly described Res. 15/2024
+  as a public-sector small-agents regulation. Reading the actual chunk
+  text (art. 1) disproved it — **Res. 15/2024 IS the incident-
+  notification regulamento**: "Este Regulamento tem por objetivo
+  estabelecer os procedimentos para Comunicação de Incidente de
+  Segurança, que possa acarretar risco ou dano relevante aos
+  titulares, nos termos do art. 48 da Lei nº 13.709/2018". Art. 6
+  fixes the 3-business-day deadline.
+- The lawyer-review-checklist citation (Res. 15/2024 art. 6) is
+  therefore CORRECT and the `regulamenta` relationship typing holds.
+- Open question for the lawyer: is the `expected_paragraph`'s "prazo
+  razoável (a LGPD não fixa um número específico — a ANPD considera
+  razoável 3 dias úteis nos termos de sua regulamentação setorial)"
+  phrasing right? The current draft soft-pedals the deadline; given
+  Res. 15/2024 art. 6 actually fixes 3 dias úteis as the rule (with
+  the "ressalvada legislação específica" carve-out), it might be
+  more accurate to say the deadline IS 3 business days.
 
 ### Row 5 — Sanções / dosimetria
 

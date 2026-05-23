@@ -176,16 +176,14 @@
 # ============================================================================
 # Scenario 4 — Notificação de incidente de segurança
 # ============================================================================
-# OPERATOR NOTE TO LAWYER: o lawyer-review-checklist nomeia "Res. 15/2024
-# art. 6" como a peça regulamentar da notificação de incidente. A Res.
-# 15/2024, na verdade, regulamenta o tratamento de dados pessoais por
-# agentes de tratamento de pequeno porte (setor público) — NÃO é a
-# regulamentação principal de incidente. A regulamentação de incidente
-# está na Res. CD/ANPD 15/2024 art. 6º (comunicado de incidente para
-# agentes de pequeno porte) e em normativos ainda em fase de consulta
-# pública na ANPD em 2026-05. Validar com o lawyer qual norma citar
-# como companion regulamentadora — talvez nenhuma seja apropriada e
-# o row deva ficar só com LGPD art. 48.
+# OPERATOR NOTE (corrected 2026-05-22): an earlier draft of this row
+# carried an incorrect note describing Res. 15/2024 as a public-sector
+# small-agents regulation. Reading the actual chunk text of art. 1
+# disproved it — Res. 15/2024 IS the incident-notification
+# regulamento ("Este Regulamento tem por objetivo estabelecer os
+# procedimentos para Comunicação de Incidente de Segurança"). Art. 6
+# fixes the 3-business-day deadline. So the citation here is CORRECT
+# as originally written in lawyer-review-checklist.md:119.
 - query: "qual o prazo e o conteúdo da notificação de incidente de segurança envolvendo dados pessoais?"
   type: cross-doc
   oos: false
