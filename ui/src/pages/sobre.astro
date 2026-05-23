@@ -1,0 +1,199 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Sobre · Aferida">
+  <article class="guide-article">
+    <nav class="breadcrumb"><a href="/">← VOLTAR PARA O CHAT</a></nav>
+
+    <header class="article-header">
+      <span class="label-eyebrow">SOBRE</span>
+      <h1>Aferida</h1>
+      <p class="article-intro">
+        Pesquisa em legislação digital brasileira ancorada em citações
+        verificáveis. Ferramenta de pesquisa preliminar — não substitui
+        a leitura direta da norma para uso em peça processual.
+      </p>
+    </header>
+
+    <section class="guide-section">
+      <h2>O que é</h2>
+      <p>
+        Aferida é uma interface de consulta sobre o corpus federal de
+        direito digital: LGPD, Marco Civil da Internet, Constituição,
+        Código de Defesa do Consumidor, Decreto 8.771/2016, Lei do
+        Software, LAI, Lei das Assinaturas Eletrônicas, resoluções da
+        ANPD, e correlatas. A pergunta passa por classificação,
+        recuperação semântica e geração com citação obrigatória dos
+        artigos — sem citação verificável, a resposta é recusada.
+      </p>
+      <p>
+        O painel de revisão jurídica fica em
+        <a href="https://revisada.aferida.com.br" target="_blank" rel="noopener">
+          revisada.aferida.com.br
+        </a>
+        (acesso restrito).
+      </p>
+    </section>
+
+    <section class="guide-section">
+      <h2>Metodologia</h2>
+      <ul>
+        <li>
+          <strong>Recuperação semântica</strong> (RAG) sobre chunks de
+          dispositivos (artigo, §, inciso, alínea), com reranking
+          baseado em hierarquia normativa.
+        </li>
+        <li>
+          <strong>Citações obrigatórias</strong> — toda resposta vem
+          ligada aos URNs LexML dos artigos efetivamente recuperados.
+          Sem fontes, sem resposta.
+        </li>
+        <li>
+          <strong>Recusa disciplinada</strong> — o sistema prefere
+          recusar a inventar. Perguntas fora da cobertura, com fontes
+          irrelevantes, ou com hierarquia normativa comprometida são
+          marcadas como tal.
+        </li>
+        <li>
+          <strong>Overlays de vigência</strong> — quando um dispositivo
+          está sub-judice, suspenso, ou revogado tacitamente, a resposta
+          carrega um aviso explícito antes do texto.
+        </li>
+      </ul>
+    </section>
+
+    <section class="guide-section">
+      <h2>Privacidade e conformidade (LGPD)</h2>
+      <ul>
+        <li>
+          <strong>Residência de dados no Brasil</strong>. Processamento
+          e armazenamento (histórico, audit log) em
+          <code>sa-east-1</code> (São Paulo). Nenhum dado pessoal sai
+          do território nacional.
+        </li>
+        <li>
+          <strong>PII redigida automaticamente</strong>. Antes de
+          persistir qualquer texto, são removidos: CPF, CNPJ, e-mail,
+          telefone, CEP, RG, OAB, CRM, processo CNJ (formato unificado)
+          e título de eleitor. Os padrões viram tokens estruturados
+          (<code>[CPF#1]</code>, <code>[OAB#1]</code>, etc.).
+        </li>
+        <li>
+          <strong>Base legal: legítimo interesse</strong>. Suas
+          consultas alimentam o seu próprio histórico e o audit log do
+          redator de PII. Você é a única pessoa que acessa seu
+          histórico — nem admin, nem terceiros.
+        </li>
+        <li>
+          <strong>Sem treinamento de modelos</strong> com seus dados.
+          Suas consultas não vão para fine-tuning ou treino de embeddings.
+        </li>
+      </ul>
+    </section>
+
+    <section class="guide-section">
+      <h2>Código-fonte</h2>
+      <p>
+        O sistema é auditável. Implementação, prompts, scripts de eval
+        e métricas de qualidade ficam em repositório público:
+      </p>
+      <p>
+        <a
+          href="https://github.com/dlgiant/rag-leis-digitais-br"
+          target="_blank"
+          rel="noopener"
+          class="mono"
+        >
+          github.com/dlgiant/rag-leis-digitais-br
+        </a>
+      </p>
+      <p class="muted small">
+        Tornar o pipeline auditável é uma escolha deliberada: em um
+        domínio onde a fidelidade à fonte é o produto, o código que
+        recupera e cita merece o mesmo escrutínio que a citação.
+      </p>
+    </section>
+
+    <section class="guide-section">
+      <h2>Limites</h2>
+      <ul>
+        <li>
+          <strong>Apenas legislação federal</strong>. Sem estadual,
+          municipal ou supranacional.
+        </li>
+        <li>
+          <strong>Sem jurisprudência ampla</strong>. Apenas um piloto
+          de teses STF/STJ relevantes ao MCI/LGPD.
+        </li>
+        <li>
+          <strong>Cobertura infralegal limitada</strong> a resoluções
+          da ANPD. Demais portarias e atos não estão indexados.
+        </li>
+        <li>
+          <strong>Data de corte do corpus</strong>. Normas editadas
+          após a última atualização não estão na base — confirme
+          sempre no LexML.
+        </li>
+      </ul>
+    </section>
+
+    <section class="guide-section">
+      <h2>Contato</h2>
+      <p>
+        Esta é uma versão pública em revisão. Não há botão "reportar"
+        na interface — se notar um problema, a recomendação é
+        reformular a pergunta sendo mais específica e comparar o
+        resultado com a redação atual no LexML. O admin monitora o
+        sistema (audit logs, métricas de recusa, cobertura de vigência)
+        e ajusta a base ao longo do tempo.
+      </p>
+    </section>
+  </article>
+</Layout>
+
+<style>
+  .breadcrumb { margin-bottom: 1.5rem; }
+  .breadcrumb a { color: var(--muted); text-decoration: none; font-family: ui-monospace, monospace; font-size: 0.85rem; }
+  .breadcrumb a:hover { color: var(--fg); }
+
+  .guide-article {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+  .article-header { margin-bottom: 2.5rem; }
+  .article-header h1 {
+    margin: 0.4rem 0 0.8rem;
+    font-size: 2rem;
+    line-height: 1.15;
+  }
+  .article-intro { color: var(--fg-dim); line-height: 1.6; max-width: 60ch; }
+
+  .guide-section {
+    margin: 2.5rem 0;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .guide-section:last-child { border-bottom: none; }
+  .guide-section h2 {
+    font-size: 1.35rem;
+    margin: 0 0 1rem;
+    letter-spacing: -0.01em;
+  }
+  .guide-section p { line-height: 1.6; margin: 0.7rem 0; }
+  .guide-section ul { padding-left: 1.4rem; line-height: 1.7; }
+  .guide-section li { margin: 0.3rem 0; }
+  .guide-section code {
+    background: var(--code-bg);
+    padding: 0 0.25rem;
+    font-size: 0.92em;
+    color: var(--fg);
+  }
+  .guide-section a {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .guide-section a:hover { color: var(--emphasis); }
+  .mono { font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; }
+</style>

@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import TermTip from "../../components/TermTip.astro";
 import { adminFetch, AdminApiError, formatError, isVerbose, type EvalQueryDetailResponse } from "../../lib/admin-api";
 
 const verbose = isVerbose(Astro.url);
@@ -44,7 +45,7 @@ const lexmlUrn = (urn: string) => {
         <span class="label-eyebrow">STATUS / 404</span>
         <h1>Query não encontrada</h1>
         <p class="muted">
-          ID <code>{id}</code> não existe no eval set.
+          ID <code>{id}</code> não existe no <TermTip slug="eval-set">eval set</TermTip>.
           Pode ter sido editada (texto novo gera ID novo) ou removida.
         </p>
         <a href="/queries" class="button button-primary">VOLTAR <span class="button-arrow">→</span></a>
@@ -74,7 +75,7 @@ const lexmlUrn = (urn: string) => {
           <div class="meta">
             {data.qtype && <span class="type-pill">{data.qtype}</span>}
             <span class="meta-divider">·</span>
-            <span class="muted small mono">{data.core_urns.length} central{data.supporting_urns.length > 0 && <> + {data.supporting_urns.length} auxiliar</>}</span>
+            <span class="muted small mono"><TermTip slug="core-supporting">{data.core_urns.length} central{data.supporting_urns.length > 0 && <> + {data.supporting_urns.length} auxiliar</>}</TermTip></span>
           </div>
           {data.notes && (
             <p class="notes">
@@ -86,12 +87,12 @@ const lexmlUrn = (urn: string) => {
 
         <section class="gold-chunks">
           <header class="section-header">
-            <h2>Chunks gold</h2>
+            <h2><TermTip slug="chunk">Chunks</TermTip> <TermTip slug="gold">gold</TermTip></h2>
             <span class="muted small mono">{data.gold_chunks.length} chunk(s)</span>
           </header>
 
           {data.gold_chunks.length === 0 && (
-            <p class="muted mono empty-state">— nenhum chunk encontrado para esses URNs —</p>
+            <p class="muted mono empty-state">— nenhum <TermTip slug="chunk">chunk</TermTip> encontrado para esses <TermTip slug="urn">URNs</TermTip> —</p>
           )}
 
           <div class="chunk-list">
@@ -133,12 +134,12 @@ const lexmlUrn = (urn: string) => {
             <div class="alert alert-warning">
               <span class="alert-label alert-label-warning">AVISO</span>
               <div class="alert-body alert-body-warning">
-                <strong>URNs no eval que não estão no corpus:</strong>
+                <strong><TermTip slug="urn">URNs</TermTip> no eval que não estão no corpus:</strong>
                 <ul class="missing-list mono small">
                   {data.missing_urns.map((u) => <li>{u}</li>)}
                 </ul>
                 <p class="alert-hint muted small">
-                  Pode indicar drift do corpus (URN renomeado por uma emenda)
+                  Pode indicar <TermTip slug="corpus-drift">drift do corpus</TermTip> (URN renomeado por uma emenda)
                   ou erro de digitação no eval/queries.yaml.
                 </p>
               </div>
@@ -153,10 +154,10 @@ const lexmlUrn = (urn: string) => {
           </header>
 
           <p class="muted small refine-intro">
-            Reescreva a query e veja quais chunks o retriever traz. URNs
-            que coincidem com os <em>gold</em> são marcados em verde — útil
+            Reescreva a query e veja quais <TermTip slug="chunk">chunks</TermTip> o <TermTip slug="retriever">retriever</TermTip> traz. <TermTip slug="urn">URNs</TermTip>
+            que coincidem com os <em><TermTip slug="gold">gold</TermTip></em> são marcados em verde — útil
             para descobrir se uma formulação alternativa é tão boa quanto
-            a original, ou para propor uma nova entrada no eval set.
+            a original, ou para propor uma nova entrada no <TermTip slug="eval-set">eval set</TermTip>.
           </p>
 
           <details class="refine-details">
@@ -182,7 +183,7 @@ const lexmlUrn = (urn: string) => {
 
               <div class="refine-controls">
                 <div class="field field-inline">
-                  <label for="refine-top-k" class="label-eyebrow">TOP-K</label>
+                  <label for="refine-top-k" class="label-eyebrow"><TermTip slug="top-k">TOP-K</TermTip></label>
                   <input
                     id="refine-top-k"
                     name="top_k"
@@ -194,7 +195,7 @@ const lexmlUrn = (urn: string) => {
                 </div>
                 <label class="refine-save-checkbox">
                   <input id="refine-save" type="checkbox" name="save_as_proposal" checked />
-                  <span>Salvar como proposta (kind=refinement)</span>
+                  <span>Salvar como <TermTip slug="proposal">proposta</TermTip> (<TermTip slug="proposal-kind">kind=refinement</TermTip>)</span>
                 </label>
               </div>
 
@@ -221,8 +222,8 @@ const lexmlUrn = (urn: string) => {
 
           <p class="review-footnote muted small">
             Refinamentos <strong>não</strong> editam <code>eval/queries.yaml</code>.
-            São apenas exploração; o operador decide se promove uma alternativa
-            via ferramenta de consolidação da Fase 11.4.
+            São apenas exploração; o admin decide se promove uma alternativa
+            via ferramenta de consolidação.
           </p>
         </section>
 
@@ -238,12 +239,12 @@ const lexmlUrn = (urn: string) => {
             data-query-id={data.id}
           >
             <fieldset class="verdict-fieldset">
-              <legend class="label-eyebrow">VEREDITO</legend>
+              <legend class="label-eyebrow"><TermTip slug="verdict">VEREDITO</TermTip></legend>
               <div class="verdict-options">
                 <label class="verdict-option">
                   <input type="radio" name="verdict" value="correct" required />
                   <span class="verdict-pill verdict-correct">Correto</span>
-                  <span class="verdict-help muted small">Gold URNs apropriados; classified_type adequado.</span>
+                  <span class="verdict-help muted small"><TermTip slug="gold">Gold</TermTip> <TermTip slug="urn">URNs</TermTip> apropriados; <TermTip slug="classified-type">classified_type</TermTip> adequado.</span>
                 </label>
                 <label class="verdict-option">
                   <input type="radio" name="verdict" value="incorrect" />
@@ -306,7 +307,7 @@ const lexmlUrn = (urn: string) => {
 
           <p class="review-footnote muted small">
             Propostas <strong>não</strong> editam <code>eval/queries.yaml</code> diretamente.
-            O operador revisa a fila em <code>/proposals</code> e consolida via ferramenta CLI.
+            O admin revisa a fila em <code>/proposals</code> e consolida via ferramenta CLI.
           </p>
         </section>
       </article>

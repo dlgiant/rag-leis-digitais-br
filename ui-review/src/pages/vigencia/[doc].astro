@@ -5,6 +5,7 @@
 // page at a time (50 per page). Each chunk shows its current overlay
 // (if any) + a form for the lawyer to submit a vigência annotation.
 import Layout from "../../layouts/Layout.astro";
+import TermTip from "../../components/TermTip.astro";
 import {
   adminFetch,
   formatError,
@@ -62,7 +63,7 @@ const hasNext = data ? nextOffset < data.total : false;
         <code class="doc-urn-display mono small muted">{docUrn}</code>
         {data && (
           <p class="counter muted small mono">
-            chunks <span class="counter-num">{offset + 1}</span>
+            <TermTip slug="chunk">chunks</TermTip> <span class="counter-num">{offset + 1}</span>
             <span>–</span>
             <span class="counter-num">{Math.min(offset + limit, data.total)}</span>
             <span> de </span>
@@ -88,7 +89,7 @@ const hasNext = data ? nextOffset < data.total : false;
       <div class="alert alert-danger">
         <span class="alert-label">ERRO</span>
         <div class="alert-body">
-          <strong>Falha ao carregar chunks.</strong>
+          <strong>Falha ao carregar <TermTip slug="chunk">chunks</TermTip>.</strong>
           <code>{fetchError}</code>
         </div>
       </div>
@@ -120,7 +121,7 @@ const hasNext = data ? nextOffset < data.total : false;
 
             {chunk.vigencia && (
               <div class="current-overlay">
-                <span class="label-eyebrow">OVERLAY ATUAL</span>
+                <span class="label-eyebrow"><TermTip slug="overlay">OVERLAY</TermTip> ATUAL</span>
                 <p class="overlay-fundamento"><strong>Fundamento:</strong> {chunk.vigencia.fundamento}</p>
                 {chunk.vigencia.desde && <p class="overlay-desde mono small">desde {chunk.vigencia.desde}</p>}
                 <p class="overlay-desc">{chunk.vigencia.descricao_curta}</p>
