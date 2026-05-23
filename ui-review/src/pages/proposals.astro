@@ -66,16 +66,16 @@ function formatTs(ts: string): string {
 }
 ---
 
-<Layout title="Proposals">
+<Layout title="Propostas">
   <div class="container">
     <header class="page-header">
       <div>
-        <span class="label-eyebrow">QUEUE / 03</span>
+        <span class="label-eyebrow">FILA / 03</span>
         <h1>Propostas pendentes</h1>
         {data && (
           <p class="counter muted small mono">
             <span class="counter-num">{data.total}</span>
-            <span> proposta(s) aguardando merge</span>
+            <span> proposta(s) aguardando consolidação</span>
           </p>
         )}
       </div>
@@ -85,9 +85,9 @@ function formatTs(ts: string): string {
       <div class="alert alert-warning">
         <span class="alert-label alert-label-warning">ACESSO</span>
         <div class="alert-body">
-          <strong>Esta página é operator-only.</strong>
+          <strong>Esta página é restrita ao operador.</strong>
           <p class="muted small">
-            Seu e-mail <code>{viewerEmail}</code> está na allowlist mas
+            Seu e-mail <code>{viewerEmail}</code> está autorizado mas
             não é o operador configurado (<code>RAG_OPERATOR_EMAIL</code>).
           </p>
         </div>
@@ -175,8 +175,8 @@ function formatTs(ts: string): string {
 
     {data && data.total > 0 && (
       <p class="merge-footnote muted small">
-        Merge via CLI: <code>uv run python scripts/phase_11_merge_proposals.py</code>
-        (Fase 11.4 — ainda não shipped).
+        Consolidação via CLI: <code>uv run python scripts/phase_11_merge_proposals.py</code>
+        (Fase 11.4 — ainda não publicada).
       </p>
     )}
   </div>

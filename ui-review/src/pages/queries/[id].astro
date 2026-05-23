@@ -74,7 +74,7 @@ const lexmlUrn = (urn: string) => {
           <div class="meta">
             {data.qtype && <span class="type-pill">{data.qtype}</span>}
             <span class="meta-divider">·</span>
-            <span class="muted small mono">{data.core_urns.length} core{data.supporting_urns.length > 0 && <> + {data.supporting_urns.length} supporting</>}</span>
+            <span class="muted small mono">{data.core_urns.length} central{data.supporting_urns.length > 0 && <> + {data.supporting_urns.length} auxiliar</>}</span>
           </div>
           {data.notes && (
             <p class="notes">
@@ -104,7 +104,7 @@ const lexmlUrn = (urn: string) => {
                     <div class="chunk-label-row">
                       <span class="chunk-label">{chunk.label || chunk.kind}</span>
                       <span class={`relevance-pill ${isCore ? "core" : "supporting"}`}>
-                        {isCore ? "CORE" : "SUPPORTING"}
+                        {isCore ? "CENTRAL" : "AUXILIAR"}
                       </span>
                     </div>
                     {chunk.nav && <div class="chunk-nav muted small mono">↳ {chunk.nav}</div>}
@@ -149,13 +149,13 @@ const lexmlUrn = (urn: string) => {
         <section class="refine-section">
           <header class="section-header">
             <h2>Refinar query</h2>
-            <span class="label-eyebrow">EXPLORAR PHRASINGS · PHASE 11.3</span>
+            <span class="label-eyebrow">EXPLORAR FORMULAÇÕES · FASE 11.3</span>
           </header>
 
           <p class="muted small refine-intro">
             Reescreva a query e veja quais chunks o retriever traz. URNs
             que coincidem com os <em>gold</em> são marcados em verde — útil
-            para descobrir se uma alternativa de phrasing é tão boa quanto
+            para descobrir se uma formulação alternativa é tão boa quanto
             a original, ou para propor uma nova entrada no eval set.
           </p>
 
@@ -168,7 +168,7 @@ const lexmlUrn = (urn: string) => {
               data-query-id={data.id}
             >
               <div class="field">
-                <label for="refined-query" class="label-eyebrow">PHRASING ALTERNATIVO</label>
+                <label for="refined-query" class="label-eyebrow">FORMULAÇÃO ALTERNATIVA</label>
                 <textarea
                   id="refined-query"
                   name="refined_query"
@@ -204,7 +204,7 @@ const lexmlUrn = (urn: string) => {
                   class="button button-primary"
                   id="run-refine-btn"
                 >
-                  RODAR REFINE <span class="button-arrow">→</span>
+                  EXECUTAR REFINAMENTO <span class="button-arrow">→</span>
                 </button>
                 <span id="refine-status" class="refine-status muted small" aria-live="polite"></span>
               </div>
@@ -220,16 +220,16 @@ const lexmlUrn = (urn: string) => {
           </details>
 
           <p class="review-footnote muted small">
-            Refinements <strong>não</strong> editam <code>eval/queries.yaml</code>.
+            Refinamentos <strong>não</strong> editam <code>eval/queries.yaml</code>.
             São apenas exploração; o operador decide se promove uma alternativa
-            via Phase 11.4 merge tool.
+            via ferramenta de consolidação da Fase 11.4.
           </p>
         </section>
 
         <section class="review-section">
           <header class="section-header">
             <h2>Revisão</h2>
-            <span class="label-eyebrow">VERDICT + NOTAS</span>
+            <span class="label-eyebrow">VEREDITO + NOTAS</span>
           </header>
 
           <form
@@ -238,7 +238,7 @@ const lexmlUrn = (urn: string) => {
             data-query-id={data.id}
           >
             <fieldset class="verdict-fieldset">
-              <legend class="label-eyebrow">VERDICT</legend>
+              <legend class="label-eyebrow">VEREDITO</legend>
               <div class="verdict-options">
                 <label class="verdict-option">
                   <input type="radio" name="verdict" value="correct" required />
@@ -264,7 +264,7 @@ const lexmlUrn = (urn: string) => {
                 id="notes"
                 name="notes"
                 rows="4"
-                placeholder="Justifique o verdict. Cite jurisprudência ou doutrina se relevante."
+                placeholder="Justifique o veredito. Cite jurisprudência ou doutrina se relevante."
                 maxlength="4000"
               ></textarea>
             </div>
@@ -287,7 +287,7 @@ const lexmlUrn = (urn: string) => {
                   id="suggested-classified-type"
                   name="suggested_classified_type"
                   type="text"
-                  placeholder="Ex: definicao, parafrase, citacao-literal..."
+                  placeholder="Ex: definição, paráfrase, citação-literal..."
                 />
               </div>
             </details>
@@ -306,7 +306,7 @@ const lexmlUrn = (urn: string) => {
 
           <p class="review-footnote muted small">
             Propostas <strong>não</strong> editam <code>eval/queries.yaml</code> diretamente.
-            O operador revisa a fila em <code>/proposals</code> e faz merge via tool CLI.
+            O operador revisa a fila em <code>/proposals</code> e consolida via ferramenta CLI.
           </p>
         </section>
       </article>
@@ -929,7 +929,7 @@ const lexmlUrn = (urn: string) => {
     const suggestedClassifiedType = (formData.get("suggested_classified_type") ?? "").toString().trim() || null;
 
     if (typeof verdict !== "string") {
-      statusEl.textContent = "Selecione um verdict.";
+      statusEl.textContent = "Selecione um veredito.";
       statusEl.setAttribute("data-state", "error");
       return;
     }
@@ -1011,7 +1011,7 @@ const lexmlUrn = (urn: string) => {
       return;
     }
 
-    statusEl.textContent = "Rodando refine...";
+    statusEl.textContent = "Executando refinamento...";
     statusEl.setAttribute("data-state", "sending");
     if (runBtn) runBtn.disabled = true;
     resultEl.setAttribute("hidden", "");
@@ -1073,9 +1073,9 @@ const lexmlUrn = (urn: string) => {
 
       if (body.proposal) {
         const pid = String(body.proposal.id ?? "?").slice(0, 8);
-        statusEl.textContent = `Refine concluído. Proposta ${pid} salva.`;
+        statusEl.textContent = `Refinamento concluído. Proposta ${pid} salva.`;
       } else {
-        statusEl.textContent = "Refine concluído (não salvo).";
+        statusEl.textContent = "Refinamento concluído (não salvo).";
       }
       statusEl.setAttribute("data-state", "success");
     } catch (err) {

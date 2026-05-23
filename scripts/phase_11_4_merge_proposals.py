@@ -65,6 +65,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import unicodedata
 from pathlib import Path
 from typing import IO
 
@@ -74,6 +75,16 @@ from ruamel.yaml.scalarstring import DoubleQuotedScalarString as DQ
 from rag_leis import db
 from rag_leis.eval_loader import query_id as derive_query_id
 from rag_leis.proposals import Proposal, load_pending_proposals, mark_merged
+
+
+# Canonical eval `type` values are ASCII-stable so query_type.py can
+# match them as plain Python strings without locale gymnastics. The
+# review UI shows reviewers the accented forms (definição, paráfrase,
+# citação-literal) because that's natural Portuguese; this strips
+# accents at merge time so `eval/queries.yaml` keeps the ASCII form.
+def normalize_classified_type(s: str) -> str:
+    nfd = unicodedata.normalize("NFD", s.strip())
+    return "".join(c for c in nfd if not unicodedata.combining(c)).lower()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_EVAL_PATH = PROJECT_ROOT / "eval" / "queries.yaml"
@@ -152,9 +163,18 @@ def apply_review_to_yaml(rows: list[dict], proposal: Proposal) -> str:
 
     if proposal.suggested_classified_type:
         # `type` in queries.yaml is unquoted (a YAML "plain scalar").
-        # Just assign the string.
-        row["type"] = proposal.suggested_classified_type
-        changes.append(f"`type` updated to {proposal.suggested_classified_type!r}")
+        # Reviewers type the accented Portuguese form ("definição") in
+        # the UI; strip accents here so the YAML keeps the canonical
+        # ASCII enum that query_type.py / router_eval.py match on.
+        normalized = normalize_classified_type(proposal.suggested_classified_type)
+        row["type"] = normalized
+        if normalized != proposal.suggested_classified_type:
+            changes.append(
+                f"`type` updated to {normalized!r} "
+                f"(normalized from {proposal.suggested_classified_type!r})"
+            )
+        else:
+            changes.append(f"`type` updated to {normalized!r}")
 
     if not changes:
         # verdict=correct with no suggestions, or verdict=needs_followup.

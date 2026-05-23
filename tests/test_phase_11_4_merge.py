@@ -25,6 +25,7 @@ from scripts.phase_11_4_merge_proposals import (
     apply_review_to_yaml,
     find_row_by_query_id,
     load_eval,
+    normalize_classified_type,
     save_eval,
 )
 
@@ -158,6 +159,37 @@ def test_apply_review_with_suggested_classified_type_updates_type(fixture_yaml: 
     msg = apply_review_to_yaml(rows, p)
     assert "type" in msg
     assert rows[0]["type"] == "parafrase"
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        ("definição", "definicao"),
+        ("paráfrase", "parafrase"),
+        ("citação-literal", "citacao-literal"),
+        ("enumeração", "enumeracao"),
+        ("DEFINIÇÃO  ", "definicao"),
+        ("definicao", "definicao"),
+    ],
+)
+def test_normalize_classified_type_strips_accents_and_case(raw: str, expected: str):
+    assert normalize_classified_type(raw) == expected
+
+
+def test_apply_review_normalizes_accented_classified_type(fixture_yaml: Path):
+    # The review UI shows the user "Ex: definição, paráfrase, citação-literal..."
+    # so a reviewer naturally types the accented form. The YAML must
+    # still receive the ASCII-stable enum that query_type.py matches on.
+    rows = load_eval(fixture_yaml)
+    qid = derive_query_id(rows[0]["query"])
+    p = _make_review_proposal(
+        qid,
+        verdict="incorrect",
+        suggested_classified_type="definição",
+    )
+    msg = apply_review_to_yaml(rows, p)
+    assert rows[0]["type"] == "definicao"
+    assert "normalized" in msg.lower()
 
 
 def test_apply_review_correct_with_no_suggestions_is_noop(fixture_yaml: Path):

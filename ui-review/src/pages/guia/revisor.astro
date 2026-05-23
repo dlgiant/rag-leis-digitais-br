@@ -28,10 +28,10 @@ import Layout from "../../layouts/Layout.astro";
         <li>
           A proposta vai para o Postgres em São Paulo. Você
           <strong>não edita os arquivos do projeto diretamente</strong>
-          — só o operador faz isso, via merge tool offline.
+          — só o operador faz isso, via ferramenta de consolidação offline.
         </li>
         <li>
-          O operador roda o merge tool localmente, escolhe quais
+          O operador roda a ferramenta de consolidação localmente, escolhe quais
           propostas aceitar, e as aceitas viram alterações em
           <code>eval/queries.yaml</code> /
           <code>data/vigencia/overlays.yaml</code> /
@@ -76,12 +76,12 @@ import Layout from "../../layouts/Layout.astro";
 
       <h3>Refinar query (botão na mesma página)</h3>
       <p>
-        Se você quer testar um phrasing alternativo da pergunta sem
+        Se você quer testar uma formulação alternativa da pergunta sem
         sair, abra <em>Refinar query</em>, digite a nova versão, e
-        clique <strong>Rodar Refine</strong>. O sistema mostra quais
-        chunks o novo phrasing recupera, marcando em verde os que
+        clique <strong>Executar Refinamento</strong>. O sistema mostra quais
+        chunks a nova formulação recupera, marcando em verde os que
         coincidem com o gold da query original. Útil para descobrir
-        se uma alternativa de frase é tão boa quanto a original — ou
+        se uma formulação alternativa é tão boa quanto a original — ou
         para propor uma nova linha no eval set inteiramente.
       </p>
     </section>
@@ -130,7 +130,7 @@ import Layout from "../../layouts/Layout.astro";
       <p class="how">
         <span class="label-eyebrow">COMO</span>
         Digitar uma query que você suspeita ter problema. Clicar
-        <strong>Rodar Probe</strong>. Ver os top-k chunks com a rank
+        <strong>Executar Sondagem</strong>. Ver os top-k chunks com a rank
         legal de cada um colorida (verde = CF, vermelho = infralegal).
         Marcar checkboxes nos URNs que estão mascarando autoridade
         primária. Adicionar uma nota explicando. Enviar.
@@ -140,8 +140,8 @@ import Layout from "../../layouts/Layout.astro";
         Quando você lê uma resposta do RAG e percebe que ele citou
         uma Resolução ANPD onde deveria ter citado a LGPD diretamente,
         ou citou um Decreto onde deveria ter citado a Lei. Casos
-        flagados aqui vão para <code>data/hierarchy/flagged.yaml</code>;
-        o operador usa o histórico pra tunar os pesos em
+        sinalizados aqui vão para <code>data/hierarchy/flagged.yaml</code>;
+        o operador usa o histórico pra ajustar os pesos em
         <code>rag_leis/legal_rank.py</code> ou adicionar novas linhas
         de eval.
       </p>
@@ -160,10 +160,10 @@ import Layout from "../../layouts/Layout.astro";
         <span class="label-eyebrow">COMO</span>
         Para cada entrada do log: ler o texto redactado. Se você vê
         PII visível no texto (porque o regex não capturou), marcar
-        a categoria correspondente — covered (CPF/CNPJ/email/telefone/
-        CEP/RG) ou gap (OAB/CRM/processo SEI/processo CNJ/eleitoral/
+        a categoria correspondente — coberta (CPF/CNPJ/email/telefone/
+        CEP/RG) ou lacuna (OAB/CRM/processo SEI/processo CNJ/eleitoral/
         NIS/PIS/IBAN/cartão de crédito). Notas opcionais ajudam o
-        operador a tunar o regex.
+        operador a ajustar a expressão regular.
       </p>
       <p class="when">
         <span class="label-eyebrow">QUANDO</span>
@@ -181,8 +181,8 @@ import Layout from "../../layouts/Layout.astro";
         <li>
           Edição direta de <code>eval/queries.yaml</code> ou
           <code>data/vigencia/overlays.yaml</code> via UI. Suas
-          propostas viram alterações depois que o operador roda o
-          merge tool localmente — não em tempo real.
+          propostas viram alterações depois que o operador roda a
+          ferramenta de consolidação localmente — não em tempo real.
         </li>
         <li>
           Reverter uma proposta já aceita. Se você submeter uma
@@ -191,7 +191,7 @@ import Layout from "../../layouts/Layout.astro";
         <li>
           Histórico das suas próprias propostas. Você não vê uma lista
           do que já submeteu (a página <code>/proposals</code> é
-          operator-only).
+          restrita ao operador).
         </li>
         <li>
           NER de nomes próprios para PII. O redator atual cobre só

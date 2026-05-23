@@ -15,7 +15,7 @@ import Layout from "../layouts/Layout.astro";
     <header class="page-header">
       <div>
         <span class="label-eyebrow">HIERARQUIA / 04</span>
-        <h1>Probe de hierarquia normativa</h1>
+        <h1>Sondagem de hierarquia normativa</h1>
         <p class="muted small intro">
           Digite uma consulta. Veja os top-k chunks recuperados, cada um
           com sua <strong>rank legal</strong> (1=Constituição … 5=infralegal).
@@ -56,7 +56,7 @@ import Layout from "../layouts/Layout.astro";
 
       <div class="form-actions">
         <button type="submit" class="button button-primary" id="run-probe-btn">
-          RODAR PROBE <span class="button-arrow">→</span>
+          EXECUTAR SONDAGEM <span class="button-arrow">→</span>
         </button>
         <span id="probe-status" class="probe-status muted small" aria-live="polite"></span>
       </div>
@@ -72,12 +72,12 @@ import Layout from "../layouts/Layout.astro";
 
       <div class="flag-form" id="flag-form-section" hidden>
         <header class="flag-form-header">
-          <span class="label-eyebrow">FLAGAR COMO MASCARAMENTO</span>
+          <span class="label-eyebrow">SINALIZAR COMO MASCARAMENTO</span>
           <p class="muted small">
             URNs marcados acima serão registrados como proposta
-            (<code>kind=hierarchy</code>). O operador revisa via merge tool;
-            casos acumulados informam tunagem de pesos em <code>legal_rank.py</code>
-            ou novas linhas de eval.
+            (<code>kind=hierarchy</code>). O operador revisa via ferramenta
+            de consolidação; casos acumulados informam calibração de pesos
+            em <code>legal_rank.py</code> ou novas linhas de eval.
           </p>
         </header>
         <div class="field">
@@ -150,7 +150,7 @@ import Layout from "../layouts/Layout.astro";
       return;
     }
 
-    statusEl.textContent = "Rodando probe...";
+    statusEl.textContent = "Executando sondagem...";
     statusEl.setAttribute("data-state", "sending");
     if (runBtn) runBtn.disabled = true;
     resultEl.setAttribute("hidden", "");
@@ -212,7 +212,7 @@ import Layout from "../layouts/Layout.astro";
       window.__lastProbeQuery = query;
       resultEl.removeAttribute("hidden");
       flagSection.removeAttribute("hidden");
-      statusEl.textContent = "Probe concluído.";
+      statusEl.textContent = "Sondagem concluída.";
       statusEl.setAttribute("data-state", "success");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -230,7 +230,7 @@ import Layout from "../layouts/Layout.astro";
 
     const lastQuery = window.__lastProbeQuery;
     if (!lastQuery) {
-      alert("Rode um probe antes de flagar.");
+      alert("Execute uma sondagem antes de sinalizar.");
       return;
     }
 
@@ -270,7 +270,7 @@ import Layout from "../layouts/Layout.astro";
       }
       const body = await resp.json();
       const proposalId = (body?.proposal?.id ?? "?").slice(0, 8);
-      statusEl.textContent = `Proposta ${proposalId} enviada (${flagged.length} URN(s) flagados).`;
+      statusEl.textContent = `Proposta ${proposalId} enviada (${flagged.length} URN(s) sinalizados).`;
       statusEl.setAttribute("data-state", "success");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);

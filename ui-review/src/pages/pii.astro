@@ -66,7 +66,7 @@ const CATEGORY_GROUPS: Array<{ label: string; types: { value: string; label: str
     ],
   },
   {
-    label: "Gaps identificados pela revisão jurídica",
+    label: "Lacunas identificadas pela revisão jurídica",
     types: [
       { value: "processo_sei", label: "Processo SEI" },
       { value: "nis", label: "NIS" },
@@ -108,8 +108,8 @@ const CATEGORY_GROUPS: Array<{ label: string; types: { value: string; label: str
       Cada entrada é uma query do produto onde o redator processou PII.
       O texto redactado pode <strong>ainda conter</strong> categorias que
       o regex atual não captura (processo SEI, NIS/PIS, IBAN, cartão de
-      crédito) — esse é exatamente o caso a flagar.
-      <code>kind=pii_miss</code> alimenta tunagem das patterns em
+      crédito) — esse é exatamente o caso a sinalizar.
+      <code>kind=pii_miss</code> alimenta a calibração dos padrões em
       <code>rag_leis/pii.py</code>.
     </p>
 
@@ -161,7 +161,7 @@ const CATEGORY_GROUPS: Array<{ label: string; types: { value: string; label: str
             </div>
 
             <details class="flag-details">
-              <summary>Flagar PII não detectada</summary>
+              <summary>Sinalizar PII não detectada</summary>
               <form class="flag-form" data-audit-id={entry.id}>
                 {CATEGORY_GROUPS.map((group) => (
                   <fieldset class="pii-fieldset">
