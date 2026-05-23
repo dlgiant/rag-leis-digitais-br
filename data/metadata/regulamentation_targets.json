@@ -18,5 +18,11 @@
     "regulamenta_urn": "urn:lex:br:federal:lei:2018-08-14;13709",
     "regulamenta_label": "Lei Geral de Proteção de Dados Pessoais (LGPD — Lei 13.709/2018)",
     "_evidence": "Res. CD/ANPD 15/2024 regulamenta a aplicação da LGPD ao tratamento de dados pessoais por agentes de tratamento no setor público. Same ANPD competence chain via art. 55-J."
+  },
+
+  "urn:lex:br:federal:decreto:2020-08-26;10474": {
+    "regulamenta_urn": "urn:lex:br:federal:lei:2019-07-08;13853",
+    "regulamenta_label": "Lei 13.853/2019 — cria a ANPD (altera a LGPD)",
+    "_evidence": "Decreto 10.474/2020 art. 1 declara: 'Ficam aprovadas a Estrutura Regimental e o Quadro Demonstrativo dos Cargos em Comissão e das Funções de Confiança da Autoridade Nacional de Proteção de Dados - ANPD'. A ANPD foi criada pela Lei 13.853/2019, que alterou a LGPD para incluir a autoridade — o Decreto operacionaliza essa criação ao definir a estrutura interna do órgão. Added in Phase 18.1 along with the indexation of the Decreto's full text."
   }
 }

@@ -140,6 +140,54 @@ TIER_1: tuple[Document, ...] = (
             "direitos-titulares",
         ),
     ),
+    # Phase 18.1 — Tier-1 expansion. Three docs referenced by existing
+    # overlays as "não indexada" until 2026-05-22. All full-document
+    # extractions (no scope filter needed — these are short enough to
+    # index entirely without retrieval-noise concerns).
+
+    # LC 105/2001 — sigilo bancário. Operative core (arts. 1-6) defines
+    # what the financial-secrecy rule is and the judicial-order
+    # exception. Referenced by STF Tema 225 (already in Tier-4 via
+    # status-aware effective rank) — pre-18.1 the Tema's parent statute
+    # was "não indexada".
+    Document(
+        urn="urn:lex:br:federal:lei.complementar:2001-01-10;105",
+        title="LC 105/2001 — dispõe sobre o sigilo das operações de instituições financeiras",
+        planalto_url="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp105.htm",
+        document_scope=(
+            "sigilo-bancario", "instituicao-financeira", "ordem-judicial",
+            "compartilhamento-dados", "receita-federal",
+        ),
+    ),
+
+    # Lei 12.414/2011 — Cadastro Positivo. Disciplina o banco de dados
+    # de adimplemento (histórico de crédito), com regime de consentimento
+    # + direitos do cadastrado (arts. 5, 6, 13). Adjacent to LGPD's
+    # consent regime — overlays for art-7-LGPD reference this.
+    Document(
+        urn="urn:lex:br:federal:lei:2011-06-09;12414",
+        title="Lei 12.414/2011 — disciplina a formação e consulta a bancos de dados de adimplemento (Cadastro Positivo)",
+        planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12414.htm",
+        document_scope=(
+            "cadastro-positivo", "dados-pessoais", "consentimento",
+            "instituicao-financeira", "direitos-titulares",
+        ),
+    ),
+
+    # Decreto 10.474/2020 — estrutura regimental da ANPD. Regulamenta a
+    # Lei 13.853/2019 (que criou a ANPD via emenda à LGPD). Antes da
+    # Phase 18.1, overlays referenciavam este Decreto como "estrutura
+    # regimental — não indexada"; agora as queries sobre cargos +
+    # competência regimental + organograma da ANPD pousam aqui.
+    Document(
+        urn="urn:lex:br:federal:decreto:2020-08-26;10474",
+        title="Decreto 10.474/2020 — Estrutura Regimental e Quadro Demonstrativo dos Cargos em Comissão da ANPD",
+        planalto_url="https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2020/decreto/D10474.htm",
+        document_scope=(
+            "ANPD", "autoridade-fiscalizacao", "estrutura-regimental",
+            "competencia-uniao",
+        ),
+    ),
 )
 
 
@@ -192,6 +240,33 @@ TIER_2: tuple[Document, ...] = (
         document_scope=(
             "direitos-personalidade", "intimidade", "direito-imagem",
             "privacidade",
+        ),
+    ),
+    # Phase 18.1 — ECA escopo CIRÚRGICO. ECA tem ~270 chunks completa;
+    # indexamos APENAS os artigos que tocam direito digital + crimes
+    # cibernéticos contra crianças/adolescentes:
+    #   art. 17-18  — direito ao respeito (inviolabilidade da imagem,
+    #                identidade, autonomia, valores) — pilar pra
+    #                pedidos de remoção de conteúdo envolvendo menores
+    #   art. 78     — exposição de criança em mídia (espelho do CDC
+    #                e CF art. 5 V/X aplicado a menores)
+    #   art. 240-241-E — crimes contra a dignidade sexual de
+    #                criança/adolescente em ambiente digital (gravação,
+    #                divulgação, troca, oferta — toda a cadeia
+    #                criminalizada pela Lei 11.829/2008 + Lei 13.441/2017)
+    #
+    # IMPORTANT: mesmo padrão do CC — `parse_all_tier` produz TODOS os
+    # chunks do ECA. Re-aplicar `scripts/filter_eca_digital_arts.py`
+    # após (Phase 18.1; sobrescreve o JSONL com a versão filtrada).
+    # Sem o filtro, ~260 chunks de ECA fora do escopo digital
+    # adicionariam noise em retrieval.
+    Document(
+        urn="urn:lex:br:federal:lei:1990-07-13;8069",
+        title="ECA — Estatuto da Criança e do Adolescente (Lei 8.069/1990) — escopo: arts. 17-18, 78, 240-241-E (direito digital + crimes digitais)",
+        planalto_url="https://www.planalto.gov.br/ccivil_03/leis/l8069.htm",
+        document_scope=(
+            "direitos-personalidade", "intimidade", "direito-imagem",
+            "crimes-ciberneticos", "menores",
         ),
     ),
 )
