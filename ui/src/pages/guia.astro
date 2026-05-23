@@ -16,16 +16,16 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout title="Guia · Como usar o RAG-leis">
+<Layout title="Guia · Como usar a Aferida">
   <article class="guide-article">
     <nav class="breadcrumb"><a href="/">← VOLTAR PARA O CHAT</a></nav>
 
     <header class="article-header">
       <span class="label-eyebrow">GUIA · USO</span>
-      <h1>Como usar o RAG-leis</h1>
+      <h1>Como usar a Aferida</h1>
       <p class="article-intro">
-        O RAG-leis responde perguntas sobre 17 documentos da legislação
-        federal brasileira. Você faz a pergunta, ele busca os artigos
+        A Aferida responde perguntas sobre legislação federal brasileira
+        de matéria digital. Você faz a pergunta, ela busca os artigos
         relevantes e gera uma resposta citando as fontes.
         <strong>Ferramenta de pesquisa preliminar</strong> — não
         substitui leitura direta da norma para uso em peça processual.
@@ -116,9 +116,9 @@ import Layout from "../layouts/Layout.astro";
       </p>
       <ul class="status-list">
         <li>
-          <strong>Out of scope</strong> — a pergunta não está coberta pelo
-          corpus. Acontece muito com jurisprudência ou legislação
-          estadual.
+          <strong>Fora da cobertura do corpus</strong> — a pergunta não
+          está coberta pela base de leis indexada. Acontece muito com
+          jurisprudência ou legislação estadual.
         </li>
         <li>
           <strong>Sem fontes relevantes</strong> — encontrei chunks mas
@@ -163,12 +163,12 @@ import Layout from "../layouts/Layout.astro";
         para voltar à mesma thread depois.
       </p>
       <p class="muted small">
-        Cada turn é independente — o sistema NÃO usa o contexto de
-        perguntas anteriores na thread para responder a próxima. Se a
-        pergunta de seguimento precisa do contexto da resposta anterior,
-        reformule explicitamente (em vez de "e quanto a isso?", diga "e
-        quanto ao art. 5º que você mencionou?"). Multi-turn com contexto
-        é um próximo passo (Phase 10d, ainda não implementado).
+        Perguntas de seguimento dentro de uma mesma conversa carregam
+        contexto: o sistema reescreve a pergunta de modo a torná-la
+        autossuficiente (usando o histórico da thread) antes de buscar
+        nos artigos. Por isso, perguntas como "e quanto a isso?"
+        funcionam — embora perguntas mais específicas continuem dando
+        resultados melhores.
       </p>
     </section>
 
@@ -205,15 +205,15 @@ import Layout from "../layouts/Layout.astro";
       <ul>
         <li>
           <strong>Login obrigatório</strong>. A versão antiga era pública;
-          desde a Phase 14.6 (maio/2026) é necessário fazer login via
-          Clerk para identificar usuário + escopar histórico. Aberto a
-          qualquer e-mail válido — não há allowlist na versão pública.
+          desde maio/2026 é necessário fazer login via Clerk para
+          identificar usuário + escopar histórico. Aberto a qualquer
+          e-mail válido — não há allowlist na versão pública.
         </li>
         <li>
           <strong>Base legal: legítimo interesse (LGPD)</strong>. Suas
           perguntas e respostas são persistidas para histórico próprio +
           audit log do redator. Você é a única pessoa que vê seu próprio
-          histórico — não há acesso de terceiros, nem operadora. A
+          histórico — não há acesso de terceiros, nem admin. A
           redação automática remove, antes de armazenar qualquer texto,
           os seguintes identificadores: CPF, CNPJ, email, telefone, CEP,
           RG, OAB, CRM, processo CNJ (formato unificado
@@ -231,19 +231,14 @@ import Layout from "../layouts/Layout.astro";
           fica em <code>sa-east-1</code>. Cumprimos requisito de
           residência de dados no Brasil.
         </li>
-        <li>
-          <strong>Multi-turn com contexto: ainda não</strong>. Cada
-          pergunta é tratada de forma independente, mesmo dentro de uma
-          mesma conversa. (Phase 10d, futuro.)
-        </li>
       </ul>
     </section>
 
     <section class="guide-section">
       <h2>Se você achar um problema</h2>
       <p>
-        Esta é uma versão de demonstração — não há um botão "reportar"
-        na interface pública. Se a resposta parecer incorreta:
+        Esta é uma versão pública em revisão — não há um botão "reportar"
+        na interface. Se a resposta parecer incorreta:
       </p>
       <ul>
         <li>
@@ -263,7 +258,7 @@ import Layout from "../layouts/Layout.astro";
         </li>
       </ul>
       <p class="muted small">
-        O operador monitora o sistema (audit logs, métricas de recusa,
+        O admin monitora o sistema (audit logs, métricas de recusa,
         cobertura de vigência) e melhora a base ao longo do tempo. As
         questões mais problemáticas viram entrada de eval e são
         corrigidas em ciclos sucessivos de revisão jurídica.

@@ -157,7 +157,7 @@ function lexmlHref(urn: string): string {
 }
 ---
 
-<Layout title="rag-leis demo — perguntas sobre leis digitais brasileiras">
+<Layout title="Aferida — pesquisa em legislação digital brasileira">
   <div class="page-wrap">
     <div class="sidebar-column">
     <aside class="sidebar" data-conv-active={activeConvId ?? ""}>
@@ -191,12 +191,6 @@ function lexmlHref(urn: string): string {
         )}
       </nav>
     </aside>
-    <p class="sidebar-code-link">
-      <span class="label-eyebrow">CÓDIGO</span>
-      <a href="https://github.com/dlgiant/rag-leis-digitais-br" target="_blank" rel="noopener">
-        github.com/dlgiant/rag-leis-digitais-br
-      </a>
-    </p>
     </div>
 
     <main>
@@ -208,15 +202,22 @@ function lexmlHref(urn: string): string {
           {activeConv ? (
             <span class="active-title">{activeTitle}</span>
           ) : (
-            <Fragment><span class="brand-mark">RAG-leis</span><span class="brand-slash">/digitais-br</span></Fragment>
+            <Fragment><span class="brand-mark">Aferida</span></Fragment>
           )}
         </h1>
         {!activeConv && (
-          <p class="tagline">
-            Pesquisa em legislação digital brasileira: LGPD, Marco Civil,
-            Lei do Software, CDC, Constituição e correlatas. Resposta com
-            citações dos artigos.
-          </p>
+          <>
+            <p class="tagline">
+              Pesquisa em legislação digital brasileira: LGPD, Marco Civil,
+              Lei do Software, CDC, Constituição e correlatas. Resposta com
+              citações dos artigos.
+            </p>
+            <ul class="privacy-chips" aria-label="Conformidade e privacidade">
+              <li class="chip"><span aria-hidden="true">·</span> Hospedado no Brasil</li>
+              <li class="chip"><span aria-hidden="true">·</span> PII redigida automaticamente</li>
+              <li class="chip"><span aria-hidden="true">·</span> LGPD · sa-east-1</li>
+            </ul>
+          </>
         )}
       </header>
 
@@ -224,12 +225,12 @@ function lexmlHref(urn: string): string {
         <details class="notice" open>
           <summary>
             <span class="notice-icon" aria-hidden="true">ℹ</span>
-            <span class="notice-summary-text">Aviso sobre a demonstração</span>
+            <span class="notice-summary-text">Sobre esta versão</span>
             <span class="notice-toggle" aria-hidden="true"></span>
           </summary>
           <div class="notice-body">
             <p>
-              Esta é uma versão de demonstração. Suas consultas são
+              Esta é uma versão pública em revisão. Suas consultas são
               persistidas para histórico — você pode reabrir conversas
               anteriores na barra lateral.
             </p>
@@ -384,28 +385,7 @@ function lexmlHref(urn: string): string {
       border-bottom: 1px solid var(--border);
       margin-bottom: 0.75rem;
     }
-    /* The "Código:" reference. Sits BELOW the sidebar box (outside the
-       border), aligned with the sidebar's horizontal padding so the
-       eyebrow + link line up visually with the conversation items
-       above. */
-    .sidebar-code-link {
-      margin: 0;
-      padding: 0 0.9rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-      font-size: 0.78rem;
-      line-height: 1.35;
-    }
-    .sidebar-code-link .label-eyebrow { font-size: 0.62rem; }
-    .sidebar-code-link a {
-      color: var(--muted);
-      text-decoration: none;
-      word-break: break-all;
-      transition: color 0.12s ease;
-    }
-    .sidebar-code-link a:hover { color: var(--accent); text-decoration: underline; }
-    .new-chat-btn {
+.new-chat-btn {
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -511,6 +491,31 @@ function lexmlHref(urn: string): string {
       line-height: 1.55;
       max-width: 60ch;
     }
+
+    /* Privacy / compliance chips — small monospace pills below the
+       tagline. Subtle (no background), separator dot, hover reveals
+       border. The goal is to make the LGPD posture visible without
+       shouting. */
+    .privacy-chips {
+      list-style: none;
+      padding: 0;
+      margin: 0.85rem 0 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem 0.6rem;
+    }
+    .privacy-chips .chip {
+      font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      padding: 0.18rem 0.5rem;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      white-space: nowrap;
+    }
+    .privacy-chips .chip span { color: var(--success); margin-right: 0.25rem; }
 
     /* ---------- Collapsible notice (only on new-conversation view) ---------- */
     .notice {
