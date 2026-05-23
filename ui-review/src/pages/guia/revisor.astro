@@ -8,12 +8,12 @@ import Layout from "../../layouts/Layout.astro";
     <nav class="breadcrumb"><a href="/guia">← GUIA</a></nav>
 
     <header class="article-header">
-      <span class="label-eyebrow">GUIA · PAPEL A</span>
+      <span class="label-eyebrow">GUIA · REVISORA</span>
       <h1>Como auditar o sistema</h1>
       <p class="article-intro">
         O sistema tem quatro superfícies de revisão. Cada uma audita
         uma parte diferente do RAG. Você pode usar uma de cada vez ou
-        intercalar — todas escrevem para a mesma fila do operador.
+        intercalar — todas escrevem para a mesma fila do admin.
       </p>
     </header>
 
@@ -28,10 +28,10 @@ import Layout from "../../layouts/Layout.astro";
         <li>
           A proposta vai para o Postgres em São Paulo. Você
           <strong>não edita os arquivos do projeto diretamente</strong>
-          — só o operador faz isso, via ferramenta de consolidação offline.
+          — só o admin faz isso, via ferramenta de consolidação offline.
         </li>
         <li>
-          O operador roda a ferramenta de consolidação localmente, escolhe quais
+          O admin roda a ferramenta de consolidação localmente, escolhe quais
           propostas aceitar, e as aceitas viram alterações em
           <code>eval/queries.yaml</code> /
           <code>data/vigencia/overlays.yaml</code> /
@@ -39,13 +39,13 @@ import Layout from "../../layouts/Layout.astro";
           <code>data/pii/missed.yaml</code> dependendo do tipo.
         </li>
         <li>
-          O operador faz commit e push. O próximo deploy aplica
+          O admin faz commit e push. O próximo deploy aplica
           as mudanças.
         </li>
       </ol>
       <p class="muted small">
         Você não tem que esperar — pode continuar submetendo
-        propostas. Elas se acumulam até o operador processar.
+        propostas. Elas se acumulam até o admin processar.
       </p>
     </section>
 
@@ -53,9 +53,11 @@ import Layout from "../../layouts/Layout.astro";
       <h2><code>/queries</code> — Eval set</h2>
       <p class="what">
         <span class="label-eyebrow">O QUE</span>
-        Catálogo das 139 perguntas que rodamos pra testar o sistema.
-        Cada linha é uma pergunta com URNs <em>gold</em> — chunks que
-        DEVERIAM ser recuperados quando essa pergunta é feita.
+        Catálogo das <strong>102 perguntas</strong> que rodamos pra testar
+        o sistema. Cada linha é uma pergunta com URNs <em>gold</em> —
+        chunks que DEVERIAM ser recuperados quando essa pergunta é feita.
+        Distribuição atual por tipo: 28 paráfrase, 25 definição,
+        21 enumeração, 19 citação-literal, 9 cross-doc (resposta em ≥2 leis).
       </p>
       <p class="how">
         <span class="label-eyebrow">COMO</span>
@@ -109,9 +111,11 @@ import Layout from "../../layouts/Layout.astro";
       </p>
       <p class="when">
         <span class="label-eyebrow">QUANDO</span>
-        Este é o gap mais crítico do projeto v1. Hoje cobrimos cerca
-        de 12 dispositivos de ~15.000 chunks. Sem overlay, o RAG pode
-        citar com confiança uma norma sub-judice ou revogada
+        Este é o gap mais crítico do projeto v1. Hoje cobrimos
+        <strong>12 dispositivos em 4 documentos</strong>, de
+        <strong>7.955 chunks distribuídos por 26 documentos</strong> do
+        corpus — cobertura agregada inferior a 0,2%. Sem overlay, o RAG
+        pode citar com confiança uma norma sub-judice ou revogada
         tacitamente sem nenhum aviso ao usuário. Toda contribuição
         aqui melhora o sistema imediatamente após o próximo merge.
       </p>
@@ -141,7 +145,7 @@ import Layout from "../../layouts/Layout.astro";
         uma Resolução ANPD onde deveria ter citado a LGPD diretamente,
         ou citou um Decreto onde deveria ter citado a Lei. Casos
         sinalizados aqui vão para <code>data/hierarchy/flagged.yaml</code>;
-        o operador usa o histórico pra ajustar os pesos em
+        o admin usa o histórico pra ajustar os pesos em
         <code>rag_leis/legal_rank.py</code> ou adicionar novas linhas
         de eval.
       </p>
@@ -151,27 +155,27 @@ import Layout from "../../layouts/Layout.astro";
       <h2><code>/pii</code> — Redator</h2>
       <p class="what">
         <span class="label-eyebrow">O QUE</span>
-        O sistema redige PII (CPF, CNPJ, email, telefone, CEP, RG) das
-        queries antes de processá-las, e mantém um audit log. Esta
-        página é onde você revisa o log e flaga categorias que o
-        regex atual deixa passar.
+        O sistema redige PII das queries antes de processá-las e mantém
+        um audit log. Cobertura atual: <strong>10 categorias</strong> —
+        CPF, CNPJ, e-mail, telefone, CEP, RG, OAB, CRM, processo CNJ e
+        título de eleitor. Esta página é onde você
+        revisa o log e flaga categorias que o regex atual deixa passar.
       </p>
       <p class="how">
         <span class="label-eyebrow">COMO</span>
-        Para cada entrada do log: ler o texto redactado. Se você vê
-        PII visível no texto (porque o regex não capturou), marcar
-        a categoria correspondente — coberta (CPF/CNPJ/email/telefone/
-        CEP/RG) ou lacuna (OAB/CRM/processo SEI/processo CNJ/eleitoral/
-        NIS/PIS/IBAN/cartão de crédito). Notas opcionais ajudam o
-        operador a ajustar a expressão regular.
+        Para cada entrada do log: ler o texto redactado. Se você vê PII
+        visível no texto (porque o regex não capturou), marcar a
+        categoria correspondente. As <strong>5 lacunas</strong> ainda em
+        aberto, identificadas pela revisão jurídica e priorizadas pela
+        fila, são: processo SEI, NIS, PIS, IBAN e cartão de crédito.
+        Notas opcionais ajudam o admin a ajustar a expressão regular.
       </p>
       <p class="when">
         <span class="label-eyebrow">QUANDO</span>
-        Esta auditoria importa menos antes do produto ter tráfego
-        real (ainda não tem). Em v1, é mais relevante depois que o
-        deploy público começar a acumular entradas no log. Marcado
-        como 🟡 (importante mas não bloqueante) na checklist
-        jurídica.
+        Esta auditoria importa menos antes do produto ter tráfego real
+        (ainda em volume baixo). Tende a se tornar mais relevante
+        conforme o deploy público acumular entradas no log. Marcado
+        como 🟡 (importante mas não bloqueante) na checklist jurídica.
       </p>
     </section>
 
@@ -181,17 +185,17 @@ import Layout from "../../layouts/Layout.astro";
         <li>
           Edição direta de <code>eval/queries.yaml</code> ou
           <code>data/vigencia/overlays.yaml</code> via UI. Suas
-          propostas viram alterações depois que o operador roda a
+          propostas viram alterações depois que o admin roda a
           ferramenta de consolidação localmente — não em tempo real.
         </li>
         <li>
           Reverter uma proposta já aceita. Se você submeter uma
-          anotação e mudar de ideia depois, fale com o operador.
+          anotação e mudar de ideia depois, fale com o admin.
         </li>
         <li>
           Histórico das suas próprias propostas. Você não vê uma lista
           do que já submeteu (a página <code>/proposals</code> é
-          restrita ao operador).
+          restrita ao admin).
         </li>
         <li>
           NER de nomes próprios para PII. O redator atual cobre só
@@ -201,7 +205,7 @@ import Layout from "../../layouts/Layout.astro";
           Múltiplos revisores simultâneos. Se outro revisor existir,
           não há resolução de conflito automática — duas propostas
           contraditórias sobre o mesmo chunk vão para a fila, e o
-          operador decide manualmente.
+          admin decide manualmente.
         </li>
       </ul>
     </section>
@@ -226,7 +230,7 @@ import Layout from "../../layouts/Layout.astro";
         <li>
           <strong>Se uma decisão é ambígua</strong>, registre nas notas
           e marque <code>verdict=needs_followup</code> ou
-          <code>vigencia_status</code> apropriado. O operador prefere
+          <code>vigencia_status</code> apropriado. O admin prefere
           uma nota honesta a uma decisão precipitada.
         </li>
       </ul>

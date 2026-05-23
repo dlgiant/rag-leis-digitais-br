@@ -5,6 +5,7 @@
 // overlay coverage. The lawyer picks a document to walk chunk-by-chunk
 // in /vigencia/[doc].
 import Layout from "../../layouts/Layout.astro";
+import TermTip from "../../components/TermTip.astro";
 import {
   adminFetch,
   formatError,
@@ -58,15 +59,15 @@ function shortLabel(urn: string): string {
     <header class="page-header">
       <div>
         <span class="label-eyebrow">VIGÊNCIA / 03</span>
-        <h1>Curadoria de overlays</h1>
+        <h1>Curadoria de <TermTip slug="overlay">overlays</TermTip></h1>
         {data && (
           <p class="counter muted small mono">
             <span class="counter-num">{totalOverlays}</span>
             <span> de </span>
             <span class="counter-num">{totalChunks}</span>
-            <span> chunks · </span>
+            <span> <TermTip slug="chunk">chunks</TermTip> · </span>
             <span class="counter-num">{corpusCoveragePct}%</span>
-            <span> de cobertura</span>
+            <span> de <TermTip slug="vigencia-coverage">cobertura</TermTip></span>
           </p>
         )}
       </div>
@@ -90,8 +91,8 @@ function shortLabel(urn: string): string {
     {data && (
       <>
         <p class="muted small intro">
-          Cada linha é um documento do corpus. <strong>%</strong> = chunks
-          com overlay de vigência aplicado. Documentos com baixa cobertura
+          Cada linha é um documento do corpus. <strong>%</strong> = <TermTip slug="chunk">chunks</TermTip>
+          com <TermTip slug="overlay">overlay de vigência</TermTip> aplicado. Documentos com baixa <TermTip slug="vigencia-coverage">cobertura</TermTip>
           são prioridade — sem overlay, o RAG pode citar com confiança
           uma norma sub judice ou revogada tácitamente.
         </p>
@@ -101,9 +102,9 @@ function shortLabel(urn: string): string {
             <tr>
               <th class="col-num">#</th>
               <th class="col-doc">DOCUMENTO</th>
-              <th class="col-chunks">CHUNKS</th>
-              <th class="col-overlays">OVERLAYS</th>
-              <th class="col-coverage">COBERTURA</th>
+              <th class="col-chunks"><TermTip slug="chunk">CHUNKS</TermTip></th>
+              <th class="col-overlays"><TermTip slug="overlay">OVERLAYS</TermTip></th>
+              <th class="col-coverage"><TermTip slug="vigencia-coverage">COBERTURA</TermTip></th>
             </tr>
           </thead>
           <tbody>

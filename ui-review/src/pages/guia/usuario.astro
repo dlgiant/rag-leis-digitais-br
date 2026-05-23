@@ -3,62 +3,94 @@
 import Layout from "../../layouts/Layout.astro";
 ---
 
-<Layout title="Guia · Usuária do RAG">
+<Layout title="Guia · Usuária da Aferida">
   <article class="guide-article">
     <nav class="breadcrumb"><a href="/guia">← GUIA</a></nav>
 
     <header class="article-header">
-      <span class="label-eyebrow">GUIA · PAPEL B</span>
-      <h1>Como usar o RAG-leis</h1>
+      <span class="label-eyebrow">GUIA · USUÁRIA</span>
+      <h1>Como usar a Aferida</h1>
       <p class="article-intro">
-        O RAG público responde perguntas sobre 17 documentos da
-        legislação federal brasileira. Você faz a pergunta, ele
-        busca os artigos relevantes e gera uma resposta citando as
-        fontes. <strong>Ferramenta de pesquisa preliminar</strong> —
-        não substitui leitura direta da norma para uso em peça
-        processual.
+        A Aferida (versão pública) responde perguntas sobre <strong>26 documentos</strong>
+        da legislação federal brasileira (~7.955 chunks). Você faz a
+        pergunta, ele busca os artigos relevantes e gera uma resposta
+        citando as fontes. <strong>Ferramenta de pesquisa preliminar</strong>
+        — não substitui leitura direta da norma para uso em peça processual.
       </p>
     </header>
 
     <section class="guide-section">
       <h2>Onde acessar</h2>
       <p>
-        <a href="https://rag.nunes.work" target="_blank" rel="noopener">
-          rag.nunes.work
+        <a href="https://aferida.com.br" target="_blank" rel="noopener">
+          aferida.com.br
         </a>
-        — pública, sem necessidade de login. Pode abrir do celular ou
-        compartilhar com colega para QA rápido.
+        — autenticada via Clerk. Sua conta isola o histórico de
+        conversas. Funciona em desktop e celular.
       </p>
       <p class="muted small">
-        Este site (<code>revisada.nunes.work</code>) e o RAG são duas
-        coisas diferentes. Aqui você revisa o sistema; lá você usa.
+        Este site (<code>revisada.aferida.com.br</code>) e a Aferida são duas
+        superfícies diferentes do mesmo sistema. Aqui você revisa;
+        lá você usa.
       </p>
     </section>
 
     <section class="guide-section">
       <h2>O que está no corpus</h2>
       <p>
-        Aproximadamente <strong>17 documentos federais</strong>, ~15.000
-        chunks (cada chunk é um artigo, parágrafo, inciso ou alínea).
-        Inclui:
+        <strong>26 documentos federais</strong>, 7.955 chunks (cada
+        chunk é um artigo, parágrafo, inciso ou alínea). Organizado em
+        quatro tiers — núcleo de direito digital + leis transversais
+        frequentemente citadas + atos infralegais da ANPD + piloto
+        de jurisprudência.
       </p>
+
+      <p><strong>Tier 1 — núcleo (16 leis/decretos):</strong></p>
       <ul>
         <li><strong>Constituição Federal</strong> (1988)</li>
-        <li><strong>LGPD</strong> (Lei 13.709/2018)</li>
-        <li><strong>Marco Civil da Internet</strong> (Lei 12.965/2014)</li>
+        <li><strong>Código Penal</strong> (Decreto-Lei 2.848/1940)</li>
         <li><strong>Código de Defesa do Consumidor</strong> (Lei 8.078/1990)</li>
-        <li><strong>Decreto 8.771/2016</strong> (regulamenta o Marco Civil)</li>
-        <li><strong>Lei do Software</strong> (Lei 9.609/1998), Lei do Direito Autoral (9.610/1998)</li>
+        <li><strong>Habeas Data</strong> (Lei 9.507/1997)</li>
+        <li><strong>Lei do Software</strong> (Lei 9.609/1998) e <strong>Lei do Direito Autoral</strong> (Lei 9.610/1998)</li>
+        <li><strong>Lei Complementar 105/2001</strong> (sigilo bancário)</li>
+        <li><strong>Cadastro Positivo</strong> (Lei 12.414/2011)</li>
         <li><strong>LAI</strong> (Lei 12.527/2011)</li>
-        <li><strong>Lei das Estatais</strong>, Lei do Cadastro Positivo, e outros</li>
+        <li><strong>Lei Carolina Dieckmann</strong> (Lei 12.737/2012)</li>
+        <li><strong>Marco Civil da Internet</strong> (Lei 12.965/2014) + <strong>Decreto 8.771/2016</strong> (regulamenta o MCI)</li>
+        <li><strong>LGPD</strong> (Lei 13.709/2018) + <strong>Lei 13.853/2019</strong> (cria ANPD)</li>
+        <li><strong>Decreto 10.474/2020</strong> (estrutura regimental ANPD)</li>
+        <li><strong>Lei 14.155/2021</strong> (estelionato eletrônico)</li>
       </ul>
+
+      <p><strong>Tier 2 — leis transversais (5 documentos):</strong></p>
+      <ul>
+        <li><strong>ECA</strong> (Lei 8.069/1990)</li>
+        <li><strong>Código Civil</strong> (Lei 10.406/2002)</li>
+        <li><strong>Processo Eletrônico</strong> (Lei 11.419/2006)</li>
+        <li><strong>Lei das Assinaturas Eletrônicas no setor público</strong> (Lei 14.063/2020)</li>
+        <li><strong>Lei do Governo Digital</strong> (Lei 14.129/2021)</li>
+      </ul>
+
+      <p><strong>Tier 3 — infralegal ANPD (4 resoluções):</strong></p>
+      <ul>
+        <li><strong>Resolução CD/ANPD 1/2021</strong> (regimento interno)</li>
+        <li><strong>Resolução CD/ANPD 2/2022</strong> (agentes de pequeno porte)</li>
+        <li><strong>Resolução CD/ANPD 4/2023</strong> (dosimetria de sanções)</li>
+        <li><strong>Resolução CD/ANPD 15/2024</strong></li>
+      </ul>
+
+      <p><strong>Tier 4 — jurisprudência (piloto):</strong></p>
+      <ul>
+        <li>Pequeno conjunto de teses STF/STJ relevantes ao MCI/LGPD (~7 chunks; expansão deferida).</li>
+      </ul>
+
       <p>NÃO inclui:</p>
       <ul>
-        <li>Jurisprudência (acórdãos, súmulas — exceto algumas vinculantes em Tier-4 deferido)</li>
+        <li>Jurisprudência ampla (acórdãos, súmulas) — só o piloto Tier-4 acima</li>
         <li>Legislação estadual ou municipal</li>
         <li>Doutrina</li>
-        <li>Atos infralegais (resoluções, portarias) — exceto ANPD que tem cobertura parcial</li>
-        <li>Legislação MUITO recente (depende da última atualização do corpus)</li>
+        <li>Atos infralegais de outros órgãos (portarias do BACEN, normas CVM, etc.)</li>
+        <li>Legislação MUITO recente (depende da última atualização do corpus — veja o registro em <code>data/metadata/fetched_at.json</code>)</li>
       </ul>
     </section>
 
@@ -103,10 +135,12 @@ import Layout from "../../layouts/Layout.astro";
 
       <h3>Streaming (durante a geração)</h3>
       <p>
-        Você vê o sistema progredindo por estágios: classificação da
-        pergunta → busca por chunks → geração da resposta →
-        verificação de relevância. O texto da resposta aparece
-        progressivamente. Latência típica:
+        Você vê o sistema progredindo por estágios via SSE:
+        <strong>reescrita</strong> (só em perguntas de seguimento) →
+        <strong>classificação</strong> da pergunta →
+        <strong>busca</strong> por chunks → <strong>geração</strong>
+        da resposta. O texto aparece progressivamente conforme o LLM
+        emite tokens. Latência típica:
       </p>
       <ul>
         <li><strong>Warm</strong>: ~15-20 segundos (chamada normal)</li>
@@ -120,9 +154,9 @@ import Layout from "../../layouts/Layout.astro";
       </p>
       <ul class="status-list">
         <li>
-          <strong>Out of scope</strong> — a pergunta não está coberta pelo
-          corpus. Acontece muito com jurisprudência ou legislação
-          estadual.
+          <strong>Fora da cobertura do corpus</strong> — a pergunta não
+          está coberta pela base de leis indexada. Acontece muito com
+          jurisprudência ou legislação estadual.
         </li>
         <li>
           <strong>Sem fontes relevantes</strong> — encontrei chunks mas
@@ -182,24 +216,28 @@ import Layout from "../../layouts/Layout.astro";
       <h2>Limites técnicos</h2>
       <ul>
         <li>
-          <strong>Sem histórico de conversas</strong>. Cada query é
-          independente; o sistema não lembra da pergunta anterior.
-          (Phase 10c, futuro.)
+          <strong>Multi-turn ativo</strong>. A versão pública mantém
+          histórico de conversas: você pode fazer perguntas de
+          acompanhamento e o sistema reescreve a query com base nos
+          turnos anteriores antes de classificar e buscar. Cada
+          conversa fica salva na barra lateral.
         </li>
         <li>
-          <strong>Sem conta de usuário</strong>. Você não precisa de
-          login pra usar a versão pública. (Phase 10c, futuro.)
+          <strong>Login obrigatório na versão pública</strong>.
+          A autenticação é via Clerk; sua conta isola seu histórico de
+          conversas dos demais usuários. Sign-in necessário antes da
+          primeira pergunta.
         </li>
         <li>
-          <strong>Demo API key compartilhada</strong>. Há um rate limit
-          global; se o sistema estiver lento, talvez seja por causa
-          de muitas chamadas simultâneas.
+          <strong>Rate limit por conta</strong>. Há limite por usuário
+          autenticado; se o sistema estiver lento, pode ser tráfego
+          agregado pesado num momento específico.
         </li>
         <li>
           <strong>Postgres em São Paulo (LGPD)</strong>. Todo o
-          processamento e armazenamento (audit log do redator, etc.)
-          fica em <code>sa-east-1</code>. Cumprimos requisito de
-          residência de dados no Brasil.
+          processamento e armazenamento (audit log do redator,
+          conversas, etc.) fica em <code>sa-east-1</code>. Cumprimos
+          requisito de residência de dados no Brasil.
         </li>
       </ul>
     </section>
@@ -227,7 +265,7 @@ import Layout from "../../layouts/Layout.astro";
         </li>
       </ul>
       <p class="muted small">
-        Suas anotações vão para a fila do operador; o sistema melhora
+        Suas anotações vão para a fila do admin; o sistema melhora
         no próximo merge.
       </p>
     </section>

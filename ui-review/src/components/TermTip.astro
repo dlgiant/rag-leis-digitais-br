@@ -1,0 +1,47 @@
+---
+// Inline wrapper that marks a non-lawyer term (chunk, URN, gold, PII…)
+// as eligible for an on-demand tooltip. Visible affordance — dotted
+// underline + popover on hover/focus — is gated by the global "GLOSS"
+// toggle in the header (html[data-tooltips="on|off"]).
+//
+// Usage:
+//   <TermTip slug="chunk">chunks</TermTip>     // wrap visible text
+//   <TermTip slug="top-k" />                    // use term as own label
+//   <TermTip term="ad-hoc" def="…">…</TermTip>  // off-glossary one-off
+//
+// The popover styling lives in Layout.astro (global) so it can adapt
+// to dark mode and stay consistent with the avatar-menu's paper-card
+// palette without each instance carrying its own CSS.
+import { GLOSSARY, type GlossarySlug } from "../lib/glossary";
+
+interface Props {
+  slug?: GlossarySlug;
+  /** Override the term name shown in the tooltip header. Falls back
+   *  to the glossary entry's `term`, then to `slug`. */
+  term?: string;
+  /** Override the definition. Falls back to the glossary entry's `def`. */
+  def?: string;
+}
+
+const { slug, term: termProp, def: defProp } = Astro.props;
+
+const entry = slug ? GLOSSARY[slug] : undefined;
+const term = termProp ?? entry?.term ?? slug ?? "";
+const def = defProp ?? entry?.def ?? "";
+const hasChildren = Astro.slots.has("default");
+
+// Stable per-instance id so aria-describedby points to THIS popover
+// even when several TermTips on the same page share a slug.
+const tipId = `tip-${Math.random().toString(36).slice(2, 11)}`;
+---
+
+<span class="term-tip" tabindex="0" aria-describedby={tipId}
+  >{hasChildren ? <slot /> : term}<span
+    class="term-tip-pop"
+    id={tipId}
+    role="tooltip"
+  >
+    <span class="term-tip-pop-term">{term}</span>
+    <span class="term-tip-pop-def">{def}</span>
+  </span></span
+>
