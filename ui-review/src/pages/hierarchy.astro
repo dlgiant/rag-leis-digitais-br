@@ -8,6 +8,7 @@
 // (e.g. ANPD Resolução/rank 5) is dominating. Lawyer can flag a
 // set of URNs as a kind=hierarchy proposal for the operator.
 import Layout from "../layouts/Layout.astro";
+import TermTip from "../components/TermTip.astro";
 ---
 
 <Layout title="Hierarquia">
@@ -17,8 +18,8 @@ import Layout from "../layouts/Layout.astro";
         <span class="label-eyebrow">HIERARQUIA / 04</span>
         <h1>Sondagem de hierarquia normativa</h1>
         <p class="muted small intro">
-          Digite uma consulta. Veja os top-k chunks recuperados, cada um
-          com sua <strong>rank legal</strong> (1=Constituição … 5=infralegal).
+          Digite uma consulta. Veja os <TermTip slug="top-k">top-k</TermTip> <TermTip slug="chunk">chunks</TermTip> recuperados, cada um
+          com sua <strong><TermTip slug="rank-legal">rank legal</TermTip></strong> (1=Constituição … 5=infralegal).
           Marque os chunks onde uma fonte de rank mais baixo está
           indevidamente dominando a recuperação — ou onde uma fonte de
           rank mais alto deveria ter aparecido mas não apareceu.
@@ -42,7 +43,7 @@ import Layout from "../layouts/Layout.astro";
 
       <div class="probe-controls">
         <div class="field field-inline">
-          <label for="top-k" class="label-eyebrow">TOP-K</label>
+          <label for="top-k" class="label-eyebrow"><TermTip slug="top-k">TOP-K</TermTip></label>
           <input
             id="top-k"
             name="top_k"
@@ -74,8 +75,8 @@ import Layout from "../layouts/Layout.astro";
         <header class="flag-form-header">
           <span class="label-eyebrow">SINALIZAR COMO MASCARAMENTO</span>
           <p class="muted small">
-            URNs marcados acima serão registrados como proposta
-            (<code>kind=hierarchy</code>). O operador revisa via ferramenta
+            <TermTip slug="urn">URNs</TermTip> marcados acima serão registrados como <TermTip slug="proposal">proposta</TermTip>
+            (<code><TermTip slug="proposal-kind">kind=hierarchy</TermTip></code>). O <TermTip slug="operator">admin</TermTip> revisa via ferramenta
             de consolidação; casos acumulados informam calibração de pesos
             em <code>legal_rank.py</code> ou novas linhas de eval.
           </p>

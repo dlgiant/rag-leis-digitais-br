@@ -10,7 +10,7 @@ interface Props {
   hideHeader?: boolean;
 }
 
-const { title = "RAG-leis / digitais-br", hideHeader = false } = Astro.props;
+const { title = "Aferida", hideHeader = false } = Astro.props;
 
 // Phase 14.6 — read session claims attached by the Clerk middleware
 // (src/middleware.ts). On a /sign-in page we render without the header.
@@ -44,7 +44,7 @@ const initials = deriveInitials(userName, userEmail);
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="RAG sobre legislação digital brasileira: LGPD, Marco Civil, CDC, e correlatas. Resposta com citações dos artigos." />
+    <meta name="description" content="Aferida — pesquisa em legislação digital brasileira: LGPD, Marco Civil, CDC, Constituição e correlatas. Resposta com citações dos artigos." />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -164,12 +164,13 @@ const initials = deriveInitials(userName, userEmail);
       <header class="site-header">
         <div class="site-header-inner">
           <a href="/" class="brand">
-            <span class="brand-mark">RAG-leis</span><span class="brand-slash">/digitais-br</span>
+            <span class="brand-mark">Aferida</span>
           </a>
           <nav class="header-nav">
             {isAuthed ? (
               <>
                 <a href="/guia" class="nav-link">GUIA</a>
+                <a href="/sobre" class="nav-link">SOBRE</a>
                 <div class="avatar-shell">
                 <button
                   id="avatar-button"
@@ -212,6 +213,7 @@ const initials = deriveInitials(userName, userEmail);
             ) : (
               <>
                 <a href="/guia" class="nav-link">GUIA</a>
+                <a href="/sobre" class="nav-link">SOBRE</a>
                 <a href="/sign-in" class="nav-link">ENTRAR</a>
               </>
             )}

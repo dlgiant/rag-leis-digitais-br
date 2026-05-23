@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import TermTip from "../../components/TermTip.astro";
 import { adminFetch, formatError, isVerbose, type EvalQueriesListResponse } from "../../lib/admin-api";
 
 const verbose = isVerbose(Astro.url);
@@ -32,7 +33,7 @@ const availableQtypes = data
     <header class="page-header">
       <div>
         <span class="label-eyebrow">QUERIES / 02</span>
-        <h1>Catálogo do eval set</h1>
+        <h1>Catálogo do <TermTip slug="eval-set">eval set</TermTip></h1>
         {data && (
           <p class="counter muted small mono">
             <span class="counter-num">{data.rows.length}</span>
@@ -83,7 +84,7 @@ const availableQtypes = data
             <th class="col-idx">#</th>
             <th>Query</th>
             <th class="col-type">Tipo</th>
-            <th class="col-urns">Gold</th>
+            <th class="col-urns"><TermTip slug="gold">Gold</TermTip></th>
             <th class="col-action"></th>
           </tr>
         </thead>

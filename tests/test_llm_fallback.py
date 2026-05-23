@@ -21,7 +21,6 @@ from rag_leis.llm import (
     _parse_fallback_json,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers — fabricate SDK response objects without touching network.
 # ---------------------------------------------------------------------------

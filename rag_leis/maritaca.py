@@ -237,12 +237,12 @@ class MaritacaLLM:
             }
             try:
                 response = _parse_fallback_json(fallback_text)
-            except RuntimeError:
+            except RuntimeError as err:
                 # Both paths failed — combine signals.
                 raise RuntimeError(
                     f"Marítaca tool_use failed ({fallback_reason}); "
                     f"fallback complete()+JSON also failed: {fallback_text!r}"
-                )
+                ) from err
             self.last_call_used_fallback = True
             obs.get_logger().info(
                 "llm.tool_use_fallback",

@@ -41,7 +41,6 @@ from pathlib import Path
 
 import numpy as np
 import yaml
-
 from dotenv import load_dotenv
 
 from rag_leis.cache import cache_is_fresh, texts_hash
@@ -230,7 +229,7 @@ def main() -> int:
     args = p.parse_args()
 
     print(f"Loading doc vectors from {INDEX_DIR}...")
-    doc_vecs, urns = _load_doc_vectors()
+    doc_vecs, _urns = _load_doc_vectors()
     print(f"  {doc_vecs.shape[0]} doc vectors loaded.")
 
     print(f"\nLoading OOS queries from {OOS_EVAL}...")

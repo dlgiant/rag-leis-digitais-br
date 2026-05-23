@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import TermTip from "../components/TermTip.astro";
 import { adminFetch, formatError, isVerbose, type EvalQueriesListResponse } from "../lib/admin-api";
 
 const verbose = isVerbose(Astro.url);
@@ -34,12 +35,12 @@ const sortedTypes = Object.entries(countsByType).sort((a, b) => b[1] - a[1]);
   <div class="container">
     <header class="page-header">
       <span class="label-eyebrow">DASHBOARD / 01</span>
-      <h1>Revisão do eval set</h1>
+      <h1>Revisão do <TermTip slug="eval-set">eval set</TermTip></h1>
       {data && (
         <p class="viewer-line">
-          <span class="muted">Operador:</span>
+          <span class="muted">Admin:</span>
           <code class="mono">{data.viewer.email}</code>
-          {data.viewer.is_operator && <span class="badge badge-operator">OPERADOR</span>}
+          {data.viewer.is_operator && <span class="badge badge-operator"><TermTip slug="operator">ADMIN</TermTip></span>}
         </p>
       )}
     </header>
@@ -65,12 +66,12 @@ const sortedTypes = Object.entries(countsByType).sort((a, b) => b[1] - a[1]);
           <div class="metric-card">
             <span class="label-eyebrow">TOTAL</span>
             <div class="metric-value">{data.total}</div>
-            <div class="metric-label">queries no eval set</div>
+            <div class="metric-label">queries no <TermTip slug="eval-set">eval set</TermTip></div>
           </div>
           <div class="metric-card">
             <span class="label-eyebrow">REVISADAS</span>
             <div class="metric-value">0</div>
-            <div class="metric-label">aguardando Fase 11.2</div>
+            <div class="metric-label">em breve</div>
           </div>
           <div class="metric-card">
             <span class="label-eyebrow">PENDENTES</span>

@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import TermTip from "../components/TermTip.astro";
 import {
   adminFetch,
   formatError,
@@ -71,11 +72,11 @@ function formatTs(ts: string): string {
     <header class="page-header">
       <div>
         <span class="label-eyebrow">FILA / 03</span>
-        <h1>Propostas pendentes</h1>
+        <h1><TermTip slug="proposal">Propostas</TermTip> pendentes</h1>
         {data && (
           <p class="counter muted small mono">
             <span class="counter-num">{data.total}</span>
-            <span> proposta(s) aguardando consolidação</span>
+            <span> <TermTip slug="proposal">proposta(s)</TermTip> aguardando consolidação</span>
           </p>
         )}
       </div>
@@ -85,10 +86,10 @@ function formatTs(ts: string): string {
       <div class="alert alert-warning">
         <span class="alert-label alert-label-warning">ACESSO</span>
         <div class="alert-body">
-          <strong>Esta página é restrita ao operador.</strong>
+          <strong>Esta página é restrita ao <TermTip slug="operator">admin</TermTip>.</strong>
           <p class="muted small">
             Seu e-mail <code>{viewerEmail}</code> está autorizado mas
-            não é o operador configurado (<code>RAG_OPERATOR_EMAIL</code>).
+            não é o admin configurado (<code>RAG_OPERATOR_EMAIL</code>).
           </p>
         </div>
       </div>
@@ -122,17 +123,17 @@ function formatTs(ts: string): string {
           <article class={`proposal-card kind-${p.kind} verdict-${p.verdict ?? "none"}`}>
             <header class="proposal-header">
               <div class="proposal-meta">
-                <span class={`kind-pill kind-pill-${p.kind}`}>{p.kind}</span>
+                <span class={`kind-pill kind-pill-${p.kind}`}><TermTip slug="proposal-kind">{p.kind}</TermTip></span>
                 {p.verdict && (
                   <span class={`verdict-pill verdict-${p.verdict}`}>
-                    {formatVerdictLabel(p.verdict)}
+                    <TermTip slug="verdict">{formatVerdictLabel(p.verdict)}</TermTip>
                   </span>
                 )}
                 <span class="muted small mono">{formatTs(p.ts)}</span>
               </div>
               <span class="proposal-reviewer muted small">
                 {p.reviewer_email}
-                {p.is_operator && <span class="op-tag mono"> · OP</span>}
+                {p.is_operator && <span class="op-tag mono"> · ADM</span>}
               </span>
             </header>
 
@@ -176,7 +177,7 @@ function formatTs(ts: string): string {
     {data && data.total > 0 && (
       <p class="merge-footnote muted small">
         Consolidação via CLI: <code>uv run python scripts/phase_11_merge_proposals.py</code>
-        (Fase 11.4 — ainda não publicada).
+        (ferramenta interna, ainda não publicada).
       </p>
     )}
   </div>

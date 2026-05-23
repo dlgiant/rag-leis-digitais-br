@@ -19,15 +19,12 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-import pytest
-
 from rag_leis.eval_harness import (
     IndexChunk,
     _locate_regulamentation_targets_registry,
     load_chunks,
 )
 from rag_leis.rag import RAGPipeline
-
 
 # ---------------------------------------------------------------------------
 # Registry locator + schema validation
