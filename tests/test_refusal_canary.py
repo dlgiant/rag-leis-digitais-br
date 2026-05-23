@@ -53,7 +53,7 @@ def test_inscope_subset_normalizes_heterogeneous_rows(canary):
     rows = canary._load_inscope_subset(5)
     assert len(rows) <= 5
     for r in rows:
-        assert "source_id" in r and r["source_id"]
+        assert r.get("source_id")
         assert "query" in r and isinstance(r["query"], str) and r["query"]
 
 

@@ -250,7 +250,7 @@ def test_ask_with_jwt_persists_user_and_two_messages(client, keypair):
         conversation_id=conv_id, user_id="user_persisted",
     )
     assert result is not None
-    conv, msgs = result
+    _conv, msgs = result
     assert len(msgs) == 2
     assert msgs[0].role == "user"
     assert msgs[0].content_redacted == "o que é dado pessoal na LGPD?"

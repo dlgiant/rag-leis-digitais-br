@@ -96,9 +96,9 @@ def main() -> int:
         if not passed:
             print(f"    expected_type={expected_type}  actual_type={actual_type}")
             if not oos_preserved:
-                print(f"    OOS shape NOT preserved (STF/jurisprudência missing)")
+                print("    OOS shape NOT preserved (STF/jurisprudência missing)")
             if not topic_shift_dropped:
-                print(f"    topic shift NOT dropped (LGPD/dado pessoal leaked)")
+                print("    topic shift NOT dropped (LGPD/dado pessoal leaked)")
             print(f"    expected_rewrite_turn_2: {r.get('expected_rewrite_turn_2', '?')}")
             print(f"    actual rewrite:          {rewrite}")
 

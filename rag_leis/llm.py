@@ -316,7 +316,7 @@ class AnthropicLLM:
         }
         try:
             response = _parse_fallback_json(fallback_text)
-        except RuntimeError:
+        except RuntimeError as err:
             # Both paths failed — surface the original signal so the
             # operator sees that the primary tool-use returned nothing
             # AND the fallback couldn't be parsed.
@@ -324,7 +324,7 @@ class AnthropicLLM:
                 f"LLM did not return a tool_use block for {tool_schema['name']!r}; "
                 f"stop_reason={resp.stop_reason!r}. Fallback complete()+JSON "
                 f"also failed to parse: {fallback_text!r}"
-            )
+            ) from err
         self.last_call_used_fallback = True
         obs.get_logger().info(
             "llm.tool_use_fallback",
