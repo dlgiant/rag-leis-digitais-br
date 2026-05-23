@@ -32,7 +32,7 @@ class _StubPipeline:
     def __init__(self, answer: RAGAnswer):
         self._answer = answer
 
-    def answer(self, query: str, on_event=None) -> RAGAnswer:
+    def answer(self, query: str, on_event=None, prior_turns=None) -> RAGAnswer:
         return self._answer
 
 

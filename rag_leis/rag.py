@@ -360,6 +360,13 @@ class RAGAnswer:
     # callers can persist it into conversation_messages.content_redacted
     # without re-running the redactor and without storing PII.
     pii_redacted_query: str = ""
+    # Phase 10d: when answer() ran with prior_turns (multi-turn context),
+    # the rewriter produces a standalone form of the query that's then
+    # passed to classifier + retrieval + generator. This field carries
+    # the rewritten standalone query for observability + per-query
+    # eval scoring. Empty string when single-turn (no prior_turns) or
+    # when the rewriter short-circuited / fell back to current_query.
+    rewritten_query: str = ""
     # Phase 5.2: hierarchy warning string when the LLM cites lower-rank
     # sources (e.g., Decreto, Resolução) while higher-rank sources (CF, LC,
     # LO) were in top-K context. None when not applicable.
@@ -474,6 +481,7 @@ class RAGPipeline:
         self,
         query: str,
         on_event: Callable[[dict[str, Any]], None] | None = None,
+        prior_turns: list[tuple[str, str]] | None = None,
     ) -> RAGAnswer:
         """Run the pipeline. Optionally emit stage events.
 
@@ -482,6 +490,14 @@ class RAGPipeline:
         "status": "started"|"finished", **stage_attrs}`. The Phase 10.0
         SSE endpoint uses this to stream progress to the UI; non-
         streaming callers omit it and behavior is unchanged.
+
+        `prior_turns` — Phase 10d. Optional list of `(role, content)`
+        tuples representing the conversation history so far. When
+        non-None and non-empty, the rewriter
+        (`rag_leis.query_type.rewrite_for_classification`) runs first
+        to produce a standalone form of the query; classifier +
+        retriever + generator all see the rewritten form. Empty / None
+        → single-turn behavior unchanged (rewriter short-circuits).
 
         Phase 7.5.7 — SRE Golden Signal #1 (latency). monotonic, not
         wall-clock, so NTP corrections / DST never produce negatives.
@@ -510,6 +526,39 @@ class RAGPipeline:
                     write_audit(rq, self.pii_audit_log)
         else:
             query_for_pipeline = query
+
+        # Phase 10d — conversational query rewriter. Runs AFTER PII
+        # redaction (so the rewriter never sees raw CPFs/emails) but
+        # BEFORE the classifier (so the rewritten form is what gets
+        # classified + retrieved + generated). When `prior_turns` is
+        # empty/None, `rewrite_for_classification` short-circuits to
+        # the verbatim current query — no LLM call, no cost, no
+        # latency. The first turn of any conversation never pays.
+        #
+        # `redacted_user_query` is preserved as the user's actual
+        # input (post-PII-redaction); it's what `pii_redacted_query`
+        # surfaces on RAGAnswer + what gets persisted in
+        # conversation_messages.content_redacted. The rewritten form
+        # is observable separately via `rewritten_query`.
+        redacted_user_query = query_for_pipeline
+        rewritten_query_text = ""
+        if prior_turns:
+            from rag_leis.query_type import rewrite_for_classification
+            _emit({"event": "stage", "name": "rewrite", "status": "started",
+                   "n_prior_turns": len(prior_turns)})
+            with obs.span("pipeline.rewrite", n_prior_turns=len(prior_turns)) as _s:
+                # Use self.llm so cost + token-usage is attributed to
+                # this answer() call's accumulator (the rewriter's
+                # complete() call routes through last_call_usage).
+                rewritten = rewrite_for_classification(
+                    list(prior_turns), query_for_pipeline, llm=self.llm,
+                )
+                rewritten_query_text = rewritten if rewritten != query_for_pipeline else ""
+                _s.set_attribute("rewritten", bool(rewritten_query_text))
+            _emit({"event": "stage", "name": "rewrite", "status": "finished",
+                   "rewritten": bool(rewritten_query_text)})
+            # From here, the pipeline operates on the rewritten form.
+            query_for_pipeline = rewritten
 
         # Classifier runs on the redacted query (preserves semantic shape).
         _emit({"event": "stage", "name": "classify", "status": "started"})
@@ -557,7 +606,8 @@ class RAGPipeline:
                 classified_type=classified,
                 classified_top_k=effective_top_k,
                 pii_types_redacted=pii_types,
-                pii_redacted_query=query_for_pipeline,
+                pii_redacted_query=redacted_user_query,
+                rewritten_query=rewritten_query_text,
                 prose_citation_mismatches=[],
                 prose_check_retried=False,
                 latency_ms=(_time.monotonic() - _t0) * 1000.0,
@@ -622,7 +672,8 @@ class RAGPipeline:
                     classified_type=classified,
                     classified_top_k=effective_top_k,
                     pii_types_redacted=pii_types,
-                    pii_redacted_query=query_for_pipeline,
+                    pii_redacted_query=redacted_user_query,
+                    rewritten_query=rewritten_query_text,
                     prose_citation_mismatches=[],
                     prose_check_retried=False,
                     cost_estimate_usd=round(extractor_cost, 6),
@@ -855,7 +906,8 @@ class RAGPipeline:
             classified_type=classified,
             classified_top_k=effective_top_k,
             pii_types_redacted=pii_types,
-            pii_redacted_query=query_for_pipeline,
+            pii_redacted_query=redacted_user_query,
+            rewritten_query=rewritten_query_text,
             hierarchy_warning=hier_warn,
             prose_citation_mismatches=prose_mismatches,
             prose_check_retried=prose_retried,

@@ -52,7 +52,9 @@ class StubPipeline:
         self._raise = raise_exc
         self.calls: list[str] = []
 
-    def answer(self, query: str) -> RAGAnswer:
+    def answer(self, query: str, on_event=None, prior_turns=None) -> RAGAnswer:
+        # Phase 10d — accept (but ignore) prior_turns + on_event to
+        # match RAGPipeline.answer's signature.
         self.calls.append(query)
         if self._raise is not None:
             raise self._raise
@@ -694,7 +696,8 @@ class StreamingStubPipeline:
     def __init__(self, answer_to_return: RAGAnswer):
         self._answer = answer_to_return
 
-    def answer(self, query, on_event=None):
+    def answer(self, query, on_event=None, prior_turns=None):
+        # Phase 10d — accept (but ignore) prior_turns to match RAGPipeline.answer.
         # Synthesize the canonical stage event sequence.
         if on_event is not None:
             on_event({"event": "stage", "name": "classify", "status": "started"})

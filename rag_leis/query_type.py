@@ -122,6 +122,7 @@ five before the pipeline figures out the answer doesn't exist.
 from __future__ import annotations
 
 import re
+from typing import Any
 
 # Order matters: each regex is tried in this sequence; first match wins.
 # Reasoning behind the order:
@@ -267,9 +268,107 @@ def prompt_snippet_for_query(query: str) -> str:
 # prompt / temperature are unspecified here on purpose.
 
 
+# Phase 10d (2026-05-23) — Conversational query rewriter
+# ============================================================================
+#
+# Implementation of the Phase 17.2 contract. Uses an LLM (Maritaca by
+# default — sabia-4 is the production generator, and the rewriter prompt
+# is PT-BR so a PT-BR-tuned model is natural) to produce the standalone
+# form of a conversational follow-up.
+#
+# Cost: ~$0.0003 per rewrite (short system + short user + short output).
+# Latency: ~200-400ms wall-clock. The first turn of any conversation
+# never pays — `prior_turns` is empty, rewriter short-circuits.
+#
+# Failure mode: if the LLM call fails for any reason (network, rate
+# limit, malformed response), the rewriter returns `current_query`
+# unchanged. The pipeline then proceeds as if the turn were single-turn.
+# Degrades gracefully — better to under-rewrite than to crash on a
+# transient provider hiccup.
+
+
+_REWRITER_SYSTEM_PROMPT = """\
+Você é um reescritor de consultas conversacionais para um sistema RAG \
+de legislação digital brasileira.
+
+Sua tarefa: receber o histórico de uma conversa (turnos anteriores) + a \
+pergunta atual do usuário, e produzir uma versão AUTOSSUFICIENTE da \
+pergunta atual. A versão reescrita será usada como query única para \
+classificação + retrieval + geração — sem acesso ao histórico.
+
+Regras inegociáveis:
+
+1. Se a pergunta atual JÁ É autossuficiente (não tem pronomes/elipse \
+referindo aos turnos anteriores), retorne ela praticamente inalterada.
+
+2. Pronomes e elipse ("isso", "ele", "que você mencionou", "e para X?") \
+DEVEM ser resolvidos com o que está nos turnos anteriores. Substitua \
+explicitamente.
+
+3. Marcadores de mudança de assunto ("mudando de assunto", "outra \
+pergunta", "agora sobre") DEVEM levar você a IGNORAR o histórico — a \
+reescrita fica equivalente à pergunta atual sem o marcador.
+
+4. Perguntas que pedem fontes FORA DO ESCOPO do corpus (jurisprudência \
+do STF, doutrina, lei estadual, etc.) DEVEM manter essa característica. \
+NÃO "resgate" perguntas fora do escopo inlinando entidades do corpus do \
+histórico. Exemplo: "e jurisprudência do STF sobre isso?" → \
+"jurisprudência do STF sobre [tópico do histórico]" — NÃO transforme em \
+"o que diz a LGPD sobre [tópico]".
+
+5. Use vocabulário compatível com o classificador interno:
+   - Para perguntas de definição: "o que é X" ou "qual a definição de X"
+   - Para citação literal: mantenha "art. N", "artigo N" se a pergunta \
+referência um dispositivo
+   - Para enumeração: "quais são X", "liste X"
+   - Para cross-doc: "comparação entre X e Y", "diferença entre X e Y"
+
+6. **PRESERVE A ESTRUTURA DA PERGUNTA DO USUÁRIO**. Não introduza \
+"quais" ou "liste" se a pergunta original não usou essas palavras. \
+Se o usuário pediu "pode dar mais detalhes?" sobre um conceito, \
+reescreva como "qual a definição mais detalhada de X" — NÃO como \
+"quais são os detalhes de X" (que muda o tipo de pergunta de \
+definição para enumeração). Se o usuário pediu "o que NÃO é X?", \
+preserve essa estrutura — NÃO transforme em "quais são as situações \
+que NÃO são X". A regra geral: reescreva o MENOS necessário para \
+tornar a pergunta autossuficiente; preserve a forma original.
+
+7. Saída: APENAS a query reescrita. Sem prefixo ("Aqui está:"), sem \
+sufixo, sem aspas, sem markdown. Apenas o texto da pergunta.\
+"""
+
+
+def _build_rewriter_user_message(
+    prior_turns: list[tuple[str, str]], current_query: str,
+) -> str:
+    """Format the prior turns + current query as the user message.
+
+    Uses an explicit `[USUÁRIO]` / `[ASSISTENTE]` prefix per turn so the
+    LLM doesn't confuse turn boundaries. Caps assistant turn length at
+    400 chars to keep the prompt under control (an LLM doesn't need the
+    full answer text to resolve a pronoun — the topic + key entities are
+    enough)."""
+    lines: list[str] = ["HISTÓRICO DA CONVERSA:"]
+    for role, content in prior_turns:
+        role_label = "USUÁRIO" if role == "user" else "ASSISTENTE"
+        # Truncate assistant turns; they're often long answer text and
+        # the rewriter only needs topic + key entity references.
+        truncated = content if len(content) <= 400 else content[:400] + "…"
+        lines.append(f"[{role_label}] {truncated}")
+    lines.append("")
+    lines.append(f"PERGUNTA ATUAL: {current_query}")
+    lines.append("")
+    lines.append(
+        "Reescreva a PERGUNTA ATUAL como uma query autossuficiente, "
+        "seguindo as regras do system prompt."
+    )
+    return "\n".join(lines)
+
+
 def rewrite_for_classification(
     prior_turns: list[tuple[str, str]],
     current_query: str,
+    llm: Any | None = None,
 ) -> str:
     """Rewrite `current_query` to a standalone form using `prior_turns`
     as conversational context. Returns the rewritten standalone query
@@ -279,42 +378,101 @@ def rewrite_for_classification(
     Args:
         prior_turns: chronological list of (role, content) tuples for
             the conversation so far. Role is "user" or "assistant".
-            Excludes the current turn. May be empty (rewriter MUST
-            return current_query unchanged in that case).
+            Excludes the current turn. Empty → returns current_query
+            verbatim (no LLM call).
         current_query: the latest user turn, possibly conversational
             (containing pronouns, ellipsis, "and what about…" patterns).
+        llm: optional LLM instance (anything that exposes `complete()`).
+            Defaults to constructing a fresh `get_llm("maritaca")`.
+            Tests inject a mock here to avoid the network call.
 
     Returns:
         A standalone query string suitable for passing to
         `classify_query`, the retriever, and the generator as if it
         were a fresh single-turn query.
 
-    Constraints (enforced by `eval/conversation_queries.yaml`):
-        * If `prior_turns` is empty, MUST return current_query verbatim.
-        * Pronouns + ellipsis ("isso", "ele", "que você mencionou")
-          MUST be resolved against prior_turns when possible.
-        * Topic-shift markers ("mudando de assunto", "outra pergunta")
-          MUST drop prior context — the rewrite is then ~= the current
-          query.
-        * OOS follow-ups MUST NOT be "rescued" by inlining prior
-          on-corpus entities (e.g., "e jurisprudência do STF sobre isso"
-          stays OOS-shaped after rewrite — the rewriter does not
-          launder scope violations).
-        * The rewrite SHOULD preserve the question_type of the
-          underlying intent (a follow-up citação-literal stays
-          citação-literal after rewrite).
+    Contract (enforced by `eval/conversation_queries.yaml`):
+        * If `prior_turns` is empty, returns `current_query` verbatim
+          (no LLM call).
+        * Pronouns + ellipsis are resolved against `prior_turns`.
+        * Topic-shift markers ("mudando de assunto") cause prior
+          context to be DROPPED.
+        * OOS follow-ups stay OOS-shaped after rewrite.
+        * The rewrite preserves the question_type of the underlying
+          intent (a follow-up citação-literal stays citação-literal).
 
-    Raises:
-        NotImplementedError until Phase 10d ships an implementation.
+    Failure mode: if the LLM call raises, returns `current_query`
+    unchanged. The pipeline then proceeds as if the turn were
+    single-turn — degraded but never broken.
     """
     if not prior_turns:
-        # Phase 17.2 stub returns current_query for the empty-context
-        # case — this branch is exercised by the eval as a sanity
-        # check. The recursive Phase 10d implementation should also
-        # short-circuit here.
         return current_query
-    raise NotImplementedError(
-        "rewrite_for_classification is a Phase 17.2 contract stub; "
-        "implementation deferred to Phase 10d. See module docstring + "
-        "eval/conversation_queries.yaml for the contract."
+
+    if llm is None:
+        # Lazy import — keeps query_type.py importable without the LLM
+        # module's deps in eval-only paths.
+        from rag_leis.llm import get_llm
+        llm = get_llm(provider="maritaca")
+
+    user_msg = _build_rewriter_user_message(prior_turns, current_query)
+    try:
+        raw = llm.complete(
+            system=_REWRITER_SYSTEM_PROMPT,
+            user=user_msg,
+            max_tokens=256,
+            temperature=0.0,  # determinism > creativity for a rewriter
+        )
+    except Exception:
+        # Defensive fallback — never crash on a transient provider
+        # failure. The pipeline will treat the turn as single-turn,
+        # which is degraded but correct behavior.
+        return current_query
+
+    return _clean_rewriter_response(raw, current_query)
+
+
+def _clean_rewriter_response(raw: str, fallback: str) -> str:
+    """Strip the common shapes that LLMs prepend/append despite the
+    system prompt: leading "Aqui está:" prose, wrapping quotes, markdown
+    code fences, trailing punctuation drift. Returns `fallback` if
+    cleaning produces an empty string."""
+    if not raw:
+        return fallback
+    text = raw.strip()
+
+    # Drop a leading code-fence block (```...```) if present
+    if text.startswith("```"):
+        # find the next ```
+        end = text.rfind("```")
+        if end > 3:
+            # extract inside; strip optional language tag
+            inner = text[3:end].strip()
+            # if there's a language tag (e.g., ```text\n...), drop the first line
+            if "\n" in inner:
+                first_line, rest = inner.split("\n", 1)
+                if len(first_line) <= 10:  # likely a language tag
+                    inner = rest
+            text = inner.strip()
+
+    # Strip wrapping quotes (single, double, smart). Common LLM habit.
+    # Smart-quote pairs are asymmetric — "…" uses U+201C/U+201D, not the
+    # same char — so check (opening, closing) pairs not single chars.
+    _QUOTE_PAIRS = [('"', '"'), ("'", "'"), ("“", "”"), ("‘", "’")]
+    for open_q, close_q in _QUOTE_PAIRS:
+        if text.startswith(open_q) and text.endswith(close_q) and len(text) >= len(open_q) + len(close_q):
+            text = text[len(open_q):-len(close_q)].strip()
+            break
+
+    # Drop common Portuguese prefixes ("Reescrita: ...", "Aqui está: ...")
+    prefixes = (
+        "reescrita:", "aqui está:", "aqui está a query reescrita:",
+        "pergunta reescrita:", "query reescrita:", "resposta:",
     )
+    lower = text.lower()
+    for p in prefixes:
+        if lower.startswith(p):
+            text = text[len(p):].strip()
+            lower = text.lower()
+            break
+
+    return text if text else fallback

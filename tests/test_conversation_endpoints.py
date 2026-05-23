@@ -65,7 +65,7 @@ class _StubPipeline:
     def __init__(self, answer: RAGAnswer):
         self._answer = answer
 
-    def answer(self, query: str, on_event=None) -> RAGAnswer:
+    def answer(self, query: str, on_event=None, prior_turns=None) -> RAGAnswer:
         # Mirror the production behavior: the pipeline IS the source of
         # truth for the redacted query text. Our stub trivially echoes
         # the query (no PII in test queries).

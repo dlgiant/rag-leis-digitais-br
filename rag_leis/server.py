@@ -672,6 +672,61 @@ def get_pipeline(request: Request) -> RAGPipeline:
 
 
 # ============================================================================
+# Phase 10d — prior-turn loading for multi-turn rewriter
+# ============================================================================
+
+
+def _load_prior_turns(
+    *, caller: AskCaller, payload: AskRequest,
+) -> list[tuple[str, str]]:
+    """Load the conversation's prior turns as `(role, content)` tuples
+    for the Phase 10d rewriter. Returns empty list (= single-turn
+    behavior) when:
+
+      - API-key caller (no users row, can't scope conversations)
+      - DB pool unconfigured (eval CLI / tests)
+      - No conversation_id in the request body
+      - conversation_id supplied but doesn't belong to caller (foreign
+        id; the rewriter behaves as if it's the first turn — same as
+        the silent-rotation rule in `_persist_turn`)
+      - DB read raises (defensive — treat as single-turn rather than
+        failing the request on a transient DB hiccup)
+
+    Returns the turns ordered chronologically (oldest first). The
+    rewriter system prompt expects this order.
+    """
+    if not caller.is_clerk_authed:
+        return []
+    if not db.is_configured():
+        return []
+    if not payload.conversation_id:
+        return []
+    try:
+        if not convos.conversation_belongs_to(
+            conversation_id=payload.conversation_id,
+            user_id=caller.user_id or "",
+        ):
+            return []
+        result = convos.get_conversation(
+            conversation_id=payload.conversation_id,
+            user_id=caller.user_id or "",
+        )
+        if result is None:
+            return []
+        _, messages = result
+        return [(m.role, m.content_redacted) for m in messages]
+    except Exception as e:
+        obs.get_logger().warning(
+            "conversation.prior_turns_load_failed",
+            error_type=type(e).__name__,
+            error_message=str(e),
+            caller=caller.identity,
+            conversation_id=payload.conversation_id,
+        )
+        return []
+
+
+# ============================================================================
 # Phase 10c — conversation persistence helper
 # ============================================================================
 
@@ -802,8 +857,12 @@ async def ask(
     Raw query text + answer text are NEVER logged (PII surface).
     """
     log = obs.get_logger()
+    # Phase 10d — load prior turns when conversation_id supplied.
+    # Empty list (single-turn) when no conversation_id, foreign id,
+    # API-key caller, or DB unavailable — see _load_prior_turns docs.
+    prior_turns = _load_prior_turns(caller=caller, payload=payload)
     try:
-        ans = pipeline.answer(payload.query)
+        ans = pipeline.answer(payload.query, prior_turns=prior_turns or None)
     except Exception as e:
         # Pipeline-level failures (provider rate limit, embedder OOM, etc.)
         # surface as 500 with a generic message. Detail is type-only
@@ -833,6 +892,14 @@ async def ask(
         cost_estimate_usd=ans.cost_estimate_usd,
         llm_calls=ans.llm_calls,
         tool_use_fallback_count=ans.tool_use_fallback_count,
+        # Phase 10d — was this turn rewritten from prior context? Boolean
+        # (true iff rewriter changed the query); the rewritten text
+        # itself is on RAGAnswer.rewritten_query but is NOT logged
+        # because it may carry user-pasted entities the audit log
+        # shouldn't see in plaintext (the redacted form already lives
+        # in conversation_messages.content_redacted).
+        was_rewritten=bool(ans.rewritten_query),
+        n_prior_turns=len(prior_turns),
         tokens_input=(ans.tokens_used or {}).get("input_tokens", 0),
         tokens_output=(ans.tokens_used or {}).get("output_tokens", 0),
         pipeline_latency_ms=ans.latency_ms,
@@ -909,9 +976,18 @@ async def ask_stream(
         asyncio event loop's queue via call_soon_threadsafe."""
         loop.call_soon_threadsafe(queue.put_nowait, e)
 
+    # Phase 10d — load prior turns BEFORE kicking off the pipeline
+    # thread. The load is synchronous (Postgres point-lookup) and
+    # cheap; doing it pre-thread keeps the thread closure simple.
+    prior_turns = _load_prior_turns(caller=caller, payload=payload)
+
     def run_pipeline() -> tuple[RAGAnswer | None, Exception | None]:
         try:
-            ans = pipeline.answer(payload.query, on_event=on_event)
+            ans = pipeline.answer(
+                payload.query,
+                on_event=on_event,
+                prior_turns=prior_turns or None,
+            )
             return ans, None
         except Exception as exc:
             return None, exc
@@ -955,6 +1031,8 @@ async def ask_stream(
                 cost_estimate_usd=ans.cost_estimate_usd,
                 llm_calls=ans.llm_calls,
                 tool_use_fallback_count=ans.tool_use_fallback_count,
+                was_rewritten=bool(ans.rewritten_query),
+                n_prior_turns=len(prior_turns),
                 tokens_input=(ans.tokens_used or {}).get("input_tokens", 0),
                 tokens_output=(ans.tokens_used or {}).get("output_tokens", 0),
                 pipeline_latency_ms=ans.latency_ms,

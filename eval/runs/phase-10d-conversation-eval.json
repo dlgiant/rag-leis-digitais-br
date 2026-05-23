@@ -1,0 +1,135 @@
+{
+  "config": {
+    "llm_provider": "maritaca",
+    "llm_name": "sabia-4",
+    "n_rows": 10
+  },
+  "summary": {
+    "classify_match": 10,
+    "oos_preserved": 10,
+    "topic_shift_dropped": 10,
+    "passed": 10
+  },
+  "rows": [
+    {
+      "source_id": "conv-01-entity-reference-back",
+      "turn_2": "e o art. 5º que você mencionou?",
+      "expected_type": "citacao-literal",
+      "actual_type": "citacao-literal",
+      "classify_ok": true,
+      "oos_preserved": true,
+      "topic_shift_dropped": true,
+      "passed": true,
+      "rewrite": "o que diz o artigo 5º da LGPD sobre a definição de dado pessoal?",
+      "reference_rewrite": "o que diz o art. 5º da LGPD sobre definição de dado pessoal?"
+    },
+    {
+      "source_id": "conv-02-subject-continuation-isso",
+      "turn_2": "quem fiscaliza isso?",
+      "expected_type": "parafrase",
+      "actual_type": "parafrase",
+      "classify_ok": true,
+      "oos_preserved": true,
+      "topic_shift_dropped": true,
+      "passed": true,
+      "rewrite": "quem fiscaliza o tratamento de dados pessoais segundo a LGPD?",
+      "reference_rewrite": "quem fiscaliza o tratamento de dados pessoais na LGPD?"
+    },
+    {
+      "source_id": "conv-03-implicit-narrowing-public-sector",
+      "turn_2": "e para o setor público?",
+      "expected_type": "parafrase",
+      "actual_type": "parafrase",
+      "classify_ok": true,
+      "oos_preserved": true,
+      "topic_shift_dropped": true,
+      "passed": true,
+      "rewrite": "como a LGPD trata bases legais para o setor público?",
+      "reference_rewrite": "como a LGPD trata bases legais para o setor público?"
+    },
+    {
+      "source_id": "conv-04-topic-shift-explicit",
+      "turn_2": "mudando de assunto, o que diz o Marco Civil sobre responsabilidade do provedor de aplicações?",
+      "expected_type": "parafrase",
+      "actual_type": "parafrase",
+      "classify_ok": true,
+      "oos_preserved": true,
+      "topic_shift_dropped": true,
+      "passed": true,
+      "rewrite": "o que diz o Marco Civil da Internet sobre a responsabilidade do provedor de aplicações?",
+      "reference_rewrite": "o que diz o Marco Civil sobre responsabilidade do provedor de aplicações?"
+    },
+    {
+      "source_id": "conv-05-clarification-request",
+      "turn_2": "pode dar mais detalhes?",
+      "expected_type": "definicao",
+      "actual_type": "definicao",
+      "classify_ok": true,
+      "oos_preserved": true,
+      "topic_shift_dropped": true,
+      "passed": true,
+      "rewrite": "qual a definição mais detalhada de hipossuficiência no CDC?",
+      "reference_rewrite": "qual a definição mais detalhada de hipossuficiência no CDC?"
+    },
+    {
+      "source_id": "conv-06-comparison-cross-doc",
+      "turn_2": "como isso compara com os princípios do Marco Civil?",
+      "expected_type": "cross-doc",
+      "actual_type": "cross-doc",
+      "classify_ok": true,
+      "oos_preserved": true,
+      "topic_shift_dropped": true,
+      "passed": true,
+      "rewrite": "comparação entre os princípios da LGPD e os princípios do Marco Civil da Internet",
+      "reference_rewrite": "comparação entre os princípios da LGPD e os princípios do Marco Civil"
+    },
+    {
+      "source_id": "conv-07-article-follow-up",
+      "turn_2": "e o art. 37 especificamente?",
+      "expected_type": "citacao-literal",
+      "actual_type": "citacao-literal",
+      "classify_ok": true,
+      "oos_preserved": true,
+      "topic_shift_dropped": true,
+      "passed": true,
+      "rewrite": "o que diz o artigo 37 da Constituição sobre os princípios da Administração Pública",
+      "reference_rewrite": "o que diz o art. 37 da Constituição sobre princípios da Administração Pública?"
+    },
+    {
+      "source_id": "conv-08-negation-exclusion",
+      "turn_2": "e o que NÃO é considerado um direito do titular?",
+      "expected_type": "parafrase",
+      "actual_type": "parafrase",
+      "classify_ok": true,
+      "oos_preserved": true,
+      "topic_shift_dropped": true,
+      "passed": true,
+      "rewrite": "o que NÃO é considerado um direito do titular dos dados pessoais segundo a LGPD?",
+      "reference_rewrite": "o que NÃO é considerado um direito do titular dos dados pessoais segundo a LGPD?"
+    },
+    {
+      "source_id": "conv-09-oos-follow-up-jurisprudence",
+      "turn_2": "e jurisprudência do STF sobre isso?",
+      "expected_type": "parafrase",
+      "actual_type": "parafrase",
+      "classify_ok": true,
+      "oos_preserved": true,
+      "topic_shift_dropped": true,
+      "passed": true,
+      "rewrite": "jurisprudência do STF sobre definição de dado pessoal na LGPD",
+      "reference_rewrite": "jurisprudência do STF sobre dado pessoal na LGPD"
+    },
+    {
+      "source_id": "conv-10-explicit-new-law-follow-up",
+      "turn_2": "e na Constituição, art. 5, X?",
+      "expected_type": "citacao-literal",
+      "actual_type": "citacao-literal",
+      "classify_ok": true,
+      "oos_preserved": true,
+      "topic_shift_dropped": true,
+      "passed": true,
+      "rewrite": "o que diz o artigo 5º, inciso X, da Constituição Federal sobre tratamento de dados pessoais?",
+      "reference_rewrite": "o que diz o art. 5, inciso X da Constituição?"
+    }
+  ]
+}
