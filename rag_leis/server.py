@@ -355,7 +355,7 @@ def verify_api_key(x_api_key: str | None = Header(default=None)) -> str:
 @_dataclass(frozen=True)
 class AskCaller:
     """Identity of an authenticated `/v1/ask` caller. One of:
-      - `email` + `user_id` populated → Clerk-authed user (browser via rag.nunes.work).
+      - `email` + `user_id` populated → Clerk-authed user (browser via aferida.com.br).
         `user_id` is the Clerk `sub` claim; profile fields mirror what
         Clerk has so the users-table upsert is one statement, not
         multiple round trips.
@@ -392,7 +392,7 @@ class AskCaller:
 def verify_clerk_or_api_key(request: Request) -> AskCaller:
     """FastAPI dep for `/v1/ask` + `/v1/ask/stream`: accept EITHER
 
-      - `Authorization: Bearer <clerk-jwt>` — browser path (rag.nunes.work
+      - `Authorization: Bearer <clerk-jwt>` — browser path (aferida.com.br
         Clerk session, no allowlist gate; any registered user passes)
       - `X-API-Key: <key>` — programmatic path (CI smoke tests, MCP,
         curl scripts), keys read from RAG_API_KEYS
